@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "checkJs": true,
+    "target": "ESNext",
+    "moduleResolution": "node",
+    "paths": {
+      "uce": ["types/uce"]
+    }
+  },
+  "exclude": ["node_modules", "build"]
+}
