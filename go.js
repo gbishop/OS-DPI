@@ -1,10 +1,14 @@
 import { loadData } from "./data";
 import * as rules from "./rules";
 import { state } from "./state";
+import "./components";
 
 /** let me wait for the page to load */
 const pageLoaded = new Promise((resolve) => {
-  window.addEventListener("load", resolve);
+  window.addEventListener("load", () => {
+    document.body.classList.add("loaded");
+    resolve();
+  });
 });
 
 /** Load data and page then go
