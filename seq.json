@@ -1,0 +1,61 @@
+[
+  {
+    "tags": [],
+    "msg": "A"
+  },
+  {
+    "tags": [],
+    "msg": "B"
+  },
+  {
+    "tags": [],
+    "msg": "C"
+  },
+  {
+    "tags": [],
+    "msg": "D"
+  },
+  {
+    "tags": ["A"],
+    "msg": "T",
+    "say": "at"
+  },
+  {
+    "tags": ["B"],
+    "msg": "A"
+  },
+  {
+    "tags": ["B"],
+    "msg": "E",
+    "say": "be"
+  },
+  {
+    "tags": ["C"],
+    "msg": "A"
+  },
+  {
+    "tags": ["D"],
+    "msg": "O",
+    "say": "do"
+  },
+  {
+    "tags": ["B", "A"],
+    "msg": "D",
+    "say": "bad"
+  },
+  {
+    "tags": ["C", "A"],
+    "msg": "B",
+    "say": "cab"
+  },
+  {
+    "tags": ["C", "A"],
+    "msg": "D",
+    "say": "cad"
+  },
+  {
+    "tags": ["C", "A"],
+    "msg": "T",
+    "say": "cat"
+  }
+]
