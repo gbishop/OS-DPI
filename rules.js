@@ -4,16 +4,30 @@
 
 import { state } from "./state.js";
 
+/**
+ * functions for updating states
+ */
+
+/**
+ * @typedef {Object} Rule
+ * @property {string} origin
+ * @property {string} event
+ * @property {string[]} conditions
+ * @property {Object<string, string>} updates
+ */
+
+/** @type {Rule} */
 const exampleRule = {
   origin: "a-grid",
   event: "press",
-  restrictions: ["foo < bar", "$s == 'ok'"],
-  actions: ["$s = 'nok'", "say('hello')"],
+  conditions: ["foo < bar", "$s == 'ok'"],
+  updates: {
+    $s: "$t", // set the state variable $s to the value of $t
+    $foo: "append(icon)", // append the value of icon to the list $foo
+    $bar: "empty()", // empty the list $bar
+    $count: "increment(1)", // increment the value of $count by 1
+  },
 };
-
-/**
- * @typedef {typeof exampleRule} Rule
- */
 
 /**
  * evaluate a string as an expression in a given context
@@ -60,21 +74,22 @@ function applyRules(origin, event, data) {
     if (origin != rule.origin || event != rule.event) {
       continue;
     }
-    const result = rule.restrictions.every((restriction) =>
+    const result = rule.conditions.every((restriction) =>
       evalInContext(restriction, context)
     );
     if (result) {
       // console.log("got it");
-      context.$ = {};
-      for (const action of rule.actions) {
-        const a = action.replace(/(\$\w+)\s*=/, "$$.$1 =");
-        // console.log("action", action, a);
-        evalInContext(a, context);
-      }
-      // console.log("$", context.$);
-      if (Object.keys(context.$)) {
-        state.update(context.$);
-      }
+      context.append = (value) => (old) => [...old, value];
+      context.empty = () => () => [];
+      context.increment = (value) => (old) => old + value;
+      const patch = Object.fromEntries(
+        Object.entries(rule.updates).map(([$var, value]) => [
+          $var,
+          evalInContext(value, context),
+        ])
+      );
+      // console.log("patch", patch);
+      state.update(patch);
       return result;
     }
   }

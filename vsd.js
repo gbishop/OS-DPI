@@ -4,7 +4,7 @@ go("./vsd.json", [
   {
     origin: "vsd",
     event: "press",
-    restrictions: [],
-    actions: ["$utterance = msg"],
+    conditions: [],
+    updates: { $utterance: "msg" },
   },
 ]);
