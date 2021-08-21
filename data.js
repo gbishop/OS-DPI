@@ -38,7 +38,10 @@ export function normalizeTags(tagsStringOrArray) {
     // console.log("nt", tags);
   }
   // normalize
-  tags = tags.map((t) => state.interpolate(t)).filter((t) => t.length);
+  tags = tags
+    .map((t) => (t.startsWith("$") && state(t)) || t)
+    .filter((t) => t.length)
+    .flat();
   return tags;
 }
 
