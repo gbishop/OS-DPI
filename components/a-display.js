@@ -1,9 +1,11 @@
 import { html, render } from "uhtml";
 import { state } from "../state";
 import ABase from "./a-base";
+import { formatSlottedString } from "./helpers";
 
 class ADisplay extends ABase {
   state = "a-display";
+  slots = "$slots";
   background = "inherit";
   scale = 1;
 
@@ -11,13 +13,15 @@ class ADisplay extends ABase {
 
   init() {
     state.define(this.state, "The utterance goes here");
+    state.define(this.slots, []);
     this.render();
   }
 
   render() {
     this.style.flexGrow = this.scale.toString();
     this.style.backgroundColor = this.background;
-    const msg = state(this.state);
+    const msg = formatSlottedString(state(this.state));
+    // parse the message and replace any slots
     console.log("display", msg);
     render(this, html`${msg}`);
   }

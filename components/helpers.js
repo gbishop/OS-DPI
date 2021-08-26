@@ -1,3 +1,5 @@
+import { html } from "uhtml";
+
 /**
  * Copy properties from HTML into the element. Only accept
  * properties that already exist
@@ -15,4 +17,22 @@ export function copyProps(element) {
       }
     }
   }
+}
+
+/**
+ * Edit slots markup to replace with values
+ * @param {string} msg - the string possibly containing $$ kind = value $$ markup
+ * @param {string[]} slotValues - values to replace slots
+ * @returns {import('uhtml').Hole[]} - formatted string
+ */
+export function formatSlottedString(msg, slotValues = []) {
+  let slotIndex = 0;
+  return msg.split(/(\$\$.*?\$\$)/).map((part) => {
+    const m = part.match(/\$\$(?<name>.*?)=(?<value>.*?)\$\$/);
+    if (m) {
+      return html`<b>${slotValues[slotIndex++] || m.groups.value}</b>`;
+    } else {
+      return html`${part}`;
+    }
+  });
 }

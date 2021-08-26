@@ -13,6 +13,7 @@
     "snowpack": "^3.0.13"
   },
   "dependencies": {
+    "focus-trap": "^6.6.1",
     "mergerino": "^0.4.0",
     "uhtml": "^2.7.6"
   }

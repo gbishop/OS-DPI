@@ -2,24 +2,7 @@ import { html } from "uhtml";
 import { getTaggedRows } from "../data";
 import * as rules from "../rules";
 import ABase from "./a-base";
-
-/**
- * Convert a message with slots to an html string
- * @param {string} msg - incoming message possibly with markup
- * @return {import('uhtml').Hole[]} - array so uhtml won't escape it
- */
-export function removeMarkup(msg) {
-  if (!msg) return [];
-  const parts = msg.split(/(\$\$.*?\$\$)/);
-  return parts.map((part) => {
-    const m = part.match(/\$\$(?<name>.*?)=(?<value>.*?)\$\$/);
-    if (m) {
-      return html`<b>${m.groups.value}</b>`;
-    } else {
-      return html`${part}`;
-    }
-  });
-}
+import { formatSlottedString } from "./helpers";
 
 class AGrid extends ABase {
   // set the defaults
@@ -49,7 +32,7 @@ class AGrid extends ABase {
         result.push(html`<button disabled></button>`);
       }
       let content;
-      let msg = removeMarkup(item.msg);
+      let msg = formatSlottedString(item.msg);
       if ("symbol" in item) {
         content = html`<div>
           <figure>
