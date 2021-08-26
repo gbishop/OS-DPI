@@ -1,4 +1,4 @@
-import { html, render } from "uhtml";
+import { html } from "uhtml";
 import { state } from "../state";
 import ABase from "./a-base";
 import ATabPanel from "./a-tab-panel";
@@ -26,25 +26,25 @@ class ATabControl extends ABase {
   template() {
     this.style.flexGrow = this.scale.toString();
     this.style.backgroundColor = this.background;
-    const tabs = this.panels.map((panel) => panel.name || "No name");
-    const labels = this.panels.map((panel) => panel.getAttribute("label"));
-    const buttons = tabs.map((tab, i) => {
-      tab = state.interpolate(tab);
-      const color = this.panels[i].getAttribute("background");
-      const active = state(this.state) == tab;
-      const style = active
-        ? `background-color: ${color};border-top-color: ${color};`
-        : "";
-      return html`<button
-        style=${style}
-        onClick=${() => state.update({ [this.state]: tab })}
-      >
-        ${state.interpolate(labels[i] || tab)}
-      </button>`;
-    });
-    const current = state(this.state);
+    const buttons = this.panels
+      .filter((panel) => panel.label != "UNLABELED")
+      .map((panel) => {
+        const tabName = state.interpolate(panel.name); // internal name
+        const tabLabel = state.interpolate(panel.label || panel.name); // display name
+        const color = panel.background;
+        const active = state(this.state) == tabName;
+        const style = active
+          ? `background-color: ${color};border-top-color: ${color};`
+          : "";
+        return html`<button
+          style=${style}
+          onClick=${() => state.update({ [this.state]: tabName })}
+        >
+          ${tabLabel}
+        </button>`;
+      });
     const panel = this.panels.filter(
-      (_, i) => current == state.interpolate(tabs[i])
+      (panel) => state(this.state) == state.interpolate(panel.name)
     );
     return html`<div class="panels" style=${`flex-grow: ${this.scale - 1}`}>
         ${panel}
