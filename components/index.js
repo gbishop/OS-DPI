@@ -6,3 +6,4 @@ import "./a-choose-one";
 import "./a-tab-control";
 import "./a-tab-panel";
 import "./a-vsd";
+import "./a-modal-dialog";
