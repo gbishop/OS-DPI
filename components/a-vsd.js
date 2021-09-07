@@ -28,6 +28,10 @@ class AVSD extends ABase {
   static observed = "tags match name scale";
 
   init() {
+    state.observe(
+      this,
+      ...this.tags.split(" ").filter((tag) => tag.startsWith("$"))
+    );
     this.timer = null;
     const onMove = () => {
       this.classList.add("show");

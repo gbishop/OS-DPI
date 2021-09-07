@@ -1,17 +1,21 @@
 import merge from "mergerino";
+import ABase from "./components/a-base";
 
 const LSKEY = "4.state";
 
 var State = {};
-const Listeners = new Set();
+/* a map from elements to state variables they are observing */
+/** @type {Map<ABase, String[]>} */
+const Listeners = new Map();
 
 /** unified interface to state
- * @param {string} [name]
+ * @param {string} [name] - possibly dotted path to a value
+ * @param {any} defaultValue
  * @returns {any} if name is defined, null otherwise
  */
-export function state(name) {
+export function state(name, defaultValue = null) {
   if (name && name.length) {
-    return name in State ? State[name] : null;
+    return name.split(".").reduce((o, p) => (o ? o[p] : defaultValue), State);
   } else {
     return { ...State };
   }
@@ -24,18 +28,46 @@ export function state(name) {
  * @return {void}
  */
 state.update = (patch) => {
-  State = merge(State, patch);
-  for (const element of [...Listeners].reverse()) {
-    if (element.isConnected) element.render();
+  const oldState = State;
+  State = merge(oldState, patch);
+  const changed = new Set();
+  for (const key in State) {
+    if (State[key] !== oldState[key]) {
+      changed.add(key);
+    }
   }
+  for (const key in oldState) {
+    if (!(key in State)) {
+      changed.add(key);
+    }
+  }
+  for (const [element, names] of Listeners) {
+    if (element.isConnected && names.some((name) => changed.has(name))) {
+      element.render();
+    }
+  }
+
   const persist = JSON.stringify(State);
   window.localStorage.setItem(LSKEY, persist);
 };
 
+state.render = () => {
+  for (const [element, _] of Listeners) {
+    if (element.isConnected) {
+      element.render();
+    }
+  }
+};
+
 /** state.observe - link this element to the state
- * @param {Object} element */
-state.observe = (element) => {
-  Listeners.add(element);
+ * @param {ABase} element
+ * @param {String[]} names - state names to observe
+ */
+state.observe = (element, ...names) => {
+  Listeners.set(
+    element,
+    names.map((name) => name.split(".")[0])
+  );
 };
 
 /** state.define - add a named state to the global system state
@@ -54,8 +86,8 @@ state.define = (name, default_value) => {
    @returns input with $name replaced by values from the state
 */
 state.interpolate = (input) => {
-  let result = input.replace(/(\$[a-zA-Z0-9_]+)/, (_, name) => state(name));
-  result = result.replace(/\$\{([a-zA-Z0-9_]+)}/, (_, name) =>
+  let result = input.replace(/(\$[a-zA-Z0-9_.]+)/, (_, name) => state(name));
+  result = result.replace(/\$\{([a-zA-Z0-9_.]+)}/, (_, name) =>
     state("$" + name)
   );
   return result;
@@ -84,3 +116,14 @@ const persist = window.localStorage.getItem(LSKEY);
 if (persist) {
   State = JSON.parse(persist);
 }
+
+var Foo = {
+  S: { A: 1, B: 2 },
+};
+
+var Bar = merge(Foo, {
+  S: (o) => {
+    console.log("test", o === Foo.S);
+    return o;
+  },
+});

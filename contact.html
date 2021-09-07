@@ -11,7 +11,7 @@
   <body>
     <a-hstack>
       <a-vstack scale="5">
-        <a-display state="$utterance"></a-display>
+        <a-display state="$Display" slots="$Slots"></a-display>
         <a-tab-control state="$tab" scale="7">
           <a-tab-panel name="Chat Menu" background="#ffffbb">
             <a-grid
@@ -186,5 +186,21 @@
         </a-choose-one>
       </a-vstack>
     </a-hstack>
+    <a-modal-dialog state="$SlotsPopup">
+      <a-hstack>
+        <a-grid
+          rows="5"
+          columns="5"
+          tags="LIST $Display.slotName"
+          name="SlotGrid"
+          scale="5"
+        ></a-grid>
+        <a-vstack scale="1">
+          <a-button name="duplicateSlot">Duplicate Slot</a-button>
+          <a-button name="okSlot">OK</a-button>
+          <a-button name="cancelSlot">Cancel</a-button>
+        </a-vstack>
+      </a-hstack>
+    </a-modal-dialog>
   </body>
 </html>

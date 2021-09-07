@@ -21,6 +21,7 @@ class ATabControl extends ABase {
       this.state,
       this.activeTab || this.panels[0].getAttribute("name") // props not yet available
     );
+    state.observe(this, this.state);
   }
 
   template() {

@@ -39,7 +39,8 @@ const exampleRule = {
 function evalInContext(expression, context) {
   const variables = Object.keys(context);
   const values = Object.values(context);
-  // console.log("eic", expression, variables, values);
+  // console.log("eic", expression);
+  // console.log("variables", variables);
   const func = Function(...variables, `return ${expression}`);
   return func(...values);
 }
@@ -57,44 +58,61 @@ export function set(rules) {
   Rules = rules;
 }
 
+export var Functions = {
+  append: (value) => (old) => [...old, value],
+  empty: () => () => [],
+  increment: (value) => (old) => old + value,
+};
+
+const eventQueue = [];
+
+/** queue an event from within an event handler
+ * @param {String} origin
+ * @param {String} event
+ */
+
+export function queueEvent(origin, event) {
+  eventQueue.push({ origin, event });
+}
+
 /**
  * Attempt to apply a rule
  *
  * @param {string} origin - name of the originating element
  * @param {string} event - type of event that occurred, i.e.press
  * @param {Object} data - data associated with the event
- * @return {boolean} returns true if rule was applied
  */
 function applyRules(origin, event, data) {
-  const context = { ...state(), ...data };
-  // console.log("applyRules", origin, event, data);
-  // console.log("context", context);
-  for (const rule of Rules) {
-    // console.log("rule", rule);
-    if (origin != rule.origin || event != rule.event) {
-      continue;
-    }
-    const result = rule.conditions.every((restriction) =>
-      evalInContext(restriction, context)
-    );
-    if (result) {
-      // console.log("got it");
-      context.append = (value) => (old) => [...old, value];
-      context.empty = () => () => [];
-      context.increment = (value) => (old) => old + value;
-      const patch = Object.fromEntries(
-        Object.entries(rule.updates).map(([$var, value]) => [
-          $var,
-          evalInContext(value, context),
-        ])
+  // first for the event then for any that got queued.
+  while (true) {
+    const context = { ...Functions, ...state(), ...data };
+    // console.log("applyRules", origin, event, data);
+    // console.log("context", context);
+    for (const rule of Rules) {
+      // console.log("rule", rule);
+      if (origin != rule.origin || event != rule.event) {
+        continue;
+      }
+      const result = rule.conditions.every((restriction) =>
+        evalInContext(restriction, context)
       );
-      // console.log("patch", patch);
-      state.update(patch);
-      return result;
+      if (result) {
+        // console.log("got it");
+        const patch = Object.fromEntries(
+          Object.entries(rule.updates).map(([$var, value]) => [
+            $var,
+            evalInContext(value, context),
+          ])
+        );
+        // console.log("patch", patch);
+        state.update(patch);
+        break;
+      }
     }
+    if (eventQueue.length == 0) break;
+    ({ origin, event } = eventQueue.pop());
+    data = {};
   }
-  // console.log("no rule");
-  return false;
 }
 
 /**
@@ -107,6 +125,9 @@ function applyRules(origin, event, data) {
  */
 export function handler(origin, data, event) {
   return (e) => {
+    if (e instanceof PointerEvent && e.altKey) {
+      event = "alt-" + event;
+    }
     // console.log("handler", e, origin, event, data);
     applyRules(origin, event || e.type, data);
   };

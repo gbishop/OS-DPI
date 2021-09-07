@@ -3,6 +3,7 @@ import { getTaggedRows } from "../data";
 import * as rules from "../rules";
 import ABase from "./a-base";
 import { formatSlottedString } from "./helpers";
+import { state } from "../state";
 
 class AGrid extends ABase {
   // set the defaults
@@ -16,12 +17,21 @@ class AGrid extends ABase {
 
   static observed = "tags rows columns scale background match name";
 
+  init() {
+    state.observe(
+      this,
+      ...this.tags.split(" ").filter((tag) => tag.startsWith("$"))
+    );
+  }
+
   template() {
     this.style.flexGrow = this.scale.toString();
     const rows = +this.rows;
     const columns = +this.columns;
     const tags = this.tags;
+    // console.log("tags", tags);
     const items = getTaggedRows(tags, this.match);
+    // console.log("items", items);
     const result = [];
     this.style.gridTemplate = `repeat(${rows}, calc(100% / ${rows} - 0.5%)) / repeat(${columns}, 1fr)`;
 
@@ -45,6 +55,7 @@ class AGrid extends ABase {
       }
       result.push(
         html`<button
+          oncontextmenu="event.preventDefault();"
           onClick=${rules.handler(this.name, item, "press")}
           style=${`background-color: ${this.background}`}
           .disabled=${!item.msg || item.msg.length == 0}

@@ -8,14 +8,16 @@ class AModalDialog extends ABase {
   background = "white";
 
   init() {
-    state.define(this.state, true);
+    state.observe(this, this.state);
+    console.log("init modal");
     this.content = Array.from(this.childNodes);
     this.trap = focusTrap.createFocusTrap(this, {
-      onDeactivate: () => state.update({ [this.state]: false }),
+      onDeactivate: () => state.update({ $Slots: { open: false } }),
     });
   }
 
   template() {
+    console.log(state());
     if (state(this.state)) {
       this.classList.add("open");
       this.trap.activate();

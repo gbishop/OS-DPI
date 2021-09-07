@@ -25,6 +25,7 @@ class AChooseOne extends ABase {
 
   init() {
     state.define(this.state, this.initial);
+    state.observe(this, this.state);
     // gather the choices
     /** @type {AChoice[]} */
     this.choices = Array.from(this.querySelectorAll("a-choice"));

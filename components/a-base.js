@@ -31,11 +31,11 @@ export default class ABase extends HTMLElement {
    */
   connectedCallback() {
     if (!this.initialized) {
-      state.observe(this);
       this.copyProps();
       this.initialized = true;
       this.init();
     }
+    this.render();
   }
 
   /**

@@ -22,5 +22,5 @@ export default async function go(name, myRules, definitions = {}) {
     state.define(key, definitions[key])
   );
   rules.set(myRules);
-  state.update();
+  state.render();
 }
