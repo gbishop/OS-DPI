@@ -51,7 +51,7 @@ class ADisplay extends ABase {
           // highlight the current slot
           return html`<b>${editor.slots[i++].value}</b>`;
         } else {
-          return html`${editor.slots[i++].value}`;
+          return html`${editor.slots[i++].value.replace(/^\*/, "")}`;
         }
       }
       return html`${part}`;
@@ -107,11 +107,20 @@ function update(message) {
   return (old) => {
     // copy the slots from the old value
     const slots = [...old.slots];
+    let slotIndex = old.slotIndex;
     // replace the current one
-    slots[old.slotIndex].value = message;
-    const slotIndex = old.slotIndex + 1;
-    if (slotIndex >= slots.length) {
-      rules.queueEvent("okSlot", "press");
+    if (message.startsWith("*")) {
+      slots[slotIndex].value = message;
+    } else {
+      if (slots[slotIndex].value.startsWith("*")) {
+        slots[slotIndex].value = `${slots[slotIndex].value} ${message}`;
+      } else {
+        slots[slotIndex].value = message;
+      }
+      slotIndex++;
+      if (slotIndex >= slots.length) {
+        rules.queueEvent("okSlot", "press");
+      }
     }
     return merge(old, {
       slots,
