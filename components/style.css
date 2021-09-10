@@ -16,7 +16,12 @@ a-vstack {
   flex: 1 1 0;
   width: 100%;
   flex-direction: column;
-  gap: 1em;
+}
+a-gap {
+  display: flex;
+  flex: 1 1 0;
+  width: 100%;
+  height: 100%;
 }
 a-grid {
   display: grid;
