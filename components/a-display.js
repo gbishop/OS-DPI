@@ -130,4 +130,53 @@ function update(message) {
   };
 }
 
-rules.Functions["slots"] = { init, cancel, update, hasSlots };
+/** advance to the next slot
+ */
+function nextSlot() {
+  /** @param {Editor} old
+   */
+  return (old) => {
+    const slotIndex = old.slotIndex + 1;
+    if (slotIndex >= old.slots.length) {
+      rules.queueEvent("okSlot", "press");
+    }
+    return merge(old, { slotIndex });
+  };
+}
+
+/** duplicate the current slot
+ */
+function duplicate() {
+  /** @param {Editor} old
+   */
+  return (old) => {
+    const matches = Array.from(
+      old.message.matchAll(/\$\$(?<name>.*?)=(?<value>.*?)\$\$/g)
+    );
+    const current = matches[old.slotIndex];
+    const message =
+      old.message.slice(0, current.index) +
+      current[0] +
+      " and " +
+      current[0] +
+      old.message.slice(current.index + current[0].length);
+    const slots = [
+      ...old.slots.slice(0, old.slotIndex + 1),
+      { ...old.slots[old.slotIndex] }, // copy it
+      ...old.slots.slice(old.slotIndex + 1),
+    ];
+    return merge(old, {
+      message,
+      slots,
+    });
+  };
+}
+
+rules.Functions["slots"] = {
+  init,
+  cancel,
+  update,
+  hasSlots,
+  duplicate,
+  nextSlot,
+};

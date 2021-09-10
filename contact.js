@@ -59,10 +59,22 @@ go("contact.json", [
     updates: { $Display: "slots.cancel()", $SlotsPopup: "0" },
   },
   {
+    origin: "nextSlot",
+    event: "press",
+    conditions: [],
+    updates: { $Display: "slots.nextSlot()" },
+  },
+  {
     origin: "okSlot",
     event: "press",
     conditions: [],
     updates: { $SlotsPopup: "0" },
+  },
+  {
+    origin: "duplicateSlot",
+    event: "press",
+    conditions: [],
+    updates: { $Display: "slots.duplicate()" },
   },
   {
     origin: "SlotGrid",
