@@ -1,5 +1,5 @@
 import { html } from "uhtml";
-import { getTaggedRows } from "../data";
+import { getTaggedRows, normalizeTags } from "../data";
 import * as rules from "../rules";
 import ABase from "./a-base";
 import { formatSlottedString } from "./helpers";
@@ -22,6 +22,8 @@ class AGrid extends ABase {
       this,
       ...this.tags.split(" ").filter((tag) => tag.startsWith("$"))
     );
+    this.page = 0;
+    this.cache = { key: "", items: [] };
   }
 
   template() {
@@ -29,14 +31,43 @@ class AGrid extends ABase {
     const rows = +this.rows;
     const columns = +this.columns;
     const tags = this.tags;
-    const items = getTaggedRows(tags, this.match);
+    const key = normalizeTags(tags).join("|");
+    let items;
+    console.log("cache", key, this.cache);
+    if (
+      key.length &&
+      this.cache.key.length &&
+      this.cache.items.length &&
+      this.cache.key === key
+    ) {
+      items = this.cache.items;
+      console.log("from cache", items);
+    } else {
+      items = getTaggedRows(tags, this.match);
+      console.log("from data");
+      this.cache.items = items;
+      this.cache.key = key;
+      this.page = 0;
+      console.log("in cache", this.cache);
+    }
     const result = [];
     this.style.gridTemplate = `repeat(${rows}, calc(100% / ${rows} - 0.5%)) / repeat(${columns}, 1fr)`;
 
-    for (let i = 0; i < Math.min(items.length, rows * columns); i++) {
+    let perPage = rows * columns;
+    let pages = 1;
+    if (items.length > perPage) {
+      perPage = rows * columns - 1;
+      pages = Math.ceil(items.length / perPage);
+    }
+    if (this.page >= pages) {
+      this.page = 0;
+    }
+    const offset = this.page * perPage;
+
+    for (let i = offset; i < Math.min(items.length, perPage + offset); i++) {
       const item = items[i];
       let itemIndex = item.index || i;
-      while (result.length < itemIndex) {
+      while (offset + result.length < itemIndex) {
         result.push(html`<button disabled></button>`);
       }
       let content;
@@ -61,8 +92,34 @@ class AGrid extends ABase {
         </button>`
       );
     }
-    while (result.length < rows * columns) {
+    while (result.length < perPage) {
       result.push(html`<button disabled></button>`);
+    }
+    if (perPage < rows * columns) {
+      result.push(html`<div class="page-control">
+        <div class="text">Page ${this.page + 1} of ${pages}</div>
+        <div class="back-next">
+          <button
+            onClick=${() => {
+              this.page = (((this.page - 1) % pages) + pages) % pages;
+              this.render();
+            }}
+            style=${`background-color: ${this.background}`}
+            .disabled=${perPage >= items.length}
+          >
+            &#9754;</button
+          ><button
+            onClick=${() => {
+              this.page = (this.page + 1) % pages;
+              this.render();
+            }}
+            style=${`background-color: ${this.background}`}
+            .disabled=${perPage >= items.length}
+          >
+            &#9755;
+          </button>
+        </div>
+      </div>`);
     }
 
     return html`${result}`;

@@ -65,6 +65,24 @@ a-grid button figure img {
 a-grid b {
   color: blue;
 }
+a-grid .page-control {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+}
+a-grid .page-control .text {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+}
+a-grid .page-control .back-next {
+  display: flex;
+  flex: 1 1 0;
+}
+a-grid .page-control .back-next button {
+  flex: 1 1 0;
+}
 a-tab-control {
   display: flex;
   flex-direction: column;
@@ -108,7 +126,7 @@ a-tab-panel {
   display: flex;
   flex: 1 1 0;
 }
-a-tab-panel div {
+a-tab-panel > div {
   display: flex;
   flex: 1 1 0;
 }
