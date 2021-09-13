@@ -116,14 +116,3 @@ const persist = window.localStorage.getItem(LSKEY);
 if (persist) {
   State = JSON.parse(persist);
 }
-
-var Foo = {
-  S: { A: 1, B: 2 },
-};
-
-var Bar = merge(Foo, {
-  S: (o) => {
-    console.log("test", o === Foo.S);
-    return o;
-  },
-});
