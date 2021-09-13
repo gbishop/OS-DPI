@@ -33,7 +33,6 @@ class AGrid extends ABase {
     const tags = this.tags;
     const key = normalizeTags(tags).join("|");
     let items;
-    console.log("cache", key, this.cache);
     if (
       key.length &&
       this.cache.key.length &&
@@ -41,14 +40,11 @@ class AGrid extends ABase {
       this.cache.key === key
     ) {
       items = this.cache.items;
-      console.log("from cache", items);
     } else {
       items = getTaggedRows(tags, this.match);
-      console.log("from data");
       this.cache.items = items;
       this.cache.key = key;
       this.page = 0;
-      console.log("in cache", this.cache);
     }
     const result = [];
     this.style.gridTemplate = `repeat(${rows}, calc(100% / ${rows} - 0.5%)) / repeat(${columns}, 1fr)`;
