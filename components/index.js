@@ -9,3 +9,4 @@ import "./a-vsd";
 import "./a-modal-dialog";
 import "./a-button";
 import "./a-gap";
+import "./a-speech-control";

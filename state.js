@@ -5,7 +5,7 @@ const LSKEY = "4.state";
 
 var State = {};
 /* a map from elements to state variables they are observing */
-/** @type {Map<ABase, String[]>} */
+/** @type {Map<ABase|Function, String[]>} */
 const Listeners = new Map();
 
 /** unified interface to state
@@ -42,8 +42,17 @@ state.update = (patch) => {
     }
   }
   for (const [element, names] of Listeners) {
-    if (element.isConnected && names.some((name) => changed.has(name))) {
+    if (
+      element instanceof ABase &&
+      element.isConnected &&
+      names.some((name) => changed.has(name))
+    ) {
       element.render();
+    } else if (
+      element instanceof Function &&
+      names.some((name) => changed.has(name))
+    ) {
+      element(...names.map((name) => state(name)));
     }
   }
 
@@ -53,14 +62,14 @@ state.update = (patch) => {
 
 state.render = () => {
   for (const [element, _] of Listeners) {
-    if (element.isConnected) {
+    if (element instanceof ABase && element.isConnected) {
       element.render();
     }
   }
 };
 
 /** state.observe - link this element to the state
- * @param {ABase} element
+ * @param {ABase|Function} element
  * @param {String[]} names - state names to observe
  */
 state.observe = (element, ...names) => {

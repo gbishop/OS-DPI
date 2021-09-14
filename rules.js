@@ -125,10 +125,11 @@ function applyRules(origin, event, data) {
  */
 export function handler(origin, data, event) {
   return (e) => {
+    let ev = event;
     if (e instanceof PointerEvent && e.altKey) {
-      event = "alt-" + event;
+      ev = "alt-" + event;
     }
     // console.log("handler", e, origin, event, data);
-    applyRules(origin, event || e.type, data);
+    applyRules(origin, ev || e.type, data);
   };
 }

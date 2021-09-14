@@ -63,9 +63,13 @@ class ADisplay extends ABase {
 customElements.define("a-display", ADisplay);
 
 /** return true of the message contains slots
- * @param {String} message
+ * @param {String|Editor} message
  */
 function hasSlots(message) {
+  console.log("has slots", message);
+  if (message instanceof Object) {
+    return message.slots.length > 0;
+  }
   return message.indexOf("$$") >= 0;
 }
 
@@ -74,6 +78,7 @@ function hasSlots(message) {
  * @returns Editor
  */
 function init(message) {
+  console.log("init", message);
   const slots = Array.from(
     message.matchAll(/\$\$(?<name>.*?)=(?<value>.*?)\$\$/g)
   ).map((m) => m.groups);
@@ -172,6 +177,31 @@ function duplicate() {
   };
 }
 
+/* TODO: refactor the multiple versions of this formatting code */
+
+/** strip slots markup
+ * @param {String|Editor} value
+ * @returns {String}
+ */
+export function strip(value) {
+  if (typeof value === "string" || value instanceof String) {
+    // strip any slot markup
+    value = value.replaceAll(/\$\$(?<name>.*?)=(?<value>.*?)\$\$/g, "$2");
+    return value;
+  }
+  let editor = /** @type {Editor} */ (value);
+  // otherwise it is an editor object
+  let i = 0;
+  const parts = editor.message.split(/(\$\$.*?\$\$)/).map((part) => {
+    const m = part.match(/\$\$(?<name>.*?)=(?<value>.*?)\$\$/);
+    if (m) {
+      return editor.slots[i++].value.replace(/^\*/, "");
+    }
+    return part;
+  });
+  return parts.join("");
+}
+
 rules.Functions["slots"] = {
   init,
   cancel,
@@ -179,4 +209,5 @@ rules.Functions["slots"] = {
   hasSlots,
   duplicate,
   nextSlot,
+  strip,
 };

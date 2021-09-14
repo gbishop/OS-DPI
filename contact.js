@@ -21,12 +21,6 @@ go("contact.json", [
   },
   {
     origin: "TalkGrid",
-    event: "press",
-    conditions: [],
-    updates: { $Display: "msg" },
-  },
-  {
-    origin: "TalkGrid",
     event: "alt-press",
     conditions: ["slots.hasSlots(msg)"],
     updates: {
@@ -41,6 +35,12 @@ go("contact.json", [
     updates: { $tab: "'Keyboard'", $Display: "msg" },
   },
   {
+    origin: "TalkGrid",
+    event: "press",
+    conditions: [],
+    updates: { $Display: "msg", $Speak: "msg" },
+  },
+  {
     origin: "QuickGrid",
     event: "press",
     conditions: ["$tab == 'Choose Quickfire'"],
@@ -50,7 +50,7 @@ go("contact.json", [
     origin: "QuickGrid",
     event: "press",
     conditions: [],
-    updates: { $Display: "msg", $Quick: "value" },
+    updates: { $Speak: "msg", $Quick: "value" },
   },
   {
     origin: "cancelSlot",
@@ -68,7 +68,7 @@ go("contact.json", [
     origin: "okSlot",
     event: "press",
     conditions: [],
-    updates: { $SlotsPopup: "0" },
+    updates: { $SlotsPopup: "0", $Speak: "$Display" },
   },
   {
     origin: "duplicateSlot",
