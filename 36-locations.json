@@ -1,0 +1,290 @@
+[
+    {
+        "row": "1",
+        "column": "1",
+        "tags": [],
+        "msg": "like",
+        "icon": "like",
+        "symbol": "alphabet/like.png"
+    },
+    {
+        "row": "1",
+        "column": "2",
+        "tags": [],
+        "msg": "want",
+        "icon": "want",
+        "symbol": "alphabet/want.png"
+    },
+    {
+        "row": "1",
+        "column": "3",
+        "tags": [],
+        "msg": "get",
+        "icon": "get",
+        "symbol": "alphabet/get.png"
+    },
+    {
+        "row": "1",
+        "column": "4",
+        "tags": [],
+        "msg": "make",
+        "icon": "make",
+        "symbol": "alphabet/make.png"
+    },
+    {
+        "row": "1",
+        "column": "5",
+        "tags": [],
+        "msg": "good",
+        "icon": "good",
+        "symbol": "alphabet/good.png"
+    },
+    {
+        "row": "1",
+        "column": "6",
+        "tags": [],
+        "msg": "more",
+        "icon": "more",
+        "symbol": "alphabet/more.png"
+    },
+    {
+        "row": "2",
+        "column": "1",
+        "tags": [],
+        "msg": "not",
+        "icon": "not",
+        "symbol": "alphabet/not.png"
+    },
+    {
+        "row": "2",
+        "column": "2",
+        "tags": [],
+        "msg": "go",
+        "icon": "go",
+        "symbol": "alphabet/go.png"
+    },
+    {
+        "row": "2",
+        "column": "3",
+        "tags": [],
+        "msg": "look",
+        "icon": "look",
+        "symbol": "alphabet/look.png"
+    },
+    {
+        "row": "2",
+        "column": "4",
+        "tags": [],
+        "msg": "turn",
+        "icon": "turn",
+        "symbol": "alphabet/turn.png"
+    },
+    {
+        "row": "2",
+        "column": "5",
+        "tags": [],
+        "msg": "help",
+        "icon": "help",
+        "symbol": "alphabet/help.png"
+    },
+    {
+        "row": "2",
+        "column": "6",
+        "tags": [],
+        "msg": "different",
+        "icon": "different",
+        "symbol": "alphabet/different.png"
+    },
+    {
+        "row": "3",
+        "column": "1",
+        "tags": [],
+        "msg": "I",
+        "icon": "I",
+        "symbol": "alphabet/I.png"
+    },
+    {
+        "row": "3",
+        "column": "2",
+        "tags": [],
+        "msg": "he",
+        "icon": "he",
+        "symbol": "alphabet/he.png"
+    },
+    {
+        "row": "3",
+        "column": "3",
+        "tags": [],
+        "msg": "open",
+        "icon": "open",
+        "symbol": "alphabet/open.png"
+    },
+    {
+        "row": "3",
+        "column": "4",
+        "tags": [],
+        "msg": "do",
+        "icon": "do",
+        "symbol": "alphabet/do.png"
+    },
+    {
+        "row": "3",
+        "column": "5",
+        "tags": [],
+        "msg": "put",
+        "icon": "put",
+        "symbol": "alphabet/put.png"
+    },
+    {
+        "row": "3",
+        "column": "6",
+        "tags": [],
+        "msg": "same",
+        "icon": "same",
+        "symbol": "alphabet/same.png"
+    },
+    {
+        "row": "4",
+        "column": "1",
+        "tags": [],
+        "msg": "you",
+        "icon": "you",
+        "symbol": "alphabet/you.png"
+    },
+    {
+        "row": "4",
+        "column": "2",
+        "tags": [],
+        "msg": "she",
+        "icon": "she",
+        "symbol": "alphabet/she.png"
+    },
+    {
+        "row": "4",
+        "column": "3",
+        "tags": [],
+        "msg": "that",
+        "icon": "that",
+        "symbol": "alphabet/that.png"
+    },
+    {
+        "row": "4",
+        "column": "4",
+        "tags": [],
+        "msg": "up",
+        "icon": "up",
+        "symbol": "alphabet/up.png"
+    },
+    {
+        "row": "4",
+        "column": "5",
+        "tags": [],
+        "msg": "all",
+        "icon": "all",
+        "symbol": "alphabet/all.png"
+    },
+    {
+        "row": "4",
+        "column": "6",
+        "tags": [],
+        "msg": "some",
+        "icon": "some",
+        "symbol": "alphabet/some.png"
+    },
+    {
+        "row": "5",
+        "column": "1",
+        "tags": [],
+        "msg": "it",
+        "icon": "it",
+        "symbol": "alphabet/it.png"
+    },
+    {
+        "row": "5",
+        "column": "2",
+        "tags": [],
+        "msg": "here",
+        "icon": "here",
+        "symbol": "alphabet/here.png"
+    },
+    {
+        "row": "5",
+        "column": "3",
+        "tags": [],
+        "msg": "in",
+        "icon": "in",
+        "symbol": "alphabet/in.png"
+    },
+    {
+        "row": "5",
+        "column": "4",
+        "tags": [],
+        "msg": "on",
+        "icon": "on",
+        "symbol": "alphabet/on.png"
+    },
+    {
+        "row": "5",
+        "column": "5",
+        "tags": [],
+        "msg": "can",
+        "icon": "can",
+        "symbol": "alphabet/can.png"
+    },
+    {
+        "row": "5",
+        "column": "6",
+        "tags": [],
+        "msg": "finished",
+        "icon": "finished",
+        "symbol": "alphabet/finished.png"
+    },
+    {
+        "row": "6",
+        "column": "1",
+        "tags": [],
+        "msg": "where",
+        "icon": "where",
+        "symbol": "alphabet/where.png"
+    },
+    {
+        "row": "6",
+        "column": "2",
+        "tags": [],
+        "msg": "what",
+        "icon": "what",
+        "symbol": "alphabet/what.png"
+    },
+    {
+        "row": "6",
+        "column": "3",
+        "tags": [],
+        "msg": "why",
+        "icon": "why",
+        "symbol": "alphabet/why.png"
+    },
+    {
+        "row": "6",
+        "column": "4",
+        "tags": [],
+        "msg": "who",
+        "icon": "who",
+        "symbol": "alphabet/who.png"
+    },
+    {
+        "row": "6",
+        "column": "5",
+        "tags": [],
+        "msg": "when",
+        "icon": "when",
+        "symbol": "alphabet/when.png"
+    },
+    {
+        "row": "6",
+        "column": "6",
+        "tags": [],
+        "msg": "stop",
+        "icon": "stop",
+        "symbol": "alphabet/stop.png"
+    }
+]
