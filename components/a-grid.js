@@ -117,7 +117,6 @@ class AGrid extends ABase {
         </div>
       </div>`);
     }
-
     return html`${result}`;
   }
 }

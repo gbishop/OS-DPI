@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <script type="module" src="./60-locations.js"></script>
+    <title>PO AAC 4</title>
+    <link rel="stylesheet" href="components/style.css" />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+        a-grid figure {
+            max-height: 13vh;
+        }
+    </style>
+</head>
+
+<body>
+    <a-hstack>
+        <a-vstack scale="5">
+            <a-hstack>
+                <a-display scale="5" state="$Display" slots="$Slots"></a-display>
+                <a-button name="morph">Morph</a-button>
+            </a-hstack>
+            <a-tab-control state="$tab" scale="7">
+                <a-tab-panel name="Demo" background="lemonchiffon">
+                    <a-grid 
+                      name="TalkGrid" 
+                      rows="4" 
+                      columns="4"
+                      match="sequence"
+                      tags=""
+                    ></a-grid>
+                </a-tab-panel>
+            </a-tab-control>
+        </a-vstack>
+    </a-hstack>
+    <a-modal-dialog>
+        <a-hstack>
+        <a-grid 
+          rows="3"
+          columns="3"
+          scale="3"
+          tags="$last_token"
+          name="ConjugateGrid"
+        ></a-grid>
+        <a-vstack>
+            <a-button name="CancelConjugate">Cancel</a-button>
+        </a-vstack>
+        </a-hstack>
+    </a-modal-dialog>
+</body>
+
+</html>

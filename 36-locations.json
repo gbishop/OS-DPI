@@ -9,19 +9,19 @@
     },
     {
         "row": "1",
-        "column": "2",
-        "tags": [],
-        "msg": "want",
-        "icon": "want",
-        "symbol": "alphabet/want.png"
-    },
-    {
-        "row": "1",
         "column": "3",
         "tags": [],
         "msg": "get",
         "icon": "get",
         "symbol": "alphabet/get.png"
+    },
+    {
+        "row": "1",
+        "column": "2",
+        "tags": [],
+        "msg": "want",
+        "icon": "want",
+        "symbol": "alphabet/want.png"
     },
     {
         "row": "1",

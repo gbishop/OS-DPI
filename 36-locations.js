@@ -5,6 +5,6 @@ go("36-locations.json", [
     origin: "TalkGrid",
     event: "press",
     conditions: [],
-    updates: { $Display: "msg"},
+    updates: { $Display: "msg" },
   },
 ]);

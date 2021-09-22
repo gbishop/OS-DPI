@@ -1,0 +1,776 @@
+[
+    {
+        "row": "1",
+        "column": "1",
+        "tags": [],
+        "msg": "like",
+        "symbol": "alphabet/like.png",
+        "icon": "like"
+    },
+    {
+        "msg": "like",
+        "tags": [
+            "like"
+        ]
+    },
+    {
+        "msg": "likes",
+        "tags": [
+            "like"
+        ]
+    },
+    {
+        "msg": "liked",
+        "tags": [
+            "like"
+        ]
+    },
+    {
+        "msg": "liking",
+        "tags": [
+            "like"
+        ]
+    },
+    {
+        "row": "1",
+        "column": "2",
+        "tags": [],
+        "msg": "want",
+        "symbol": "alphabet/want.png",
+        "icon": "want"
+    },
+    {
+        "msg": "want",
+        "tags": [
+            "want"
+        ]
+    },
+    {
+        "msg": "wants",
+        "tags": [
+            "want"
+        ]
+    },
+    {
+        "msg": "wanted",
+        "tags": [
+            "want"
+        ]
+    },
+    {
+        "msg": "wanting",
+        "tags": [
+            "want"
+        ]
+    },
+    {
+        "row": "1",
+        "column": "3",
+        "tags": [],
+        "msg": "get",
+        "symbol": "alphabet/get.png",
+        "icon": "get"
+    },
+    {
+        "msg": "get",
+        "tags": [
+            "get"
+        ]
+    },
+    {
+        "msg": "gets",
+        "tags": [
+            "get"
+        ]
+    },
+    {
+        "msg": "got",
+        "tags": [
+            "get"
+        ]
+    },
+    {
+        "msg": "getting",
+        "tags": [
+            "get"
+        ]
+    },
+    {
+        "row": "1",
+        "column": "4",
+        "tags": [],
+        "msg": "make",
+        "symbol": "alphabet/make.png",
+        "icon": "make"
+    },
+    {
+        "msg": "make",
+        "tags": [
+            "make"
+        ]
+    },
+    {
+        "msg": "makes",
+        "tags": [
+            "make"
+        ]
+    },
+    {
+        "msg": "made",
+        "tags": [
+            "make"
+        ]
+    },
+    {
+        "msg": "making",
+        "tags": [
+            "make"
+        ]
+    },
+    {
+        "row": "1",
+        "column": "5",
+        "tags": [],
+        "msg": "good",
+        "symbol": "alphabet/good.png",
+        "icon": "good"
+    },
+    {
+        "row": "1",
+        "column": "6",
+        "tags": [],
+        "msg": "more",
+        "symbol": "alphabet/more.png",
+        "icon": "more"
+    },
+    {
+        "row": "1",
+        "column": "7",
+        "tags": [],
+        "msg": ""
+    },
+    {
+        "row": "1",
+        "column": "8",
+        "tags": [],
+        "msg": ""
+    },
+    {
+        "row": "1",
+        "column": "9",
+        "tags": [],
+        "msg": ""
+    },
+    {
+        "row": "1",
+        "column": "10",
+        "tags": [],
+        "msg": "people"
+    },
+    {
+        "row": "2",
+        "column": "1",
+        "tags": [],
+        "msg": "not",
+        "symbol": "alphabet/not.png",
+        "icon": "not"
+    },
+    {
+        "row": "2",
+        "column": "2",
+        "tags": [],
+        "msg": "go",
+        "symbol": "alphabet/go.png",
+        "icon": "go"
+    },
+    {
+        "msg": "go",
+        "tags": [
+            "go"
+        ]
+    },
+    {
+        "msg": "goes",
+        "tags": [
+            "go"
+        ]
+    },
+    {
+        "msg": "went",
+        "tags": [
+            "go"
+        ]
+    },
+    {
+        "msg": "gone",
+        "tags": [
+            "go"
+        ]
+    },
+    {
+        "msg": "going",
+        "tags": [
+            "go"
+        ]
+    },
+    {
+        "row": "2",
+        "column": "3",
+        "tags": [],
+        "msg": "look",
+        "symbol": "alphabet/look.png",
+        "icon": "look"
+    },
+    {
+        "msg": "look",
+        "tags": [
+            "look"
+        ]
+    },
+    {
+        "msg": "looks",
+        "tags": [
+            "look"
+        ]
+    },
+    {
+        "msg": "looked",
+        "tags": [
+            "look"
+        ]
+    },
+    {
+        "msg": "looking",
+        "tags": [
+            "look"
+        ]
+    },
+    {
+        "row": "2",
+        "column": "4",
+        "tags": [],
+        "msg": "turn",
+        "symbol": "alphabet/turn.png",
+        "icon": "turn"
+    },
+    {
+        "msg": "turn",
+        "tags": [
+            "turn"
+        ]
+    },
+    {
+        "msg": "turns",
+        "tags": [
+            "turn"
+        ]
+    },
+    {
+        "msg": "turned",
+        "tags": [
+            "turn"
+        ]
+    },
+    {
+        "msg": "turning",
+        "tags": [
+            "turn"
+        ]
+    },
+    {
+        "row": "2",
+        "column": "5",
+        "tags": [],
+        "msg": "help",
+        "symbol": "alphabet/help.png",
+        "icon": "help"
+    },
+    {
+        "msg": "help",
+        "tags": [
+            "help"
+        ]
+    },
+    {
+        "msg": "helps",
+        "tags": [
+            "help"
+        ]
+    },
+    {
+        "msg": "helped",
+        "tags": [
+            "help"
+        ]
+    },
+    {
+        "msg": "helping",
+        "tags": [
+            "help"
+        ]
+    },
+    {
+        "row": "2",
+        "column": "6",
+        "tags": [],
+        "msg": "different",
+        "symbol": "alphabet/different.png",
+        "icon": "different"
+    },
+    {
+        "row": "2",
+        "column": "7",
+        "tags": [],
+        "msg": ""
+    },
+    {
+        "row": "2",
+        "column": "8",
+        "tags": [],
+        "msg": ""
+    },
+    {
+        "row": "2",
+        "column": "9",
+        "tags": [],
+        "msg": ""
+    },
+    {
+        "row": "2",
+        "column": "10",
+        "tags": [],
+        "msg": "places"
+    },
+    {
+        "row": "3",
+        "column": "1",
+        "tags": [],
+        "msg": "I",
+        "symbol": "alphabet/I.png",
+        "icon": "I"
+    },
+    {
+        "msg": "I",
+        "tags": [
+            "I"
+        ]
+    },
+    {
+        "msg": "my",
+        "tags": [
+            "I"
+        ]
+    },
+    {
+        "msg": "mine",
+        "tags": [
+            "I"
+        ]
+    },
+    {
+        "row": "3",
+        "column": "2",
+        "tags": [],
+        "msg": "he",
+        "symbol": "alphabet/he.png",
+        "icon": "he"
+    },
+    {
+        "msg": "he",
+        "tags": [
+            "he"
+        ]
+    },
+    {
+        "msg": "him",
+        "tags": [
+            "he"
+        ]
+    },
+    {
+        "msg": "his",
+        "tags": [
+            "he"
+        ]
+    },
+    {
+        "row": "3",
+        "column": "3",
+        "tags": [],
+        "msg": "open",
+        "symbol": "alphabet/open.png",
+        "icon": "open"
+    },
+    {
+        "msg": "open",
+        "tags": [
+            "open"
+        ]
+    },
+    {
+        "msg": "opens",
+        "tags": [
+            "open"
+        ]
+    },
+    {
+        "msg": "opened",
+        "tags": [
+            "open"
+        ]
+    },
+    {
+        "msg": "opening",
+        "tags": [
+            "open"
+        ]
+    },
+    {
+        "row": "3",
+        "column": "4",
+        "tags": [],
+        "msg": "do",
+        "symbol": "alphabet/do.png",
+        "icon": "do"
+    },
+    {
+        "msg": "do",
+        "tags": [
+            "do"
+        ]
+    },
+    {
+        "msg": "does",
+        "tags": [
+            "do"
+        ]
+    },
+    {
+        "msg": "did",
+        "tags": [
+            "do"
+        ]
+    },
+    {
+        "msg": "done",
+        "tags": [
+            "do"
+        ]
+    },
+    {
+        "row": "3",
+        "column": "5",
+        "tags": [],
+        "msg": "put",
+        "symbol": "alphabet/put.png",
+        "icon": "put"
+    },
+    {
+        "msg": "put",
+        "tags": [
+            "put"
+        ]
+    },
+    {
+        "msg": "puts",
+        "tags": [
+            "put"
+        ]
+    },
+    {
+        "msg": "putting",
+        "tags": [
+            "put"
+        ]
+    },
+    {
+        "row": "3",
+        "column": "6",
+        "tags": [],
+        "msg": "same",
+        "symbol": "alphabet/same.png",
+        "icon": "same"
+    },
+    {
+        "row": "3",
+        "column": "7",
+        "tags": [],
+        "msg": ""
+    },
+    {
+        "row": "3",
+        "column": "8",
+        "tags": [],
+        "msg": ""
+    },
+    {
+        "row": "3",
+        "column": "9",
+        "tags": [],
+        "msg": ""
+    },
+    {
+        "row": "3",
+        "column": "10",
+        "tags": [],
+        "msg": "describing"
+    },
+    {
+        "row": "4",
+        "column": "1",
+        "tags": [],
+        "msg": "you",
+        "symbol": "alphabet/you.png",
+        "icon": "you"
+    },
+    {
+        "row": "4",
+        "column": "2",
+        "tags": [],
+        "msg": "she",
+        "symbol": "alphabet/she.png",
+        "icon": "she"
+    },
+    {
+        "msg": "she",
+        "tags": [
+            "she"
+        ]
+    },
+    {
+        "msg": "her",
+        "tags": [
+            "she"
+        ]
+    },
+    {
+        "msg": "hers",
+        "tags": [
+            "she"
+        ]
+    },
+    {
+        "row": "4",
+        "column": "3",
+        "tags": [],
+        "msg": "that",
+        "symbol": "alphabet/that.png",
+        "icon": "that"
+    },
+    {
+        "row": "4",
+        "column": "4",
+        "tags": [],
+        "msg": "up",
+        "symbol": "alphabet/up.png",
+        "icon": "up"
+    },
+    {
+        "row": "4",
+        "column": "5",
+        "tags": [],
+        "msg": "all",
+        "symbol": "alphabet/all.png",
+        "icon": "all"
+    },
+    {
+        "row": "4",
+        "column": "6",
+        "tags": [],
+        "msg": "some",
+        "symbol": "alphabet/some.png",
+        "icon": "some"
+    },
+    {
+        "row": "4",
+        "column": "7",
+        "tags": [],
+        "msg": ""
+    },
+    {
+        "row": "4",
+        "column": "8",
+        "tags": [],
+        "msg": ""
+    },
+    {
+        "row": "4",
+        "column": "9",
+        "tags": [],
+        "msg": ""
+    },
+    {
+        "row": "4",
+        "column": "10",
+        "tags": [],
+        "msg": ""
+    },
+    {
+        "row": "5",
+        "column": "1",
+        "tags": [],
+        "msg": "it",
+        "symbol": "alphabet/it.png",
+        "icon": "it"
+    },
+    {
+        "row": "5",
+        "column": "2",
+        "tags": [],
+        "msg": "here",
+        "symbol": "alphabet/here.png",
+        "icon": "here"
+    },
+    {
+        "row": "5",
+        "column": "3",
+        "tags": [],
+        "msg": "in",
+        "symbol": "alphabet/in.png",
+        "icon": "in"
+    },
+    {
+        "row": "5",
+        "column": "4",
+        "tags": [],
+        "msg": "on",
+        "symbol": "alphabet/on.png",
+        "icon": "on"
+    },
+    {
+        "row": "5",
+        "column": "5",
+        "tags": [],
+        "msg": "can",
+        "symbol": "alphabet/can.png",
+        "icon": "can"
+    },
+    {
+        "row": "5",
+        "column": "6",
+        "tags": [],
+        "msg": "finished",
+        "symbol": "alphabet/finished.png",
+        "icon": "finished"
+    },
+    {
+        "row": "5",
+        "column": "7",
+        "tags": [],
+        "msg": ""
+    },
+    {
+        "row": "5",
+        "column": "8",
+        "tags": [],
+        "msg": ""
+    },
+    {
+        "row": "5",
+        "column": "9",
+        "tags": [],
+        "msg": ""
+    },
+    {
+        "row": "5",
+        "column": "10",
+        "tags": [],
+        "msg": ""
+    },
+    {
+        "row": "6",
+        "column": "1",
+        "tags": [],
+        "msg": "where",
+        "symbol": "alphabet/where.png",
+        "icon": "where"
+    },
+    {
+        "row": "6",
+        "column": "2",
+        "tags": [],
+        "msg": "what",
+        "symbol": "alphabet/what.png",
+        "icon": "what"
+    },
+    {
+        "row": "6",
+        "column": "3",
+        "tags": [],
+        "msg": "why",
+        "symbol": "alphabet/why.png",
+        "icon": "why"
+    },
+    {
+        "row": "6",
+        "column": "4",
+        "tags": [],
+        "msg": "who",
+        "symbol": "alphabet/who.png",
+        "icon": "who"
+    },
+    {
+        "row": "6",
+        "column": "5",
+        "tags": [],
+        "msg": "when",
+        "symbol": "alphabet/when.png",
+        "icon": "when"
+    },
+    {
+        "row": "6",
+        "column": "6",
+        "tags": [],
+        "msg": "stop",
+        "symbol": "alphabet/stop.png",
+        "icon": "stop"
+    },
+    {
+        "msg": "stop",
+        "tags": [
+            "stop"
+        ]
+    },
+    {
+        "msg": "stops",
+        "tags": [
+            "stop"
+        ]
+    },
+    {
+        "msg": "stopped",
+        "tags": [
+            "stop"
+        ]
+    },
+    {
+        "msg": "stopping",
+        "tags": [
+            "stop"
+        ]
+    },
+    {
+        "row": "6",
+        "column": "7",
+        "tags": [],
+        "msg": ""
+    },
+    {
+        "row": "6",
+        "column": "8",
+        "tags": [],
+        "msg": "Word morph"
+    },
+    {
+        "row": "6",
+        "column": "9",
+        "tags": [],
+        "msg": "Delete"
+    },
+    {
+        "row": "6",
+        "column": "10",
+        "tags": [],
+        "msg": "Clear"
+    }
+]

@@ -62,6 +62,17 @@ export var Functions = {
   append: (value) => (old) => [...old, value],
   empty: () => () => [],
   increment: (value) => (old) => old + value,
+  yank_last: () => (old) => {
+    let parted = old.split(' ');
+    return parted[parted.length-1];
+  },
+  insert_conjugate: (value) => (old) => {
+    let parted = old.split(' ');
+    parted.pop();
+    return [...parted, value].reduce((out, token) => {
+      return out+" "+token;
+    }, "");
+  },
 };
 
 const eventQueue = [];

@@ -5,26 +5,25 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <script type="module" src="./36-locations.js"></script>
-    <title>PO AAC 4</title>
+    <title>36 Location Demo</title>
     <link rel="stylesheet" href="components/style.css" />
     <link rel="stylesheet" href="style.css" />
     <style>
         a-grid figure {
-            max-height: 12vh;
+            max-height: 13vh;
         }
     </style>
 </head>
-
 <body>
     <a-hstack>
         <a-vstack>
             <a-display state="$Display" slots="$Slots"></a-display>
-            <a-tab-panel scale="1" name="Keyboard" background="lemonchiffon">
-                <a-grid
-                  name="TalkGrid"
-                  rows="6"
-                  columns="6"></a-grid>
-            </a-tab-panel>
+            <a-tab-control state="$tab" scale="7">
+                <a-tab-panel name="36-Demo" background="lemonchiffon">
+                    <a-grid name="TalkGrid" 
+                    rows="4" columns="4"></a-grid>
+                </a-tab-panel>
+            </a-tab-control>
         </a-vstack>
     </a-hstack>
 </body>
