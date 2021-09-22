@@ -1,8 +1,15 @@
-import { render } from "uhtml";
+import { render, html } from "uhtml";
 import { state } from "../state";
 
+let AId = 0;
+
+function standardize_color(str) {
+  var ctx = document.createElement("canvas").getContext("2d");
+  ctx.fillStyle = str;
+  return ctx.fillStyle;
+}
+
 export default class ABase extends HTMLElement {
-  initialized = false;
   /**
    * I'm using a string for observed values instead of an array. I'm lazy
    */
@@ -13,9 +20,10 @@ export default class ABase extends HTMLElement {
    * This isn't required if you listed the values in observed
    */
   copyProps() {
+    this.props = Object.getOwnPropertyNames(this);
+    // console.log(this.props);
     for (const { name, value } of this.attributes) {
       if (this.hasOwnProperty(name)) {
-        // console.log("cp", name, value, this[name]);
         if (typeof this[name] == "number") {
           this[name] = +value;
         } else {
@@ -30,8 +38,11 @@ export default class ABase extends HTMLElement {
    * I will copy the props and call the init method
    */
   connectedCallback() {
-    if (!this.initialized) {
+    if (!this.hasOwnProperty("initialized")) {
       this.copyProps();
+      if (!this.id) {
+        this.id = `id-${++AId}`;
+      }
       this.initialized = true;
       this.init();
     }
@@ -84,5 +95,88 @@ export default class ABase extends HTMLElement {
     if (content) {
       render(this, content);
     }
+  }
+
+  get designerName() {
+    return this.tagName;
+  }
+
+  get designerChildren() {
+    return [...this.children];
+  }
+
+  designerHandleChildren() {
+    const children = this.designerChildren.map((child) => {
+      if (child instanceof ABase) {
+        return html`<li>${child.designer()}</li>`;
+      } else {
+        return html`<li>${child.tagName}</li>`;
+      }
+    });
+    return html`<ul style=${this.designerStyle}>
+      ${children}
+    </ul>`;
+  }
+
+  designerPropUpdate(name, event) {
+    let value = event.target.value;
+    if (typeof this[name] === "number") {
+      value = parseInt(value);
+      if (isNaN(value)) value = 0;
+    }
+    this[name] = value;
+    console.log("update", name, value);
+    this.render();
+  }
+
+  designerPropControl(name) {
+    let type = "text";
+    let value = this[name];
+    if (name === "background") {
+      type = "color";
+      value = standardize_color(value);
+      console.log("color", value);
+    } else if (typeof this[name] === "number" || name == "scale") {
+      type = "number";
+    }
+    const id = `${this.id}-${name}`;
+    return html`<tr>
+      <td><label for=${id}>${name}</label></td>
+      <td>
+        <input
+          id=${id}
+          type=${type}
+          value=${value}
+          onchange=${(event) => this.designerPropUpdate(name, event)}
+        />
+      </td>
+    </tr>`;
+  }
+
+  designerHighlight(open) {
+    this.style.border = open ? "solid red" : "";
+  }
+
+  get designerStyle() {
+    return undefined;
+  }
+
+  designer() {
+    const controls = this.props.map((name) => this.designerPropControl(name));
+    const style = this.designerStyle;
+    return html`<li>
+      <details
+        ontoggle=${(event) => this.designerHighlight(event.target.open)}
+        style=${style}
+      >
+        <summary>${this.designerName}</summary>
+        <table>
+          <tbody>
+            ${controls}
+          </tbody>
+        </table>
+      </details>
+      ${this.designerHandleChildren()}
+    </li>`;
   }
 }

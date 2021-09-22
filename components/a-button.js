@@ -3,11 +3,12 @@ import ABase from "./a-base";
 import * as rules from "../rules";
 
 class AButton extends ABase {
+  text = "click me";
   name = "button";
   background = "inherit";
 
-  init() {
-    this.content = this.innerHTML;
+  get designerChildren() {
+    return [];
   }
 
   template() {
@@ -17,7 +18,7 @@ class AButton extends ABase {
       style=${style}
       onClick=${rules.handler(this.name, {}, "press")}
     >
-      ${this.content}
+      ${this.text}
     </button>`;
   }
 }

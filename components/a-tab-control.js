@@ -3,7 +3,7 @@ import { state } from "../state";
 import ABase from "./a-base";
 import ATabPanel from "./a-tab-panel";
 
-class ATabControl extends ABase {
+export default class ATabControl extends ABase {
   // defaults
   state = "a-tab-control";
   activeTab = "";
@@ -37,6 +37,7 @@ class ATabControl extends ABase {
         const style = active
           ? `background-color: ${color};border-top-color: ${color};`
           : "";
+        panel.active = active;
         return html`<button
           style=${style}
           onClick=${() => state.update({ [this.state]: tabName })}
@@ -44,13 +45,15 @@ class ATabControl extends ABase {
           ${tabLabel}
         </button>`;
       });
-    const panel = this.panels.filter(
-      (panel) => state(this.state) == state.interpolate(panel.name)
-    );
+    const panel = this.panels.find((panel) => panel.active);
     return html`<div class="panels" style=${`flex-grow: ${this.scale - 1}`}>
         ${panel}
       </div>
       <div class="buttons">${buttons}</div>`;
+  }
+
+  get designerChildren() {
+    return this.panels;
   }
 }
 customElements.define("a-tab-control", ATabControl);

@@ -120,6 +120,14 @@ class AGrid extends ABase {
 
     return html`${result}`;
   }
+
+  get designerName() {
+    return `${this.tagName} ${this.name}`;
+  }
+
+  get designerChildren() {
+    return [];
+  }
 }
 
 customElements.define("a-grid", AGrid);

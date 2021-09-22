@@ -19,3 +19,42 @@ body.loaded {
   opacity: 1;
   transition: opacity 0.5s ease-in;
 }
+
+div#UI {
+  width: 100%;
+  height: 100%;
+}
+
+body.designing {
+  display: flex;
+}
+
+body.designing div#UI {
+  height: 75%;
+  width: 75%;
+  font-size: 1vw;
+}
+
+div#designer {
+  display: none;
+}
+
+body.designing div#designer {
+  display: block;
+  overflow-y: auto;
+}
+
+div#designer ul {
+  list-style: none;
+  padding-left: 1em;
+  border-left: 1px solid black;
+}
+
+div#designer details[open] {
+  border-bottom: 1px solid black;
+  border-left: 1px solid grey;
+  outline: 2px solid red;
+}
+div#designer details[open] table {
+  padding-left: 1em;
+}

@@ -66,7 +66,7 @@ customElements.define("a-display", ADisplay);
  * @param {String|Editor} message
  */
 function hasSlots(message) {
-  console.log("has slots", message);
+  // console.log("has slots", message);
   if (message instanceof Object) {
     return message.slots.length > 0;
   }
@@ -78,7 +78,7 @@ function hasSlots(message) {
  * @returns Editor
  */
 function init(message) {
-  console.log("init", message);
+  // console.log("init", message);
   const slots = Array.from(
     message.matchAll(/\$\$(?<name>.*?)=(?<value>.*?)\$\$/g)
   ).map((m) => m.groups);

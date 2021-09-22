@@ -4,9 +4,14 @@ import { state } from "../state";
 import ABase from "./a-base";
 
 class AChoice extends ABase {
+  text = "choose me";
   value = "";
 
   static observed = "value";
+
+  get designerName() {
+    return `${this.tagName} ${this.text}`;
+  }
 }
 customElements.define("a-choice", AChoice);
 
@@ -73,12 +78,12 @@ class AChooseOne extends ABase {
     if (this.kind === "radio") {
       let current = state(this.state);
       chooser = this.choices.map((choice) => {
-        const value = choice.value || choice.textContent;
+        const value = choice.value || choice.text;
         const disabled = this.tags && !this.valid(value);
         const color = value == current ? this.selected : this.background;
         const style = `background-color: ${color}`;
         return html`<button value=${value} ?disabled=${disabled} style=${style}>
-          ${choice.textContent}
+          ${choice.text}
         </button>`;
       });
     } else if (this.kind == "toggle") {
@@ -100,12 +105,16 @@ class AChooseOne extends ABase {
         ?disabled=${validChoices.length < 1}
         style=${style}
       >
-        ${choice.textContent}
+        ${choice.text}
       </button>`;
     }
     return html`<fieldset>
       ${this.label && html`<legend>${this.label}</legend>`} ${chooser}
     </fieldset>`;
+  }
+
+  get designerChildren() {
+    return this.choices;
   }
 }
 

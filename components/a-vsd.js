@@ -77,7 +77,7 @@ class AVSD extends ABase {
   /** markers - render the overlay buttons on the image */
   markers() {
     const { left, top, width, height } = this.getActualImageShape();
-    console.log("markers", left, top, width, height);
+    // console.log("markers", left, top, width, height);
     const buttons = this.items
       .filter((item) => item.msg)
       .map(
@@ -96,7 +96,7 @@ class AVSD extends ABase {
     render(this.markerDiv.current, html`${buttons}`);
   }
   render() {
-    console.log("render", this);
+    // console.log("render", this);
     this.style.flexGrow = this.scale.toString();
     this.items = getTaggedRows(this.tags, this.match);
     /** reference to the image
@@ -105,7 +105,7 @@ class AVSD extends ABase {
     /** reference to the div containing the markers
      * @type { {current: HTMLElement} } */
     this.markerDiv = { current: null };
-    console.log("render", this.items);
+    // console.log("render", this.items);
     const src = this.items.find((item) => item.details.src).details.src;
     render(
       this,
