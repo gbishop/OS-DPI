@@ -11,7 +11,7 @@ class AGrid extends ABase {
   rows = 1;
   columns = 1;
   scale = 1;
-  background = "inherit";
+  background = "";
   match = "contains";
   name = "a-grid";
 

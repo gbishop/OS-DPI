@@ -5,7 +5,7 @@ import * as rules from "../rules";
 class AButton extends ABase {
   text = "click me";
   name = "button";
-  background = "inherit";
+  background = "";
 
   get designerChildren() {
     return [];

@@ -2,7 +2,7 @@ import ABase from "./a-base";
 
 class AGap extends ABase {
   scale = 1;
-  background = "inherit";
+  background = "";
 
   static observed = "scale background";
 

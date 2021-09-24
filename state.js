@@ -1,6 +1,7 @@
 import merge from "mergerino";
 import ABase from "./components/a-base";
 import { html, render } from "uhtml";
+import * as designer from "./designer";
 
 const LSKEY = "4.state";
 
@@ -77,14 +78,7 @@ state.render = () => {
       element.render();
     }
   }
-  const UI = document.querySelector("div#UI");
-  const children = [...UI.children].map((child) => child.designer());
-  render(
-    document.querySelector("div#designer"),
-    html`<ul>
-      ${children}
-    </ul>`
-  );
+  designer.render();
 };
 
 /** state.observe - link this element to the state

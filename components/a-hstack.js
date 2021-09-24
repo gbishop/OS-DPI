@@ -3,7 +3,7 @@ import { html } from "uhtml";
 
 class AHStack extends ABase {
   scale = 1;
-  background = "inherit";
+  background = "";
 
   static observed = "scale background";
 

@@ -1,10 +1,12 @@
+import { html } from "uhtml";
 import ABase from "./a-base";
 import ATabControl from "./a-tab-control";
 import { state } from "../state";
+import { getColor } from "./color";
 
 export default class ATabPanel extends ABase {
   scale = 1;
-  background = "inherit";
+  background = "";
   name = "";
   label = "";
 
@@ -17,7 +19,9 @@ export default class ATabPanel extends ABase {
   }
 
   get designerName() {
-    return `${this.tagName} ${this.name}`;
+    console.log("hi", this.name, this.active);
+    if (this.active) return html`<b>${this.tagName} ${this.name}</b>`;
+    else return `${this.tagName} ${this.name}`;
   }
 
   get designerChildren() {
@@ -25,10 +29,6 @@ export default class ATabPanel extends ABase {
       return [];
     }
     return super.designerChildren;
-  }
-
-  get designerStyle() {
-    return `background-color: ${this.background}`;
   }
 
   designerHighlight(open) {
@@ -42,7 +42,12 @@ export default class ATabPanel extends ABase {
 
   template() {
     this.style.flexGrow = this.scale.toString();
-    this.style.backgroundColor = this.background;
+    this.style.backgroundColor = getColor(this.background);
+    console.log(
+      "tabpanel background",
+      this.background,
+      this.style.backgroundColor
+    );
   }
 }
 customElements.define("a-tab-panel", ATabPanel);

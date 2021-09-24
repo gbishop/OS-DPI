@@ -20,7 +20,7 @@ import merge from "mergerino";
 
 class ADisplay extends ABase {
   state = "$Display";
-  background = "inherit";
+  background = "";
   scale = 1;
 
   static observed = "state background scale";

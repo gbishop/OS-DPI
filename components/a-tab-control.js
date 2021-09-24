@@ -7,7 +7,7 @@ export default class ATabControl extends ABase {
   // defaults
   state = "a-tab-control";
   activeTab = "";
-  background = "inherit";
+  background = "";
   scale = 1;
 
   static observed = "state activeTab background scale";

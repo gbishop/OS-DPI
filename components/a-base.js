@@ -1,8 +1,12 @@
 import { render, html } from "uhtml";
 import { state } from "../state";
+import * as designer from "../designer";
 
 let AId = 0;
 
+/** convert a color string to hex
+ * @param {String} str - the color name or other representation
+ */
 function standardize_color(str) {
   var ctx = document.createElement("canvas").getContext("2d");
   ctx.fillStyle = str;
@@ -97,6 +101,9 @@ export default class ABase extends HTMLElement {
     }
   }
 
+  /**
+   * @returns {string|import("uhtml").Hole}
+   */
   get designerName() {
     return this.tagName;
   }
@@ -127,15 +134,38 @@ export default class ABase extends HTMLElement {
     this[name] = value;
     console.log("update", name, value);
     this.render();
+    designer.render();
+  }
+
+  getColor(color) {
+    if (!color.length) {
+      // get the color from up the tree
+      var div = document.createElement("div");
+      document.head.appendChild(div);
+      var defaultColor = window.getComputedStyle(div).backgroundColor;
+      document.head.removeChild(div);
+
+      /** @type {Element} */
+      let el = this;
+      while (true) {
+        color = window.getComputedStyle(el).backgroundColor;
+        if (color != defaultColor) break;
+        if (!el.parentElement) {
+          color = "#ffffff";
+          break;
+        }
+        el = el.parentElement;
+      }
+    }
+    return standardize_color(color);
   }
 
   designerPropControl(name) {
     let type = "text";
     let value = this[name];
+    // this is a hack, we need types
     if (name === "background") {
       type = "color";
-      value = standardize_color(value);
-      console.log("color", value);
     } else if (typeof this[name] === "number" || name == "scale") {
       type = "number";
     }
@@ -143,12 +173,18 @@ export default class ABase extends HTMLElement {
     return html`<tr>
       <td><label for=${id}>${name}</label></td>
       <td>
-        <input
-          id=${id}
-          type=${type}
-          value=${value}
-          onchange=${(event) => this.designerPropUpdate(name, event)}
-        />
+        ${type == "color"
+          ? html`<color-input
+              id=${id}
+              value=${value}
+              onchange=${(event) => this.designerPropUpdate(name, event)}
+            />`
+          : html` <input
+              id=${id}
+              type=${type}
+              value=${value}
+              onchange=${(event) => this.designerPropUpdate(name, event)}
+            />`}
       </td>
     </tr>`;
   }

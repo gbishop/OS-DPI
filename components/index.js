@@ -10,3 +10,4 @@ import "./a-modal-dialog";
 import "./a-button";
 import "./a-gap";
 import "./a-speech-control";
+import "./color";
