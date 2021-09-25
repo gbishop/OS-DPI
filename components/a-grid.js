@@ -10,7 +10,7 @@ class AGrid extends ABase {
   tags = "";
   rows = 1;
   columns = 1;
-  scale = 1;
+  scale = "1";
   background = "";
   match = "contains";
   name = "a-grid";
@@ -27,7 +27,7 @@ class AGrid extends ABase {
   }
 
   template() {
-    this.style.flexGrow = this.scale.toString();
+    this.setStyle({ flexGrow: this.scale });
     const rows = +this.rows;
     const columns = +this.columns;
     const tags = this.tags;
@@ -81,7 +81,7 @@ class AGrid extends ABase {
       result.push(
         html`<button
           onClick=${rules.handler(this.name, item, "press")}
-          style=${`background-color: ${this.background}`}
+          style=${this.getStyleString({ backgroundColor: this.background })}
           .disabled=${!item.msg || item.msg.length == 0}
         >
           ${content}
@@ -100,7 +100,7 @@ class AGrid extends ABase {
               this.page = (((this.page - 1) % pages) + pages) % pages;
               this.render();
             }}
-            style=${`background-color: ${this.background}`}
+            style=${this.getStyleString({ backgroundColor: this.background })}
             .disabled=${perPage >= items.length}
           >
             &#9754;</button
@@ -109,7 +109,7 @@ class AGrid extends ABase {
               this.page = (this.page + 1) % pages;
               this.render();
             }}
-            style=${`background-color: ${this.background}`}
+            style=${this.getStyleString({ backgroundColor: this.background })}
             .disabled=${perPage >= items.length}
           >
             &#9755;
@@ -125,7 +125,7 @@ class AGrid extends ABase {
     return `${this.tagName} ${this.name}`;
   }
 
-  get designerChildren() {
+  get Children() {
     return [];
   }
 }

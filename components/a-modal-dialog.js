@@ -17,12 +17,13 @@ class AModalDialog extends ABase {
     });
   }
 
-  get designerChildren() {
+  get Children() {
     return this.elements;
   }
 
   template() {
     // console.log(state());
+    this.setStyle({ backgroundColor: this.background });
     if (state(this.state)) {
       this.classList.add("open");
       this.trap.activate();

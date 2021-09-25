@@ -7,12 +7,12 @@ class AButton extends ABase {
   name = "button";
   background = "";
 
-  get designerChildren() {
+  get Children() {
     return [];
   }
 
   template() {
-    const style = `background-color: ${this.background}`;
+    const style = this.getStyleString({ backgroundColor: this.background });
     return html`<button
       name=${this.name}
       style=${style}

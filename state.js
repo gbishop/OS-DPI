@@ -1,7 +1,7 @@
 import merge from "mergerino";
 import ABase from "./components/a-base";
 import { html, render } from "uhtml";
-import * as designer from "./designer";
+import { designerRender } from "./designer";
 
 const LSKEY = "4.state";
 
@@ -57,16 +57,7 @@ state.update = (patch) => {
       element(...names.map((name) => state(name)));
     }
   }
-  const UI = document.querySelector("div#UI");
-  const children = [...UI.children].map(
-    (child) => child instanceof ABase && child.designer()
-  );
-  render(
-    document.querySelector("div#designer"),
-    html`<ul>
-      ${children}
-    </ul>`
-  );
+  designerRender();
 
   const persist = JSON.stringify(State);
   window.localStorage.setItem(LSKEY, persist);
@@ -78,7 +69,7 @@ state.render = () => {
       element.render();
     }
   }
-  designer.render();
+  designerRender();
 };
 
 /** state.observe - link this element to the state

@@ -51,6 +51,7 @@ div#designer ul {
   list-style: none;
   padding-left: 0.2em;
   border-left: 1px solid black;
+  margin-top: 0;
 }
 
 div#designer li ul {

@@ -2,17 +2,18 @@ import { html, render } from "uhtml";
 import { ColorNames } from "./color-names";
 
 function isValidColor(strColor) {
-  strColor = getColor(strColor);
+  if (strColor in ColorNames) {
+    return true;
+  }
   var s = new Option().style;
   s.color = strColor;
 
-  console.log("vc", strColor, s.color);
   // return 'false' if color wasn't assigned
   return s.color !== "";
 }
 
 export function getColor(name) {
-  return (name in ColorNames && ColorNames[name]) || name;
+  return ColorNames[name] || name;
 }
 
 class ColorInput extends HTMLElement {
@@ -56,19 +57,16 @@ class ColorInput extends HTMLElement {
       </datalist>`;
       document.body.appendChild(list);
     }
-    this.input = this.querySelector("input");
-    this.swatch = this.querySelector("div.swatch");
   }
   validate() {
-    if (!isValidColor(this.input.value)) {
-      console.log("set");
-      this.input.setCustomValidity("invalid color");
-      this.input.reportValidity();
+    const input = this.querySelector("input");
+    if (!isValidColor(input.value)) {
+      input.setCustomValidity("invalid color");
+      input.reportValidity();
     } else {
-      this.input.setCustomValidity("");
+      input.setCustomValidity("");
       const div = this.querySelector("div");
-      div.style.background = getColor(this.input.value);
-      console.log("swatch", div, this.input.value);
+      div.style.background = getColor(input.value);
     }
   }
   render() {

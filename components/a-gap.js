@@ -1,14 +1,13 @@
 import ABase from "./a-base";
 
 class AGap extends ABase {
-  scale = 1;
+  scale = "1";
   background = "";
 
   static observed = "scale background";
 
   template() {
-    this.style.flexGrow = this.scale.toString();
-    this.style.backgroundColor = this.background;
+    this.setStyle({ flexGrow: this.scale, backgroundColor: this.background });
   }
 }
 

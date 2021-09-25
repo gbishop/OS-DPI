@@ -23,7 +23,7 @@ class AChooseOne extends ABase {
   initial = "";
   background = "lightgray";
   selected = "pink";
-  scale = 1;
+  scale = "1";
   tags = "";
 
   static observed = "kind label state initial background selected scale tags";
@@ -73,7 +73,7 @@ class AChooseOne extends ABase {
   }
 
   template() {
-    this.style.flexGrow = this.scale.toString();
+    this.setStyle({ flexGrow: this.scale });
     let chooser;
     if (this.kind === "radio") {
       let current = state(this.state);
@@ -81,7 +81,7 @@ class AChooseOne extends ABase {
         const value = choice.value || choice.text;
         const disabled = this.tags && !this.valid(value);
         const color = value == current ? this.selected : this.background;
-        const style = `background-color: ${color}`;
+        const style = this.getStyleString({ backgroundColor: color });
         return html`<button value=${value} ?disabled=${disabled} style=${style}>
           ${choice.text}
         </button>`;
@@ -99,7 +99,7 @@ class AChooseOne extends ABase {
         (validChoices.length && validChoices[index]) || this.choices[0];
       const value = choice.value;
       const color = value == current ? this.selected : this.background;
-      const style = `background-color: ${color}`;
+      const style = this.getStyleString({ backgroundColor: color });
       chooser = html`<button
         value=${choice.value}
         ?disabled=${validChoices.length < 1}
@@ -113,7 +113,7 @@ class AChooseOne extends ABase {
     </fieldset>`;
   }
 
-  get designerChildren() {
+  get Children() {
     return this.choices;
   }
 }

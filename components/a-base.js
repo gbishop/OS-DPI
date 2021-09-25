@@ -1,6 +1,7 @@
 import { render, html } from "uhtml";
 import { state } from "../state";
 import * as designer from "../designer";
+import { getColor } from "./color";
 
 let AId = 0;
 
@@ -84,6 +85,38 @@ export default class ABase extends HTMLElement {
     return this.observed.split(" ");
   }
 
+  /** @param {Partial<CSSStyleDeclaration>} style */
+  normalizeStyle(style) {
+    return Object.fromEntries(
+      Object.entries(style).map(([key, value]) =>
+        key.toLowerCase().indexOf("color") >= 0
+          ? [key, getColor(value)]
+          : [key, value.toString()]
+      )
+    );
+  }
+
+  /** @param {Partial<CSSStyleDeclaration>} styles */
+  setStyle(styles) {
+    Object.assign(this.style, this.normalizeStyle(styles));
+  }
+
+  /** @param {Partial<CSSStyleDeclaration>} styles */
+  getStyleString(styles) {
+    return Object.entries(this.normalizeStyle(styles)).reduce(
+      (acc, [key, value]) =>
+        acc +
+        key
+          .split(/(?=[A-Z])/)
+          .join("-")
+          .toLowerCase() +
+        ":" +
+        value +
+        ";",
+      ""
+    );
+  }
+
   /**
    * Return the content for element.
    * @returns {import('uhtml').Hole | void }
@@ -108,111 +141,14 @@ export default class ABase extends HTMLElement {
     return this.tagName;
   }
 
-  get designerChildren() {
-    return [...this.children];
+  get Children() {
+    return [...super.children];
   }
 
-  designerHandleChildren() {
-    const children = this.designerChildren.map((child) => {
-      if (child instanceof ABase) {
-        return html`<li>${child.designer()}</li>`;
-      } else {
-        return html`<li>${child.tagName}</li>`;
-      }
-    });
-    return html`<ul style=${this.designerStyle}>
-      ${children}
-    </ul>`;
-  }
-
-  designerPropUpdate(name, event) {
-    let value = event.target.value;
-    if (typeof this[name] === "number") {
-      value = parseInt(value);
-      if (isNaN(value)) value = 0;
-    }
-    this[name] = value;
-    console.log("update", name, value);
-    this.render();
-    designer.render();
-  }
-
-  getColor(color) {
-    if (!color.length) {
-      // get the color from up the tree
-      var div = document.createElement("div");
-      document.head.appendChild(div);
-      var defaultColor = window.getComputedStyle(div).backgroundColor;
-      document.head.removeChild(div);
-
-      /** @type {Element} */
-      let el = this;
-      while (true) {
-        color = window.getComputedStyle(el).backgroundColor;
-        if (color != defaultColor) break;
-        if (!el.parentElement) {
-          color = "#ffffff";
-          break;
-        }
-        el = el.parentElement;
-      }
-    }
-    return standardize_color(color);
-  }
-
-  designerPropControl(name) {
-    let type = "text";
-    let value = this[name];
-    // this is a hack, we need types
-    if (name === "background") {
-      type = "color";
-    } else if (typeof this[name] === "number" || name == "scale") {
-      type = "number";
-    }
-    const id = `${this.id}-${name}`;
-    return html`<tr>
-      <td><label for=${id}>${name}</label></td>
-      <td>
-        ${type == "color"
-          ? html`<color-input
-              id=${id}
-              value=${value}
-              onchange=${(event) => this.designerPropUpdate(name, event)}
-            />`
-          : html` <input
-              id=${id}
-              type=${type}
-              value=${value}
-              onchange=${(event) => this.designerPropUpdate(name, event)}
-            />`}
-      </td>
-    </tr>`;
-  }
-
+  /** highlight the element from the designer
+   * @param {boolean} open
+   */
   designerHighlight(open) {
     this.style.border = open ? "solid red" : "";
-  }
-
-  get designerStyle() {
-    return undefined;
-  }
-
-  designer() {
-    const controls = this.props.map((name) => this.designerPropControl(name));
-    const style = this.designerStyle;
-    return html`<li>
-      <details
-        ontoggle=${(event) => this.designerHighlight(event.target.open)}
-        style=${style}
-      >
-        <summary>${this.designerName}</summary>
-        <table>
-          <tbody>
-            ${controls}
-          </tbody>
-        </table>
-      </details>
-      ${this.designerHandleChildren()}
-    </li>`;
   }
 }

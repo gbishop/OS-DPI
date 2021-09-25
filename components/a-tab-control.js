@@ -8,7 +8,7 @@ export default class ATabControl extends ABase {
   state = "a-tab-control";
   activeTab = "";
   background = "";
-  scale = 1;
+  scale = "1";
 
   static observed = "state activeTab background scale";
 
@@ -25,8 +25,7 @@ export default class ATabControl extends ABase {
   }
 
   template() {
-    this.style.flexGrow = this.scale.toString();
-    this.style.backgroundColor = this.background;
+    this.setStyle({ flexGrow: this.scale, backgroundColor: this.background });
     const buttons = this.panels
       .filter((panel) => panel.label != "UNLABELED")
       .map((panel) => {
@@ -35,7 +34,10 @@ export default class ATabControl extends ABase {
         const color = panel.background;
         const active = state(this.state) == tabName;
         const style = active
-          ? `background-color: ${color};border-top-color: ${color};`
+          ? this.getStyleString({
+              backgroundColor: color,
+              borderTopColor: color,
+            })
           : "";
         panel.active = active;
         return html`<button
@@ -46,13 +48,16 @@ export default class ATabControl extends ABase {
         </button>`;
       });
     const panel = this.panels.find((panel) => panel.active);
-    return html`<div class="panels" style=${`flex-grow: ${this.scale - 1}`}>
+    return html`<div
+        class="panels"
+        style=${this.getStyleString({ flexGrow: (+this.scale - 1).toString() })}
+      >
         ${panel}
       </div>
       <div class="buttons">${buttons}</div>`;
   }
 
-  get designerChildren() {
+  get Children() {
     return this.panels;
   }
 }

@@ -21,18 +21,20 @@ import merge from "mergerino";
 class ADisplay extends ABase {
   state = "$Display";
   background = "";
-  scale = 1;
+  scale = "1";
 
   static observed = "state background scale";
 
   init() {
     state.define(this.state, "The utterance goes here");
     state.observe(this, this.state);
-    this.style.flexGrow = this.scale.toString();
-    this.style.backgroundColor = this.background;
   }
 
   template() {
+    this.setStyle({
+      flexGrow: this.scale,
+      backgroundColor: this.background,
+    });
     /** @type {String|Editor} */
     let value = state(this.state);
     if (typeof value === "string" || value instanceof String) {

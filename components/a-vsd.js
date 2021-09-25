@@ -23,7 +23,7 @@ class AVSD extends ABase {
   tags = "";
   match = "contains";
   name = "a-vsd";
-  scale = 1;
+  scale = "1";
 
   static observed = "tags match name scale";
 
@@ -82,12 +82,12 @@ class AVSD extends ABase {
       .filter((item) => item.msg)
       .map(
         (item) => html`<button
-          style=${[
-            `left: ${left + (width * item.details.x) / 100}px`,
-            `top: ${top + (height * item.details.y) / 100}px`,
-            `width: ${(width * item.details.w) / 100}px`,
-            `height: ${(height * item.details.h) / 100}px`,
-          ].join(";")}
+          style=${this.getStyleString({
+            left: `${left + (width * item.details.x) / 100}px`,
+            top: `${top + (height * item.details.y) / 100}px`,
+            width: `${(width * item.details.w) / 100}px`,
+            height: `${(height * item.details.h) / 100}px`,
+          })}
           onClick=${rules.handler(this.name, item, "press")}
         >
           <span>${item.label || item.msg}</span>
@@ -97,7 +97,7 @@ class AVSD extends ABase {
   }
   render() {
     // console.log("render", this);
-    this.style.flexGrow = this.scale.toString();
+    this.setStyle({ flexGrow: this.scale });
     this.items = getTaggedRows(this.tags, this.match);
     /** reference to the image
      * @type { {current: HTMLElement} } */
