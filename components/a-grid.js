@@ -65,9 +65,9 @@ class AGrid extends ABase {
     }
     const offset = this.page * perPage;
 
-    for (let i = offset; i < Math.min(rows*columns, perPage + offset); i++) {
-      const item = items.find((element) => element.row==parseInt(i/columns + 1) && element.column==parseInt(i%columns + 1))
-                    || {msg: "", tags: []};       
+    for (let i = offset; i < Math.min(this.autofill ? rows*columns : items.length, perPage + offset); i++) {
+      const item = this.autofill ? items.find((element) => element.row==parseInt(i/columns + 1) && element.column==parseInt(i%columns + 1))
+                    || {msg: "", tags: []} : items[i];       
       let itemIndex = item.index || i;
       while (offset + result.length < itemIndex) {
         result.push(html`<button disabled></button>`);
