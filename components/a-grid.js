@@ -10,6 +10,7 @@ class AGrid extends ABase {
   tags = "";
   rows = 1;
   columns = 1;
+  autofill = 0;
   scale = 1;
   background = "inherit";
   match = "contains";
@@ -28,9 +29,13 @@ class AGrid extends ABase {
 
   template() {
     this.style.flexGrow = this.scale.toString();
-    const rows = +this.rows;
-    const columns = +this.columns;
     const tags = this.tags;
+    const [rows, columns] = this.autofill ? 
+      getTaggedRows(tags, this.match).reduce((maxDims, item) => {
+        if(maxDims[0] < parseInt(item.row)) maxDims[0] = item.row;
+        if(maxDims[1] < parseInt(item.column)) maxDims[1] = item.column;
+        return maxDims;
+      }, [0,0]) : [this.rows, this.columns];
     const key = normalizeTags(tags).join("|");
     let items;
     if (
@@ -60,8 +65,9 @@ class AGrid extends ABase {
     }
     const offset = this.page * perPage;
 
-    for (let i = offset; i < Math.min(items.length, perPage + offset); i++) {
-      const item = items[i];
+    for (let i = offset; i < Math.min(rows*columns, perPage + offset); i++) {
+      const item = items.find((element) => element.row==parseInt(i/columns + 1) && element.column==parseInt(i%columns + 1))
+                    || {msg: "", tags: []};       
       let itemIndex = item.index || i;
       while (offset + result.length < itemIndex) {
         result.push(html`<button disabled></button>`);
