@@ -1,7 +1,5 @@
 import merge from "mergerino";
 import ABase from "./components/a-base";
-import { html, render } from "uhtml";
-import { designerRender } from "./designer";
 
 const LSKEY = "4.state";
 
@@ -57,7 +55,6 @@ state.update = (patch) => {
       element(...names.map((name) => state(name)));
     }
   }
-  designerRender();
 
   const persist = JSON.stringify(State);
   window.localStorage.setItem(LSKEY, persist);
@@ -69,7 +66,6 @@ state.render = () => {
       element.render();
     }
   }
-  designerRender();
 };
 
 /** state.observe - link this element to the state
@@ -77,10 +73,11 @@ state.render = () => {
  * @param {String[]} names - state names to observe
  */
 state.observe = (element, ...names) => {
-  Listeners.set(
-    element,
-    names.map((name) => name.split(".")[0])
-  );
+  const old = Listeners.get(element) || [];
+  for (const name of names) {
+    old.push(name.split(".")[0]);
+  }
+  Listeners.set(element, old);
 };
 
 /** state.define - add a named state to the global system state
@@ -93,6 +90,7 @@ state.define = (name, default_value) => {
       current_value || default_value,
   });
 };
+console.log("sd", state.define);
 
 /** state.interpolate
  * @param {string} input

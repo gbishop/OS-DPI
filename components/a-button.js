@@ -21,6 +21,10 @@ class AButton extends ABase {
       ${this.text}
     </button>`;
   }
+
+  getChildren() {
+    return [];
+  }
 }
 
 customElements.define("a-button", AButton);

@@ -9,15 +9,36 @@ class AChoice extends ABase {
 
   static observed = "value";
 
+  init() {
+    this.disabled = false;
+    this.color = "";
+    if (!this.value.length) {
+      this.value = this.text;
+    }
+    /** @type {AChooseOne} */
+    this.parent = this.closest("a-choose-one");
+    state.observe(this, this.parent.state);
+  }
+
   get designerName() {
     return `${this.tagName} ${this.text}`;
+  }
+
+  template() {
+    console.log("draw choice", this.text, this.color);
+    const style = this.getStyleString({ backgroundColor: this.color });
+    return html`<button
+      value=${this.value || this.text}
+      ?disabled=${this.disabled}
+      style=${style}
+    >
+      ${this.text}
+    </button>`;
   }
 }
 customElements.define("a-choice", AChoice);
 
-class AChooseOne extends ABase {
-  /** @type {"radio" | "select" | "toggle"} */
-  kind = "radio";
+export default class AChooseOne extends ABase {
   label = "";
   state = "";
   initial = "";
@@ -50,70 +71,32 @@ class AChooseOne extends ABase {
    * @param {MouseEvent} event
    */
   handleClick({ target }) {
-    if (this.kind == "radio") {
-      if (target instanceof HTMLButtonElement) {
-        const value = target.value;
-        const name = this.state;
-        state.update({ [name]: value });
-      }
-    } else if (this.kind == "toggle") {
-      if (target instanceof HTMLButtonElement) {
-        const current = target.value;
-        const validChoices = this.choices.filter((choice) =>
-          this.valid(choice.value)
-        );
-        let index = validChoices.findIndex((choice) => choice.value == current);
-        const N = validChoices.length;
-        index = (((index + 1) % N) + N) % N;
-        const value = validChoices[index].value;
-        const name = this.state;
-        state.update({ [name]: value });
-      }
+    if (target instanceof HTMLButtonElement) {
+      const value = target.value;
+      const name = this.state;
+      state.update({ [name]: value });
     }
   }
 
   template() {
     this.setStyle({ flexGrow: this.scale });
-    let chooser;
-    if (this.kind === "radio") {
-      let current = state(this.state);
-      chooser = this.choices.map((choice) => {
-        const value = choice.value || choice.text;
-        const disabled = this.tags && !this.valid(value);
-        const color = value == current ? this.selected : this.background;
-        const style = this.getStyleString({ backgroundColor: color });
-        return html`<button value=${value} ?disabled=${disabled} style=${style}>
-          ${choice.text}
-        </button>`;
-      });
-    } else if (this.kind == "toggle") {
-      const current = state(this.state);
-      const validChoices = this.choices.filter((choice) =>
-        this.valid(choice.value)
-      );
-      let index = validChoices.findIndex((choice) => choice.value == current);
-      if (index < 0) {
-        index = 0;
+    const current = state(this.state);
+    this.choices.forEach((choice) => {
+      if (this.tags && !this.valid(choice.value)) {
+        choice.setAttribute("disabled", "disabled");
       }
-      const choice =
-        (validChoices.length && validChoices[index]) || this.choices[0];
-      const value = choice.value;
-      const color = value == current ? this.selected : this.background;
-      const style = this.getStyleString({ backgroundColor: color });
-      chooser = html`<button
-        value=${choice.value}
-        ?disabled=${validChoices.length < 1}
-        style=${style}
-      >
-        ${choice.text}
-      </button>`;
-    }
+      const color = choice.value == current ? this.selected : this.background;
+      choice.setStyle({ backgroundColor: color });
+      console.log("choice", choice);
+    });
+
     return html`<fieldset>
-      ${this.label && html`<legend>${this.label}</legend>`} ${chooser}
+      ${(this.label && html`<legend>${this.label}</legend>`) || null}
+      ${this.choices}
     </fieldset>`;
   }
 
-  get Children() {
+  getChildren() {
     return this.choices;
   }
 }

@@ -1,7 +1,7 @@
 import ABase from "./a-base";
 
 class AHStack extends ABase {
-  scale = 1;
+  scale = "1";
   background = "";
 
   static observed = "scale background";

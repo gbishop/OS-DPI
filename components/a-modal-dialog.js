@@ -3,22 +3,18 @@ import { state } from "../state";
 import ABase from "./a-base";
 import * as focusTrap from "focus-trap";
 
-class AModalDialog extends ABase {
+export default class AModalDialog extends ABase {
   state = "$modalOpen";
-  background = "white";
+  background = "";
 
   init() {
     state.observe(this, this.state);
     // console.log("init modal");
     this.content = Array.from(this.childNodes);
-    this.elements = Array.from(this.children);
+    this.elements = Array.from(super.getChildren());
     this.trap = focusTrap.createFocusTrap(this, {
       onDeactivate: () => state.update({ $Slots: { open: false } }),
     });
-  }
-
-  get Children() {
-    return this.elements;
   }
 
   template() {
@@ -26,12 +22,22 @@ class AModalDialog extends ABase {
     this.setStyle({ backgroundColor: this.background });
     if (state(this.state)) {
       this.classList.add("open");
-      this.trap.activate();
+      if (!document.body.classList.contains("designing")) {
+        this.trap.activate();
+      }
     } else {
       this.classList.remove("open");
       this.trap.deactivate();
     }
     return html`<div>${this.content}</div>`;
+  }
+
+  getChildren() {
+    return this.elements;
+  }
+
+  makeVisible(v) {
+    state.update({ [this.state]: v ? "open" : "" });
   }
 }
 

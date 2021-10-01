@@ -17,6 +17,7 @@ export default class ATabControl extends ABase {
     // render
     /** @type {ATabPanel[]} */
     this.panels = Array.from(this.querySelectorAll("a-tab-panel"));
+    console.log("state", state);
     state.define(
       this.state,
       this.activeTab || this.panels[0].getAttribute("name") // props not yet available
@@ -57,7 +58,7 @@ export default class ATabControl extends ABase {
       <div class="buttons">${buttons}</div>`;
   }
 
-  get Children() {
+  getChildren() {
     return this.panels;
   }
 }

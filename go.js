@@ -1,6 +1,8 @@
 import { loadData } from "./data";
 import * as rules from "./rules";
 import { state } from "./state";
+import { initDesigner } from "./designer";
+
 import "./components";
 
 /** let me wait for the page to load */
@@ -23,4 +25,5 @@ export default async function go(name, myRules, definitions = {}) {
   );
   rules.set(myRules);
   state.render();
+  initDesigner();
 }

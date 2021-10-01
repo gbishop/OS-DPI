@@ -20,23 +20,20 @@ export default class ATabPanel extends ABase {
   }
   /* for the designer */
 
-  get Children() {
-    if (!this.active) {
-      return [];
-    }
-    return super.Children;
-  }
-
-  get designerName() {
+  getName() {
     if (this.active) return html`<b>${this.tagName} ${this.name}</b>`;
     else return `${this.tagName} ${this.name}`;
   }
 
-  designerHighlight(open) {
-    if (open) {
-      state.update({ [this.control.state]: state.interpolate(this.name) });
+  setHighlight(highlight) {
+    if (highlight) {
+      this.makeVisible();
     }
-    super.designerHighlight(open);
+    super.setHighlight(highlight);
+  }
+
+  makeVisible() {
+    state.update({ [this.control.state]: state.interpolate(this.name) });
   }
 }
 customElements.define("a-tab-panel", ATabPanel);

@@ -5,7 +5,7 @@ import ABase from "./a-base";
 import { formatSlottedString } from "./helpers";
 import { state } from "../state";
 
-class AGrid extends ABase {
+export default class AGrid extends ABase {
   // set the defaults
   tags = "";
   rows = 1;
@@ -121,11 +121,11 @@ class AGrid extends ABase {
     return html`${result}`;
   }
 
-  get designerName() {
+  getName() {
     return `${this.tagName} ${this.name}`;
   }
 
-  get Children() {
+  getChildren() {
     return [];
   }
 }

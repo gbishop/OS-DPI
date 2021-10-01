@@ -1,18 +1,8 @@
 import { render, html } from "uhtml";
 import { state } from "../state";
-import * as designer from "../designer";
 import { getColor } from "./color";
 
 let AId = 0;
-
-/** convert a color string to hex
- * @param {String} str - the color name or other representation
- */
-function standardize_color(str) {
-  var ctx = document.createElement("canvas").getContext("2d");
-  ctx.fillStyle = str;
-  return ctx.fillStyle;
-}
 
 export default class ABase extends HTMLElement {
   /**
@@ -45,6 +35,7 @@ export default class ABase extends HTMLElement {
   connectedCallback() {
     if (!this.hasOwnProperty("initialized")) {
       this.copyProps();
+      // make sure we have an id
       if (!this.id) {
         this.id = `id-${++AId}`;
       }
@@ -85,6 +76,8 @@ export default class ABase extends HTMLElement {
     return this.observed.split(" ");
   }
 
+  /**** TODO: does not belong here ****/
+
   /** @param {Partial<CSSStyleDeclaration>} style */
   normalizeStyle(style) {
     return Object.fromEntries(
@@ -117,6 +110,8 @@ export default class ABase extends HTMLElement {
     );
   }
 
+  /**** TODO: above doesn't belong ****/
+
   /**
    * Return the content for element.
    * @returns {import('uhtml').Hole | void }
@@ -137,18 +132,31 @@ export default class ABase extends HTMLElement {
   /**
    * @returns {string|import("uhtml").Hole}
    */
-  get designerName() {
+  getName() {
     return this.tagName;
   }
 
-  get Children() {
-    return [...super.children];
+  /**
+   * @returns {ABase[]}
+   */
+  getChildren() {
+    const children = [];
+    for (const child of super.children) {
+      if (child instanceof ABase) {
+        children.push(child);
+      }
+    }
+    return children;
   }
 
-  /** highlight the element from the designer
-   * @param {boolean} open
-   */
-  designerHighlight(open) {
-    this.style.border = open ? "solid red" : "";
+  /** @param {boolean} highlight */
+  setHighlight(highlight) {
+    if (highlight) {
+      this.style.border = "4px solid red";
+    } else {
+      this.style.border = "";
+    }
   }
+
+  makeVisible(o) {}
 }

@@ -49,7 +49,7 @@ body.designing div#designer {
 
 div#designer ul {
   list-style: none;
-  padding-left: 0.2em;
+  padding-left: 1em;
   border-left: 1px solid black;
   margin-top: 0;
 }
@@ -58,12 +58,30 @@ div#designer li ul {
   padding-left: 1em;
 }
 
-div#designer details[open] {
-  border-bottom: 1px solid black;
-  border-left: 1px solid grey;
-  outline: 2px solid red;
+div#designer .highlight details {
+  background-color: white;
 }
+
+div#designer details.highlight > summary {
+  background-color: lightblue;
+}
+
 div#designer details[open] table {
   padding-left: 1em;
   width: 100%;
+}
+
+div#designer button.edit {
+  border: none;
+  padding: 0;
+  background: none;
+}
+
+div#designer button.edit::after {
+  content: "\1F589";
+}
+
+div#designer div.controls {
+  border: 1px solid black;
+  margin-left: 2em;
 }

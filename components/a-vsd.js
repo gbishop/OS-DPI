@@ -122,5 +122,9 @@ class AVSD extends ABase {
       this.resizeObserver.observe(this.img.current);
     }
   }
+
+  getChidren() {
+    return [];
+  }
 }
 customElements.define("a-vsd", AVSD);
