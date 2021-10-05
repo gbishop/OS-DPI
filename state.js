@@ -1,129 +1,120 @@
 import merge from "mergerino";
-import ABase from "./components/a-base";
 
-const LSKEY = "4.state";
-
-var State = {};
-/* a map from elements to state variables they are observing */
-/** @type {Map<ABase|Function, String[]>} */
-const Listeners = new Map();
-
-/** unified interface to state
- * @param {string} [name] - possibly dotted path to a value
- * @param {any} defaultValue
- * @returns {any} if name is defined, null otherwise
- */
-export function state(name, defaultValue = null) {
-  if (name && name.length) {
-    return name.split(".").reduce((o, p) => (o ? o[p] : defaultValue), State);
-  } else {
-    return { ...State };
-  }
-}
-
-/**
- * update the state with a patch and invoke any listeners
- *
- * @param {Object} patch - the changes to make to the state
- * @return {void}
- */
-state.update = (patch) => {
-  const oldState = State;
-  State = merge(oldState, patch);
-  const changed = new Set();
-  for (const key in State) {
-    if (State[key] !== oldState[key]) {
-      changed.add(key);
-    }
-  }
-  for (const key in oldState) {
-    if (!(key in State)) {
-      changed.add(key);
-    }
-  }
-  for (const [element, names] of Listeners) {
-    if (
-      element instanceof ABase &&
-      element.isConnected &&
-      names.some((name) => changed.has(name))
-    ) {
-      element.render();
-    } else if (
-      element instanceof Function &&
-      names.some((name) => changed.has(name))
-    ) {
-      element(...names.map((name) => state(name)));
-    }
-  }
-
-  const persist = JSON.stringify(State);
-  window.localStorage.setItem(LSKEY, persist);
-};
-
-state.render = () => {
-  for (const [element, _] of Listeners) {
-    if (element instanceof ABase && element.isConnected) {
-      element.render();
-    }
-  }
-};
-
-/** state.observe - link this element to the state
- * @param {ABase|Function} element
- * @param {String[]} names - state names to observe
- */
-state.observe = (element, ...names) => {
-  const old = Listeners.get(element) || [];
-  for (const name of names) {
-    old.push(name.split(".")[0]);
-  }
-  Listeners.set(element, old);
-};
-
-/** state.define - add a named state to the global system state
- * @param {String} name - name of the state
- * @param {any} default_value - value if not already defined
- */
-state.define = (name, default_value) => {
-  State = merge(State, {
-    [name]: (/** @type {any} */ current_value) =>
-      current_value || default_value,
-  });
-};
-console.log("sd", state.define);
-
-/** state.interpolate
- * @param {string} input
-   @returns input with $name replaced by values from the state
-*/
-state.interpolate = (input) => {
-  let result = input.replace(/(\$[a-zA-Z0-9_.]+)/, (_, name) => state(name));
-  result = result.replace(/\$\{([a-zA-Z0-9_.]+)}/, (_, name) =>
-    state("$" + name)
-  );
-  return result;
-};
-
-/** state.parseAction
- * @param {string} input
- * @param {Object} context
- */
-state.parseAction = (input, context) => {
-  return () => {
-    const action = {};
-    for (const match of input.matchAll(/(\$\w+)\s*=\s*(\$?\w+)/g)) {
-      if (match[2].startsWith("$")) {
-        action[match[1]] = state.interpolate(match[2]);
-      } else {
-        action[match[1]] = context[match[2]];
+export class State {
+  constructor(persistKey = "") {
+    this.persistKey = persistKey;
+    /** @type {Map<function, string[]>} */
+    this.listeners = new Map();
+    /** @type {Object} */
+    this.values = {};
+    if (this.persistKey) {
+      /* persistence */
+      const persist = window.localStorage.getItem(this.persistKey);
+      if (persist) {
+        this.values = JSON.parse(persist);
       }
     }
-    state.update(action);
-  };
-};
+  }
 
-/* persistence */
-const persist = window.localStorage.getItem(LSKEY);
-if (persist) {
-  State = JSON.parse(persist);
+  /** unified interface to state
+   * @param {string} [name] - possibly dotted path to a value
+   * @param {any} defaultValue
+   * @returns {any}
+   */
+  get(name, defaultValue = undefined) {
+    if (name && name.length) {
+      return name
+        .split(".")
+        .reduce((o, p) => (o ? o[p] : defaultValue), this.values);
+    } else {
+      return this.values;
+    }
+  }
+
+  /**
+   * update the state with a patch and invoke any listeners
+   *
+   * @param {Object} patch - the changes to make to the state
+   * @return {void}
+   */
+  update = (patch) => {
+    const oldValues = this.values;
+    this.values = merge(oldValues, patch);
+    const changed = new Set();
+    for (const key in this.values) {
+      if (this.values[key] !== oldValues[key]) {
+        changed.add(key);
+      }
+    }
+    for (const key in oldValues) {
+      if (!(key in this.values)) {
+        changed.add(key);
+      }
+    }
+    for (const [callback, names] of this.listeners) {
+      if (!names.length || names.some((name) => changed.has(name))) {
+        callback(changed);
+      }
+    }
+
+    if (this.persistKey) {
+      const persist = JSON.stringify(this.values);
+      window.localStorage.setItem(this.persistKey, persist);
+    }
+  };
+  /** observe - call this function if the named states change
+   * @param {Function} callback
+   * @param {String[]} names - state names to observe (use only first level)
+   */
+  observe(callback, ...names) {
+    const old = this.listeners.get(callback) || [];
+    // extract top level name from any that are dotted
+    const topLevelNames = names.map((name) => name.split(".")[0]);
+    this.listeners.set(callback, [...old, ...topLevelNames]);
+  }
+
+  /** define - add a named state to the global system state
+   * @param {String} name - name of the state
+   * @param {any} defaultValue - value if not already defined
+   */
+  define(name, defaultValue) {
+    // handle dotted names
+    const patch = {};
+    let p = patch;
+    let dots = name.split(".");
+    let i = 0;
+    for (; i < dots.length - 1; i++) {
+      p = p[dots[i]] = {};
+    }
+    p[dots[i]] = (/** @type {any} */ currentValue) =>
+      currentValue || defaultValue;
+    this.update(patch);
+  }
+  /** interpolate
+   * @param {string} input
+   * @returns {string} input with $name replaced by values from the state
+   */
+  interpolate(input) {
+    let result = input.replace(/(\$[a-zA-Z0-9_.]+)/, (_, name) =>
+      this.get(name)
+    );
+    result = result.replace(/\$\{([a-zA-Z0-9_.]+)}/, (_, name) =>
+      this.get("$" + name)
+    );
+    return result;
+  }
+  /**
+   * Normalize tags
+   *
+   * @param {string[]} tags - Tags that must be in each row
+   * @return {string[]} normalized tags as an array
+   */
+  normalizeTags(tags) {
+    /** @type {string[]} tags */
+    // normalize
+    return tags
+      .map((t) => (t.startsWith("$") && this.get(t)) || t)
+      .filter((t) => t.length)
+      .flat();
+  }
 }

@@ -1,0 +1,31 @@
+{
+  "type": "page",
+  "props": {},
+  "children": [
+    {
+      "type": "stack",
+      "props": { "direction": "column" },
+      "children": [
+        {
+          "type": "display",
+          "props": {
+            "stateName": "$Display",
+            "scale": 1
+          },
+          "children": []
+        },
+        {
+          "type": "grid",
+          "props": {
+            "name": "TalkGrid",
+            "rows": 6,
+            "columns": 6,
+            "scale": 12,
+            "background": "#98fb98"
+          },
+          "children": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,13 +1,12 @@
-import "./a-hstack";
-import "./a-vstack";
-import "./a-display";
-import "./a-grid";
-import "./a-choose-one";
-import "./a-tab-control";
-import "./a-tab-panel";
-import "./a-vsd";
-import "./a-modal-dialog";
-import "./a-button";
-import "./a-gap";
-import "./a-speech-control";
-import "./color";
+import { ComponentMap } from "./base";
+import "./grid";
+import "./display";
+
+export function assemble(design, context, parent = null) {
+  console.log(design.type);
+  const node = new ComponentMap[design.type](design.props, context, parent);
+  node.children = design.children.map((child) =>
+    assemble(child, context, node)
+  );
+  return node;
+}

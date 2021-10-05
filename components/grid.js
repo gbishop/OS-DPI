@@ -1,53 +1,38 @@
 import { html } from "uhtml";
-import { getTaggedRows, normalizeTags } from "../data";
-import * as rules from "../rules";
-import ABase from "./a-base";
+import { BaseComponent, ComponentMap } from "./base";
+import { styleString } from "./style";
 import { formatSlottedString } from "./helpers";
-import { state } from "../state";
 
-export default class AGrid extends ABase {
-  // set the defaults
-  tags = "";
-  rows = 1;
-  columns = 1;
-  scale = "1";
-  background = "";
-  match = "contains";
-  name = "a-grid";
-
-  static observed = "tags rows columns scale background match name";
-
-  init() {
-    state.observe(
-      this,
-      ...this.tags.split(" ").filter((tag) => tag.startsWith("$"))
-    );
-    this.page = 0;
-    this.cache = { key: "", items: [] };
-  }
+class GridComponent extends BaseComponent {
+  static defaultProps = {
+    rows: 1,
+    columns: 1,
+    tags: [],
+    match: "contains",
+    name: "grid",
+  };
+  page = 0;
+  cache = { key: "", items: [] };
 
   template() {
-    this.setStyle({ flexGrow: this.scale });
-    const rows = +this.rows;
-    const columns = +this.columns;
-    const tags = this.tags;
-    const key = normalizeTags(tags).join("|");
+    const style = {
+      flexGrow: this.props.scale,
+    };
+    const { data, state, rules } = this.context;
+    const { rows, columns, match, name, background } = this.props;
+    const tags = state.normalizeTags(this.props.tags);
+    const key = tags.join("|");
     let items;
-    if (
-      key.length &&
-      this.cache.key.length &&
-      this.cache.items.length &&
-      this.cache.key === key
-    ) {
+    if (this.cache.items.length && this.cache.key === key) {
       items = this.cache.items;
     } else {
-      items = getTaggedRows(tags, this.match);
+      items = data.getTaggedRows(tags, match);
       this.cache.items = items;
       this.cache.key = key;
       this.page = 0;
     }
     const result = [];
-    this.style.gridTemplate = `repeat(${rows}, calc(100% / ${rows} - 0.5%)) / repeat(${columns}, 1fr)`;
+    style.gridTemplate = `repeat(${rows}, calc(100% / ${rows})) / repeat(${columns}, 1fr)`;
 
     let perPage = rows * columns;
     let pages = 1;
@@ -80,8 +65,8 @@ export default class AGrid extends ABase {
       }
       result.push(
         html`<button
-          onClick=${rules.handler(this.name, item, "press")}
-          style=${this.getStyleString({ backgroundColor: this.background })}
+          onClick=${rules.handler(name, item, "press")}
+          style=${styleString({ backgroundColor: background })}
           .disabled=${!item.msg || item.msg.length == 0}
         >
           ${content}
@@ -98,18 +83,18 @@ export default class AGrid extends ABase {
           <button
             onClick=${() => {
               this.page = (((this.page - 1) % pages) + pages) % pages;
-              this.render();
+              state.update(); // trigger redraw
             }}
-            style=${this.getStyleString({ backgroundColor: this.background })}
+            style=${styleString({ backgroundColor: background })}
             .disabled=${perPage >= items.length}
           >
             &#9754;</button
           ><button
             onClick=${() => {
               this.page = (this.page + 1) % pages;
-              this.render();
+              state.update(); // trigger redraw
             }}
-            style=${this.getStyleString({ backgroundColor: this.background })}
+            style=${styleString({ backgroundColor: background })}
             .disabled=${perPage >= items.length}
           >
             &#9755;
@@ -118,16 +103,9 @@ export default class AGrid extends ABase {
       </div>`);
     }
 
-    return html`${result}`;
-  }
-
-  getName() {
-    return `${this.tagName} ${this.name}`;
-  }
-
-  getChildren() {
-    return [];
+    return html`<div class="grid" ref=${this} style=${styleString(style)}>
+      ${result}
+    </div>`;
   }
 }
-
-customElements.define("a-grid", AGrid);
+ComponentMap["grid"] = GridComponent;

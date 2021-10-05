@@ -1,0 +1,35 @@
+{
+  "type": "page",
+  "props": {},
+  "children": [
+    {
+      "type": "stack",
+      "props": { "direction": "column" },
+      "children": [
+        {
+          "type": "display",
+          "props": {
+            "stateName": "$Display",
+            "slots": "$Slots",
+            "scale": 1,
+            "backgroundColor": "yellow"
+          },
+          "children": []
+        },
+        {
+          "type": "grid",
+          "props": {
+            "tags": ["MENU", "CHAT"],
+            "match": "contains",
+            "name": "chatMenu",
+            "rows": 6,
+            "columns": 6,
+            "scale": 5,
+            "background": "#98fb98"
+          },
+          "children": []
+        }
+      ]
+    }
+  ]
+}

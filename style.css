@@ -1,19 +1,15 @@
 body {
   font-size: 1vw;
   overflow: hidden;
-  background-color: white;
-}
-
-button {
-  font-size: inherit;
-}
-
-body {
   margin: 0;
   padding: 0;
   opacity: 0;
   width: 100vw;
   height: 100vh;
+}
+
+button {
+  font-size: inherit;
 }
 
 body.loaded {
@@ -47,41 +43,78 @@ body.designing div#designer {
   flex: 1 1 0;
 }
 
-div#designer ul {
-  list-style: none;
-  padding-left: 1em;
-  border-left: 1px solid black;
-  margin-top: 0;
+.flex {
+  display: flex;
+  flex: 1 1 0;
+  width: 100%;
+  height: 100%;
 }
 
-div#designer li ul {
-  padding-left: 1em;
+.row {
+  flex-direction: row;
 }
 
-div#designer .highlight details {
-  background-color: white;
+.column {
+  flex-direction: column;
 }
 
-div#designer details.highlight > summary {
-  background-color: lightblue;
+.grid {
+  display: grid;
+  grid-auto-rows: 1fr;
+  flex: 1 1 0;
 }
 
-div#designer details[open] table {
-  padding-left: 1em;
+.grid button {
+  overflow-wrap: normal;
+  overflow: hidden;
+  border-radius: 5px;
+  background-color: inherit;
+}
+.grid button div {
+  display: flex;
+  flex: 1 1 0;
+  height: 100%;
+}
+.grid button figure {
+  margin: 2px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  margin-block-start: 0;
+  margin-block-end: 0;
+  margin-inline-start: 0;
+  margin-inline-end: 0;
+}
+.grid button figure figcaption {
   width: 100%;
 }
-
-div#designer button.edit {
-  border: none;
-  padding: 0;
-  background: none;
+.grid button figure img {
+  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 0;
 }
-
-div#designer button.edit::after {
-  content: "\1F589";
+.grid b {
+  color: blue;
 }
-
-div#designer div.controls {
-  border: 1px solid black;
-  margin-left: 2em;
+.grid .page-control {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+}
+.grid .page-control .text {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+}
+.grid .page-control .back-next {
+  display: flex;
+  flex: 1 1 0;
+}
+.grid .page-control .back-next button {
+  flex: 1 1 0;
 }
