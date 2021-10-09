@@ -1,15 +1,17 @@
 import { html } from "uhtml";
-import { BaseComponent, ComponentMap } from "./base";
+import { Base, componentMap } from "./base";
 import { styleString } from "./style";
 import { formatSlottedString } from "./helpers";
 
-class GridComponent extends BaseComponent {
+class Grid extends Base {
   static defaultProps = {
-    rows: 1,
-    columns: 1,
+    rows: 3,
+    columns: 3,
     tags: [],
     match: "contains",
     name: "grid",
+    background: "white",
+    scale: "1",
   };
   page = 0;
   cache = { key: "", items: [] };
@@ -108,4 +110,4 @@ class GridComponent extends BaseComponent {
     </div>`;
   }
 }
-ComponentMap["grid"] = GridComponent;
+componentMap.addMap("grid", Grid);

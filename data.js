@@ -10,7 +10,7 @@
  * @property {Object} [details]
  * */
 
-class Data {
+export class Data {
   /** @param {Rows} rows */
   constructor(rows) {
     this.allrows = rows;

@@ -1,5 +1,5 @@
 import { html } from "uhtml";
-import { BaseComponent, ComponentMap } from "./base";
+import { Base, componentMap } from "./base";
 import { styleString } from "./style";
 import merge from "mergerino";
 
@@ -17,8 +17,12 @@ import merge from "mergerino";
  * @property {String} slotName - current slot type
  */
 
-class DisplayComponent extends BaseComponent {
-  defaultProps = { ...super.defaultProps, stateName: "$Display" };
+class Display extends Base {
+  static defaultProps = {
+    stateName: "$Display",
+    background: "white",
+    scale: "1",
+  };
   static functionsInitialized = false;
 
   template() {
@@ -60,8 +64,8 @@ class DisplayComponent extends BaseComponent {
   }
 
   init() {
-    if (!DisplayComponent.functionsInitialized) {
-      DisplayComponent.functionsInitialized = true;
+    if (!Display.functionsInitialized) {
+      Display.functionsInitialized = true;
       let { rules } = this.context;
 
       /** return true of the message contains slots
@@ -215,6 +219,10 @@ class DisplayComponent extends BaseComponent {
       };
     }
   }
+
+  get name() {
+    return this.props.name || this.props.stateName;
+  }
 }
 
-ComponentMap["display"] = DisplayComponent;
+componentMap.addMap("display", Display);

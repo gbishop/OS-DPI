@@ -53,24 +53,7 @@ export function styleString(styles) {
 
 class ColorInput extends HTMLElement {
   value = "";
-
-  /**
-   * Copy attribute values from the HTML into the element properties.
-   * This isn't required if you listed the values in observed
-   */
-  copyProps() {
-    this.props = Object.getOwnPropertyNames(this);
-    // console.log(this.props);
-    for (const { name, value } of this.attributes) {
-      if (this.hasOwnProperty(name)) {
-        if (typeof this[name] == "number") {
-          this[name] = +value;
-        } else {
-          this[name] = value;
-        }
-      }
-    }
-  }
+  name = "";
 
   /**
    * Called when the element is added to a page. The first time this is called
@@ -79,9 +62,24 @@ class ColorInput extends HTMLElement {
   connectedCallback() {
     if (!this.hasOwnProperty("initialized")) {
       this.initialized = true;
-      this.copyProps();
       this.init();
     }
+    this.render();
+  }
+
+  static get observedAttributes() {
+    return ["name", "value"];
+  }
+
+  /**
+   * watch for changing attributes
+   * @param {string} name
+   * @param {string} _
+   * @param {string} newValue
+   */
+  attributeChangedCallback(name, _, newValue) {
+    console.log("acc", name, newValue);
+    this[name] = newValue;
     this.render();
   }
 
@@ -109,6 +107,7 @@ class ColorInput extends HTMLElement {
       this,
       html`<input
           type="text"
+          name=${this.name}
           value=${this.value}
           list="ColorNames"
           onchange=${() => this.validate()}

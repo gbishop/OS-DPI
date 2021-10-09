@@ -10,24 +10,160 @@
           "type": "display",
           "props": {
             "stateName": "$Display",
-            "slots": "$Slots",
             "scale": 1,
-            "backgroundColor": "yellow"
+            "background": "yellow"
           },
           "children": []
         },
         {
-          "type": "grid",
-          "props": {
-            "tags": ["MENU", "CHAT"],
-            "match": "contains",
-            "name": "chatMenu",
-            "rows": 6,
-            "columns": 6,
-            "scale": 5,
-            "background": "#98fb98"
-          },
-          "children": []
+          "type": "stack",
+          "props": { "direction": "row", "scale": 5 },
+          "children": [
+            {
+              "type": "stack",
+              "props": { "direction": "column", "scale": 1 },
+              "children": [
+                {
+                  "type": "radio",
+                  "props": {
+                    "stateName": "$ChatPerson",
+                    "scale": 1
+                  },
+                  "children": [
+                    {
+                      "type": "option",
+                      "props": {
+                        "name": "Me",
+                        "value": "Person.Me"
+                      },
+                      "children": []
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "name": "You",
+                        "value": "Person.You"
+                      },
+                      "children": []
+                    }
+                  ]
+                },
+                {
+                  "type": "gap",
+                  "props": { "scale": "0.2" },
+                  "children": []
+                },
+                {
+                  "type": "radio",
+                  "props": {
+                    "stateName": "$ChatTime",
+                    "scale": 2
+                  },
+                  "children": [
+                    {
+                      "type": "option",
+                      "props": {
+                        "name": "Present",
+                        "value": "Time.Present"
+                      },
+                      "children": []
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "name": "Past",
+                        "value": "Time.Past"
+                      },
+                      "children": []
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "name": "Future",
+                        "value": "Time.Future"
+                      },
+                      "children": []
+                    }
+                  ]
+                },
+                {
+                  "type": "gap",
+                  "props": { "scale": "0.2" },
+                  "children": []
+                },
+                {
+                  "type": "radio",
+                  "props": {
+                    "stateName": "$ChatAspect",
+                    "scale": 4
+                  },
+                  "children": [
+                    {
+                      "type": "option",
+                      "props": {
+                        "name": "Who",
+                        "value": "Aspect.Who"
+                      },
+                      "children": []
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "name": "What",
+                        "value": "Aspect.What"
+                      },
+                      "children": []
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "name": "When",
+                        "value": "Aspect.When"
+                      },
+                      "children": []
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "name": "Where",
+                        "value": "Aspect.Where"
+                      },
+                      "children": []
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "name": "Why",
+                        "value": "Aspect.Why"
+                      },
+                      "children": []
+                    },
+                    {
+                      "type": "option",
+                      "props": {
+                        "name": "How",
+                        "value": "Aspect.How"
+                      },
+                      "children": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "grid",
+              "props": {
+                "tags": ["CHAT", "Greeting & Meeting", "$ChatPerson"],
+                "match": "contains",
+                "name": "chatMenu",
+                "rows": 6,
+                "columns": 6,
+                "scale": 5,
+                "background": "#98fb98"
+              },
+              "children": []
+            }
+          ]
         }
       ]
     }

@@ -1,7 +1,9 @@
+import { html, render } from "uhtml";
 import { assemble } from "./components/index";
 import Rules from "./rules";
 import Data from "./data";
 import { State } from "./state";
+import { designer } from "./designer";
 
 /** let me wait for the page to load */
 const pageLoaded = new Promise((resolve) => {
@@ -19,21 +21,23 @@ export async function start(name) {
     const resp = await fetch(`./examples/${name}/${file}`);
     return await resp.json();
   });
-  const [design, rules, data, _] = await Promise.all([...parts, pageLoaded]);
-  /*
-  Object.keys(definitions).forEach((key) =>
-    state.define(key, definitions[key])
-  );
-  */
+  let [design, rules, data, _] = await Promise.all([...parts, pageLoaded]);
+
+  if (localStorage.getItem("design")) {
+    design = JSON.parse(localStorage.getItem("design"));
+  }
+
   const state = new State("PO6");
   const context = {
     data: new Data(data),
     rules: new Rules(rules, state),
     state,
   };
-  const root = document.querySelector("#UI");
   const tree = assemble(design, context);
-  tree.current = root;
-  state.observe(() => tree.render());
-  tree.render();
+  function renderUI() {
+    render(document.querySelector("#UI"), tree.template());
+  }
+  state.observe(renderUI);
+  renderUI();
+  designer(tree);
 }

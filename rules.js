@@ -14,7 +14,7 @@
  * @property {Object<string, string>} updates
  */
 
-class Rules {
+export class Rules {
   Functions = {
     append: (value) => (old) => [...old, value],
     empty: () => () => [],

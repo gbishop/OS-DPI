@@ -27,10 +27,10 @@ body.designing {
 }
 
 body.designing div#UI {
-  height: 75%;
-  width: 75%;
-  font-size: 1vw;
-  flex: 2 1 0;
+  height: 50%;
+  width: 50%;
+  font-size: 0.7vw;
+  flex: 1 1 0;
 }
 
 div#designer {
@@ -117,4 +117,152 @@ body.designing div#designer {
 }
 .grid .page-control .back-next button {
   flex: 1 1 0;
+}
+
+.radio fieldset {
+  flex-flow: wrap;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  justify-content: space-around;
+  gap: 1%;
+}
+
+.radio button {
+  flex: 1 1 0;
+  min-width: 45%;
+  max-width: 45%;
+}
+
+details.menu {
+  display: inline-block;
+}
+
+details.menu[disabled] {
+  pointer-events: none;
+  color: rgba(16, 16, 16, 0.3);
+  border-color: rgba(16, 16, 16, 0.3);
+}
+
+/*
+details.menu[open] > summary::before {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 80;
+  display: block;
+  cursor: default;
+  content: " ";
+  background: transparent;
+}
+*/
+
+details.menu summary {
+  border: 1px solid black;
+  display: inline;
+  padding: 5px;
+  border-radius: 5px;
+}
+
+details.menu ul {
+  position: absolute;
+  background: white;
+  border: 1px solid black;
+  border-radius: 5px;
+  list-style: none;
+  padding: 5px;
+  margin-top: 0;
+  margin-left: 0px;
+}
+
+details.menu button {
+  width: 100%;
+  text-align: left;
+  padding: 10px;
+}
+
+span.arrows {
+  font-size: 2em;
+}
+
+span.arrows button {
+  border: 0;
+  background: inherit;
+  padding: 0;
+  margin: 0;
+  vertical-align: center;
+}
+
+summary[highlight],
+span[highlight] {
+  font-weight: bold;
+  background-color: pink;
+}
+
+details ul {
+  list-style: none;
+  margin-block-start: 0;
+  padding-inline-start: 20px;
+}
+
+color-input {
+  margin-right: 1em;
+  align-items: center;
+}
+
+color-input input {
+  flex: 1 1 0;
+  margin-right: 0.2em;
+}
+
+color-input .swatch {
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  border: 1px solid black;
+}
+
+div.props {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-gap: 0.25em 1em;
+  border: 1px solid black;
+  padding: 1em;
+}
+
+div.props label {
+  grid-column: 1 / 2;
+  text-align: right;
+}
+
+div.props input,
+div.props color-input,
+div.props button {
+  grid-column: 2 / 3;
+}
+
+input[type="number"] {
+  width: 3em;
+}
+
+select option[disabled] {
+  display: none;
+}
+
+div.empty {
+  background-color: rgba(15, 15, 15, 0.3);
+  justify-content: center;
+  align-items: center;
+}
+
+div.empty::before {
+  content: "Empty";
+}
+
+.display {
+  border: 1px solid black;
+  padding: 1em;
+  box-sizing: border-box;
 }

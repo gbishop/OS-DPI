@@ -18,6 +18,7 @@ export function getColor(name) {
 
 class ColorInput extends HTMLElement {
   value = "";
+  name = "";
 
   /**
    * Copy attribute values from the HTML into the element properties.
@@ -74,6 +75,7 @@ class ColorInput extends HTMLElement {
       this,
       html`<input
           type="text"
+          name=${this.name}
           value=${this.value}
           list="ColorNames"
           onchange=${() => this.validate()}
