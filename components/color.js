@@ -76,7 +76,7 @@ class ColorInput extends HTMLElement {
       html`<input
           type="text"
           name=${this.name}
-          value=${this.value}
+          .value=${this.value}
           list="ColorNames"
           onchange=${() => this.validate()}
         />

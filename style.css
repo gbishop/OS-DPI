@@ -266,3 +266,20 @@ div.empty::before {
   padding: 1em;
   box-sizing: border-box;
 }
+
+.tabcontrol {
+}
+.tabcontrol .buttons button:focus {
+  outline: 0;
+}
+.tabcontrol .panels {
+  flex: 1 1 0;
+  display: flex;
+}
+.tabcontrol .buttons {
+  flex: 1 1 0;
+  display: flex;
+}
+.tabcontrol .buttons button {
+  flex: 1 1 0;
+}

@@ -2,7 +2,7 @@ import { html, render } from "uhtml";
 import { ColorNames } from "./color-names";
 
 function isValidColor(strColor) {
-  if (strColor in ColorNames) {
+  if (strColor.length == 0 || strColor in ColorNames) {
     return true;
   }
   var s = new Option().style;
@@ -108,7 +108,7 @@ class ColorInput extends HTMLElement {
       html`<input
           type="text"
           name=${this.name}
-          value=${this.value}
+          .value=${this.value}
           list="ColorNames"
           onchange=${() => this.validate()}
         />

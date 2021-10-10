@@ -53,6 +53,7 @@ export function designer(tree) {
     return html`<select
       class="menu"
       ?disabled=${!allowed.length}
+      style="width: 7em"
       onchange=${(e) => {
         addChild(e.target.value);
         e.target.value = "";
@@ -193,7 +194,7 @@ export function designer(tree) {
           <color-input
             id=${name}
             name=${name}
-            .value=${value}
+            value=${value}
             onchange=${propUpdate}
           />`;
       case "select":
@@ -273,6 +274,7 @@ export function designer(tree) {
     ) {
       const button = document.getElementById(ev.key);
       button.click();
+      ev.preventDefault();
     }
   }
 

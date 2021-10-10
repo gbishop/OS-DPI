@@ -187,7 +187,7 @@ componentMap.addMap("page", Page);
 
 class Stack extends Base {
   static defaultProps = { direction: "column", background: "", scale: "1" };
-  static allowedChildren = ["stack", "grid", "display", "radio"];
+  static allowedChildren = ["stack", "grid", "display", "radio", "tab control"];
 
   template() {
     const style = styleString({
