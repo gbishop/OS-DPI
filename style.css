@@ -283,3 +283,36 @@ div.empty::before {
 .tabcontrol .buttons button {
   flex: 1 1 0;
 }
+
+.controls {
+  min-height: 300px;
+}
+
+.tree ul[role="tree"] {
+  list-style-type: none;
+  padding-inline-start: 5px;
+}
+.tree ul[role="group"] {
+  list-style-type: none;
+  margin-block-start: 0;
+  padding-inline-start: 20px;
+}
+.tree li[aria-expanded] span::before {
+  cursor: pointer;
+  user-select: none;
+}
+
+.tree li[aria-expanded="false"] > span::before {
+  content: "\25B6";
+  color: black;
+  display: inline-block;
+  margin-right: 6px;
+}
+
+.tree li[aria-expanded="true"] > span::before {
+  content: "\25B6";
+  color: black;
+  display: inline-block;
+  margin-right: 6px;
+  transform: rotate(90deg);
+}

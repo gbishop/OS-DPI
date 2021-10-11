@@ -20,8 +20,14 @@ export function designer(tree) {
    */
   function setSelected(selection) {
     selected = selection;
+    while (selection.parent) {
+      selection.parent.designer.expanded = true;
+      selection = selection.parent;
+    }
     localStorage.setItem("path", JSON.stringify(getPath(selected)));
     renderDesigner();
+    selected.designer.current.focus();
+    console.log("focus", document.activeElement, selected.designer.current);
   }
 
   function getNode(path) {
@@ -65,11 +71,7 @@ export function designer(tree) {
   }
 
   function visibleChidren(tree) {
-    if (
-      tree.children.length &&
-      tree.designer?.current instanceof HTMLDetailsElement &&
-      tree.designer.current.open
-    ) {
+    if (tree.children.length && tree.designer.expanded) {
       return tree.children.reduce(
         (result, child) => [...result, child, ...visibleChidren(child)],
         []
@@ -91,60 +93,6 @@ export function designer(tree) {
     return vc[ndx];
   }
 
-  function navigation() {
-    return html`<span class="arrows">
-      <button
-        id="ArrowUp"
-        title="previous"
-        onclick=${() => {
-          setSelected(previous());
-        }}
-      >
-        &#129081;
-      </button>
-      <button
-        id="ArrowDown"
-        title="next"
-        onclick=${() => {
-          setSelected(next());
-        }}
-      >
-        &#129083;
-      </button>
-      <button
-        id="ArrowRight"
-        title="open"
-        ?disabled=${!selected.children.length}
-        onclick=${() => {
-          if (selected.designer.current.open) {
-            setSelected(selected.children[0]);
-          } else {
-            selected.designer.current.open = true;
-          }
-        }}
-      >
-        &#129082;
-      </button>
-      <button
-        id="ArrowLeft"
-        title="parent"
-        ?disabled=${!selected.parent}
-        onclick=${() => {
-          if (
-            selected.designer.current instanceof HTMLDetailsElement &&
-            selected.designer.current.open
-          ) {
-            selected.designer.current.open = false;
-          } else {
-            setSelected(selected.parent);
-          }
-        }}
-      >
-        &#129080;
-      </button>
-    </span>`;
-  }
-
   function movement() {
     return html`<details class="menu">
       <summary>Move</summary>
@@ -155,6 +103,7 @@ export function designer(tree) {
     return html`<button>Delete</button>`;
   }
 
+  /** @param {InputEvent} event */
   function propUpdate(event) {
     console.log("update", event);
     const name = event.target.name;
@@ -164,6 +113,7 @@ export function designer(tree) {
     selected.context.state.update();
   }
 
+  /** @param {string} name */
   function prop(name) {
     const value = selected.props[name];
     const info = PropInfo[name];
@@ -215,10 +165,12 @@ export function designer(tree) {
             name=${name}
             .value=${value}
             onchange=${propUpdate}
-            oninput=${(ev) => {
+            oninput=${(/** @type {InputEvent} */ ev) => {
               console.log("input", ev);
-              if (!ev.target.value.startsWith("$")) {
-                ev.target.value = "$" + ev.target.value;
+
+              const target = /** @type {HTMLInputElement} */ (ev.target);
+              if (!target.value.startsWith("$")) {
+                target.value = "$" + target.value;
               }
             }}
           />`;
@@ -235,12 +187,11 @@ export function designer(tree) {
                 type="text"
                 id=${id}
                 .value=${tag}
-                onchange=${(ev) => {
-                  const nv = ev.target.value;
-                  if (!nv) {
+                onchange=${({ target: { value } }) => {
+                  if (!value) {
                     tags.splice(index, 1);
                   } else {
-                    tags[index] = ev.target.value;
+                    tags[index] = value;
                   }
                   selected.props[name] = tags;
                   selected.context.state.update();
@@ -248,7 +199,7 @@ export function designer(tree) {
               />
             `;
           })}<button
-            onclick=${(ev) => {
+            onclick=${() => {
               selected.props[name].push("NewTag");
               renderDesigner();
             }}
@@ -267,21 +218,10 @@ export function designer(tree) {
       .map((name) => prop(name));
   }
 
-  /** @param {KeyboardEvent} ev */
-  function controlKeys(ev) {
-    if (
-      ["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight"].indexOf(ev.key) >= 0
-    ) {
-      const button = document.getElementById(ev.key);
-      button.click();
-      ev.preventDefault();
-    }
-  }
-
   function controls() {
-    return html`<div class="controls" onkeydown=${controlKeys} tabindex="0">
+    return html`<div class="controls">
       <h1>Editing ${selected.constructor.name} ${selected.name}</h1>
-      ${addMenu()} ${navigation()} ${movement()} ${deleteCurrent()}
+      ${addMenu()} ${movement()} ${deleteCurrent()}
       <div class="props">${props()}</div>
     </div>`;
   }
@@ -293,33 +233,86 @@ export function designer(tree) {
    */
   function showTree(tree, selected) {
     if (tree.children.length) {
-      return html`<details open ref=${tree.designer}>
-        <summary
+      if (!tree.designer.hasOwnProperty("expanded")) {
+        tree.designer.expanded = false;
+      }
+      const { expanded, focused } = tree.designer;
+      return html`<li
+        role="treeitem"
+        aria=${{
+          expanded,
+          selected: selected === tree,
+        }}
+        tabindex=${selected === tree ? 0 : -1}
+        ref=${tree.designer}
+      >
+        <span
+          role="button"
           ?highlight=${selected === tree}
-          onclick=${(ev) => {
-            if (selected !== tree) {
-              ev.preventDefault();
+          onclick=${() => {
+            if (selected === tree) {
+              tree.designer.expanded = !tree.designer.expanded;
             }
             setSelected(tree);
           }}
         >
           ${tree.constructor.name} ${tree.name}
-        </summary>
-        <ul>
-          ${tree.children.map(
-            (child) => html`<li>${showTree(child, selected)}</li>`
-          )}
-        </ul>
-      </details>`;
+        </span>
+        ${tree.designer.expanded
+          ? html` <ul role="group">
+              ${tree.children.map(
+                (child) => html`${showTree(child, selected)}`
+              )}
+            </ul>`
+          : html``}
+      </li>`;
     } else {
-      return html`<span
-        ?highlight=${selected === tree}
+      return html`<li
+        role="treeitem"
+        aria=${{ selected: selected === tree }}
+        tabindex=${selected === tree ? 0 : -1}
         ref=${tree.designer}
-        onclick=${() => setSelected(tree)}
-        >${tree.constructor.name} ${tree.name}</span
-      >`;
+      >
+        <span
+          role="button"
+          ?highlight=${selected === tree}
+          onclick=${() => setSelected(tree)}
+          >${tree.constructor.name} ${tree.name}</span
+        >
+      </li>`;
     }
   }
+  /** @param {KeyboardEvent} event */
+  function treeKeyHandler(event) {
+    console.log(event);
+    switch (event.key) {
+      case "ArrowDown":
+        setSelected(next());
+        break;
+      case "ArrowUp":
+        setSelected(previous());
+        break;
+      case "ArrowRight":
+        if (selected.children.length && !selected.designer.expanded) {
+          selected.designer.expanded = true;
+          renderDesigner();
+        } else if (selected.children.length) {
+          setSelected(selected.children[0]);
+        }
+        break;
+      case "ArrowLeft":
+        if (selected.children.length && selected.designer.expanded) {
+          selected.designer.expanded = false;
+          renderDesigner();
+        } else if (selected.parent) {
+          setSelected(selected.parent);
+        }
+        break;
+      default:
+        console.log("ignored key", event);
+    }
+  }
+
   function renderDesigner() {
     if (!selected) {
       // restore the selected node if possible
@@ -328,17 +321,29 @@ export function designer(tree) {
       if (jpath) {
         try {
           const path = JSON.parse(jpath);
-          selected = getNode(path);
+          const target = getNode(path);
+          if (target) {
+            setSelected(target);
+          }
         } catch (error) {
           localStorage.removeItem("path");
         }
       }
     }
     if (!selected) {
-      selected = tree.children[0] || tree;
+      if (tree.children.length) {
+        setSelected(tree.children[0]);
+      } else {
+        setSelected(tree);
+      }
     }
     console.log("selected", selected);
-    const designer = html`${controls()}${showTree(tree, selected)}`;
+    const designer = html`${controls()}
+      <div class="tree">
+        <ul role="tree" onKeyDown=${treeKeyHandler}>
+          ${showTree(tree, selected)}
+        </ul>
+      </div>`;
     render(document.querySelector("#designer"), designer);
     // persist the design
     localStorage.setItem("design", JSON.stringify(toDesign(tree)));
