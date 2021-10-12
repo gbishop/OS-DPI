@@ -54,6 +54,7 @@ export function styleString(styles) {
 class ColorInput extends HTMLElement {
   value = "";
   name = "";
+  tabindex = "0";
 
   /**
    * Called when the element is added to a page. The first time this is called
@@ -68,7 +69,7 @@ class ColorInput extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ["name", "value"];
+    return ["name", "value", "tabindex"];
   }
 
   /**
@@ -105,18 +106,20 @@ class ColorInput extends HTMLElement {
   render() {
     render(
       this,
-      html`<input
+      html`<div class="color-input">
+        <input
           type="text"
           name=${this.name}
           .value=${this.value}
           list="ColorNames"
           onchange=${() => this.validate()}
+          tabindex=${this.tabindex}
         />
         <div
           class="swatch"
           style=${`background-color: ${getColor(this.value)}`}
         ></div>
-        <span />`
+      </div> `
     );
   }
 }

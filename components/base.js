@@ -62,6 +62,11 @@ class ComponentNameMap {
 
 export const componentMap = new ComponentNameMap();
 
+let idCounter = 0;
+function nextId() {
+  return `osdpi${idCounter++}`;
+}
+
 export class Base {
   /** @type {Props} */
   static defaultProps = {};
@@ -88,6 +93,7 @@ export class Base {
     this.parent = parent;
     this.designer = {};
     this.init();
+    this.id = nextId();
   }
 
   init() {}
@@ -196,6 +202,7 @@ class Stack extends Base {
     });
     const empty = this.children.length ? "" : "empty";
     return html`<div
+      id=${this.id}
       class=${`stack flex ${this.props.direction} ${empty}`}
       style=${style}
     >

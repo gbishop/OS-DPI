@@ -1,15 +1,10 @@
 import { html, render } from "uhtml";
 import { PropInfo } from "./properties";
 import { componentMap, toDesign } from "./components/base";
+import { ColorNames } from "./components/color-names";
+import * as focusTrap from "focus-trap";
 
 /** @typedef {import('components/base').Base} Tree */
-
-const symbols = {
-  left: "&#129080;",
-  right: "&#129082;",
-  down: "&#129083;",
-  up: "&#129081;",
-};
 
 /** @type {Tree} */
 let selected = null;
@@ -18,16 +13,17 @@ let selected = null;
 export function designer(tree) {
   /** @param {Tree} selection
    */
-  function setSelected(selection) {
+  function setSelected(selection, editing = false) {
     selected = selection;
     while (selection.parent) {
       selection.parent.designer.expanded = true;
       selection = selection.parent;
     }
     localStorage.setItem("path", JSON.stringify(getPath(selected)));
-    renderDesigner();
+    renderDesigner(editing);
     selected.designer.current.focus();
-    console.log("focus", document.activeElement, selected.designer.current);
+    document.querySelector("#UI .highlight")?.classList.remove("highlight");
+    document.querySelector(`#${selected.id}`)?.classList.add("highlight");
   }
 
   function getNode(path) {
@@ -100,7 +96,21 @@ export function designer(tree) {
   }
 
   function deleteCurrent() {
-    return html`<button>Delete</button>`;
+    return html`<button
+      onclick=${() => {
+        const index = selected.parent.children.indexOf(selected);
+        console.log("index", index);
+        selected.parent.children.splice(index, 1);
+        if (selected.parent.children.length) {
+          setSelected(selected.parent.children[Math.max(0, index - 1)]);
+        } else {
+          setSelected(selected.parent);
+        }
+        selected.context.state.update();
+      }}
+    >
+      Delete
+    </button>`;
   }
 
   /** @param {InputEvent} event */
@@ -111,6 +121,33 @@ export function designer(tree) {
     console.log({ name, value });
     selected.props[name] = value;
     selected.context.state.update();
+  }
+
+  function isValidColor(strColor) {
+    if (strColor.length == 0 || strColor in ColorNames) {
+      return true;
+    }
+    var s = new Option().style;
+    s.color = strColor;
+
+    // return 'false' if color wasn't assigned
+    return s.color !== "";
+  }
+
+  function getColor(name) {
+    return ColorNames[name] || name;
+  }
+
+  /** @param {HTMLInputElement} input */
+  function validateColor(input) {
+    if (!isValidColor(input.value)) {
+      input.setCustomValidity("invalid color");
+      input.reportValidity();
+    } else {
+      input.setCustomValidity("");
+      const div = this.querySelector("div");
+      div.style.background = getColor(input.value);
+    }
   }
 
   /** @param {string} name */
@@ -141,12 +178,20 @@ export function designer(tree) {
       case "color":
         console.log("color", name, value);
         return html`<label for=${name}>${info.name}</label>
-          <color-input
-            id=${name}
-            name=${name}
-            value=${value}
-            onchange=${propUpdate}
-          />`;
+          <div class="color-input">
+            <input
+              id=${name}
+              type="text"
+              name=${name}
+              .value=${value}
+              list="ColorNames"
+              onchange=${({ target }) => validateColor(target)}
+            />
+            <div
+              class="swatch"
+              style=${`background-color: ${getColor(value)}`}
+            ></div>
+          </div>`;
       case "select":
         return html`<label for=${name}>${info.name}</label>
           <select id=${name} name=${name} onchange=${propUpdate}>
@@ -221,8 +266,10 @@ export function designer(tree) {
   function controls() {
     return html`<div class="controls">
       <h1>Editing ${selected.constructor.name} ${selected.name}</h1>
-      ${addMenu()} ${movement()} ${deleteCurrent()}
+      ${addMenu()} ${deleteCurrent()}
       <div class="props">${props()}</div>
+      <button id="controls-return">Return</button
+      ><button disabled>Cancel</button>
     </div>`;
   }
   /**
@@ -248,12 +295,11 @@ export function designer(tree) {
       >
         <span
           role="button"
-          ?highlight=${selected === tree}
           onclick=${() => {
             if (selected === tree) {
               tree.designer.expanded = !tree.designer.expanded;
             }
-            setSelected(tree);
+            setSelected(tree, true);
           }}
         >
           ${tree.constructor.name} ${tree.name}
@@ -273,10 +319,7 @@ export function designer(tree) {
         tabindex=${selected === tree ? 0 : -1}
         ref=${tree.designer}
       >
-        <span
-          role="button"
-          ?highlight=${selected === tree}
-          onclick=${() => setSelected(tree)}
+        <span role="button" onclick=${() => setSelected(tree, true)}
           >${tree.constructor.name} ${tree.name}</span
         >
       </li>`;
@@ -308,12 +351,18 @@ export function designer(tree) {
           setSelected(selected.parent);
         }
         break;
+      case " ":
+      case "Enter":
+        renderDesigner(true);
+        document.querySelector("div.controls").focus();
+        break;
       default:
         console.log("ignored key", event);
     }
   }
 
-  function renderDesigner() {
+  /** @param {boolean} focusEditor */
+  function renderDesigner(focusEditor = false) {
     if (!selected) {
       // restore the selected node if possible
       const jpath = localStorage.getItem("path");
@@ -338,13 +387,30 @@ export function designer(tree) {
       }
     }
     console.log("selected", selected);
-    const designer = html`${controls()}
-      <div class="tree">
+    const designer = html` <div class="tree">
         <ul role="tree" onKeyDown=${treeKeyHandler}>
           ${showTree(tree, selected)}
         </ul>
-      </div>`;
+      </div>
+      ${focusEditor ? controls() : html``}`;
     render(document.querySelector("#designer"), designer);
+    if (focusEditor) {
+      let trap = focusTrap.createFocusTrap("div.controls", {
+        clickOutsideDeactivates: true,
+        allowOutsideClick: true,
+        onDeactivate: () => {
+          console.log("deactivate trap");
+          renderDesigner();
+        },
+        onActivate: () => {
+          console.log("activate trap");
+        },
+      });
+      document
+        .querySelector("#controls-return")
+        .addEventListener("click", () => trap.deactivate());
+      trap.activate();
+    }
     // persist the design
     localStorage.setItem("design", JSON.stringify(toDesign(tree)));
   }

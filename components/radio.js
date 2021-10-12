@@ -68,6 +68,7 @@ class Radio extends Base {
       class="radio flex"
       style=${styleString(style)}
       onclick=${(e) => this.handleClick(e)}
+      id=${this.id}
     >
       <fieldset class="flex">
         ${(this.props.label && html`<legend>${this.props.label}</legend>`) ||

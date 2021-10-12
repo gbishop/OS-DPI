@@ -10,7 +10,7 @@ class Gap extends Base {
       flexGrow: this.props.scale,
       backgroundColor: this.props.background,
     });
-    return html`<div class="gap flex" style=${style}></div>`;
+    return html`<div class="gap flex" style=${style} id=${this.id}></div>`;
   }
 }
 

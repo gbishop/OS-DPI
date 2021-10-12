@@ -195,29 +195,23 @@ span.arrows button {
   vertical-align: center;
 }
 
-summary[highlight],
-span[highlight] {
-  font-weight: bold;
-  background-color: pink;
-}
-
 details ul {
   list-style: none;
   margin-block-start: 0;
   padding-inline-start: 20px;
 }
 
-color-input {
+.color-input {
   margin-right: 1em;
   align-items: center;
 }
 
-color-input input {
+.color-input input {
   flex: 1 1 0;
   margin-right: 0.2em;
 }
 
-color-input .swatch {
+.color-input .swatch {
   width: 1em;
   height: 1em;
   display: inline-block;
@@ -315,4 +309,13 @@ div.empty::before {
   display: inline-block;
   margin-right: 6px;
   transform: rotate(90deg);
+}
+
+.tree li[aria-selected="true"] > span {
+  background-color: pink;
+}
+
+div.highlight {
+  border: 1px solid red;
+  box-sizing: border-box;
 }

@@ -51,7 +51,7 @@ class Grid extends Base {
       const item = items[i];
       let itemIndex = item.index || i;
       while (offset + result.length < itemIndex) {
-        result.push(html`<button disabled></button>`);
+        result.push(html`<button tabindex="-1" disabled></button>`);
       }
       let content;
       let msg = formatSlottedString(item.msg);
@@ -70,13 +70,14 @@ class Grid extends Base {
           onClick=${rules.handler(name, item, "press")}
           style=${styleString({ backgroundColor: background })}
           .disabled=${!item.msg || item.msg.length == 0}
+          tabindex="-1"
         >
           ${content}
         </button>`
       );
     }
     while (result.length < perPage) {
-      result.push(html`<button disabled></button>`);
+      result.push(html`<button tabindex="-1" disabled></button>`);
     }
     if (perPage < rows * columns) {
       result.push(html`<div class="page-control">
@@ -89,6 +90,7 @@ class Grid extends Base {
             }}
             style=${styleString({ backgroundColor: background })}
             .disabled=${perPage >= items.length}
+            tabindex="-1"
           >
             &#9754;</button
           ><button
@@ -98,6 +100,7 @@ class Grid extends Base {
             }}
             style=${styleString({ backgroundColor: background })}
             .disabled=${perPage >= items.length}
+            tabindex="-1"
           >
             &#9755;
           </button>
@@ -105,7 +108,12 @@ class Grid extends Base {
       </div>`);
     }
 
-    return html`<div class="grid" ref=${this} style=${styleString(style)}>
+    return html`<div
+      class="grid"
+      id=${this.id}
+      ref=${this}
+      style=${styleString(style)}
+    >
       ${result}
     </div>`;
   }

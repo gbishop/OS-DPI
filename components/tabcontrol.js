@@ -43,7 +43,11 @@ class TabControl extends Base {
         </button>`;
       });
     const panel = panels.find((panel) => panel.active)?.template() || html``;
-    return html`<div class="tabcontrol flex column" style=${style}>
+    return html`<div
+      class="tabcontrol flex column"
+      style=${style}
+      id=${this.id}
+    >
       <div class="panels" style=${styleString({ flexGrow: this.props.scale })}>
         ${panel}
       </div>
@@ -67,6 +71,7 @@ class TabPanel extends Base {
     return html`<div
       class="tabpanel flex"
       style=${styleString({ backgroundColor: this.props.background })}
+      id=${this.id}
     >
       ${this.children.map((child) => child.template())}
     </div>`;

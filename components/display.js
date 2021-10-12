@@ -58,7 +58,12 @@ class Display extends Base {
         return html`${part}`;
       });
     }
-    return html`<div class="display flex" ref=${this} style=${style}>
+    return html`<div
+      class="display flex"
+      ref=${this}
+      style=${style}
+      id=${this.id}
+    >
       ${content}
     </div>`;
   }
