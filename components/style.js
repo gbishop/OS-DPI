@@ -1,7 +1,22 @@
 import { html, render } from "uhtml";
 import { ColorNames } from "./color-names";
 
-function isValidColor(strColor) {
+/** @param {Event & { target: HTMLInputElement }} event
+ */
+export function validateColor(event) {
+  const input = event.target;
+  if (!isValidColor(input.value)) {
+    input.setCustomValidity("invalid color");
+    input.reportValidity();
+  } else {
+    input.setCustomValidity("");
+    const div = /** @type {HTMLElement} */ (input.nextElementSibling);
+    div.style.background = getColor(input.value);
+    this.propUpdate(event);
+  }
+}
+
+export function isValidColor(strColor) {
   if (strColor.length == 0 || strColor in ColorNames) {
     return true;
   }

@@ -26,8 +26,8 @@ import { styleString } from "./style";
 /**
  * @typedef {Object} Context
  * @property {import("../state").State} state
- * @property {import("../rules").Rules} rules
- * @property {import("../data").Data} data
+ * @property {import("../rules").Rules} [rules]
+ * @property {import("../data").Data} [data]
  */
 
 class ComponentNameMap {

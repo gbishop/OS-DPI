@@ -1,63 +1,90 @@
-import { html, render } from "uhtml";
+import { html } from "uhtml";
 import { PropInfo } from "./properties";
-import { componentMap, toDesign } from "./components/base";
-import { ColorNames } from "./components/color-names";
+import { componentMap } from "./components/base";
+import { getColor, validateColor } from "./components/style";
 import * as focusTrap from "focus-trap";
+import { Base } from "./components/base";
 
 /** @typedef {import('components/base').Base} Tree */
 
 /** @type {Tree} */
 let selected = null;
 
-/** @param {Tree} tree */
-export function designer(tree) {
+export class Layout extends Base {
+  /** @param {Tree} tree
+   * @param {import("./components/base").Context} context
+   * */
+  constructor(context, tree) {
+    super({}, context, null);
+    this.tree = tree;
+  }
+
+  /** Make sure a node is visible
+   * @param {Tree} node
+   */
+  makeVisible(node) {
+    while (node.parent) {
+      node.parent.designer.expanded = true;
+      node = node.parent;
+    }
+  }
+
   /** @param {Tree} selection
    */
-  function setSelected(selection, editing = false) {
+  setSelected(selection, editingTree = false) {
     selected = selection;
-    while (selection.parent) {
-      selection.parent.designer.expanded = true;
-      selection = selection.parent;
-    }
-    localStorage.setItem("path", JSON.stringify(getPath(selected)));
-    renderDesigner(editing);
-    selected.designer.current.focus();
+    this.makeVisible(selected);
+    const state = this.context.state;
+    state.update({ state, path: this.getPath(selected), editingTree });
     document.querySelector("#UI .highlight")?.classList.remove("highlight");
     document.querySelector(`#${selected.id}`)?.classList.add("highlight");
   }
 
-  function getNode(path) {
+  /** return a node given the path through the children to get to it
+   * from the root.
+   * @param {number[]} path
+   * @returns {Tree}
+   */
+  getNode(path) {
+    if (!path) path = [];
     return path.reduce((pv, index) => {
       return pv.children[index];
-    }, tree);
+    }, this.tree);
   }
 
-  function getPath(selection) {
+  /** return the path from root to selection
+   * @param {Tree} selection
+   * @returns {number[]}
+   */
+  getPath(selection) {
     if (selection.parent) {
       const index = selection.parent.children.indexOf(selection);
-      return [...getPath(selection.parent), index];
+      return [...this.getPath(selection.parent), index];
     }
     return [];
   }
 
-  function addChild(type) {
-    console.log("hey");
+  /** Add a child of the given type to the current selection
+   * @param {string} type
+   */
+  addChild(type) {
     const constructor = componentMap.component(type);
     const child = new constructor({}, selected.context, selected);
     selected.children.push(child);
-    console.log({ type, constructor, child });
-    setSelected(child);
+    this.setSelected(child);
     selected.context.state.update();
   }
 
-  function addMenu() {
+  /** Create the add child menu */
+  addMenu() {
     const allowed = selected.allowedChildren();
     return html`<select
       class="menu"
       ?disabled=${!allowed.length}
       style="width: 7em"
       onchange=${(e) => {
-        addChild(e.target.value);
+        this.trap.deactivate();
+        this.addChild(e.target.value);
         e.target.value = "";
       }}
     >
@@ -66,10 +93,11 @@ export function designer(tree) {
     </select>`;
   }
 
-  function visibleChidren(tree) {
+  /** Get a list of the children that are visible */
+  visibleChidren(tree) {
     if (tree.children.length && tree.designer.expanded) {
       return tree.children.reduce(
-        (result, child) => [...result, child, ...visibleChidren(child)],
+        (result, child) => [...result, child, ...this.visibleChidren(child)],
         []
       );
     } else {
@@ -77,34 +105,36 @@ export function designer(tree) {
     }
   }
 
-  function next() {
-    const vc = visibleChidren(tree);
+  /** Get the next visible child
+   * @returns {Tree}
+   * */
+  nextVisibleChild() {
+    const vc = this.visibleChidren(this.tree);
     const ndx = Math.min(vc.indexOf(selected) + 1, vc.length - 1);
     return vc[ndx];
   }
 
-  function previous() {
-    const vc = visibleChidren(tree);
+  /** Get the previous visible child
+   * @returns {Tree}
+   * */
+  previousVisibleChild() {
+    const vc = this.visibleChidren(this.tree);
     const ndx = Math.max(0, vc.indexOf(selected) - 1);
     return vc[ndx];
   }
 
-  function movement() {
-    return html`<details class="menu">
-      <summary>Move</summary>
-    </details>`;
-  }
-
-  function deleteCurrent() {
+  /** Delete the current tree node */
+  deleteCurrent() {
     return html`<button
       onclick=${() => {
+        this.trap.deactivate();
         const index = selected.parent.children.indexOf(selected);
         console.log("index", index);
         selected.parent.children.splice(index, 1);
         if (selected.parent.children.length) {
-          setSelected(selected.parent.children[Math.max(0, index - 1)]);
+          this.setSelected(selected.parent.children[Math.max(0, index - 1)]);
         } else {
-          setSelected(selected.parent);
+          this.setSelected(selected.parent);
         }
         selected.context.state.update();
       }}
@@ -113,49 +143,21 @@ export function designer(tree) {
     </button>`;
   }
 
-  /** @param {InputEvent} event */
-  function propUpdate(event) {
-    console.log("update", event);
-    const name = event.target.name;
-    const value = event.target.value;
+  /** @param {Event & { target: HTMLInputElement }} event
+   */
+  propUpdate({ target }) {
+    const name = target.name;
+    const value = target.value;
     console.log({ name, value });
     selected.props[name] = value;
     selected.context.state.update();
   }
 
-  function isValidColor(strColor) {
-    if (strColor.length == 0 || strColor in ColorNames) {
-      return true;
-    }
-    var s = new Option().style;
-    s.color = strColor;
-
-    // return 'false' if color wasn't assigned
-    return s.color !== "";
-  }
-
-  function getColor(name) {
-    return ColorNames[name] || name;
-  }
-
-  /** @param {HTMLInputElement} input */
-  function validateColor(input) {
-    if (!isValidColor(input.value)) {
-      input.setCustomValidity("invalid color");
-      input.reportValidity();
-    } else {
-      input.setCustomValidity("");
-      const div = this.querySelector("div");
-      div.style.background = getColor(input.value);
-    }
-  }
-
   /** @param {string} name */
-  function prop(name) {
+  prop(name) {
     const value = selected.props[name];
     const info = PropInfo[name];
     const label = html`<label for=${name}>${info.name}</label>`;
-    console.log("prop", name, info.type);
     switch (info.type) {
       case "string":
         return html`<label for=${name}>${info.name}</label>
@@ -164,7 +166,7 @@ export function designer(tree) {
             id=${name}
             name=${name}
             .value=${value}
-            onchange=${propUpdate}
+            onchange=${this.propUpdate}
           />`;
       case "number":
         return html`${label}
@@ -173,10 +175,9 @@ export function designer(tree) {
             id=${name}
             name=${name}
             .value=${value}
-            onchange=${propUpdate}
+            onchange=${this.propUpdate}
           />`;
       case "color":
-        console.log("color", name, value);
         return html`<label for=${name}>${info.name}</label>
           <div class="color-input">
             <input
@@ -185,7 +186,7 @@ export function designer(tree) {
               name=${name}
               .value=${value}
               list="ColorNames"
-              onchange=${({ target }) => validateColor(target)}
+              onchange=${(event) => validateColor(event)}
             />
             <div
               class="swatch"
@@ -194,8 +195,8 @@ export function designer(tree) {
           </div>`;
       case "select":
         return html`<label for=${name}>${info.name}</label>
-          <select id=${name} name=${name} onchange=${propUpdate}>
-            ${info.values.map(
+          <select id=${name} name=${name} onchange=${this.propUpdate}>
+            ${info.values?.map(
               (ov) =>
                 html`<option value=${ov} ?selected=${ov == value}>
                   ${ov}
@@ -209,10 +210,8 @@ export function designer(tree) {
             id=${name}
             name=${name}
             .value=${value}
-            onchange=${propUpdate}
+            onchange=${this.propUpdate}
             oninput=${(/** @type {InputEvent} */ ev) => {
-              console.log("input", ev);
-
               const target = /** @type {HTMLInputElement} */ (ev.target);
               if (!target.value.startsWith("$")) {
                 target.value = "$" + target.value;
@@ -222,7 +221,6 @@ export function designer(tree) {
       case "tags":
         const tags = value.length ? [...value] : [""];
         return html`${tags.map((tag, index) => {
-            console.log({ tag, index });
             const id = `${name}_${index}`;
             const hidden = index != 0;
             const label = index != 0 ? `${info.name} ${index + 1}` : info.name;
@@ -246,7 +244,7 @@ export function designer(tree) {
           })}<button
             onclick=${() => {
               selected.props[name].push("NewTag");
-              renderDesigner();
+              this.refresh(true);
             }}
           >
             Add tag
@@ -257,18 +255,37 @@ export function designer(tree) {
     }
   }
 
-  function props() {
+  /** Render props for the selected element */
+  showProps() {
     return Object.keys(PropInfo)
       .filter((name) => name in selected.props)
-      .map((name) => prop(name));
+      .map((name) => this.prop(name));
   }
 
-  function controls() {
-    return html`<div class="controls">
+  /** Render the controls */
+  controls() {
+    return html`<div
+      class="controls"
+      ref=${(/** @type {HTMLElement} */ div) => {
+        this.trap = focusTrap.createFocusTrap(div, {
+          clickOutsideDeactivates: true,
+          allowOutsideClick: true,
+          onDeactivate: () => {
+            console.log("deactivate trap");
+            this.refresh();
+          },
+          onActivate: () => {
+            console.log("activate trap");
+          },
+        });
+        this.trap.activate();
+      }}
+    >
       <h1>Editing ${selected.constructor.name} ${selected.name}</h1>
-      ${addMenu()} ${deleteCurrent()}
-      <div class="props">${props()}</div>
-      <button id="controls-return">Return</button
+      ${this.addMenu()} ${this.deleteCurrent()}
+      <div class="props">${this.showProps()}</div>
+      <button id="controls-return" onclick=${() => this.trap.deactivate()}>
+        Return</button
       ><button disabled>Cancel</button>
     </div>`;
   }
@@ -278,12 +295,20 @@ export function designer(tree) {
    * @param {Tree} selected
    * @returns {import('uhtml').Hole}
    */
-  function showTree(tree, selected) {
+  showTree(tree, selected) {
+    /** @param {HTMLElement} current */
+    function setCurrent(current) {
+      tree.designer.current = current;
+      if (tree === selected) {
+        current.focus();
+      }
+    }
+
     if (tree.children.length) {
       if (!tree.designer.hasOwnProperty("expanded")) {
         tree.designer.expanded = false;
       }
-      const { expanded, focused } = tree.designer;
+      const { expanded } = tree.designer;
       return html`<li
         role="treeitem"
         aria=${{
@@ -291,7 +316,7 @@ export function designer(tree) {
           selected: selected === tree,
         }}
         tabindex=${selected === tree ? 0 : -1}
-        ref=${tree.designer}
+        ref=${setCurrent}
       >
         <span
           role="button"
@@ -299,7 +324,7 @@ export function designer(tree) {
             if (selected === tree) {
               tree.designer.expanded = !tree.designer.expanded;
             }
-            setSelected(tree, true);
+            this.setSelected(tree, true);
           }}
         >
           ${tree.constructor.name} ${tree.name}
@@ -307,7 +332,7 @@ export function designer(tree) {
         ${tree.designer.expanded
           ? html` <ul role="group">
               ${tree.children.map(
-                (child) => html`${showTree(child, selected)}`
+                (child) => html`${this.showTree(child, selected)}`
               )}
             </ul>`
           : html``}
@@ -317,103 +342,72 @@ export function designer(tree) {
         role="treeitem"
         aria=${{ selected: selected === tree }}
         tabindex=${selected === tree ? 0 : -1}
-        ref=${tree.designer}
+        ref=${setCurrent}
       >
-        <span role="button" onclick=${() => setSelected(tree, true)}
+        <span role="button" onclick=${() => this.setSelected(tree, true)}
           >${tree.constructor.name} ${tree.name}</span
         >
       </li>`;
     }
   }
   /** @param {KeyboardEvent} event */
-  function treeKeyHandler(event) {
-    console.log(event);
+  treeKeyHandler(event) {
     switch (event.key) {
       case "ArrowDown":
-        setSelected(next());
+        this.setSelected(this.nextVisibleChild());
         break;
       case "ArrowUp":
-        setSelected(previous());
+        this.setSelected(this.previousVisibleChild());
         break;
       case "ArrowRight":
         if (selected.children.length && !selected.designer.expanded) {
           selected.designer.expanded = true;
-          renderDesigner();
+          this.refresh();
         } else if (selected.children.length) {
-          setSelected(selected.children[0]);
+          this.setSelected(selected.children[0]);
         }
         break;
       case "ArrowLeft":
         if (selected.children.length && selected.designer.expanded) {
           selected.designer.expanded = false;
-          renderDesigner();
+          this.refresh();
         } else if (selected.parent) {
-          setSelected(selected.parent);
+          this.setSelected(selected.parent);
         }
         break;
       case " ":
       case "Enter":
-        renderDesigner(true);
-        document.querySelector("div.controls").focus();
+        this.refresh(true);
         break;
       default:
         console.log("ignored key", event);
     }
   }
 
-  /** @param {boolean} focusEditor */
-  function renderDesigner(focusEditor = false) {
-    if (!selected) {
-      // restore the selected node if possible
-      const jpath = localStorage.getItem("path");
-      console.log("jpath", jpath);
-      if (jpath) {
-        try {
-          const path = JSON.parse(jpath);
-          const target = getNode(path);
-          if (target) {
-            setSelected(target);
-          }
-        } catch (error) {
-          localStorage.removeItem("path");
-        }
-      }
-    }
-    if (!selected) {
-      if (tree.children.length) {
-        setSelected(tree.children[0]);
-      } else {
-        setSelected(tree);
-      }
-    }
+  template() {
+    const state = this.context.state;
+    const editingTree = state.get("editingTree");
+    selected = this.getNode(state.get("path"));
+    this.makeVisible(selected);
     console.log("selected", selected);
-    const designer = html` <div class="tree">
-        <ul role="tree" onKeyDown=${treeKeyHandler}>
-          ${showTree(tree, selected)}
+    return html`<div class="tree">
+        <ul
+          role="tree"
+          onKeyDown=${
+            /** @param {KeyboardEvent} event */ (event) =>
+              this.treeKeyHandler(event)
+          }
+        >
+          ${this.showTree(this.tree, selected)}
         </ul>
       </div>
-      ${focusEditor ? controls() : html``}`;
-    render(document.querySelector("#designer"), designer);
-    if (focusEditor) {
-      let trap = focusTrap.createFocusTrap("div.controls", {
-        clickOutsideDeactivates: true,
-        allowOutsideClick: true,
-        onDeactivate: () => {
-          console.log("deactivate trap");
-          renderDesigner();
-        },
-        onActivate: () => {
-          console.log("activate trap");
-        },
-      });
-      document
-        .querySelector("#controls-return")
-        .addEventListener("click", () => trap.deactivate());
-      trap.activate();
-    }
-    // persist the design
-    localStorage.setItem("design", JSON.stringify(toDesign(tree)));
+      ${editingTree ? this.controls() : html``}`;
   }
-  tree.context.state.observe(renderDesigner);
-  renderDesigner();
+
+  /** Update the editing flag and request a refresh
+   * @param {boolean} editingTree
+   */
+  refresh(editingTree = false) {
+    this.context.state.update({ editingTree });
+  }
 }

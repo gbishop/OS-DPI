@@ -3,7 +3,8 @@ import { assemble } from "./components/index";
 import Rules from "./rules";
 import Data from "./data";
 import { State } from "./state";
-import { designer } from "./designer";
+import { Layout } from "./designer";
+import { toDesign } from "./components/base";
 
 /** let me wait for the page to load */
 const pageLoaded = new Promise((resolve) => {
@@ -34,10 +35,28 @@ export async function start(name) {
     state,
   };
   const tree = assemble(design, context);
+
+  function debounce(f) {
+    let timeout = null;
+    return () => {
+      if (timeout) window.cancelAnimationFrame(timeout);
+      timeout = window.requestAnimationFrame(f);
+    };
+  }
+
   function renderUI() {
     render(document.querySelector("#UI"), tree.template());
+    console.log("render UI");
   }
-  state.observe(renderUI);
+  state.observe(debounce(renderUI));
   renderUI();
-  designer(tree);
+  const designerState = new State("D06");
+  const layout = new Layout({ state: designerState }, tree);
+  function renderDesigner() {
+    localStorage.setItem("design", JSON.stringify(toDesign(tree)));
+    render(document.querySelector("div#designer"), layout.template());
+    console.log("render designer");
+  }
+  designerState.observe(debounce(renderDesigner));
+  renderDesigner();
 }
