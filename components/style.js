@@ -8,14 +8,16 @@ export function validateColor(event) {
   if (!isValidColor(input.value)) {
     input.setCustomValidity("invalid color");
     input.reportValidity();
+    return false;
   } else {
     input.setCustomValidity("");
     const div = /** @type {HTMLElement} */ (input.nextElementSibling);
     div.style.background = getColor(input.value);
-    this.propUpdate(event);
+    return true;
   }
 }
 
+/** @param {string} strColor */
 export function isValidColor(strColor) {
   if (strColor.length == 0 || strColor in ColorNames) {
     return true;
@@ -27,6 +29,7 @@ export function isValidColor(strColor) {
   return s.color !== "";
 }
 
+/** @param {string} name */
 export function getColor(name) {
   return ColorNames[name] || name;
 }
@@ -38,7 +41,7 @@ function normalizeStyle(style) {
       .filter(([_, value]) => value.toString().length)
       .map(([key, value]) =>
         key.toLowerCase().indexOf("color") >= 0
-          ? [key, getColor(value)]
+          ? [key, getColor(/** @type {string} */ (value))]
           : [key, value.toString()]
       )
   );
@@ -64,6 +67,12 @@ export function styleString(styles) {
       ";",
     ""
   );
+}
+
+export function colorNamesDataList() {
+  return html`<datalist id="ColorNames">
+    ${Object.keys(ColorNames).map((name) => html`<option value="${name}" />`)}
+  </datalist>`;
 }
 
 class ColorInput extends HTMLElement {

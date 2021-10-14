@@ -2,28 +2,24 @@
  * implement actions
  */
 
+import { State } from "./state";
+
 /**
  * functions for updating states
  */
 
-/**
- * @typedef {Object} Rule
- * @property {string} origin
- * @property {string} event
- * @property {string[]} conditions
- * @property {Object<string, string>} updates
- */
-
 export class Rules {
   Functions = {
-    append: (value) => (old) => [...old, value],
+    append: (/** @type {any} */ value) => (/** @type {any[]} */ old) =>
+      [...old, value],
     empty: () => () => [],
-    increment: (value) => (old) => old + value,
+    increment: (/** @type {number} */ value) => (/** @type {number} */ old) =>
+      old + value,
   };
 
   /**
    * @param {Rule[]} rules
-   * @param {import('./state').State} state
+   * @param {State} state
    */
   constructor(rules, state) {
     this.rules = rules;
@@ -116,5 +112,3 @@ export class Rules {
     };
   }
 }
-
-export default Rules;

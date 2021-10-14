@@ -1,13 +1,6 @@
 /* info about component properties */
 
-/** @typedef {Object} Info
- * @property {string} type
- * @property {string} name
- * @property {string} description
- * @property {string[]} [values]
- */
-
-/** @type {Object<string,Info>} */
+/** @type {Object<string,PropertyInfo>} */
 export const PropInfo = {
   stateName: {
     type: "state",

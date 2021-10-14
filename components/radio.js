@@ -11,7 +11,7 @@ class Option extends Base {
 componentMap.addMap("option", Option);
 
 class Radio extends Base {
-  /** @type {import('./base').Props} */
+  /** @type {Props} */
   static defaultProps = {
     label: "",
     stateName: "",
@@ -67,7 +67,7 @@ class Radio extends Base {
     return html`<div
       class="radio flex"
       style=${styleString(style)}
-      onclick=${(e) => this.handleClick(e)}
+      onclick=${(/** @type {MouseEvent} */ e) => this.handleClick(e)}
       id=${this.id}
     >
       <fieldset class="flex">

@@ -1,15 +1,3 @@
-/**
- * @typedef {Object[]} Rows
- * @property {string[]} tags
- * @property {string} [message]
- * @property {string} [label]
- * @property {string} [link]
- * @property {string} [icon]
- * @property {number} [row]
- * @property {number} [column]
- * @property {Object} [details]
- * */
-
 export class Data {
   /** @param {Rows} rows */
   constructor(rows) {
@@ -53,5 +41,3 @@ export class Data {
     );
   }
 }
-
-export default Data;

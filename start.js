@@ -1,9 +1,9 @@
-import { html, render } from "uhtml";
+import { render } from "uhtml";
 import { assemble } from "./components/index";
-import Rules from "./rules";
-import Data from "./data";
+import { Rules } from "./rules";
+import { Data } from "./data";
 import { State } from "./state";
-import { Layout } from "./designer";
+import { Designer } from "./designer";
 import { toDesign } from "./components/base";
 
 /** let me wait for the page to load */
@@ -36,6 +36,7 @@ export async function start(name) {
   };
   const tree = assemble(design, context);
 
+  /** @param {() => void} f */
   function debounce(f) {
     let timeout = null;
     return () => {
@@ -51,10 +52,17 @@ export async function start(name) {
   state.observe(debounce(renderUI));
   renderUI();
   const designerState = new State("D06");
-  const layout = new Layout({ state: designerState }, tree);
+  const designer = new Designer(
+    {},
+    { state: designerState },
+    null,
+    tree,
+    rules,
+    data
+  );
   function renderDesigner() {
     localStorage.setItem("design", JSON.stringify(toDesign(tree)));
-    render(document.querySelector("div#designer"), layout.template());
+    render(document.querySelector("div#designer"), designer.template());
     console.log("render designer");
   }
   designerState.observe(debounce(renderDesigner));

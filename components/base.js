@@ -1,35 +1,6 @@
 import { html } from "uhtml";
 import { styleString } from "./style";
 
-/**
- * @typedef {Object} AllProps
- * @property {string} scale
- * @property {string} background
- * @property {string} selected
- * @property {string} unselected
- * @property {number} rows
- * @property {number} columns
- * @property {string[]} tags
- * @property {string} stateName
- * @property {string} match
- * @property {string} name
- * @property {string} label
- * @property {{value: string, text: string}[]} choices
- * @property {string} direction
- * @property {string} value
- */
-
-/**
- * @typedef {Partial<AllProps>} Props
- */
-
-/**
- * @typedef {Object} Context
- * @property {import("../state").State} state
- * @property {import("../rules").Rules} [rules]
- * @property {import("../data").Data} [data]
- */
-
 class ComponentNameMap {
   componentFromName = new Map();
   nameFromComponent = new Map();
@@ -142,13 +113,6 @@ export class Base {
     return this.constructor.name;
   }
 }
-
-/**
- * @typedef {Object} Design
- * @property {string} type
- * @property {import("./base").Props} props
- * @property {Design[]} children
- */
 
 /**
  * @param {Design} design

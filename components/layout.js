@@ -1,21 +1,22 @@
 import { html } from "uhtml";
-import { PropInfo } from "./properties";
-import { componentMap } from "./components/base";
-import { getColor, validateColor } from "./components/style";
+import { PropInfo } from "../properties";
+import { componentMap } from "./base";
+import { getColor, validateColor, colorNamesDataList } from "./style";
 import * as focusTrap from "focus-trap";
-import { Base } from "./components/base";
+import { Base } from "./base";
 
-/** @typedef {import('components/base').Base} Tree */
+/** @typedef {Base} Tree */
 
 /** @type {Tree} */
 let selected = null;
 
 export class Layout extends Base {
   /** @param {Tree} tree
-   * @param {import("./components/base").Context} context
+   * @param {Context} context
    * */
   constructor(context, tree) {
     super({}, context, null);
+    console.log({ context, tree });
     this.tree = tree;
   }
 
@@ -77,12 +78,13 @@ export class Layout extends Base {
 
   /** Create the add child menu */
   addMenu() {
+    /** @type {string[]} */
     const allowed = selected.allowedChildren();
     return html`<select
       class="menu"
       ?disabled=${!allowed.length}
       style="width: 7em"
-      onchange=${(e) => {
+      onchange=${(/** @type {{ target: { value: string; }; }} */ e) => {
         this.trap.deactivate();
         this.addChild(e.target.value);
         e.target.value = "";
@@ -93,7 +95,10 @@ export class Layout extends Base {
     </select>`;
   }
 
-  /** Get a list of the children that are visible */
+  /** Get a list of the children that are visible
+   * @param {Tree} tree
+   * @returns {Tree[]}
+   * */
   visibleChidren(tree) {
     if (tree.children.length && tree.designer.expanded) {
       return tree.children.reduce(
@@ -186,7 +191,9 @@ export class Layout extends Base {
               name=${name}
               .value=${value}
               list="ColorNames"
-              onchange=${(event) => validateColor(event)}
+              onchange=${(
+                /** @type {Event & { target: HTMLInputElement; }} */ event
+              ) => validateColor(event) && this.propUpdate(event)}
             />
             <div
               class="swatch"
@@ -401,7 +408,7 @@ export class Layout extends Base {
           ${this.showTree(this.tree, selected)}
         </ul>
       </div>
-      ${editingTree ? this.controls() : html``}`;
+      ${editingTree ? this.controls() : html``} ${colorNamesDataList()}`;
   }
 
   /** Update the editing flag and request a refresh
