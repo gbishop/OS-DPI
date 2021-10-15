@@ -5,20 +5,13 @@ import { getColor, validateColor, colorNamesDataList } from "./style";
 import * as focusTrap from "focus-trap";
 import { Base } from "./base";
 
-/** @typedef {Base} Tree */
-
-/** @type {Tree} */
-let selected = null;
-
 export class Layout extends Base {
-  /** @param {Tree} tree
-   * @param {Context} context
-   * */
-  constructor(context, tree) {
-    super({}, context, null);
-    console.log({ context, tree });
-    this.tree = tree;
-  }
+  static defaultProps = {
+    scale: "1",
+  };
+
+  /** @type {Tree} */
+  selected = null;
 
   /** Make sure a node is visible
    * @param {Tree} node
@@ -33,12 +26,12 @@ export class Layout extends Base {
   /** @param {Tree} selection
    */
   setSelected(selection, editingTree = false) {
-    selected = selection;
-    this.makeVisible(selected);
+    this.selected = selection;
+    this.makeVisible(this.selected);
     const state = this.context.state;
-    state.update({ state, path: this.getPath(selected), editingTree });
+    state.update({ state, path: this.getPath(this.selected), editingTree });
     document.querySelector("#UI .highlight")?.classList.remove("highlight");
-    document.querySelector(`#${selected.id}`)?.classList.add("highlight");
+    document.querySelector(`#${this.selected.id}`)?.classList.add("highlight");
   }
 
   /** return a node given the path through the children to get to it
@@ -50,7 +43,7 @@ export class Layout extends Base {
     if (!path) path = [];
     return path.reduce((pv, index) => {
       return pv.children[index];
-    }, this.tree);
+    }, this.context.tree);
   }
 
   /** return the path from root to selection
@@ -70,16 +63,16 @@ export class Layout extends Base {
    */
   addChild(type) {
     const constructor = componentMap.component(type);
-    const child = new constructor({}, selected.context, selected);
-    selected.children.push(child);
+    const child = new constructor({}, this.selected.context, this.selected);
+    this.selected.children.push(child);
     this.setSelected(child);
-    selected.context.state.update();
+    this.selected.context.state.update();
   }
 
   /** Create the add child menu */
   addMenu() {
     /** @type {string[]} */
-    const allowed = selected.allowedChildren();
+    const allowed = this.selected.allowedChildren();
     return html`<select
       class="menu"
       ?disabled=${!allowed.length}
@@ -114,8 +107,8 @@ export class Layout extends Base {
    * @returns {Tree}
    * */
   nextVisibleChild() {
-    const vc = this.visibleChidren(this.tree);
-    const ndx = Math.min(vc.indexOf(selected) + 1, vc.length - 1);
+    const vc = this.visibleChidren(this.context.tree);
+    const ndx = Math.min(vc.indexOf(this.selected) + 1, vc.length - 1);
     return vc[ndx];
   }
 
@@ -123,8 +116,8 @@ export class Layout extends Base {
    * @returns {Tree}
    * */
   previousVisibleChild() {
-    const vc = this.visibleChidren(this.tree);
-    const ndx = Math.max(0, vc.indexOf(selected) - 1);
+    const vc = this.visibleChidren(this.context.tree);
+    const ndx = Math.max(0, vc.indexOf(this.selected) - 1);
     return vc[ndx];
   }
 
@@ -133,15 +126,17 @@ export class Layout extends Base {
     return html`<button
       onclick=${() => {
         this.trap.deactivate();
-        const index = selected.parent.children.indexOf(selected);
+        const index = this.selected.parent.children.indexOf(this.selected);
         console.log("index", index);
-        selected.parent.children.splice(index, 1);
-        if (selected.parent.children.length) {
-          this.setSelected(selected.parent.children[Math.max(0, index - 1)]);
+        this.selected.parent.children.splice(index, 1);
+        if (this.selected.parent.children.length) {
+          this.setSelected(
+            this.selected.parent.children[Math.max(0, index - 1)]
+          );
         } else {
-          this.setSelected(selected.parent);
+          this.setSelected(this.selected.parent);
         }
-        selected.context.state.update();
+        this.selected.context.state.update();
       }}
     >
       Delete
@@ -154,13 +149,13 @@ export class Layout extends Base {
     const name = target.name;
     const value = target.value;
     console.log({ name, value });
-    selected.props[name] = value;
-    selected.context.state.update();
+    this.selected.props[name] = value;
+    this.selected.context.state.update();
   }
 
   /** @param {string} name */
   prop(name) {
-    const value = selected.props[name];
+    const value = this.selected.props[name];
     const info = PropInfo[name];
     const label = html`<label for=${name}>${info.name}</label>`;
     switch (info.type) {
@@ -243,14 +238,14 @@ export class Layout extends Base {
                   } else {
                     tags[index] = value;
                   }
-                  selected.props[name] = tags;
-                  selected.context.state.update();
+                  this.selected.props[name] = tags;
+                  this.selected.context.state.update();
                 }}
               />
             `;
           })}<button
             onclick=${() => {
-              selected.props[name].push("NewTag");
+              this.selected.props[name].push("NewTag");
               this.refresh(true);
             }}
           >
@@ -265,7 +260,7 @@ export class Layout extends Base {
   /** Render props for the selected element */
   showProps() {
     return Object.keys(PropInfo)
-      .filter((name) => name in selected.props)
+      .filter((name) => name in this.selected.props)
       .map((name) => this.prop(name));
   }
 
@@ -288,7 +283,7 @@ export class Layout extends Base {
         this.trap.activate();
       }}
     >
-      <h1>Editing ${selected.constructor.name} ${selected.name}</h1>
+      <h1>Editing ${this.selected.constructor.name} ${this.selected.name}</h1>
       ${this.addMenu()} ${this.deleteCurrent()}
       <div class="props">${this.showProps()}</div>
       <button id="controls-return" onclick=${() => this.trap.deactivate()}>
@@ -367,19 +362,19 @@ export class Layout extends Base {
         this.setSelected(this.previousVisibleChild());
         break;
       case "ArrowRight":
-        if (selected.children.length && !selected.designer.expanded) {
-          selected.designer.expanded = true;
+        if (this.selected.children.length && !this.selected.designer.expanded) {
+          this.selected.designer.expanded = true;
           this.refresh();
-        } else if (selected.children.length) {
-          this.setSelected(selected.children[0]);
+        } else if (this.selected.children.length) {
+          this.setSelected(this.selected.children[0]);
         }
         break;
       case "ArrowLeft":
-        if (selected.children.length && selected.designer.expanded) {
-          selected.designer.expanded = false;
+        if (this.selected.children.length && this.selected.designer.expanded) {
+          this.selected.designer.expanded = false;
           this.refresh();
-        } else if (selected.parent) {
-          this.setSelected(selected.parent);
+        } else if (this.selected.parent) {
+          this.setSelected(this.selected.parent);
         }
         break;
       case " ":
@@ -394,9 +389,9 @@ export class Layout extends Base {
   template() {
     const state = this.context.state;
     const editingTree = state.get("editingTree");
-    selected = this.getNode(state.get("path"));
-    this.makeVisible(selected);
-    console.log("selected", selected);
+    this.selected = this.getNode(state.get("path"));
+    this.makeVisible(this.selected);
+    console.log("selected", this.selected);
     return html`<div class="tree">
         <ul
           role="tree"
@@ -405,7 +400,7 @@ export class Layout extends Base {
               this.treeKeyHandler(event)
           }
         >
-          ${this.showTree(this.tree, selected)}
+          ${this.showTree(this.context.tree, this.selected)}
         </ul>
       </div>
       ${editingTree ? this.controls() : html``} ${colorNamesDataList()}`;

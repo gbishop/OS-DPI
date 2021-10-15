@@ -3,7 +3,7 @@ import { assemble } from "./components/index";
 import { Rules } from "./rules";
 import { Data } from "./data";
 import { State } from "./state";
-import { Designer } from "./designer";
+import { Designer } from "./components/designer";
 import { toDesign } from "./components/base";
 
 /** let me wait for the page to load */
@@ -54,11 +54,8 @@ export async function start(name) {
   const designerState = new State("D06");
   const designer = new Designer(
     {},
-    { state: designerState },
-    null,
-    tree,
-    rules,
-    data
+    { state: designerState, rules, data, tree },
+    null
   );
   function renderDesigner() {
     localStorage.setItem("design", JSON.stringify(toDesign(tree)));

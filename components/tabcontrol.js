@@ -2,95 +2,6 @@ import { html } from "uhtml";
 import { Base, componentMap } from "./base";
 import { styleString } from "./style";
 
-const tabStyle = {
-  bottom: {
-    div: {
-      flexDirection: "column",
-    },
-    panel: {
-      order: "1",
-    },
-    tabs: {
-      order: "2",
-    },
-    buttonActive: {
-      borderTop: "1px",
-      borderBottomLeftRadius: "1em",
-      borderBottomRightRadius: "1em",
-    },
-    buttonInactive: {
-      borderBottom: 0,
-      borderBottomLeftRadius: "1em",
-      borderBottomRightRadius: "1em",
-    },
-  },
-  top: {
-    div: {
-      flexDirection: "column",
-    },
-    panel: {
-      order: "2",
-    },
-    tabs: {
-      order: "1",
-    },
-    buttonActive: {
-      borderBottom: "1px",
-      borderTopLeftRadius: "1em",
-      borderTopRightRadius: "1em",
-    },
-    buttonInactive: {
-      borderTop: 0,
-      borderTopLeftRadius: "1em",
-      borderTopRightRadius: "1em",
-    },
-  },
-  right: {
-    div: {
-      flexDirection: "row",
-    },
-    panel: {
-      order: "1",
-    },
-    tabs: {
-      order: "2",
-      flexDirection: "column",
-    },
-    buttonActive: {
-      borderLeft: "1px",
-      borderTopRightRadius: "1em",
-      borderBottomRightRadius: "1em",
-    },
-    buttonInactive: {
-      borderRight: 0,
-      borderTopRightRadius: "1em",
-      borderBottomRightRadius: "1em",
-    },
-  },
-  left: {
-    div: {
-      flexDirection: "row",
-    },
-    panel: {
-      order: "2",
-    },
-    tabs: {
-      order: "1",
-      flexDirection: "column",
-    },
-    buttonActive: {
-      borderRight: "1px",
-      borderTopLeftRadius: "1em",
-      borderBottomLeftRadius: "1em",
-    },
-    buttonInactive: {
-      borderLeft: 0,
-      borderTopLeftRadius: "1em",
-      borderBottomLeftRadius: "1em",
-    },
-  },
-};
-
 export class TabControl extends Base {
   static defaultProps = {
     stateName: "a-tab-control",
@@ -103,14 +14,9 @@ export class TabControl extends Base {
 
   template() {
     const { state } = this.context;
-    const styles = tabStyle[this.props.tabEdge];
-    const divStyle = Object.assign(
-      {
-        flexGrow: this.props.scale,
-        backgroundColor: this.props.background,
-      },
-      styles.div
-    );
+    const divStyle = {
+      flexGrow: this.props.scale,
+    };
     const panels = /** @type {TabPanel[]} */ (this.children);
     const buttons = panels
       .filter((panel) => panel.props.label != "UNLABELED")
@@ -123,13 +29,11 @@ export class TabControl extends Base {
         const active =
           state.get(this.props.stateName) == tabName || panels.length === 1;
         panel.active = active;
-        const buttonStyle = Object.assign(
-          {
-            backgroundColor: color,
-          },
-          active ? styles.buttonActive : styles.buttonInactive
-        );
+        const buttonStyle = {
+          backgroundColor: color,
+        };
         return html`<button
+          ?active=${active}
           style=${styleString(buttonStyle)}
           onClick=${() => state.update({ [this.props.stateName]: tabName })}
         >
@@ -137,17 +41,14 @@ export class TabControl extends Base {
         </button>`;
       });
     const panel = panels.find((panel) => panel.active)?.template() || html``;
-    const panelStyle = Object.assign(
-      { flexGrow: this.props.scale },
-      styles.panel
-    );
+    const panelsStyle = { flexGrow: this.props.scale };
     return html`<div
-      class="tabcontrol flex column"
+      class=${["tabcontrol", "flex", this.props.tabEdge].join(" ")}
       style=${styleString(divStyle)}
       id=${this.id}
     >
-      <div class="panels" style=${styleString(panelStyle)}>${panel}</div>
-      <div class="buttons" style=${styleString(styles.tabs)}>${buttons}</div>
+      <div class="panels" style=${styleString(panelsStyle)}>${panel}</div>
+      <div class="buttons">${buttons}</div>
     </div>`;
   }
 }
@@ -165,7 +66,7 @@ export class TabPanel extends Base {
 
   template() {
     return html`<div
-      class="tabpanel flex"
+      class="tabpanel flex column"
       style=${styleString({ backgroundColor: this.props.background })}
       id=${this.id}
     >
