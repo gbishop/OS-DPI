@@ -2,6 +2,7 @@ import { html } from "uhtml";
 import { Base } from "./base";
 import { TabControl, TabPanel } from "./tabcontrol";
 import { Layout } from "./layout";
+import { Actions } from "./actions";
 
 export class Designer extends Base {
   /**
@@ -25,6 +26,7 @@ export class Designer extends Base {
       tabs
     );
     layoutPanel.children = [new Layout({}, this.context, layoutPanel)];
+
     const actionPanel = new TabPanel(
       {
         name: "Actions",
@@ -33,6 +35,8 @@ export class Designer extends Base {
       this.context,
       tabs
     );
+    actionPanel.children = [new Actions({}, this.context, actionPanel)];
+
     const accessPanel = new TabPanel(
       {
         name: "Access",
@@ -41,6 +45,7 @@ export class Designer extends Base {
       this.context,
       tabs
     );
+
     const contentPanel = new TabPanel(
       {
         name: "Content",

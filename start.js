@@ -5,6 +5,7 @@ import { Data } from "./data";
 import { State } from "./state";
 import { Designer } from "./components/designer";
 import { toDesign } from "./components/base";
+import { initSpeech } from "./components/speech";
 
 /** let me wait for the page to load */
 const pageLoaded = new Promise((resolve) => {
@@ -22,19 +23,27 @@ export async function start(name) {
     const resp = await fetch(`./examples/${name}/${file}`);
     return await resp.json();
   });
-  let [design, rules, data, _] = await Promise.all([...parts, pageLoaded]);
+  let [layout, rulesArray, dataArray, _] = await Promise.all([
+    ...parts,
+    pageLoaded,
+  ]);
 
   if (localStorage.getItem("design")) {
-    design = JSON.parse(localStorage.getItem("design"));
+    const design = JSON.parse(localStorage.getItem("design"));
+    layout = design.layout;
+    rulesArray = design.rulesArray;
   }
 
   const state = new State("PO6");
+  const rules = new Rules(rulesArray, state);
+  const data = new Data(dataArray);
   const context = {
-    data: new Data(data),
-    rules: new Rules(rules, state),
+    data,
+    rules,
     state,
   };
-  const tree = assemble(design, context);
+  await initSpeech(state);
+  const tree = assemble(layout, context);
 
   /** @param {() => void} f */
   function debounce(f) {
@@ -58,7 +67,13 @@ export async function start(name) {
     null
   );
   function renderDesigner() {
-    localStorage.setItem("design", JSON.stringify(toDesign(tree)));
+    localStorage.setItem(
+      "design",
+      JSON.stringify({
+        layout: toDesign(tree),
+        rulesArray: rules.rules,
+      })
+    );
     render(document.querySelector("div#designer"), designer.template());
     console.log("render designer");
   }

@@ -1,9 +1,10 @@
 import { html } from "uhtml";
 import { PropInfo } from "../properties";
 import { componentMap } from "./base";
-import { getColor, validateColor, colorNamesDataList } from "./style";
+import { colorNamesDataList } from "./style";
 import * as focusTrap from "focus-trap";
 import { Base } from "./base";
+import { propEditor } from "./propEditor";
 
 export class Layout extends Base {
   static defaultProps = {
@@ -153,115 +154,17 @@ export class Layout extends Base {
     this.selected.context.state.update();
   }
 
-  /** @param {string} name */
-  prop(name) {
-    const value = this.selected.props[name];
-    const info = PropInfo[name];
-    const label = html`<label for=${name}>${info.name}</label>`;
-    switch (info.type) {
-      case "string":
-        return html`<label for=${name}>${info.name}</label>
-          <input
-            type="text"
-            id=${name}
-            name=${name}
-            .value=${value}
-            onchange=${this.propUpdate}
-          />`;
-      case "number":
-        return html`${label}
-          <input
-            type="number"
-            id=${name}
-            name=${name}
-            .value=${value}
-            onchange=${this.propUpdate}
-          />`;
-      case "color":
-        return html`<label for=${name}>${info.name}</label>
-          <div class="color-input">
-            <input
-              id=${name}
-              type="text"
-              name=${name}
-              .value=${value}
-              list="ColorNames"
-              onchange=${(
-                /** @type {Event & { target: HTMLInputElement; }} */ event
-              ) => validateColor(event) && this.propUpdate(event)}
-            />
-            <div
-              class="swatch"
-              style=${`background-color: ${getColor(value)}`}
-            ></div>
-          </div>`;
-      case "select":
-        return html`<label for=${name}>${info.name}</label>
-          <select id=${name} name=${name} onchange=${this.propUpdate}>
-            ${info.values?.map(
-              (ov) =>
-                html`<option value=${ov} ?selected=${ov == value}>
-                  ${ov}
-                </option>`
-            )}
-          </select>`;
-      case "state":
-        return html`<label for=${name}>${info.name}</label>
-          <input
-            type="text"
-            id=${name}
-            name=${name}
-            .value=${value}
-            onchange=${this.propUpdate}
-            oninput=${(/** @type {InputEvent} */ ev) => {
-              const target = /** @type {HTMLInputElement} */ (ev.target);
-              if (!target.value.startsWith("$")) {
-                target.value = "$" + target.value;
-              }
-            }}
-          />`;
-      case "tags":
-        const tags = value.length ? [...value] : [""];
-        return html`${tags.map((tag, index) => {
-            const id = `${name}_${index}`;
-            const hidden = index != 0;
-            const label = index != 0 ? `${info.name} ${index + 1}` : info.name;
-            return html`
-              <label for=${id} ?hidden=${hidden}>${label}</label>
-              <input
-                type="text"
-                id=${id}
-                .value=${tag}
-                onchange=${({ target: { value } }) => {
-                  if (!value) {
-                    tags.splice(index, 1);
-                  } else {
-                    tags[index] = value;
-                  }
-                  this.selected.props[name] = tags;
-                  this.selected.context.state.update();
-                }}
-              />
-            `;
-          })}<button
-            onclick=${() => {
-              this.selected.props[name].push("NewTag");
-              this.refresh(true);
-            }}
-          >
-            Add tag
-          </button>`;
-      default:
-        console.log("tbd", name);
-        return html`<p>${name}</p>`;
-    }
-  }
-
   /** Render props for the selected element */
   showProps() {
-    return Object.keys(PropInfo)
-      .filter((name) => name in this.selected.props)
-      .map((name) => this.prop(name));
+    return Object.entries(PropInfo)
+      .filter(([name, _]) => name in this.selected.props)
+      .map(([name, info]) =>
+        propEditor(name, this.selected.props[name], info, (name, value) => {
+          this.selected.props[name] = value;
+          this.selected.context.state.update();
+          this.update();
+        })
+      );
   }
 
   /** Render the controls */
@@ -274,7 +177,7 @@ export class Layout extends Base {
           allowOutsideClick: true,
           onDeactivate: () => {
             console.log("deactivate trap");
-            this.refresh();
+            this.update({ editingTree: false });
           },
           onActivate: () => {
             console.log("activate trap");
@@ -364,7 +267,7 @@ export class Layout extends Base {
       case "ArrowRight":
         if (this.selected.children.length && !this.selected.designer.expanded) {
           this.selected.designer.expanded = true;
-          this.refresh();
+          this.update();
         } else if (this.selected.children.length) {
           this.setSelected(this.selected.children[0]);
         }
@@ -372,14 +275,14 @@ export class Layout extends Base {
       case "ArrowLeft":
         if (this.selected.children.length && this.selected.designer.expanded) {
           this.selected.designer.expanded = false;
-          this.refresh();
+          this.update();
         } else if (this.selected.parent) {
           this.setSelected(this.selected.parent);
         }
         break;
       case " ":
       case "Enter":
-        this.refresh(true);
+        this.update({ editingTree: true });
         break;
       default:
         console.log("ignored key", event);
@@ -406,10 +309,11 @@ export class Layout extends Base {
       ${editingTree ? this.controls() : html``} ${colorNamesDataList()}`;
   }
 
-  /** Update the editing flag and request a refresh
-   * @param {boolean} editingTree
+  /** Update the state
+   * @param {Object} [patch]
    */
-  refresh(editingTree = false) {
-    this.context.state.update({ editingTree });
+  update(patch) {
+    this.selected.context.state.update();
+    this.context.state.update(patch);
   }
 }

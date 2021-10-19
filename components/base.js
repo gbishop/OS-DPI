@@ -112,6 +112,24 @@ export class Base {
     }
     return this.constructor.name;
   }
+
+  /** @returns {string[]} */
+  allStates() {
+    const result = [];
+    Object.values(this.props).forEach((value) => {
+      if (typeof value === "string") {
+        for (const match of value.matchAll(/\$\w+/g)) {
+          result.push(match[0]);
+        }
+      }
+    });
+    return this.children
+      .map((child) => child.allStates())
+      .reduce(
+        (previous, current) => [...new Set([...previous, ...current])],
+        result
+      );
+  }
 }
 
 /**

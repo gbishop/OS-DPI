@@ -188,31 +188,6 @@ class Display extends Base {
         };
       }
 
-      /* TODO: refactor the multiple versions of this formatting code */
-
-      /** strip slots markup
-       * @param {String|Editor} value
-       * @returns {String}
-       */
-      function strip(value) {
-        if (typeof value === "string" || value instanceof String) {
-          // strip any slot markup
-          value = value.replaceAll(/\$\$(?<name>.*?)=(?<value>.*?)\$\$/g, "$2");
-          return value;
-        }
-        let editor = /** @type {Editor} */ (value);
-        // otherwise it is an editor object
-        let i = 0;
-        const parts = editor.message.split(/(\$\$.*?\$\$)/).map((part) => {
-          const m = part.match(/\$\$(?<name>.*?)=(?<value>.*?)\$\$/);
-          if (m) {
-            return editor.slots[i++].value.replace(/^\*/, "");
-          }
-          return part;
-        });
-        return parts.join("");
-      }
-
       rules.Functions["slots"] = {
         init,
         cancel,
@@ -228,6 +203,31 @@ class Display extends Base {
   get name() {
     return this.props.name || this.props.stateName;
   }
+}
+/* TODO: refactor the multiple versions of this formatting code */
+
+/** strip slots markup
+ * @param {String|Editor} value
+ * @returns {String}
+ */
+export function strip(value) {
+  console.log("strip", value);
+  if (typeof value === "string" || value instanceof String) {
+    // strip any slot markup
+    value = value.replaceAll(/\$\$(?<name>.*?)=(?<value>.*?)\$\$/g, "$2");
+    return value;
+  }
+  let editor = /** @type {Editor} */ (value);
+  // otherwise it is an editor object
+  let i = 0;
+  const parts = editor.message.split(/(\$\$.*?\$\$)/).map((part) => {
+    const m = part.match(/\$\$(?<name>.*?)=(?<value>.*?)\$\$/);
+    if (m) {
+      return editor.slots[i++].value.replace(/^\*/, "");
+    }
+    return part;
+  });
+  return parts.join("");
 }
 
 componentMap.addMap("display", Display);

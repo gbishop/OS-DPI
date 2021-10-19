@@ -36,13 +36,28 @@ export class Rules {
   evalInContext(expression, context) {
     const variables = Object.keys(context);
     const values = Object.values(context);
-    // console.log("eic", expression);
+    /* translate the expression from the excel like form to javascript
+       this is a hack, we should have a parser
+    */
+    // translate single = to ==
+    let exp = expression.replaceAll(/(?<![=<>!])=/g, "==");
+    // translate $name into state references
+    exp = exp.replaceAll(/\$\w+/g, "state.get($&)");
+    // translate #name into field references
+    exp = exp.replaceAll(/#(\w+)/g, "data.$1");
+
+    console.log("eic", expression, exp);
     // console.log("variables", variables);
-    const func = Function(...variables, `return ${expression}`);
+    const func = Function(...variables, `return ${exp}`);
     return func(...values);
   }
 
-  /** @type {{origin: string, event: string}[]} */
+  /** @typedef {Object} eventQueueItem
+   * @property {string} origin
+   * @property {string} event
+   */
+
+  /** @type {eventQueueItem[]} */
   eventQueue = [];
 
   /** queue an event from within an event handler
@@ -63,11 +78,11 @@ export class Rules {
   applyRules(origin, event, data) {
     // first for the event then for any that got queued.
     while (true) {
-      const context = { ...this.Functions, ...this.state.values, ...data };
-      // console.log("applyRules", origin, event, data);
-      // console.log("context", context);
+      const context = { ...this.Functions, state: this.state, data };
+      console.log("applyRules", origin, event, data);
+      console.log("context", context);
       for (const rule of this.rules) {
-        // console.log("rule", rule);
+        console.log("rule", rule);
         if (origin != rule.origin || event != rule.event) {
           continue;
         }
@@ -75,14 +90,14 @@ export class Rules {
           this.evalInContext(restriction, context)
         );
         if (result) {
-          // console.log("got it");
+          console.log("got it");
           const patch = Object.fromEntries(
             Object.entries(rule.updates).map(([$var, value]) => [
               $var,
               this.evalInContext(value, context),
             ])
           );
-          // console.log("patch", patch);
+          console.log("patch", patch);
           this.state.update(patch);
           break;
         }
@@ -110,5 +125,29 @@ export class Rules {
       // console.log("handler", e, origin, event, data);
       this.applyRules(origin, ev || e.type, data);
     };
+  }
+
+  /** @param {(rule: Rule, index?: number) => any} func */
+  map(func) {
+    return this.rules.map(func);
+  }
+
+  /** @returns {string[]} */
+  allStates() {
+    const result = [];
+    for (const rule of this.rules) {
+      for (const condition of rule.conditions) {
+        for (const match of condition.matchAll(/\$\w+/g)) {
+          result.push(match[0]);
+        }
+      }
+      for (const [state, newValue] of Object.entries(rule.updates)) {
+        result.push(state);
+        for (const match of newValue.matchAll(/\$\w+/g)) {
+          result.push(match[0]);
+        }
+      }
+    }
+    return [...new Set(result)];
   }
 }

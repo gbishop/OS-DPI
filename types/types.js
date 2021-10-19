@@ -58,14 +58,16 @@
  * @property {Object<string, string>} updates
  */
 
-/**
- * @typedef {Rule[]} Rules
- */
-
 /** @typedef {Object} PropertyInfo
  * @property {string} type
  * @property {string} name
  * @property {string} description
  * @property {string[]} [values]
  * @property {string} [style]
+ * @property {(event: InputEventWithTarget) => boolean} [validate]
+ * @property {string} [addMessage]
+ * @property {string[]} [states]
+ * @property {string[]} [fields]
  */
+
+/** @typedef {Event & { target: HTMLInputElement } } InputEventWithTarget */

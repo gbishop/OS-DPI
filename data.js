@@ -2,6 +2,16 @@ export class Data {
   /** @param {Rows} rows */
   constructor(rows) {
     this.allrows = rows;
+    this.allFields = rows.reduce(
+      (previous, current) =>
+        Array.from(
+          new Set([
+            ...previous,
+            ...Object.keys(current).map((field) => "#" + field),
+          ])
+        ),
+      []
+    );
   }
 
   /**
