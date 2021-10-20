@@ -245,9 +245,14 @@ export class Actions extends Base {
         }}
         oninput=${(/** @type {InputEventWithTarget} */ ev) => {
           const target = ev.target;
-          if (!target.value.startsWith("$")) {
-            target.setCustomValidity("states must begin with $");
+          const value = target.value.trim();
+          console.log("value", value);
+          if (value.length > 1 && !value.match(/^\$\w+$/)) {
+            target.setCustomValidity("invalid state name");
+          } else {
+            target.setCustomValidity("");
           }
+          target.reportValidity();
         }}
         ref=${(node) => {
           stateNode = node;

@@ -195,43 +195,48 @@ export function propEditor(name, value, info, hook) {
 /** @param {HTMLInputElement} node
  * @param {string[]} suggestions */
 export function suggest(node, suggestions) {
-  console.log("sug", suggestions);
   if (!suggestions.length) return;
   suggestions = [...new Set(suggestions)];
   const groups = suggestions.reduce((groupMap, suggestion) => {
     const key = suggestion[0];
     return groupMap.set(key, [...(groupMap.get(key) || []), suggestion]);
   }, new Map());
+  let lastPattern = "";
   const collections = Array.from(groups).map(([key, values]) => ({
     trigger: key,
     selectTemplate: function (item) {
-      return item.key;
+      const r = (item && item.trim()) || key + lastPattern;
+      return r;
     },
-    noMatchTemplate: null,
+    menuItemTemplate: (item) => item,
+    noMatchTemplate: () => "",
 
     lookup: "key",
 
-    values: values.map((value) => ({ key: value })),
+    values: values, //.map((value) => ({ key: value })),
   }));
+  console.log("construct");
   const tribute = new Tribute({
     collection: collections,
+    noMatchTemplate: () => "",
   });
   /* Hack the tribute search to make it NOT be fuzzy */
   /** @param {string} pattern
    * @param {Object} items
    */
   tribute.search.filter = (pattern, items) => {
+    lastPattern = pattern;
     pattern = pattern.toLowerCase();
-    const r = items
-      .filter((s) => s.key.slice(1).toLowerCase().startsWith(pattern))
-      .map((s) => {
-        return {
-          string: s.key,
-          key: s.key,
-        };
-      });
+    const r = items.filter((s) => s.slice(1).toLowerCase().startsWith(pattern));
+    console.log({ pattern, r });
     return r;
   };
-  node.onfocus = () => tribute.attach(node);
-  node.onblur = () => tribute.detach(node);
+  node.onfocus = () => {
+    tribute.attach(node);
+    console.log("attach", node);
+  };
+  node.onblur = () => {
+    tribute.detach(node);
+    console.log("detach", node);
+  };
 }

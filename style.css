@@ -488,7 +488,6 @@ div.actions div.scroll {
 
 .actions div.editor input.key {
   grid-column: 1 / 2;
-  text-align: right;
 }
 
 .actions div.editor label.key {
