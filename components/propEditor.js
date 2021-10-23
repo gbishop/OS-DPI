@@ -1,14 +1,16 @@
 import { html } from "uhtml";
 import { validateColor, getColor } from "./style";
 import Tribute from "tributejs";
+import { textInput } from "./input";
 
 /**
  * @param {string} name
  * @param {any} value
  * @param {PropertyInfo} info
+ * @param {Context} context
  * @param {(name: string, value: any) => void} [hook]
  */
-export function propEditor(name, value, info, hook) {
+export function propEditor(name, value, info, context, hook) {
   function propUpdate({ target }) {
     const name = target.name;
     const value = target.value;
@@ -64,22 +66,53 @@ export function propEditor(name, value, info, hook) {
           )}
         </select>`;
     case "state":
-      return html`<label for=${name}>${info.name}</label>
-        <input
-          type="text"
-          id=${name}
-          name=${name}
-          .value=${value}
-          onchange=${propUpdate}
-          oninput=${(/** @type {InputEventWithTarget} */ ev) => {
-            const target = ev.target;
-            if (!target.value.startsWith("$")) {
-              target.value = "$" + target.value;
-            }
+      const { tree, rules } = context;
+      let states = [...tree.allStates(), ...rules.allStates()];
+      let stateSet = new Set(states);
+      states = [...stateSet];
+      return textInput({
+        type: "text",
+        name,
+        label: info.name,
+        value,
+        context,
+        validate: (value) => (value.match(/^\$\w+$/) ? "" : "Invalid state"),
+        update: hook,
+        suggestions: [{ key: "$", values: states }],
+      });
+    case "string[]": {
+      const strings = value.length ? [...value] : [""];
+      return html`${strings.map((string, index) => {
+          const id = `${name}_${index}`;
+          const hidden = index != 0;
+          const label = index != 0 ? `${info.name} ${index + 1}` : info.name;
+          return html`
+            <label for=${id} ?hidden=${hidden}>${label}</label>
+            <input
+              type="text"
+              id=${id}
+              .value=${string}
+              onchange=${(/** @type {InputEventWithTarget} */ event) => {
+                if (!event.target.value) {
+                  strings.splice(index, 1);
+                } else {
+                  strings[index] = event.target.value;
+                }
+                (!info.validate || info.validate(event)) && hook(name, strings);
+              }}
+            />
+          `;
+        })}<button
+          onclick=${() => {
+            strings.push("New");
+            hook(name, strings);
           }}
-          autocomplete="off"
-        />`;
-    case "conditions":
+        >
+          ${info.addMessage}
+        </button>`;
+    }
+
+    case "conditions": {
       const strings = [...value, ""];
       return html`<fieldset>
         <legend>Conditions</legend>
@@ -104,6 +137,7 @@ export function propEditor(name, value, info, hook) {
           `;
         })}
       </fieldset>`;
+    }
     case "stateUpdate":
       const object = value ? { ...value } : {};
       const entries = Object.entries(object);

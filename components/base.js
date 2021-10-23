@@ -113,22 +113,33 @@ export class Base {
     return this.constructor.name;
   }
 
-  /** @returns {string[]} */
-  allStates() {
-    const result = [];
-    Object.values(this.props).forEach((value) => {
-      if (typeof value === "string") {
-        for (const match of value.matchAll(/\$\w+/g)) {
-          result.push(match[0]);
+  /** Return matching strings from props
+   * @param {RegExp} pattern
+   * @param {string[]} [props]
+   * @returns {Set<string>}
+   */
+  all(pattern, props) {
+    const matches = new Set();
+    for (const [prop, value] of Object.entries(this.props)) {
+      if (!props || props.indexOf(prop) >= 0) {
+        if (typeof value === "string") {
+          for (const [match] of value.matchAll(pattern)) {
+            matches.add(match);
+          }
         }
       }
-    });
-    return this.children
-      .map((child) => child.allStates())
-      .reduce(
-        (previous, current) => [...new Set([...previous, ...current])],
-        result
-      );
+    }
+    for (const child of this.children) {
+      for (const match of child.all(pattern, props)) {
+        matches.add(match);
+      }
+    }
+    return matches;
+  }
+
+  /** @returns {Set<string>} */
+  allStates() {
+    return this.all(/\$\w+/g);
   }
 }
 

@@ -1,0 +1,8 @@
+[
+  {
+    "origin": "grid",
+    "event": "press",
+    "conditions": [],
+    "updates": { "$Display": "#msg", "$Speak": "#msg" }
+  }
+]

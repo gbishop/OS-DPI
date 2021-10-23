@@ -26,67 +26,60 @@ function main() {
       </button>
       <input type="checkbox" ref=${check} onchange=${main} />
       <p>${JSON.stringify(Data)}</p>
-      ${check.current?.checked ? editor(Data[index]) : html``} `
+      <div .item=${Data[index]} ref=${editor} /> `
   );
   console.log("main end");
 }
 
 const contentSet = new Set();
 
-/** @param {Item} item */
-function editor(item) {
-  console.log("editor start", item);
-  const content = hooked((node) => {
-    console.log("content start");
-    const [previous, setPrevious] = useState({ item, row: [...item.values] });
-    if (item !== previous.item) {
-      setPrevious({ item, row: [...item.values] });
-    }
-    const row = [...previous.row];
-    console.log("row", row);
-    /** @param {number} index
-     * @param {number} value
-     */
-    function update(index, value) {
-      row[index] = value;
-      console.log("update", index, value);
-      setPrevious({
-        item,
-        row,
-      });
-      item.values = row.filter((v) => v != 0);
-      main();
-    }
-    render(
-      node,
-      html`<ul>
-          ${row.map(
-            (d, i) => html`<li>
-              <input
-                type="number"
-                .value=${d}
-                onchange=${(e) => update(i, +e.target.value)}
-              />
-            </li>`
-          )}
-        </ul>
-        <button
-          onclick=${() => {
-            console.log("clicked");
-            update(row.length, 0);
-          }}
-        >
-          +
-        </button> `
-    );
-    console.log("content end");
-  });
-  contentSet.add(content);
-  console.log(contentSet.size);
-  const r = html`<div ref=${content}>div</div>`;
-  console.log("editor end");
-  return r;
-}
+const editor = hooked((node) => {
+  console.log("content start");
+  const item = node.item;
+  console.log("item", item);
+  const [previous, setPrevious] = useState({ item, row: [...item.values] });
+  if (item !== previous.item) {
+    setPrevious({ item, row: [...item.values] });
+  }
+  const row = [...previous.row];
+  console.log("row", row);
+  /** @param {number} index
+   * @param {number} value
+   */
+  function update(index, value) {
+    row[index] = value;
+    console.log("update", index, value);
+    setPrevious({
+      item,
+      row,
+    });
+    item.values = row.filter((v) => v != 0);
+    main();
+  }
+  render(
+    node,
+    html`<ul>
+        ${row.map(
+          (d, i) => html`<li>
+            <input
+              type="number"
+              .value=${d}
+              onchange=${(e) => update(i, +e.target.value)}
+            />
+          </li>`
+        )}
+      </ul>
+      <button
+        onclick=${() => {
+          console.log("clicked");
+          update(row.length, 0);
+        }}
+      >
+        +
+      </button> `
+  );
+  console.log("content end");
+});
 
 let oldNode = null;
 let hook = null;

@@ -26,16 +26,11 @@ export class Rules {
     this.state = state;
   }
 
-  /**
-   * evaluate a string as an expression in a given context
-   *
-   * @param {string} expression - expression to evaluate
-   * @param {Object} context - context for the evaluation
-   * @return {boolean} value returned by the expression
+  /** translate an expression from Excel-like to Javascript
+   * @param {string} expression
+   * @return {string}
    */
-  evalInContext(expression, context) {
-    const variables = Object.keys(context);
-    const values = Object.values(context);
+  translate(expression) {
     /* translate the expression from the excel like form to javascript
        this is a hack, we should have a parser
     */
@@ -46,6 +41,38 @@ export class Rules {
     // translate #name into field references
     exp = exp.replaceAll(/#(\w+)/g, "data.$1");
 
+    console.log("eic", expression, exp);
+
+    return exp;
+  }
+
+  /**
+   * validate an expression string
+   * @param {string} expression
+   * @return {boolean}
+   */
+  validateExpression(expression) {
+    const exp = this.translate(expression);
+    try {
+      Function(`return ${exp};`);
+    } catch (error) {
+      console.log("validate", error);
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * evaluate a string as an expression in a given context
+   *
+   * @param {string} expression - expression to evaluate
+   * @param {Object} context - context for the evaluation
+   * @return {boolean} value returned by the expression
+   */
+  evalInContext(expression, context) {
+    const variables = Object.keys(context);
+    const values = Object.values(context);
+    const exp = this.translate(expression);
     console.log("eic", expression, exp);
     // console.log("variables", variables);
     const func = Function(...variables, `return ${exp}`);
@@ -132,22 +159,22 @@ export class Rules {
     return this.rules.map(func);
   }
 
-  /** @returns {string[]} */
+  /** @returns {Set<string>} */
   allStates() {
-    const result = [];
+    const result = new Set();
     for (const rule of this.rules) {
       for (const condition of rule.conditions) {
-        for (const match of condition.matchAll(/\$\w+/g)) {
-          result.push(match[0]);
+        for (const [match] of condition.matchAll(/\$\w+/g)) {
+          result.add(match);
         }
       }
       for (const [state, newValue] of Object.entries(rule.updates)) {
-        result.push(state);
-        for (const match of newValue.matchAll(/\$\w+/g)) {
-          result.push(match[0]);
+        result.add(state);
+        for (const [match] of newValue.matchAll(/\$\w+/g)) {
+          result.add(match);
         }
       }
     }
-    return [...new Set(result)];
+    return result;
   }
 }

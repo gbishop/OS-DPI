@@ -159,11 +159,17 @@ export class Layout extends Base {
     return Object.entries(PropInfo)
       .filter(([name, _]) => name in this.selected.props)
       .map(([name, info]) =>
-        propEditor(name, this.selected.props[name], info, (name, value) => {
-          this.selected.props[name] = value;
-          this.selected.context.state.update();
-          this.update();
-        })
+        propEditor(
+          name,
+          this.selected.props[name],
+          info,
+          this.context,
+          (name, value) => {
+            this.selected.props[name] = value;
+            this.selected.context.state.update();
+            this.update();
+          }
+        )
       );
   }
 

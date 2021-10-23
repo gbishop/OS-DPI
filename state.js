@@ -27,7 +27,7 @@ export class State {
         .split(".")
         .reduce((o, p) => (o ? o[p] : defaultValue), this.values);
     } else {
-      return this.values;
+      return undefined;
     }
   }
 

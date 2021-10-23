@@ -1,9 +1,14 @@
 import { html } from "uhtml";
 import { Base } from "./base";
-import { propEditor, suggest } from "./propEditor";
 import * as focusTrap from "focus-trap";
+import { textInput } from "./input";
 
 export class Actions extends Base {
+  init() {
+    /** @type {RuleEditor} */
+    this.ruleEditor = new RuleEditor({}, this.context, this);
+  }
+
   template() {
     const { state, rules } = this.context;
     const ruleIndex = state.get("ruleIndex");
@@ -33,7 +38,7 @@ export class Actions extends Base {
                 <td>${(updates.length && updates[0][0]) || ""}</td>
                 <td>${(updates.length && updates[0][1]) || ""}</td>
                 <td rowspan=${rs}>
-                  <button onclick=${() => state.update({ ruleIndex: index })}>
+                  <button onclick=${() => this.openActionEditor(index)}>
                     &#x270D;
                   </button>
                 </td>
@@ -57,7 +62,7 @@ export class Actions extends Base {
                     conditions: [],
                     updates: {},
                   });
-                  state.update({ ruleIndex: rules.rules.length - 1 });
+                  this.openActionEditor(rules.rules.length - 1);
                 }}
               >
                 Add an action
@@ -67,226 +72,19 @@ export class Actions extends Base {
           <tr></tr>
         </table>
       </div>
-      ${this.ruleEditor()}
+      ${this.ruleEditor.template()}
     </div>`;
   }
 
-  ruleEditor() {
-    const { state, rules, tree, data } = this.context;
-    const ruleIndex = state.get("ruleIndex");
-    if (isNaN(ruleIndex) || ruleIndex < 0) {
-      return html``;
+  /** @param {number} index */
+  openActionEditor(index) {
+    const { state, rules } = this.context;
+    if (isNaN(index) || index < 0 || index >= rules.rules.length) {
+      this.ruleEditor.close();
+    } else {
+      this.ruleEditor.open(index);
     }
-    console.log("re", rules, ruleIndex, rules[ruleIndex]);
-    const rule = rules.rules[ruleIndex];
-    /** @param {string} name
-     * @param {string} value
-     */
-    function update(name, value) {
-      rule[name] = value.trim();
-      state.update();
-    }
-    return html`<div
-      class="editor"
-      ref=${(/** @type {HTMLElement} */ div) => {
-        this.trap = focusTrap.createFocusTrap(div, {
-          allowOutsideClick: true,
-          onDeactivate: () => {
-            console.log("deactivate trap");
-            this.context.state.update({ ruleIndex: -1 });
-          },
-          onActivate: () => {
-            console.log("activate trap");
-          },
-        });
-        this.trap.activate();
-      }}
-    >
-      ${propEditor(
-        "origin",
-        rule.origin,
-        {
-          type: "string",
-          name: "Origin",
-          description: "Name of the control where the event originated.",
-        },
-        update
-      )}
-      ${propEditor(
-        "event",
-        rule.event,
-        {
-          type: "string",
-          name: "Event",
-          description: "The event that occurred.",
-        },
-        update
-      )}
-      ${this.editConditions(rule)} ${this.editUpdates(rule)}
-      <div>
-        <button onclick=${() => this.trap.deactivate()}>Return</button>
-        <button
-          ?disabled=${ruleIndex < 1}
-          onclick=${() => {
-            const R = rules.rules;
-            [R[ruleIndex - 1], R[ruleIndex]] = [R[ruleIndex], R[ruleIndex - 1]];
-            state.update({ ruleIndex: ruleIndex - 1 });
-          }}
-        >
-          Move earlier
-        </button>
-        <button
-          ?disabled=${ruleIndex < 0 || ruleIndex > rules.rules.length - 1}
-          onclick=${() => {
-            const R = rules.rules;
-            [R[ruleIndex + 1], R[ruleIndex]] = [R[ruleIndex], R[ruleIndex + 1]];
-            state.update({ ruleIndex: ruleIndex + 1 });
-          }}
-        >
-          Move later
-        </button>
-        <button
-          ?disabled=${ruleIndex < 0}
-          onclick=${() => {
-            const R = rules.rules;
-            R.splice(ruleIndex, 1);
-            state.update({ ruleIndex: Math.min(R.length - 1, ruleIndex) });
-          }}
-        >
-          Delete
-        </button>
-      </div>
-    </div> `;
-  }
-
-  /** @param {Rule} rule
-   */
-  editConditions(rule) {
-    const strings = [...rule.conditions, ""];
-    return html`<fieldset>
-      <legend>Conditions</legend>
-      ${strings.map((string, index) => {
-        const id = `conditions_${index}`;
-        const label = `conditions ${index + 1}`;
-        return html`
-          <label for=${id} hidden>${label}</label>
-          <input
-            type="text"
-            id=${id}
-            .value=${string}
-            onchange=${(/** @type {InputEventWithTarget} */ event) => {
-              if (!event.target.value) {
-                strings.splice(index, 1);
-              } else {
-                strings[index] = event.target.value;
-              }
-              rule.conditions = strings;
-              this.context.state.update();
-            }}
-          />
-        `;
-      })}
-    </fieldset>`;
-  }
-
-  /** @param {Rule} rule */
-  editUpdates(rule) {
-    const object = rule.updates ? { ...rule.updates } : {};
-    const entries = Object.entries(object);
-    let stateNode = null;
-    let valueNode = null;
-    const { state, rules, data, tree } = this.context;
-    const allStates = [...tree.allStates(), ...rules.allStates(), "$Speak"];
-    const allFields = data.allFields;
-    const both = [...allStates, ...allFields];
-    // value updates
-    return html` <fieldset>
-      <legend>Update</legend>
-      <span class="key">State</span>
-      <span class="value">New value</span>
-      ${entries.map(([key, value]) => {
-        const idv = `updates_${key}_value`;
-        return html`<label class="key" for=${idv}>${key}</label>
-          <input
-            class="value"
-            type="text"
-            id=${idv}
-            .value=${value}
-            onchange=${(/** @type {InputEventWithTarget} */ event) => {
-              const newValue = event.target.value.trim();
-              if (!newValue) {
-                delete object[key];
-              } else {
-                object[key] = newValue;
-              }
-              rule.updates = object;
-              this.context.state.update();
-            }}
-            ref=${(node) => {
-              suggest(node, both);
-            }}
-            autocomplete="off"
-          /> `;
-      })}
-      <label for="newState" hidden>new State</label>
-      <input
-        class="key"
-        type="text"
-        id="newState"
-        .value=${""}
-        onchange=${(/** @type {InputEventWithTarget} */ event) => {
-          const newKey = event.target.value.trim();
-          const newValue = valueNode && valueNode.value.trim();
-          if (newKey && newValue) {
-            object[newKey] = newValue;
-            rule.updates = object;
-            state.update();
-          }
-        }}
-        oninput=${(/** @type {InputEventWithTarget} */ ev) => {
-          const target = ev.target;
-          const value = target.value.trim();
-          console.log("value", value);
-          if (value.length > 1 && !value.match(/^\$\w+$/)) {
-            target.setCustomValidity("invalid state name");
-          } else {
-            target.setCustomValidity("");
-          }
-          target.reportValidity();
-        }}
-        ref=${(node) => {
-          stateNode = node;
-          suggest(node, allStates);
-        }}
-        autocomplete="off"
-      />
-      <label for="newValue" hidden>new value</label>
-      <input
-        class="value"
-        type="text"
-        id="newValue"
-        .value=${""}
-        onchange=${(/** @type {InputEventWithTarget} */ event) => {
-          const newValue = event.target.value.trim();
-          const newKey = stateNode && stateNode.value.trim();
-          console.log({ newKey, newValue, snv: stateNode.value });
-          if (!newValue && newKey) {
-            delete object[newKey];
-            rule.updates = object;
-            state.update();
-          } else if (newValue && newKey) {
-            object[newKey] = newValue;
-            rule.updates = object;
-            state.update();
-          }
-        }}
-        ref=${(node) => {
-          valueNode = node;
-          suggest(node, both);
-        }}
-        autocomplete="off"
-      />
-    </fieldset>`;
+    state.update({ ruleIndex: index });
   }
 
   /** @param {string[]} conditions */
@@ -309,5 +107,259 @@ export class Actions extends Base {
           `
       )}
     </div>`;
+  }
+}
+
+class RuleEditor extends Base {
+  init() {
+    this.ruleIndex = -1;
+  }
+
+  /** @param {number} index */
+  open(index) {
+    const { rules } = this.context;
+    this.ruleIndex = index;
+    this.rule = rules.rules[this.ruleIndex];
+    console.log(this.ruleIndex, this.rule);
+    this.origin = this.rule.origin;
+    this.event = this.rule.event;
+    this.conditions = [...this.rule.conditions];
+    this.updates = Object.entries(this.rule.updates);
+    console.log("open", this);
+  }
+
+  close() {
+    this.ruleIndex = -1;
+    this.context.state.update({ ruleIndex: -1 });
+  }
+
+  template() {
+    const { state, rules, tree } = this.context;
+
+    if (this.ruleIndex < 0) return html``;
+
+    return html`<div
+      class="editor"
+      ref=${(/** @type {HTMLElement} */ div) => {
+        this.trap = focusTrap.createFocusTrap(div, {
+          allowOutsideClick: true,
+          onDeactivate: () => {
+            console.log("deactivate trap");
+            this.close();
+          },
+          onActivate: () => {
+            console.log("activate trap");
+          },
+        });
+        this.trap.activate();
+      }}
+    >
+      ${textInput({
+        type: "text",
+        name: "origin",
+        label: "Origin",
+        value: this.rule.origin,
+        context: this.context,
+        validate: (value) => (value.match(/^\w+$/) ? "" : "Invalid origin"),
+        update: (name, value) => (this.rule[name] = value),
+        choices: tree.all(/\w+/g, ["name"]),
+      })}
+      ${textInput({
+        type: "text",
+        name: "event",
+        label: "Event",
+        value: this.rule.event,
+        context: this.context,
+        validate: (value) =>
+          ["press"].indexOf(value) >= 0 ? "" : "Invalid event",
+        update: (name, value) => (this.rule[name] = value),
+        choices: new Set(["press"]),
+      })}
+      ${this.editConditions()} ${this.editUpdates()}
+      <div>
+        <button onclick=${() => this.trap.deactivate()}>Return</button>
+        <button
+          ?disabled=${this.ruleIndex < 1}
+          onclick=${() => {
+            const R = rules.rules;
+            [R[this.ruleIndex - 1], R[this.ruleIndex]] = [
+              R[this.ruleIndex],
+              R[this.ruleIndex - 1],
+            ];
+            this.ruleIndex -= 1;
+            state.update({ ruleIndex: this.ruleIndex });
+          }}
+        >
+          Move earlier
+        </button>
+        <button
+          ?disabled=${this.ruleIndex < 0 ||
+          this.ruleIndex >= rules.rules.length - 1}
+          onclick=${() => {
+            const R = rules.rules;
+            [R[this.ruleIndex + 1], R[this.ruleIndex]] = [
+              R[this.ruleIndex],
+              R[this.ruleIndex + 1],
+            ];
+            this.ruleIndex += 1;
+            state.update({ ruleIndex: this.ruleIndex });
+          }}
+        >
+          Move later
+        </button>
+        <button
+          ?disabled=${this.ruleIndex < 0}
+          onclick=${() => {
+            const R = rules.rules;
+            R.splice(this.ruleIndex, 1);
+            this.close();
+          }}
+        >
+          Delete
+        </button>
+      </div>
+    </div> `;
+  }
+
+  editConditions() {
+    const conditions = this.conditions;
+    const context = this.context;
+    const allStates = context.tree.allStates();
+    const allFields = context.data.allFields;
+    const suggestions = new Set([...allStates, ...allFields]);
+
+    const reflect = () => {
+      this.rule.conditions = this.conditions.filter(
+        (condition) => condition.length > 0
+      );
+      context.state.update();
+    };
+    return html`<fieldset>
+      <legend>Conditions</legend>
+      ${conditions.map((string, index) => {
+        const id = `conditions_${index}`;
+        const label = `${index + 1}`;
+        return html`${textInput({
+            type: "text",
+            name: id,
+            label,
+            value: string,
+            context,
+            validate: (value) =>
+              value.length == 0 || context.rules.validateExpression(value)
+                ? ""
+                : "Invalid condition",
+            update: (_, value) => {
+              if (!value) {
+                conditions.splice(index, 1);
+              } else {
+                conditions[index] = value;
+              }
+              reflect();
+            },
+            suggestions,
+          })}<button
+            onclick=${() => {
+              conditions.splice(index, 1);
+              reflect();
+            }}
+          >
+            X
+          </button>`;
+      })}
+      <button
+        style="grid-column: 2 / 4"
+        onclick=${() => {
+          conditions.push("");
+          reflect();
+        }}
+      >
+        Add condition
+      </button>
+    </fieldset>`;
+  }
+
+  editUpdates() {
+    const { state, rules, data, tree } = this.context;
+    const updates = this.updates;
+
+    const reflect = () => {
+      // these should be filtered to remove bad ones
+      this.rule.updates = Object.fromEntries(
+        this.updates.filter(
+          ([key, value]) => key.length > 0 && value.length > 0
+        )
+      );
+      state.update();
+    };
+    const allStates = new Set([
+      ...tree.allStates(),
+      ...rules.allStates(),
+      "$Speak",
+    ]);
+    const allFields = new Set(data.allFields);
+    const both = new Set([...allStates, ...allFields]);
+    // value updates
+    return html`<fieldset>
+      <legend>Updates</legend>
+      ${updates.length > 0
+        ? html` <span class="key">State</span>
+            <span class="value">New value</span>`
+        : ""}
+      ${updates.map(([key, value], index) => {
+        const idv = `value_${index + 1}`;
+        const idk = `key_${index + 1}`;
+        const keyInput = textInput({
+          type: "text",
+          className: "key",
+          name: idk,
+          label: `${index + 1}`,
+          value: key,
+          context: this.context,
+          suggestions: allStates,
+          validate: (value) => (value.match(/^\$\w+$/) ? "" : "Invalid state"),
+          update: (_, value) => {
+            updates[index][0] = value;
+            reflect();
+          },
+        });
+        const valueInput = textInput({
+          type: "text",
+          className: "value",
+          name: idv,
+          label: `${index} value`,
+          labelHidden: true,
+          value,
+          context: this.context,
+          suggestions: both,
+          validate: (value) =>
+            value.length == 0 || rules.validateExpression(value)
+              ? ""
+              : "Invalid value",
+          update: (_, value) => {
+            updates[index][1] = value;
+            reflect();
+          },
+        });
+        return html`${keyInput} ${valueInput}
+          <button
+            onclick=${() => {
+              updates.splice(index, 1);
+              reflect();
+            }}
+          >
+            X
+          </button>`;
+      })}
+      <button
+        style="grid-column: 1/4"
+        onclick=${() => {
+          updates.push(["", ""]);
+          reflect();
+        }}
+      >
+        Add update
+      </button>
+    </fieldset>`;
   }
 }
