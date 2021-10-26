@@ -61,6 +61,8 @@ export class State {
       const persist = JSON.stringify(this.values);
       window.localStorage.setItem(this.persistKey, persist);
     }
+
+    console.log(this.values);
   };
   /** observe - call this function if the named states change
    * @param {Function} callback

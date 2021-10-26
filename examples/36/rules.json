@@ -3,6 +3,6 @@
     "origin": "TalkGrid",
     "event": "press",
     "conditions": [],
-    "updates": { "$Display": "msg" }
+    "updates": { "$Display": "#message" }
   }
 ]

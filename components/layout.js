@@ -32,6 +32,7 @@ export class Layout extends Base {
     const state = this.context.state;
     state.update({ state, path: this.getPath(this.selected), editingTree });
     document.querySelector("#UI .highlight")?.classList.remove("highlight");
+    console.log("selected", this.selected);
     document.querySelector(`#${this.selected.id}`)?.classList.add("highlight");
   }
 
@@ -42,9 +43,14 @@ export class Layout extends Base {
    */
   getNode(path) {
     if (!path) path = [];
-    return path.reduce((pv, index) => {
-      return pv.children[index];
-    }, this.context.tree);
+    let result = null;
+    try {
+      result = path.reduce((pv, index) => {
+        return pv.children[index];
+      }, this.context.tree);
+    } catch (error) {}
+    if (!result) result = this.context.tree;
+    return result;
   }
 
   /** return the path from root to selection
@@ -128,7 +134,6 @@ export class Layout extends Base {
       onclick=${() => {
         this.trap.deactivate();
         const index = this.selected.parent.children.indexOf(this.selected);
-        console.log("index", index);
         this.selected.parent.children.splice(index, 1);
         if (this.selected.parent.children.length) {
           this.setSelected(
@@ -149,7 +154,6 @@ export class Layout extends Base {
   propUpdate({ target }) {
     const name = target.name;
     const value = target.value;
-    console.log({ name, value });
     this.selected.props[name] = value;
     this.selected.context.state.update();
   }
@@ -300,7 +304,6 @@ export class Layout extends Base {
     const editingTree = state.get("editingTree");
     this.selected = this.getNode(state.get("path"));
     this.makeVisible(this.selected);
-    console.log("selected", this.selected);
     return html`<div class="tree">
         <ul
           role="tree"

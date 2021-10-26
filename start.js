@@ -28,13 +28,13 @@ export async function start(name) {
     pageLoaded,
   ]);
 
-  if (localStorage.getItem("design")) {
-    const design = JSON.parse(localStorage.getItem("design"));
+  if (localStorage.getItem(`design-${name}`)) {
+    const design = JSON.parse(localStorage.getItem(`design-${name}`));
     layout = design.layout;
     rulesArray = design.rulesArray;
   }
 
-  const state = new State("PO6");
+  const state = new State(`UIState-${name}`);
   const rules = new Rules(rulesArray, state);
   const data = new Data(dataArray);
   const context = {
@@ -60,15 +60,16 @@ export async function start(name) {
   }
   state.observe(debounce(renderUI));
   renderUI();
-  const designerState = new State("D06");
+  const designerState = new State(`DIState-${name}`);
   const designer = new Designer(
     {},
     { state: designerState, rules, data, tree },
     null
   );
   function renderDesigner() {
+    if (!document.body.classList.contains("designing")) return;
     localStorage.setItem(
-      "design",
+      `design-${name}`,
       JSON.stringify({
         layout: toDesign(tree),
         rulesArray: rules.rules,
@@ -79,4 +80,15 @@ export async function start(name) {
   }
   designerState.observe(debounce(renderDesigner));
   renderDesigner();
+
+  console.log("here");
+  document.addEventListener("keydown", (event) => {
+    console.log(event);
+    if (event.key == "D" && event.altKey) {
+      event.preventDefault();
+      console.log("toggle");
+      document.body.classList.toggle("designing");
+      state.update();
+    }
+  });
 }

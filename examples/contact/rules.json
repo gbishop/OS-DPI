@@ -20,9 +20,9 @@
   {
     "origin": "TalkGrid",
     "event": "alt-press",
-    "conditions": ["slots.hasSlots(msg)"],
+    "conditions": ["slots.hasSlots(#label)"],
     "updates": {
-      "$Display": "slots.init(msg)",
+      "$Display": "slots.init(#label)",
       "$SlotsPopup": "1"
     }
   },
@@ -30,13 +30,13 @@
     "origin": "TalkGrid",
     "event": "alt-press",
     "conditions": [],
-    "updates": { "$tab": "'Keyboard'", "$Display": "#msg" }
+    "updates": { "$tab": "'Keyboard'", "$Display": "#label" }
   },
   {
     "origin": "TalkGrid",
     "event": "press",
     "conditions": [],
-    "updates": { "$Display": "#msg", "$Speak": "#msg" }
+    "updates": { "$Display": "#label", "$Speak": "#label" }
   },
   {
     "origin": "QuickGrid",
@@ -48,7 +48,7 @@
     "origin": "QuickGrid",
     "event": "press",
     "conditions": [],
-    "updates": { "$Speak": "#msg", "$Quick": "#value" }
+    "updates": { "$Speak": "#label", "$Quick": "#value" }
   },
   {
     "origin": "cancelSlot",
@@ -78,6 +78,6 @@
     "origin": "SlotGrid",
     "event": "press",
     "conditions": [],
-    "updates": { "$Display": "slots.update(msg)" }
+    "updates": { "$Display": "slots.update(#label)" }
   }
 ]

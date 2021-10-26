@@ -43,8 +43,7 @@
  * @property {string[]} tags
  * @property {string} [message]
  * @property {string} [label]
- * @property {string} [link]
- * @property {string} [icon]
+ * @property {string} [symbol]
  * @property {number} [row]
  * @property {number} [column]
  * @property {Object} [details]

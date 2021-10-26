@@ -3,6 +3,6 @@
     "origin": "grid",
     "event": "press",
     "conditions": [],
-    "updates": { "$Display": "#msg", "$Speak": "#msg" }
+    "updates": { "$Display": "#label", "$Speak": "#label" }
   }
 ]

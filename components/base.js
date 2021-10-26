@@ -176,7 +176,7 @@ export function toDesign(tree) {
 
 class Page extends Base {
   static defaultProps = {};
-  static allowedChildren = ["stack"];
+  static allowedChildren = ["stack", "modal dialog"];
 
   template() {
     return html`${this.children.map((child) => child.template())}`;
@@ -186,7 +186,14 @@ componentMap.addMap("page", Page);
 
 class Stack extends Base {
   static defaultProps = { direction: "column", background: "", scale: "1" };
-  static allowedChildren = ["stack", "grid", "display", "radio", "tab control"];
+  static allowedChildren = [
+    "stack",
+    "grid",
+    "display",
+    "radio",
+    "tab control",
+    "vsd",
+  ];
 
   template() {
     const style = styleString({

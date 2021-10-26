@@ -2,13 +2,13 @@
   {
     "tags": ["TRY"],
     "details": {
-      "src": "vsd.jpg"
+      "src": "examples/vsd/vsd.jpg"
     }
   },
   {
     "tags": ["TRY"],
     "label": "Loud",
-    "msg": "It was loud",
+    "message": "It was loud",
     "details": {
       "x": "53",
       "y": "25",
@@ -19,7 +19,7 @@
   {
     "tags": ["TRY"],
     "label": "Me",
-    "msg": "I got to see this awesome band!",
+    "message": "I got to see this awesome band!",
     "details": {
       "x": "0",
       "y": "70",
@@ -30,7 +30,7 @@
   {
     "tags": ["TRY"],
     "label": "Bagpipes",
-    "msg": "This guy was funny playing bagpipes.",
+    "message": "This guy was funny playing bagpipes.",
     "details": {
       "x": "25",
       "y": "65",
@@ -41,7 +41,7 @@
   {
     "tags": ["TRY"],
     "label": "Drums",
-    "msg": "Drums are my favorite instrument.",
+    "message": "Drums are my favorite instrument.",
     "details": {
       "x": "60",
       "y": "45",
@@ -52,18 +52,18 @@
   {
     "tags": ["TRY"],
     "label": "Bikes",
-    "msg": "They rode these bikes to move the stage. How cool is that?",
+    "message": "They rode these bikes to move the stage. How cool is that?",
     "details": {
       "x": "40",
       "y": "65",
       "w": "40",
-      "h": "30"
+      "h": "25"
     }
   },
   {
     "tags": ["TRY"],
     "label": "Downtown",
-    "msg": "We were in downtown Pittsburgh.",
+    "message": "We were in downtown Pittsburgh.",
     "details": {
       "x": "85",
       "y": "15",
@@ -74,7 +74,7 @@
   {
     "tags": ["TRY"],
     "label": "Sonic Cycle",
-    "msg": "They're called Sonic Cycle. Do you know them?",
+    "message": "They're called Sonic Cycle. Do you know them?",
     "details": {
       "x": "47",
       "y": "50",

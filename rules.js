@@ -37,7 +37,7 @@ export class Rules {
     // translate single = to ==
     let exp = expression.replaceAll(/(?<![=<>!])=/g, "==");
     // translate $name into state references
-    exp = exp.replaceAll(/\$\w+/g, "state.get($&)");
+    exp = exp.replaceAll(/\$\w+/g, "state.get('$&')");
     // translate #name into field references
     exp = exp.replaceAll(/#(\w+)/g, "data.$1");
 
@@ -103,6 +103,7 @@ export class Rules {
    * @param {Object} data - data associated with the event
    */
   applyRules(origin, event, data) {
+    console.log({ origin, event, data });
     // first for the event then for any that got queued.
     while (true) {
       const context = { ...this.Functions, state: this.state, data };

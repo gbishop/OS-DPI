@@ -20,6 +20,7 @@ class Radio extends Base {
     scale: "1",
     tags: [],
   };
+  static allowedChildren = ["option"];
 
   /**
    * true if there exist rows with the this.tags and the value
@@ -27,9 +28,10 @@ class Radio extends Base {
    * @returns {boolean}
    */
   valid(value) {
+    const { data, state } = this.context;
     return (
       !this.props.tags.length ||
-      this.context.data.hasTaggedRows([...this.props.tags, value])
+      data.hasTaggedRows(state.normalizeTags([...this.props.tags, value]))
     );
   }
 

@@ -36,6 +36,7 @@ export async function initSpeech(state) {
     const utterance = new SpeechSynthesisUtterance(message);
     utterance.voice = voice;
     utterance.lang = voice.lang;
+    console.log("speak", { message, voiceURI });
     speechSynthesis.speak(utterance);
   }
 

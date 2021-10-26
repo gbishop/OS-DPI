@@ -5,8 +5,8 @@ import { textInput } from "./input";
 
 export class Actions extends Base {
   init() {
-    /** @type {RuleEditor} */
-    this.ruleEditor = new RuleEditor({}, this.context, this);
+    /** @type {ActionEditor} */
+    this.ruleEditor = new ActionEditor({}, this.context, this);
   }
 
   template() {
@@ -110,7 +110,7 @@ export class Actions extends Base {
   }
 }
 
-class RuleEditor extends Base {
+class ActionEditor extends Base {
   init() {
     this.ruleIndex = -1;
   }
@@ -162,7 +162,7 @@ class RuleEditor extends Base {
         context: this.context,
         validate: (value) => (value.match(/^\w+$/) ? "" : "Invalid origin"),
         update: (name, value) => (this.rule[name] = value),
-        choices: tree.all(/\w+/g, ["name"]),
+        suggestions: tree.all(/\w+/g, ["name"]),
       })}
       ${textInput({
         type: "text",
@@ -173,7 +173,7 @@ class RuleEditor extends Base {
         validate: (value) =>
           ["press"].indexOf(value) >= 0 ? "" : "Invalid event",
         update: (name, value) => (this.rule[name] = value),
-        choices: new Set(["press"]),
+        suggestions: new Set(["press"]),
       })}
       ${this.editConditions()} ${this.editUpdates()}
       <div>

@@ -6,7 +6,8 @@
     <link rel="stylesheet" href="./style.css" />
     <script type="module">
       import { start } from "./start";
-      start("demo");
+      const name = window.location.hash.slice(1);
+      start(name || "demo");
     </script>
   </head>
   <body class="loaded designing">

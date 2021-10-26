@@ -1,13 +1,9 @@
 /** Variations on encapsulated input controls */
 
 import { html } from "uhtml";
-import Tribute from "tributejs";
+import suggest from "./suggest";
 
 /**
- * @typedef {Object} Suggestion
- * @property {string} key
- * @property {string[]} values
- *
  * @typedef {Object} InputOptions
  * @property {string} type
  * @property {string} name
@@ -51,71 +47,6 @@ function createDataList(choices) {
   }
 }
 
-const suggesterMap = new WeakMap();
-
-/** @param {Set<string>} suggestions */
-function createSuggester(suggestions) {
-  if (!suggestions) {
-    return {};
-  }
-  /** @param {HTMLInputElement} element */
-  return (element) => {
-    let lastPattern = "";
-    if (!suggesterMap.has(element)) {
-      const collections = ["$", "#"].map((key) => ({
-        trigger: key,
-        values: [],
-        /** @param {any} item */
-        selectTemplate: function (item) {
-          return (item && item.key.trim()) || key + lastPattern;
-        },
-        /** @param {any} item */
-        menuItemTemplate: function (item) {
-          return item.key;
-        },
-        noMatchTemplate: function () {
-          return "";
-        },
-        lookup: "key", // need this?
-      }));
-      const tribute = new Tribute({
-        collection: collections,
-        noMatchTemplate: () => "",
-      });
-      /* Hack the tribute search to make it NOT be fuzzy */
-      /** @param {string} pattern
-       * @param {Object} items
-       */
-      // @ts-ignore
-      tribute.search.filter = (pattern, items) => {
-        lastPattern = pattern;
-        pattern = pattern.toLowerCase();
-        const r = items.filter((/** @type {any} */ item) =>
-          item.key.slice(1).toLowerCase().startsWith(pattern)
-        );
-        return r;
-      };
-      tribute.attach(element);
-      suggesterMap.set(element, tribute);
-    }
-    const tribute = suggesterMap.get(element);
-    const groups = [[], []];
-    suggestions.forEach((suggestion) => {
-      const index = ["$", "#"].indexOf(suggestion[0]);
-      if (index >= 0) {
-        groups[index].push(suggestion);
-      }
-    });
-    groups.forEach((group, index) =>
-      tribute.append(
-        index,
-        group.map((value) => ({ key: value })),
-        true // replace
-      )
-    );
-  };
-}
-
 /**
  * Generate an input element
  *
@@ -123,27 +54,28 @@ function createSuggester(suggestions) {
  */
 export function textInput(options) {
   const list = createDataList((options.choices && [...options.choices]) || []);
-  const suggester = createSuggester(options.suggestions);
-  return html`<label for=${options.name} ?hidden=${options.labelHidden}
+  return html` <label for=${options.name} ?hidden=${options.labelHidden}
       >${options.label}</label
     >
-    <input
-      type=${options.type}
-      id=${options.name}
-      name=${options.name}
-      .value=${options.value}
-      class=${options.className}
-      onchange=${(/** @type {InputEventWithTarget} */ event) => {
-        const input = event.target;
-        const value = input.value.trim();
-        const msg = (options.validate && options.validate(value)) || "";
-        input.setCustomValidity(msg);
-        input.reportValidity();
-        if (!msg) options.update(options.name, value);
-      }}
-      list=${list.id}
-      autocomplete="off"
-      ref=${suggester}
-    />
+    <div class=${["suggest", options.className || ""].join(" ")}>
+      <input
+        type=${options.type}
+        id=${options.name}
+        name=${options.name}
+        .value=${options.value}
+        onchange=${(/** @type {InputEventWithTarget} */ event) => {
+          const input = event.target;
+          const value = input.value.trim();
+          const msg = (options.validate && options.validate(value)) || "";
+          input.setCustomValidity(msg);
+          input.reportValidity();
+          if (!msg) options.update(options.name, value);
+        }}
+        list=${list.id}
+        autocomplete="off"
+        ref=${suggest(options.suggestions)}
+      />
+      <div />
+    </div>
     ${list.render()}`;
 }

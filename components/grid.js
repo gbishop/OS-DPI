@@ -24,6 +24,7 @@ class Grid extends Base {
     const { rows, columns, match, name, background } = this.props;
     const tags = state.normalizeTags(this.props.tags);
     const key = tags.join("|");
+    /** @type {Rows} */
     let items;
     if (this.cache.items.length && this.cache.key === key) {
       items = this.cache.items;
@@ -49,16 +50,16 @@ class Grid extends Base {
 
     for (let i = offset; i < Math.min(items.length, perPage + offset); i++) {
       const item = items[i];
-      let itemIndex = item.index || i;
+      let itemIndex = i;
       while (offset + result.length < itemIndex) {
         result.push(html`<button tabindex="-1" disabled></button>`);
       }
       let content;
-      let msg = formatSlottedString(item.msg);
+      let msg = formatSlottedString(item.label);
       if ("symbol" in item) {
         content = html`<div>
           <figure>
-            <img src=${item.symbol} title=${item.icon} />
+            <img src=${item.symbol} title=${item.label} />
             <figcaption>${msg}</figcaption>
           </figure>
         </div>`;
@@ -69,7 +70,6 @@ class Grid extends Base {
         html`<button
           onClick=${rules.handler(name, item, "press")}
           style=${styleString({ backgroundColor: background })}
-          .disabled=${!item.msg || item.msg.length == 0}
           tabindex="-1"
         >
           ${content}

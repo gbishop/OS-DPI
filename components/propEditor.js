@@ -67,9 +67,7 @@ export function propEditor(name, value, info, context, hook) {
         </select>`;
     case "state":
       const { tree, rules } = context;
-      let states = [...tree.allStates(), ...rules.allStates()];
-      let stateSet = new Set(states);
-      states = [...stateSet];
+      let states = new Set([...tree.allStates(), ...rules.allStates()]);
       return textInput({
         type: "text",
         name,
@@ -78,7 +76,7 @@ export function propEditor(name, value, info, context, hook) {
         context,
         validate: (value) => (value.match(/^\$\w+$/) ? "" : "Invalid state"),
         update: hook,
-        suggestions: [{ key: "$", values: states }],
+        suggestions: states,
       });
     case "string[]": {
       const strings = value.length ? [...value] : [""];
