@@ -7,5 +7,6 @@ import "./gap";
 import "./tabcontrol";
 import "./modal-dialog";
 import "./vsd";
+import "./button";
 
 export { assemble };

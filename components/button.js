@@ -1,8 +1,8 @@
 import { html } from "uhtml";
-import { BaseComponent, ComponentMap } from "./base";
+import { Base, componentMap } from "./base";
 import { styleString } from "./style";
 
-class ButtonComponent extends BaseComponent {
+class Button extends Base {
   static defaultProps = {
     text: "click me",
     name: "button",
@@ -17,7 +17,7 @@ class ButtonComponent extends BaseComponent {
       style=${style}
       onClick=${rules.handler(this.props.name, {}, "press")}
     >
-      ${this.props.text}
+      ${this.props.label}
     </button>`;
   }
 
@@ -26,4 +26,4 @@ class ButtonComponent extends BaseComponent {
   }
 }
 
-ComponentMap["button"] = ButtonComponent;
+componentMap["button"] = Button;
