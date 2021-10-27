@@ -67,6 +67,7 @@
  * @property {string} [addMessage]
  * @property {string[]} [states]
  * @property {string[]} [fields]
+ * @property {string} [label]
  */
 
 /** @typedef {Event & { target: HTMLInputElement } } InputEventWithTarget */
