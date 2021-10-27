@@ -50,11 +50,16 @@ class Radio extends Base {
   template() {
     const { state } = this.context;
     const style = { flexGrow: this.props.scale };
-    const current = state.get(this.props.stateName);
-    const choices = this.children.map((child) => {
+    const stateName = this.props.stateName;
+    let current = state.get(stateName);
+    const choices = this.children.map((child, index) => {
       const disabled = !this.valid(child.props.value);
+      if (!current && !disabled) {
+        current = child.props.value;
+        state.update({ [stateName]: current });
+      }
       const color =
-        child.props.value == current
+        child.props.value == current || (!current && index == 0)
           ? this.props.selected
           : this.props.unselected;
       return html`<button

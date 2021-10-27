@@ -18,16 +18,19 @@ export class TabControl extends Base {
       flexGrow: this.props.scale,
     };
     const panels = /** @type {TabPanel[]} */ (this.children);
+    let activeTabName = state.get(this.props.stateName);
     const buttons = panels
       .filter((panel) => panel.props.label != "UNLABELED")
-      .map((panel) => {
+      .map((panel, index) => {
         const tabName = state.interpolate(panel.props.name); // internal name
         const tabLabel = state.interpolate(
           panel.props.label || panel.props.name
         ); // display name
         const color = panel.props.background;
-        const active =
-          state.get(this.props.stateName) == tabName || panels.length === 1;
+        if (index == 0 && !activeTabName) {
+          activeTabName = tabName;
+        }
+        const active = activeTabName == tabName || panels.length === 1;
         panel.active = active;
         const buttonStyle = {
           backgroundColor: color,
