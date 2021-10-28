@@ -33,7 +33,6 @@ async function getActualImageSize(img) {
       ih = img.naturalHeight,
       iratio = iw / ih,
       cratio = cw / ch;
-    console.log({ cw, ch, iw, ih, iratio, cratio });
     if (iratio > cratio) {
       width = cw;
       height = cw / iratio;
@@ -54,6 +53,8 @@ function pct(v) {
   return `${v}%`;
 }
 
+/** @typedef {Row & {x: number, y: number, w: number, h: number, src: string, invisible: boolean }} VRow */
+
 class VSD extends Base {
   /** @type {Props} */
   static defaultProps = {
@@ -66,8 +67,10 @@ class VSD extends Base {
   template() {
     const { data, state, rules } = this.context;
     const tags = state.normalizeTags(this.props.tags);
-    const items = data.getTaggedRows(tags, this.props.match);
-    const src = items.find((item) => item.details.src)?.details.src;
+    const items = /** @type {VRow[]} */ (
+      data.getTaggedRows(tags, this.props.match)
+    );
+    const src = items.find((item) => item.src)?.src;
     return html`<div class="vsd flex show">
       <img src=${src} />
       <div
@@ -92,16 +95,17 @@ class VSD extends Base {
         }}
       >
         ${items
-          .filter((item) => item.label)
+          .filter((item) => item.x)
           .map(
             (item) => html`<button
               style=${styleString({
-                left: pct(item.details.x),
-                top: pct(item.details.y),
-                width: pct(item.details.w),
-                height: pct(item.details.h),
+                left: pct(item.x),
+                top: pct(item.y),
+                width: pct(item.w),
+                height: pct(item.h),
                 position: "absolute",
               })}
+              ?invisible=${item.invisible}
               onClick=${rules.handler(this.name, item, "press")}
             >
               <span>${item.label}</span>

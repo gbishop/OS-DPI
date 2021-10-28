@@ -39,7 +39,7 @@
  */
 
 /**
- * @typedef {Object[]} Rows
+ * @typedef {Object} Row
  * @property {string[]} tags
  * @property {string} [message]
  * @property {string} [label]
@@ -48,6 +48,10 @@
  * @property {number} [column]
  * @property {Object} [details]
  * */
+
+/**
+ * @typedef {Row[]} Rows
+ */
 
 /**
  * @typedef {Object} Rule

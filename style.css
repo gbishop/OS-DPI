@@ -591,6 +591,12 @@ div.vsd button {
   align-items: center;
 }
 
+div.vsd button[invisible] {
+  box-shadow: none;
+  outline: none;
+  border: none;
+}
+
 div.vsd img {
   flex: 1 1 0;
   object-fit: contain;
@@ -618,7 +624,9 @@ button.button {
 
 #monitor {
   display: flex;
-  height: max-content;
+  height: 100%;
+  overflow-y: auto;
+  font-size: 75%;
 }
 
 #monitor table {
