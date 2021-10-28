@@ -71,7 +71,7 @@ class VSD extends Base {
       data.getTaggedRows(tags, this.props.match)
     );
     const src = items.find((item) => item.src)?.src;
-    return html`<div class="vsd flex show">
+    return html`<div class="vsd flex show" id=${this.id}>
       <img src=${src} />
       <div
         class="markers"
