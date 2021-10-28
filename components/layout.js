@@ -255,7 +255,7 @@ export class Layout extends Base {
    * @param {Tree} selected
    * @returns {import('uhtml').Hole}
    */
-  showTree(tree, selected) {
+  showTree(tree, selected, level = 0) {
     /** @param {HTMLElement} current */
     function setCurrent(current) {
       tree.designer.current = current;
@@ -266,7 +266,7 @@ export class Layout extends Base {
 
     if (tree.children.length) {
       if (!tree.designer.hasOwnProperty("expanded")) {
-        tree.designer.expanded = false;
+        tree.designer.expanded = level < 3;
       }
       const { expanded } = tree.designer;
       return html`<li
@@ -295,7 +295,7 @@ export class Layout extends Base {
         ${tree.designer.expanded
           ? html` <ul role="group">
               ${tree.children.map(
-                (child) => html`${this.showTree(child, selected)}`
+                (child) => html`${this.showTree(child, selected, level + 1)}`
               )}
             </ul>`
           : html``}
