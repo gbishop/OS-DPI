@@ -48,11 +48,15 @@ export async function start(name) {
 
   /** @param {() => void} f */
   function debounce(f) {
+    return f;
+    /*
+     * maybe debounce is causing problems?
     let timeout = null;
     return () => {
       if (timeout) window.cancelAnimationFrame(timeout);
       timeout = window.requestAnimationFrame(f);
     };
+    */
   }
 
   function renderUI() {
@@ -100,4 +104,5 @@ export async function start(name) {
       state.update();
     }
   });
+  console.log("here");
 }
