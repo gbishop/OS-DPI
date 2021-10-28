@@ -1,1 +1,8 @@
-[]
+[
+  {
+    "origin": "vsd",
+    "event": "press",
+    "conditions": [],
+    "updates": { "$Display": "#message", "$Speak": "#message" }
+  }
+]
