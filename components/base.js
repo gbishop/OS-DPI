@@ -63,10 +63,13 @@ export class Base {
     this.children = [];
     this.parent = parent;
     this.designer = {};
-    this.init();
     this.id = nextId();
+
+    // wrong place
+    this.init();
   }
 
+  /** called after the node is constructed */
   init() {}
 
   /**

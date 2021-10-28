@@ -1,6 +1,6 @@
 import { html } from "uhtml";
 import { PropInfo } from "../properties";
-import { componentMap } from "./base";
+import { assemble, componentMap } from "./base";
 import { colorNamesDataList } from "./style";
 import * as focusTrap from "focus-trap";
 import { Base } from "./base";
@@ -95,8 +95,11 @@ export class Layout extends Base {
    * @param {string} type
    */
   addChild(type) {
-    const constructor = componentMap.component(type);
-    const child = new constructor({}, this.selected.context, this.selected);
+    const child = assemble(
+      { type, props: {}, children: [] },
+      this.selected.context,
+      this.selected
+    );
     this.selected.children.push(child);
     this.setSelected(child, true);
     this.selected.context.state.update();
@@ -220,6 +223,10 @@ export class Layout extends Base {
 
   /** Render the controls */
   controls() {
+    console.log("selected", this.selected);
+    if (!this.selected) {
+      return html``;
+    }
     return html`<div
       class="controls"
       ref=${(/** @type {HTMLElement} */ div) => {
