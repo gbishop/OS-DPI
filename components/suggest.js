@@ -55,7 +55,6 @@ css`
  * @param {string[]|Set<string>} suggestions
  * */
 export default function suggest(suggestions) {
-  console.log("s", suggestions);
   if (!suggestions) {
     return () => {};
   }
@@ -79,7 +78,6 @@ export default function suggest(suggestions) {
  * */
 /** @param {InputEvent & { target: InputWithSuggest } } event */
 function input(event) {
-  console.log("input", event);
   const element = event.target;
   const charPosition = element.selectionEnd;
   // if at the beginning no need try
@@ -104,7 +102,6 @@ function input(event) {
     const results = [];
     for (const word of element.suggest.choices)
       if (word.toLowerCase().startsWith(prefix)) results.push(word);
-    console.log("results", results);
 
     const div = /** @type {HTMLElement} */ (element.nextElementSibling);
     if (results.length) {

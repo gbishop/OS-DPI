@@ -23,12 +23,12 @@ div#UI {
 }
 
 body.designing {
-  display: flex;
+  display: grid;
+  grid-template-rows: 50% 50%;
+  grid-template-columns: 50% 50%;
 }
 
 body.designing div#UI {
-  height: 50%;
-  width: 50%;
   font-size: 0.7vw;
   flex: 1 1 0;
 }
@@ -41,6 +41,9 @@ body.designing div#designer {
   display: block;
   overflow-y: auto;
   flex: 1 1 0;
+  grid-row-start: 1;
+  grid-row-end: 4;
+  grid-column-start: 2;
 }
 
 .flex {
@@ -413,6 +416,10 @@ div.actions div.scroll {
   overflow-y: scroll;
 }
 
+.actions tr[used] {
+  font-weight: bold;
+}
+
 .actions td,
 .actions th {
   border: 1px solid #999;
@@ -567,6 +574,7 @@ div.modal > div {
   height: 80%;
   opacity: 1;
   background-color: white;
+  border: 2px solid black;
 }
 
 div.vsd {
@@ -601,4 +609,28 @@ div.vsd div.markers button {
 }
 div.vsd.show div.markers button {
   opacity: 1;
+}
+
+button.button {
+  height: 100%;
+  width: 100%;
+}
+
+#monitor {
+  display: flex;
+  height: max-content;
+}
+
+#monitor table {
+  margin-top: 1em;
+  margin-left: 1em;
+  border-collapse: collapse;
+  border: 1px solid black;
+  height: max-content;
+}
+
+#monitor table td,
+#monitor table th {
+  border: 1px solid black;
+  padding: 0.5em;
 }

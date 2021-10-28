@@ -27,7 +27,6 @@ export function copyProps(element) {
  */
 export function formatSlottedString(msg, slotValues = []) {
   let slotIndex = 0;
-  console.log("fss", msg, slotValues);
   msg = msg || "";
   return msg.split(/(\$\$.*?\$\$)/).map((part) => {
     const m = part.match(/\$\$(?<name>.*?)=(?<value>.*?)\$\$/);

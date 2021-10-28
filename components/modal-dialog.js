@@ -2,7 +2,7 @@ import { html } from "uhtml";
 import { Base, componentMap } from "./base";
 import * as focusTrap from "focus-trap";
 
-class ModalDialog extends Base {
+export class ModalDialog extends Base {
   /** @type {Props} */
   static defaultProps = {
     stateName: "$modalOpen",
@@ -16,7 +16,7 @@ class ModalDialog extends Base {
       id=${this.id}
       ?open=${!!state.get(this.props.stateName)}
     >
-      ${this.children.map((child) => child.template())}
+      <div>${this.children.map((child) => child.template())}</div>
     </div>`;
   }
 }

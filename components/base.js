@@ -150,7 +150,6 @@ export class Base {
  */
 
 export function assemble(design, context, parent = null) {
-  console.log(design.type);
   const node = new (componentMap.component(design.type))(
     design.props,
     context,

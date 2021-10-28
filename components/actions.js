@@ -2,6 +2,7 @@ import { html } from "uhtml";
 import { Base } from "./base";
 import * as focusTrap from "focus-trap";
 import { textInput } from "./input";
+/** @typedef {import("focus-trap").FocusTrap} FocusTrap */
 
 export class Actions extends Base {
   init() {
@@ -30,8 +31,9 @@ export class Actions extends Base {
           ${rules.map((rule, index) => {
             const updates = Object.entries(rule.updates);
             const rs = updates.length;
+            const used = rule === rules.last.rule;
             return html`<tbody ?highlight=${ruleIndex == index}>
-              <tr>
+              <tr ?used=${used}>
                 <td rowspan=${rs}>${rule.origin}</td>
                 <td rowspan=${rs}>${rule.event}</td>
                 <td rowspan=${rs}>${this.showConditions(rule.conditions)}</td>
@@ -45,7 +47,7 @@ export class Actions extends Base {
               </tr>
               ${updates.slice(1).map(
                 ([key, value]) =>
-                  html`<tr>
+                  html`<tr ?used=${used}>
                   <td>${key}</td>
                   <td>${value}</td>
                 </tr></tbody>`
@@ -141,16 +143,20 @@ class ActionEditor extends Base {
     return html`<div
       class="editor"
       ref=${(/** @type {HTMLElement} */ div) => {
-        this.trap = focusTrap.createFocusTrap(div, {
-          allowOutsideClick: true,
-          onDeactivate: () => {
-            console.log("deactivate trap");
-            this.close();
-          },
-          onActivate: () => {
-            console.log("activate trap");
-          },
-        });
+        if (!this.trap) {
+          this.trap = focusTrap.createFocusTrap(div, {
+            allowOutsideClick: true,
+            onDeactivate: () => {
+              console.log("deactivate trap");
+              this.close();
+            },
+            onActivate: () => {
+              console.log("activate trap");
+            },
+          });
+        } else {
+          this.trap.updateContainerElements(div);
+        }
         this.trap.activate();
       }}
     >

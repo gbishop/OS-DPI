@@ -67,7 +67,7 @@ class VSD extends Base {
     const { data, state, rules } = this.context;
     const tags = state.normalizeTags(this.props.tags);
     const items = data.getTaggedRows(tags, this.props.match);
-    const src = items.find((item) => item.details.src).details.src;
+    const src = items.find((item) => item.details.src)?.details.src;
     return html`<div class="vsd flex show">
       <img src=${src} />
       <div

@@ -6,6 +6,7 @@ import { State } from "./state";
 import { Designer } from "./components/designer";
 import { toDesign } from "./components/base";
 import { initSpeech } from "./components/speech";
+import { Monitor } from "./components/monitor";
 
 /** let me wait for the page to load */
 const pageLoaded = new Promise((resolve) => {
@@ -60,6 +61,8 @@ export async function start(name) {
   }
   state.observe(debounce(renderUI));
   renderUI();
+
+  /* Designer */
   const designerState = new State(`DIState-${name}`);
   const designer = new Designer(
     {},
@@ -81,12 +84,18 @@ export async function start(name) {
   designerState.observe(debounce(renderDesigner));
   renderDesigner();
 
-  console.log("here");
+  /* Monitor */
+  const monitor = new Monitor({}, { state, rules, data, tree }, null);
+  function renderMonitor() {
+    if (!document.body.classList.contains("designing")) return;
+    render(document.querySelector("div#monitor"), monitor.template());
+  }
+  state.observe(debounce(renderMonitor));
+  renderMonitor();
+
   document.addEventListener("keydown", (event) => {
-    console.log(event);
     if (event.key == "D" && event.altKey) {
       event.preventDefault();
-      console.log("toggle");
       document.body.classList.toggle("designing");
       state.update();
     }

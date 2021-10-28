@@ -39,6 +39,7 @@ export class TabControl extends Base {
           ?active=${active}
           style=${styleString(buttonStyle)}
           onClick=${() => state.update({ [this.props.stateName]: tabName })}
+          .dataset=${{ id: panel.id }}
         >
           ${tabLabel}
         </button>`;

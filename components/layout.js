@@ -11,8 +11,31 @@ export class Layout extends Base {
     scale: "1",
   };
 
-  /** @type {Tree} */
-  selected = null;
+  // TODO: init is a bad idea, it is called at the wrong time.
+  init() {
+    const { state, tree } = this.context;
+    this.setSelected(this.getNode(state.get("path")));
+    document.querySelector("div#UI").addEventListener("click", (event) => {
+      const target = /** @type {HTMLElement} */ (event.target);
+      let id = null;
+      if (target instanceof HTMLButtonElement && target.dataset.id) {
+        id = target.dataset.id;
+      } else {
+        const div = target.closest('div[id^="osdpi"]');
+        if (div) {
+          id = div.id;
+        }
+      }
+      if (id) {
+        const component = this.allChildren(tree).find(
+          (child) => child.id == id
+        );
+        if (component) {
+          this.setSelected(component);
+        }
+      }
+    });
+  }
 
   /** Make sure a node is visible
    * @param {Tree} node
@@ -30,10 +53,13 @@ export class Layout extends Base {
     this.selected = selection;
     this.makeVisible(this.selected);
     const state = this.context.state;
-    state.update({ state, path: this.getPath(this.selected), editingTree });
+    state.update({ path: this.getPath(this.selected), editingTree });
     document.querySelector("#UI .highlight")?.classList.remove("highlight");
-    console.log("selected", this.selected);
-    document.querySelector(`#${this.selected.id}`)?.classList.add("highlight");
+    const uinode = document.getElementById(this.selected.id);
+    if (uinode) {
+      uinode.classList.add("highlight");
+      uinode.closest(".modal")?.classList.add("highlight");
+    }
   }
 
   /** return a node given the path through the children to get to it
@@ -72,7 +98,7 @@ export class Layout extends Base {
     const constructor = componentMap.component(type);
     const child = new constructor({}, this.selected.context, this.selected);
     this.selected.children.push(child);
-    this.setSelected(child);
+    this.setSelected(child, true);
     this.selected.context.state.update();
   }
 
@@ -93,6 +119,21 @@ export class Layout extends Base {
       <option selected disabled value="">Add</option>
       ${allowed.map((type) => html`<option value=${type}>${type}</option>`)}
     </select>`;
+  }
+
+  /** Get a list of all children
+   * @param {Tree} tree
+   * @returns {Tree[]}
+   * */
+  allChildren(tree) {
+    if (tree.children.length) {
+      return tree.children.reduce(
+        (result, child) => [...result, child, ...this.allChildren(child)],
+        []
+      );
+    } else {
+      return [];
+    }
   }
 
   /** Get a list of the children that are visible
@@ -182,17 +223,21 @@ export class Layout extends Base {
     return html`<div
       class="controls"
       ref=${(/** @type {HTMLElement} */ div) => {
-        this.trap = focusTrap.createFocusTrap(div, {
-          clickOutsideDeactivates: true,
-          allowOutsideClick: true,
-          onDeactivate: () => {
-            console.log("deactivate trap");
-            this.update({ editingTree: false });
-          },
-          onActivate: () => {
-            console.log("activate trap");
-          },
-        });
+        if (!this.trap) {
+          this.trap = focusTrap.createFocusTrap(div, {
+            clickOutsideDeactivates: false,
+            allowOutsideClick: true,
+            onDeactivate: () => {
+              console.log("deactivate trap");
+              this.update({ editingTree: false });
+            },
+            onActivate: () => {
+              console.log("activate trap");
+            },
+          });
+        } else {
+          this.trap.updateContainerElements(div);
+        }
         this.trap.activate();
       }}
     >
@@ -235,12 +280,15 @@ export class Layout extends Base {
       >
         <span
           role="button"
-          onclick=${() => {
-            if (selected === tree) {
+          onclick=${(ev) => {
+            if (tree.designer.expanded && tree !== this.selected) {
+              this.setSelected(tree, true);
+            } else {
               tree.designer.expanded = !tree.designer.expanded;
+              this.setSelected(tree, true);
             }
-            this.setSelected(tree, true);
           }}
+          .dataset=${{ componentId: tree.id }}
         >
           ${tree.constructor.name} ${tree.name}
         </span>
@@ -259,7 +307,10 @@ export class Layout extends Base {
         tabindex=${selected === tree ? 0 : -1}
         ref=${setCurrent}
       >
-        <span role="button" onclick=${() => this.setSelected(tree, true)}
+        <span
+          role="button"
+          onclick=${() => this.setSelected(tree, true)}
+          .dataset=${{ componentId: tree.id }}
           >${tree.constructor.name} ${tree.name}</span
         >
       </li>`;
@@ -302,8 +353,6 @@ export class Layout extends Base {
   template() {
     const state = this.context.state;
     const editingTree = state.get("editingTree");
-    this.selected = this.getNode(state.get("path"));
-    this.makeVisible(this.selected);
     return html`<div class="tree">
         <ul
           role="tree"

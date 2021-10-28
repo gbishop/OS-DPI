@@ -24,6 +24,16 @@ export class Rules {
   constructor(rules, state) {
     this.rules = rules;
     this.state = state;
+    this.last = {
+      /** @type {Rule} */
+      rule: null,
+      /** @type {Object} */
+      data: {},
+      /** @type {string} */
+      event: "",
+      /** @type {string} */
+      origin: "",
+    };
   }
 
   /** translate an expression from Excel-like to Javascript
@@ -104,6 +114,7 @@ export class Rules {
    */
   applyRules(origin, event, data) {
     console.log({ origin, event, data });
+    this.last = { origin, event, data, rule: null };
     // first for the event then for any that got queued.
     while (true) {
       const context = { ...this.Functions, state: this.state, data };
@@ -119,6 +130,7 @@ export class Rules {
         );
         if (result) {
           console.log("got it");
+          this.last.rule = rule;
           const patch = Object.fromEntries(
             Object.entries(rule.updates).map(([$var, value]) => [
               $var,

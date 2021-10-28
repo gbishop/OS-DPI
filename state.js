@@ -52,7 +52,14 @@ export class State {
       }
     }
     for (const [callback, names] of this.listeners) {
-      if (!names.length || names.some((name) => changed.has(name))) {
+      if (
+        !names.length ||
+        names.some(
+          (name) =>
+            changed.has(name) ||
+            (name === "$Speak" && patch && "$Speak" in patch)
+        )
+      ) {
         callback(changed);
       }
     }
@@ -61,8 +68,6 @@ export class State {
       const persist = JSON.stringify(this.values);
       window.localStorage.setItem(this.persistKey, persist);
     }
-
-    console.log(this.values);
   };
   /** observe - call this function if the named states change
    * @param {Function} callback

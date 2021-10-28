@@ -8,5 +8,6 @@ import "./tabcontrol";
 import "./modal-dialog";
 import "./vsd";
 import "./button";
+import "./monitor";
 
 export { assemble };

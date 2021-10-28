@@ -35,7 +35,6 @@ class Display extends Base {
     let content = [];
     /** @type {String|Editor} */
     let value = state.get(this.props.stateName) || "";
-    console.log("value", value);
     if (typeof value === "string" || value instanceof String) {
       // strip any slot markup
       value = value.replaceAll(/\$\$(?<name>.*?)=(?<value>.*?)\$\$/g, "$2");
@@ -152,6 +151,7 @@ class Display extends Base {
         /** @param {Editor} old
          */
         return (old) => {
+          if (!old) return;
           const slotIndex = old.slotIndex + 1;
           if (slotIndex >= old.slots.length) {
             rules.queueEvent("okSlot", "press");
@@ -211,7 +211,6 @@ class Display extends Base {
  * @returns {String}
  */
 export function strip(value) {
-  console.log("strip", value);
   if (typeof value === "string" || value instanceof String) {
     // strip any slot markup
     value = value.replaceAll(/\$\$(?<name>.*?)=(?<value>.*?)\$\$/g, "$2");

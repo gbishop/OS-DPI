@@ -11,6 +11,7 @@ class Stack extends Base {
     "radio",
     "tab control",
     "vsd",
+    "button",
   ];
 
   template() {

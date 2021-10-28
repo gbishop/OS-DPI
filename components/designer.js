@@ -13,7 +13,7 @@ export class Designer extends Base {
   constructor(props, context, parent) {
     super(props, context, parent);
     const tabs = new TabControl(
-      { scale: "10", tabEdge: "top" },
+      { scale: "10", tabEdge: "top", stateName: "designerTab" },
       this.context,
       this
     );

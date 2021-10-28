@@ -4,17 +4,20 @@ import { styleString } from "./style";
 
 class Button extends Base {
   static defaultProps = {
-    text: "click me",
+    label: "click me",
     name: "button",
     background: "",
+    scale: "1",
   };
 
   template() {
     const style = styleString({ backgroundColor: this.props.background });
     const { rules } = this.context;
     return html`<button
+      class="button"
       name=${this.props.name}
       style=${style}
+      id=${this.id}
       onClick=${rules.handler(this.props.name, {}, "press")}
     >
       ${this.props.label}
@@ -26,4 +29,4 @@ class Button extends Base {
   }
 }
 
-componentMap["button"] = Button;
+componentMap.addMap("button", Button);

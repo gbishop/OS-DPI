@@ -334,7 +334,7 @@
                                 "stateName": "$TaskTime",
                                 "unselected": "lightgray",
                                 "selected": "pink",
-                                "scale": "1",
+                                "scale": "2",
                                 "tags": ["TASK", "$TaskTopic"]
                               },
                               "children": [
@@ -371,7 +371,7 @@
                                 "stateName": "$TaskAspect",
                                 "unselected": "lightgray",
                                 "selected": "pink",
-                                "scale": "1",
+                                "scale": "3",
                                 "tags": ["TASK", "$TaskTopic"]
                               },
                               "children": [
@@ -592,6 +592,60 @@
                 "scale": "5"
               },
               "children": []
+            },
+            {
+              "type": "stack",
+              "props": {
+                "direction": "column",
+                "background": "",
+                "scale": "1"
+              },
+              "children": [
+                {
+                  "type": "button",
+                  "props": {
+                    "label": "Next Slot",
+                    "name": "nextSlot",
+                    "background": "",
+                    "scale": "1",
+                    "text": "click me"
+                  },
+                  "children": []
+                },
+                {
+                  "type": "button",
+                  "props": {
+                    "label": "Duplicate Slot",
+                    "name": "duplicateSlot",
+                    "background": "",
+                    "scale": "1",
+                    "text": "click me"
+                  },
+                  "children": []
+                },
+                {
+                  "type": "button",
+                  "props": {
+                    "label": "OK",
+                    "name": "okSlot",
+                    "background": "",
+                    "scale": "1",
+                    "text": "click me"
+                  },
+                  "children": []
+                },
+                {
+                  "type": "button",
+                  "props": {
+                    "label": "Cancel",
+                    "name": "cancelSlot",
+                    "background": "",
+                    "scale": "1",
+                    "text": "click me"
+                  },
+                  "children": []
+                }
+              ]
             }
           ]
         }
