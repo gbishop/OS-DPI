@@ -1,44 +1,6 @@
 /** A simple word suggestion add-on for html input controls using uhtml */
 
 import { render, html } from "uhtml";
-import css from "ustyler";
-
-css`
-  .suggest {
-    position: relative;
-    display: inline-block;
-    font-family: monospace;
-  }
-
-  .suggest input {
-    width: 100%;
-  }
-
-  .suggest div {
-    position: absolute;
-    border: 1px solid black;
-    background-color: white;
-    z-index: 10;
-  }
-
-  .suggest div:empty {
-    display: none;
-  }
-
-  .suggest ul {
-    list-style-type: none;
-    margin: 0;
-    padding: 10px;
-  }
-
-  .suggest li[selected] {
-    background-color: #ccc;
-  }
-
-  .suggest input {
-    font-family: monospace;
-  }
-`;
 
 /**
  * @typedef {Object} SuggestState
