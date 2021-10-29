@@ -1,6 +1,6 @@
 import { html } from "uhtml";
 import { PropInfo } from "../properties";
-import { assemble, componentMap } from "./base";
+import { assemble } from "./base";
 import { colorNamesDataList } from "./style";
 import * as focusTrap from "focus-trap";
 import { Base } from "./base";
@@ -11,7 +11,6 @@ export class Layout extends Base {
     scale: "1",
   };
 
-  // TODO: init is a bad idea, it is called at the wrong time.
   init() {
     const { state, tree } = this.context;
     this.setSelected(this.getNode(state.get("path")));
@@ -31,7 +30,7 @@ export class Layout extends Base {
           (child) => child.id == id
         );
         if (component) {
-          this.setSelected(component);
+          this.setSelected(component, false, false);
         }
       }
     });
@@ -49,14 +48,14 @@ export class Layout extends Base {
 
   /** @param {Tree} selection
    */
-  setSelected(selection, editingTree = false) {
+  setSelected(selection, editingTree = false, highlight = true) {
     this.selected = selection;
     this.makeVisible(this.selected);
     const state = this.context.state;
     state.update({ path: this.getPath(this.selected), editingTree });
     document.querySelector("#UI .highlight")?.classList.remove("highlight");
     const uinode = document.getElementById(this.selected.id);
-    if (uinode) {
+    if (uinode && highlight) {
       uinode.classList.add("highlight");
       uinode.closest(".modal")?.classList.add("highlight");
     }
