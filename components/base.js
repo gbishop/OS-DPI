@@ -1,5 +1,7 @@
 import { html } from "uhtml";
-import { styleString } from "./style";
+
+/* An empty node for conditional rendering */
+export const Empty = html`<!--Empty-->`;
 
 class ComponentNameMap {
   componentFromName = new Map();

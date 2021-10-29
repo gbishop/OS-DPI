@@ -1,6 +1,6 @@
 import { html } from "uhtml";
 import { PropInfo } from "../properties";
-import { assemble } from "./base";
+import { assemble, Empty } from "./base";
 import { colorNamesDataList } from "./style";
 import * as focusTrap from "focus-trap";
 import { Base } from "./base";
@@ -223,9 +223,6 @@ export class Layout extends Base {
   /** Render the controls */
   controls() {
     console.log("selected", this.selected);
-    if (!this.selected) {
-      return html``;
-    }
     return html`<div
       class="controls"
       ref=${(/** @type {HTMLElement} */ div) => {
@@ -304,7 +301,7 @@ export class Layout extends Base {
                 (child) => html`${this.showTree(child, selected, level + 1)}`
               )}
             </ul>`
-          : html``}
+          : Empty}
       </li>`;
     } else {
       return html`<li
@@ -370,7 +367,8 @@ export class Layout extends Base {
           ${this.showTree(this.context.tree, this.selected)}
         </ul>
       </div>
-      ${editingTree ? this.controls() : html``} ${colorNamesDataList()}`;
+      ${editingTree && this.selected ? this.controls() : Empty}
+      ${colorNamesDataList()}`;
   }
 
   /** Update the state

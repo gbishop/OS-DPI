@@ -1,5 +1,5 @@
 import { html } from "uhtml";
-import { Base } from "./base";
+import { Base, Empty } from "./base";
 import * as focusTrap from "focus-trap";
 import { textInput } from "./input";
 /** @typedef {import("focus-trap").FocusTrap} FocusTrap */
@@ -138,7 +138,7 @@ class ActionEditor extends Base {
   template() {
     const { state, rules, tree } = this.context;
 
-    if (this.ruleIndex < 0) return html``;
+    if (this.ruleIndex < 0) return Empty;
 
     return html`<div
       class="editor"
