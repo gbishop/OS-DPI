@@ -49,7 +49,6 @@ class Radio extends Base {
 
   template() {
     const { state } = this.context;
-    const style = { flexGrow: this.props.scale };
     const stateName = this.props.stateName;
     let current = state.get(stateName);
     const choices = this.children.map((child, index) => {
@@ -73,7 +72,6 @@ class Radio extends Base {
 
     return html`<div
       class="radio flex"
-      style=${styleString(style)}
       onclick=${(/** @type {MouseEvent} */ e) => this.handleClick(e)}
       id=${this.id}
     >

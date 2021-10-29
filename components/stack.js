@@ -16,7 +16,6 @@ class Stack extends Base {
 
   template() {
     const style = styleString({
-      flexGrow: this.props.scale,
       backgroundColor: this.props.background,
     });
     const empty = this.children.length ? "" : "empty";

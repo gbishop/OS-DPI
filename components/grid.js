@@ -17,9 +17,7 @@ class Grid extends Base {
   cache = { key: "", items: [] };
 
   template() {
-    const style = {
-      flexGrow: this.props.scale,
-    };
+    const style = {};
     const { data, state, rules } = this.context;
     const { rows, columns, match, name, background } = this.props;
     const tags = state.normalizeTags(this.props.tags);

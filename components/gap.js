@@ -7,7 +7,6 @@ class Gap extends Base {
 
   template() {
     const style = styleString({
-      flexGrow: this.props.scale,
       backgroundColor: this.props.background,
     });
     return html`<div class="gap flex" style=${style} id=${this.id}></div>`;

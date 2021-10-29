@@ -14,9 +14,6 @@ export class TabControl extends Base {
 
   template() {
     const { state } = this.context;
-    const divStyle = {
-      flexGrow: this.props.scale,
-    };
     const panels = /** @type {TabPanel[]} */ (this.children);
     let activeTabName = state.get(this.props.stateName);
     const buttons = panels
@@ -45,13 +42,11 @@ export class TabControl extends Base {
         </button>`;
       });
     const panel = panels.find((panel) => panel.active)?.template() || Empty;
-    const panelsStyle = { flexGrow: this.props.scale };
     return html`<div
       class=${["tabcontrol", "flex", this.props.tabEdge].join(" ")}
-      style=${styleString(divStyle)}
       id=${this.id}
     >
-      <div class="panels" style=${styleString(panelsStyle)}>${panel}</div>
+      <div class="panels flex" }>${panel}</div>
       <div class="buttons">${buttons}</div>
     </div>`;
   }

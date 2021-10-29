@@ -52,7 +52,6 @@ export const PropInfo = {
   },
   scale: {
     type: "number",
-    style: "flexGrow",
     name: "Scale",
     description: "Comparative size of this element compared to its siblings.",
   },
