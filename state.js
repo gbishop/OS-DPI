@@ -120,7 +120,10 @@ export class State {
     /** @type {string[]} tags */
     // normalize
     return tags
-      .map((t) => t.startsWith("$") && (this.get(t) || ""))
+      .map((t) => {
+        if (t.startsWith("$")) return this.get(t) || "";
+        else return t;
+      })
       .filter((t) => t.length)
       .flat();
   }
