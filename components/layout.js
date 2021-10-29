@@ -256,7 +256,7 @@ export class Layout extends Base {
    * Display the designer interface
    * @param {Tree} tree
    * @param {Tree} selected
-   * @returns {import('uhtml').Hole}
+   * @returns {Hole}
    */
   showTree(tree, selected, level = 0) {
     /** @param {HTMLElement} current */

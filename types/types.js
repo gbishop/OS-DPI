@@ -75,3 +75,5 @@
  */
 
 /** @typedef {Event & { target: HTMLInputElement } } InputEventWithTarget */
+
+/** @typedef {import('uhtml').Hole} Hole */

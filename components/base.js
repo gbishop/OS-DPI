@@ -76,10 +76,10 @@ export class Base {
 
   /**
    * Return the content for element.
-   * @returns {import('uhtml').Hole}
+   * @returns {Hole}
    */
   template() {
-    return html`empty`;
+    return Empty;
   }
 
   nextSibling() {

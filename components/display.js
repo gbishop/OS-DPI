@@ -31,7 +31,7 @@ class Display extends Base {
       backgroundColor: this.props.background,
     });
     const { state } = this.context;
-    /** @type {import("uhtml").Hole[]} */
+    /** @type {Hole[]} */
     let content = [];
     /** @type {String|Editor} */
     let value = state.get(this.props.stateName) || "";
