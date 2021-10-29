@@ -82,7 +82,7 @@ export function propEditor(name, value, info, context, hook) {
         suggestions: states,
       });
 
-    case "string[]": {
+    case "tags": {
       const strings = value.length ? [...value] : [""];
       return html`${strings.map((string, index) => {
           const id = `${name}_${index}`;

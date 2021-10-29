@@ -18,7 +18,7 @@ export const PropInfo = {
     description: "Number of columns in a grid.",
   },
   tags: {
-    type: "string[]",
+    type: "tags",
     name: "Tags",
     description: "A list of tags to match",
     addMessage: "Add a tag",
