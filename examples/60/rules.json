@@ -15,13 +15,23 @@
     "origin": "grid",
     "event": "press",
     "conditions": ["#label = 'Clear'"],
-    "updates": { "$Display": "''" }
+    "updates": { "$Display": "''", "$Again": "''" }
+  },
+  {
+    "origin": "grid",
+    "event": "press",
+    "conditions": ["#label = 'Speak'", "$Again", "!$Display"],
+    "updates": { "$Speak": "$Again" }
   },
   {
     "origin": "grid",
     "event": "press",
     "conditions": ["#label = 'Speak'"],
-    "updates": { "$Speak": "$Display", "$Display": "''" }
+    "updates": {
+      "$Speak": "$Display",
+      "$Display": "''",
+      "$Again": "$Display"
+    }
   },
   {
     "origin": "grid",
