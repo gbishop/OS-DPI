@@ -3,13 +3,14 @@ import { validateColor, getColor } from "./style";
 import { textInput } from "./input";
 
 /**
+ * @param {Tree} component
  * @param {string} name
  * @param {any} value
  * @param {PropertyInfo} info
  * @param {Context} context
  * @param {(name: string, value: any) => void} [hook]
  */
-export function propEditor(name, value, info, context, hook) {
+export function propEditor(component, name, value, info, context, hook) {
   function propUpdate({ target }) {
     const name = target.name;
     const value = target.value;
@@ -83,35 +84,59 @@ export function propEditor(name, value, info, context, hook) {
       });
 
     case "tags": {
-      const strings = value.length ? [...value] : [""];
-      return html`${strings.map((string, index) => {
-          const id = `${name}_${index}`;
-          const hidden = index != 0;
-          const label = index != 0 ? `${info.name} ${index + 1}` : info.name;
-          return html`
-            <label for=${id} ?hidden=${hidden}>${label}</label>
-            <input
-              type="text"
-              id=${id}
-              .value=${string}
-              onchange=${(/** @type {InputEventWithTarget} */ event) => {
-                if (!event.target.value) {
-                  strings.splice(index, 1);
+      if (!component?.designer.tags) {
+        component.designer.tags = [...value];
+      }
+      const tags = component.designer.tags;
+      function reflect() {
+        const result = tags.filter(validTag);
+        hook(name, result);
+      }
+      function validTag(tag) {
+        return tag.match(/^\$?\w+/);
+      }
+      const { tree, rules } = context;
+      let states = new Set([...tree.allStates(), ...rules.allStates()]);
+      return html`<fieldset>
+        <legend>Tags</legend>
+        ${tags.map((tag, index) => {
+          const id = `tags_${index}`;
+          const label = `${index + 1}`;
+          return html`${textInput({
+              type: "text",
+              name: id,
+              label,
+              value: tag,
+              context,
+              validate: (value) => "",
+              update: (_, value) => {
+                if (!value) {
+                  tags.splice(index, 1);
                 } else {
-                  strings[index] = event.target.value;
+                  tags[index] = value;
                 }
-                (!info.validate || info.validate(event)) && hook(name, strings);
+                reflect();
+              },
+              suggestions: states,
+            })}<button
+              onclick=${() => {
+                tags.splice(index, 1);
+                reflect();
               }}
-            />
-          `;
-        })}<button
+            >
+              X
+            </button>`;
+        })}
+        <button
+          style="grid-column: 2 / 3"
           onclick=${() => {
-            strings.push("New");
-            hook(name, strings);
+            tags.push("");
+            reflect();
           }}
         >
-          ${info.addMessage}
-        </button>`;
+          Add tag
+        </button>
+      </fieldset> `;
     }
 
     default:

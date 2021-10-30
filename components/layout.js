@@ -266,18 +266,15 @@ export class Layout extends Base {
         current.focus();
       }
     }
-
-    if (tree.children.length) {
+    if (tree.children.length > 0) {
       if (!tree.designer.hasOwnProperty("expanded")) {
         tree.designer.expanded = level < 3;
       }
-      const { expanded } = tree.designer;
+      const expanded = !!tree.designer.designer;
       return html`<li
         role="treeitem"
-        aria=${{
-          expanded,
-          selected: selected === tree,
-        }}
+        aria-expanded=${expanded}
+        aria-selected=${selected === tree}
         tabindex=${selected === tree ? 0 : -1}
         ref=${setCurrent}
       >
@@ -296,7 +293,7 @@ export class Layout extends Base {
           ${tree.constructor.name} ${tree.name}
         </span>
         ${tree.designer.expanded
-          ? html` <ul role="group">
+          ? html`<ul role="group">
               ${tree.children.map(
                 (child) => html`${this.showTree(child, selected, level + 1)}`
               )}
@@ -306,7 +303,7 @@ export class Layout extends Base {
     } else {
       return html`<li
         role="treeitem"
-        aria=${{ selected: selected === tree }}
+        aria-selected=${selected === tree}
         tabindex=${selected === tree ? 0 : -1}
         ref=${setCurrent}
       >

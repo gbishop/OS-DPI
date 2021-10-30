@@ -234,6 +234,24 @@ div.props button {
   grid-column: 2 / 3;
 }
 
+div.props fieldset {
+  grid-column: 1 / 3;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-gap: 0.25em 1em;
+  border: 1px solid black;
+  padding: 1em;
+  padding-block-start: 0;
+}
+
+div.props fieldset div.suggest {
+  grid-column: 2 / 3;
+}
+
+div.props fieldset button {
+  grid-column: 3 / 4;
+}
+
 input[type="number"] {
   width: 3em;
 }
