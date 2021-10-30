@@ -1,7 +1,6 @@
 /** Variations on encapsulated input controls */
 
 import { html } from "uhtml";
-import { Empty } from "./base";
 import suggest from "./suggest";
 
 /**
@@ -28,7 +27,7 @@ function createDataList(choices) {
     return {
       id: null,
       render() {
-        return Empty;
+        return html``;
       },
     };
   }

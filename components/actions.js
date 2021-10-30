@@ -1,8 +1,7 @@
+import { log } from "../log";
 import { html } from "uhtml";
-import { Base, Empty } from "./base";
-import * as focusTrap from "focus-trap";
+import { Base } from "./base";
 import { textInput } from "./input";
-/** @typedef {import("focus-trap").FocusTrap} FocusTrap */
 
 export class Actions extends Base {
   init() {
@@ -122,12 +121,12 @@ class ActionEditor extends Base {
     const { rules } = this.context;
     this.ruleIndex = index;
     this.rule = rules.rules[this.ruleIndex];
-    console.log(this.ruleIndex, this.rule);
+    log(this.ruleIndex, this.rule);
     this.origin = this.rule.origin;
     this.event = this.rule.event;
     this.conditions = [...this.rule.conditions];
     this.updates = Object.entries(this.rule.updates);
-    console.log("open", this);
+    log("open", this);
   }
 
   close() {
@@ -138,28 +137,9 @@ class ActionEditor extends Base {
   template() {
     const { state, rules, tree } = this.context;
 
-    if (this.ruleIndex < 0) return Empty;
+    if (this.ruleIndex < 0) return html``;
 
-    return html`<div
-      class="editor"
-      ref=${(/** @type {HTMLElement} */ div) => {
-        if (!this.trap) {
-          this.trap = focusTrap.createFocusTrap(div, {
-            allowOutsideClick: true,
-            onDeactivate: () => {
-              console.log("deactivate trap");
-              this.close();
-            },
-            onActivate: () => {
-              console.log("activate trap");
-            },
-          });
-        } else {
-          this.trap.updateContainerElements(div);
-        }
-        this.trap.activate();
-      }}
-    >
+    return html`<div class="editor">
       ${textInput({
         type: "text",
         name: "origin",
@@ -183,7 +163,7 @@ class ActionEditor extends Base {
       })}
       ${this.editConditions()} ${this.editUpdates()}
       <div>
-        <button onclick=${() => this.trap.deactivate()}>Return</button>
+        <button onclick=${() => this.close()}>Return</button>
         <button
           ?disabled=${this.ruleIndex < 1}
           onclick=${() => {

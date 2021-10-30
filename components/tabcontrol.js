@@ -1,5 +1,5 @@
 import { html } from "uhtml";
-import { Base, componentMap, Empty } from "./base";
+import { Base, componentMap } from "./base";
 import { styleString } from "./style";
 
 export class TabControl extends Base {
@@ -41,7 +41,7 @@ export class TabControl extends Base {
           ${tabLabel}
         </button>`;
       });
-    const panel = panels.find((panel) => panel.active)?.template() || Empty;
+    const panel = panels.find((panel) => panel.active)?.template() || html``;
     return html`<div
       class=${["tabcontrol", "flex", this.props.tabEdge].join(" ")}
       id=${this.id}

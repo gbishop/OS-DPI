@@ -1,10 +1,18 @@
 import { html } from "uhtml";
 import { PropInfo } from "../properties";
-import { assemble, Empty } from "./base";
+import { assemble } from "./base";
 import { colorNamesDataList } from "./style";
-import * as focusTrap from "focus-trap";
 import { Base } from "./base";
 import { propEditor } from "./propEditor";
+
+import { log } from "../log";
+
+/*
+function html(...args) {
+  log("html", args);
+  return _html(...args);
+}
+*/
 
 export class Layout extends Base {
   static defaultProps = {
@@ -49,6 +57,7 @@ export class Layout extends Base {
   /** @param {Tree} selection
    */
   setSelected(selection, editingTree = false, highlight = true) {
+    log("setSelected", selection.constructor.name, selection.id);
     this.selected = selection;
     this.makeVisible(this.selected);
     const state = this.context.state;
@@ -113,7 +122,7 @@ export class Layout extends Base {
       ?disabled=${!allowed.length}
       style="width: 7em"
       onchange=${(/** @type {{ target: { value: string; }; }} */ e) => {
-        this.trap.deactivate();
+        this.closeControls();
         this.addChild(e.target.value);
         e.target.value = "";
       }}
@@ -175,7 +184,7 @@ export class Layout extends Base {
   deleteCurrent() {
     return html`<button
       onclick=${() => {
-        this.trap.deactivate();
+        this.closeControls();
         const index = this.selected.parent.children.indexOf(this.selected);
         this.selected.parent.children.splice(index, 1);
         if (this.selected.parent.children.length) {
@@ -205,8 +214,9 @@ export class Layout extends Base {
   showProps() {
     return Object.entries(PropInfo)
       .filter(([name, _]) => name in this.selected.props)
-      .map(([name, info]) =>
-        propEditor(
+      .map(([name, info]) => {
+        return propEditor(
+          this.selected,
           name,
           this.selected.props[name],
           info,
@@ -216,38 +226,24 @@ export class Layout extends Base {
             this.selected.context.state.update();
             this.update();
           }
-        )
-      );
+        );
+      });
+  }
+
+  /** close the editing controls */
+  closeControls() {
+    this.update({ editingTree: false });
   }
 
   /** Render the controls */
   controls() {
-    console.log("selected", this.selected);
-    return html`<div
-      class="controls"
-      ref=${(/** @type {HTMLElement} */ div) => {
-        if (!this.trap) {
-          this.trap = focusTrap.createFocusTrap(div, {
-            clickOutsideDeactivates: false,
-            allowOutsideClick: true,
-            onDeactivate: () => {
-              console.log("deactivate trap");
-              this.update({ editingTree: false });
-            },
-            onActivate: () => {
-              console.log("activate trap");
-            },
-          });
-        } else {
-          this.trap.updateContainerElements(div);
-        }
-        this.trap.activate();
-      }}
-    >
+    log("selected", this.selected);
+    log("controls");
+    return html`<div class="controls">
       <h1>Editing ${this.selected.constructor.name} ${this.selected.name}</h1>
       ${this.addMenu()} ${this.deleteCurrent()}
       <div class="props">${this.showProps()}</div>
-      <button id="controls-return" onclick=${() => this.trap.deactivate()}>
+      <button id="controls-return" onclick=${() => this.closeControls()} }>
         Return</button
       ><button disabled>Cancel</button>
     </div>`;
@@ -277,6 +273,7 @@ export class Layout extends Base {
         aria-selected=${selected === tree}
         tabindex=${selected === tree ? 0 : -1}
         ref=${setCurrent}
+        .dataset=${{ componentId: tree.id }}
       >
         <span
           role="button"
@@ -290,15 +287,15 @@ export class Layout extends Base {
           }}
           .dataset=${{ componentId: tree.id }}
         >
-          ${tree.constructor.name} ${tree.name}
+          ${tree.constructor.name || ""} ${tree.name || ""}
         </span>
         ${tree.designer.expanded
-          ? html`<ul role="group">
-              ${tree.children.map(
-                (child) => html`${this.showTree(child, selected, level + 1)}`
+          ? html`<ul role="group" .dataset=${{ componentId: tree.id }}>
+              ${tree.children.map((child) =>
+                this.showTree(child, selected, level + 1)
               )}
             </ul>`
-          : Empty}
+          : html``}
       </li>`;
     } else {
       return html`<li
@@ -306,6 +303,7 @@ export class Layout extends Base {
         aria-selected=${selected === tree}
         tabindex=${selected === tree ? 0 : -1}
         ref=${setCurrent}
+        .dataset=${{ componentId: tree.id }}
       >
         <span
           role="button"
@@ -346,25 +344,21 @@ export class Layout extends Base {
         this.update({ editingTree: true });
         break;
       default:
-        console.log("ignored key", event);
+        log("ignored key", event);
     }
   }
 
   template() {
     const state = this.context.state;
     const editingTree = state.get("editingTree");
+    /** @param {KeyboardEvent} event */
+    const keyHandler = (event) => this.treeKeyHandler(event);
     return html`<div class="tree">
-        <ul
-          role="tree"
-          onKeyDown=${
-            /** @param {KeyboardEvent} event */ (event) =>
-              this.treeKeyHandler(event)
-          }
-        >
+        <ul role="tree" onKeyDown=${keyHandler}>
           ${this.showTree(this.context.tree, this.selected)}
         </ul>
       </div>
-      ${editingTree && this.selected ? this.controls() : Empty}
+      ${editingTree && this.selected ? this.controls() : html``}
       ${colorNamesDataList()}`;
   }
 

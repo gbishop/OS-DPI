@@ -1,6 +1,7 @@
 import { html } from "uhtml";
 import { validateColor, getColor } from "./style";
 import { textInput } from "./input";
+import { log } from "../log";
 
 /**
  * @param {Tree} component
@@ -14,7 +15,7 @@ export function propEditor(component, name, value, info, context, hook) {
   function propUpdate({ target }) {
     const name = target.name;
     const value = target.value;
-    console.log({ name, value });
+    log({ name, value });
     hook(name, value);
   }
   const label = html`<label for=${name}>${info.name}</label>`;
@@ -140,7 +141,7 @@ export function propEditor(component, name, value, info, context, hook) {
     }
 
     default:
-      console.log("tbd", name);
+      log("tbd", name);
       return html`<p>${name}</p>`;
   }
 }

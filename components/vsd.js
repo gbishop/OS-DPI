@@ -1,4 +1,4 @@
-import { html, render } from "uhtml";
+import { html } from "uhtml";
 import { Base, componentMap } from "./base";
 import { styleString } from "./style";
 
@@ -46,15 +46,24 @@ async function getActualImageSize(img) {
   return { left, top, width, height };
 }
 
+/** @param {number} v */
 function px(v) {
   return `${v}px`;
 }
+/** @param {number} v */
 function pct(v) {
   return `${v}%`;
 }
 
-/** @typedef {Row & {x: number, y: number, w: number, h: number, src: string, invisible: boolean }} VRow */
-
+/** @typedef {Object} vsdData
+ * @property {number} x
+ * @property {number} y
+ * @property {number} w
+ * @property {number} h
+ * @property {string} src
+ * @property {boolean} invisible
+ */
+/** @typedef {Row & vsdData} VRow */
 class VSD extends Base {
   /** @type {Props} */
   static defaultProps = {
@@ -95,7 +104,7 @@ class VSD extends Base {
         }}
       >
         ${items
-          .filter((item) => item.x)
+          .filter((item) => item.w)
           .map(
             (item) => html`<button
               style=${styleString({

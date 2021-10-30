@@ -2,6 +2,7 @@
  * implement actions
  */
 
+import { log } from "./log";
 import { State } from "./state";
 
 /**
@@ -55,7 +56,7 @@ export class Rules {
     // translate #name into field references
     exp = exp.replaceAll(/#(\w+)/g, "data.$1");
 
-    console.log("eic", expression, exp);
+    log("eic", expression, exp);
 
     return exp;
   }
@@ -70,7 +71,7 @@ export class Rules {
     try {
       Function(`return ${exp};`);
     } catch (error) {
-      console.log("validate", error);
+      log("validate", error);
       return false;
     }
     return true;
@@ -87,8 +88,8 @@ export class Rules {
     const variables = Object.keys(context);
     const values = Object.values(context);
     const exp = this.translate(expression);
-    console.log("eic", expression, exp);
-    // console.log("variables", variables);
+    log("eic", expression, exp);
+    // log("variables", variables);
     const func = Function(...variables, `return ${exp}`);
     return func(...values);
   }
@@ -117,15 +118,15 @@ export class Rules {
    * @param {Object} data - data associated with the event
    */
   applyRules(origin, event, data) {
-    console.log({ origin, event, data });
+    log({ origin, event, data });
     this.last = { origin, event, data, rule: null };
     // first for the event then for any that got queued.
     while (true) {
       const context = { ...this.Functions, state: this.state, data };
-      console.log("applyRules", origin, event, data);
-      console.log("context", context);
+      log("applyRules", origin, event, data);
+      log("context", context);
       for (const rule of this.rules) {
-        console.log("rule", rule);
+        log("rule", rule);
         if (origin != rule.origin || event != rule.event) {
           continue;
         }
@@ -133,7 +134,7 @@ export class Rules {
           this.evalInContext(restriction, context)
         );
         if (result) {
-          console.log("got it");
+          log("got it");
           this.last.rule = rule;
           const patch = Object.fromEntries(
             Object.entries(rule.updates).map(([$var, value]) => [
@@ -141,7 +142,7 @@ export class Rules {
               this.evalInContext(value, context),
             ])
           );
-          console.log("patch", patch);
+          log("patch", patch);
           this.state.update(patch);
           break;
         }
@@ -166,7 +167,7 @@ export class Rules {
       if (e instanceof PointerEvent && e.altKey) {
         ev = "alt-" + event;
       }
-      // console.log("handler", e, origin, event, data);
+      // log("handler", e, origin, event, data);
       this.applyRules(origin, ev || e.type, data);
     };
   }

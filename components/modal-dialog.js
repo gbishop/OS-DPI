@@ -1,6 +1,5 @@
 import { html } from "uhtml";
 import { Base, componentMap } from "./base";
-import * as focusTrap from "focus-trap";
 
 export class ModalDialog extends Base {
   /** @type {Props} */

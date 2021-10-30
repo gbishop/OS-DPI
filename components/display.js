@@ -120,6 +120,9 @@ class Display extends Base {
          */
         return (old) => {
           // copy the slots from the old value
+          if (!old || !old.slots) {
+            return "";
+          }
           const slots = [...old.slots];
           let slotIndex = old.slotIndex;
           // replace the current one

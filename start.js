@@ -8,6 +8,33 @@ import { toDesign } from "./components/base";
 import { initSpeech } from "./components/speech";
 import { Monitor } from "./components/monitor";
 
+const safe = true;
+
+/** @param {HTMLElement} where
+ * @param {Hole} what
+ */
+function safeRender(where, what) {
+  let r;
+  if (safe) {
+    try {
+      r = render(where, what);
+    } catch (error) {
+      log("crash", error);
+      const id = where.id;
+      const div = document.createElement("div");
+      r = render(div, what);
+      where.id = "";
+      div.id = id;
+      where.replaceWith(div);
+    }
+  } else {
+    r = render(where, what);
+  }
+  return r;
+}
+
+import { log, logInit } from "./log";
+
 /** let me wait for the page to load */
 const pageLoaded = new Promise((resolve) => {
   window.addEventListener("load", () => {
@@ -20,6 +47,8 @@ const pageLoaded = new Promise((resolve) => {
  * @param {string} name
  */
 export async function start(name) {
+  logInit(name);
+  log("start");
   const parts = ["design.json", "rules.json", "data.json"].map(async (file) => {
     const resp = await fetch(`./examples/${name}/${file}`);
     return await resp.json();
@@ -60,8 +89,8 @@ export async function start(name) {
   }
 
   function renderUI() {
-    render(document.querySelector("#UI"), tree.template());
-    console.log("render UI");
+    safeRender(document.querySelector("#UI"), tree.template());
+    log("render UI");
   }
   state.observe(debounce(renderUI));
   renderUI();
@@ -75,6 +104,8 @@ export async function start(name) {
   );
   function renderDesigner() {
     if (!document.body.classList.contains("designing")) return;
+    log("render designer");
+    safeRender(document.querySelector("div#designer"), designer.template());
     localStorage.setItem(
       `design-${name}`,
       JSON.stringify({
@@ -82,8 +113,7 @@ export async function start(name) {
         rulesArray: rules.rules,
       })
     );
-    render(document.querySelector("div#designer"), designer.template());
-    console.log("render designer");
+    log("render designer");
   }
   designerState.observe(debounce(renderDesigner));
   renderDesigner();
@@ -92,7 +122,7 @@ export async function start(name) {
   const monitor = new Monitor({}, { state, rules, data, tree }, null);
   function renderMonitor() {
     if (!document.body.classList.contains("designing")) return;
-    render(document.querySelector("div#monitor"), monitor.template());
+    safeRender(document.querySelector("div#monitor"), monitor.template());
   }
   state.observe(debounce(renderMonitor));
   renderMonitor();
@@ -104,5 +134,24 @@ export async function start(name) {
       state.update();
     }
   });
-  console.log("here");
+  log("here");
 }
+
+/** @typedef {PointerEvent & { target: HTMLElement }} ClickEvent */
+document.addEventListener("click", (/** @type {ClickEvent} */ event) => {
+  const target = event.target;
+  let text = "";
+  for (let n = target; n.parentElement && !text; n = n.parentElement) {
+    text = n.textContent;
+  }
+  let id = "none";
+  if (target instanceof HTMLButtonElement && target.dataset.id) {
+    id = target.dataset.id;
+  } else {
+    const div = target.closest('div[id^="osdpi"]');
+    if (div) {
+      id = div.id;
+    }
+  }
+  log("click", target.tagName, id, text.slice(0, 30));
+});

@@ -1,3 +1,4 @@
+import { log } from "../log";
 import { State } from "../state";
 import { strip } from "./display";
 
@@ -36,7 +37,7 @@ export async function initSpeech(state) {
     const utterance = new SpeechSynthesisUtterance(message);
     utterance.voice = voice;
     utterance.lang = voice.lang;
-    console.log("speak", { message, voiceURI });
+    log("speak", { message, voiceURI });
     speechSynthesis.cancel();
     speechSynthesis.speak(utterance);
   }
