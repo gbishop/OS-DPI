@@ -39,11 +39,11 @@ export function getColor(name) {
 function normalizeStyle(style) {
   return Object.fromEntries(
     Object.entries(style)
-      .filter(([_, value]) => value.toString().length)
+      .filter(([_, value]) => value && value.toString().length)
       .map(([key, value]) =>
         key.toLowerCase().indexOf("color") >= 0
           ? [key, getColor(/** @type {string} */ (value))]
-          : [key, value.toString()]
+          : [key, value && value.toString()]
       )
   );
 }
@@ -119,13 +119,14 @@ class ColorInput extends HTMLElement {
   }
   validate() {
     const input = this.querySelector("input");
+    if (!input) return "not found";
     if (!isValidColor(input.value)) {
       input.setCustomValidity("invalid color");
       input.reportValidity();
     } else {
       input.setCustomValidity("");
       const div = this.querySelector("div");
-      div.style.background = getColor(input.value);
+      if (div) div.style.background = getColor(input.value);
     }
   }
   render() {

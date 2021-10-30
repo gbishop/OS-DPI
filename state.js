@@ -37,7 +37,7 @@ export class State {
    * @param {Object} patch - the changes to make to the state
    * @return {void}
    */
-  update = (patch) => {
+  update = (patch = {}) => {
     const oldValues = this.values;
     this.values = merge(oldValues, patch);
     const changed = new Set();

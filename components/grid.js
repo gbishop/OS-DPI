@@ -14,9 +14,14 @@ class Grid extends Base {
     scale: "1",
   };
   page = 0;
+  /** @type {Object}
+   * @property {string} key
+   * @property {Rows} items
+   */
   cache = { key: "", items: [] };
 
   template() {
+    /** @type {Partial<CSSStyleDeclaration>} */
     const style = {};
     const { data, state, rules } = this.context;
     const { rows, columns, match, name, background } = this.props;
@@ -53,11 +58,11 @@ class Grid extends Base {
         result.push(html`<button tabindex="-1" disabled></button>`);
       }
       let content;
-      let msg = formatSlottedString(item.label);
-      if ("symbol" in item) {
+      let msg = formatSlottedString(item.label || "");
+      if (item.symbol) {
         content = html`<div>
           <figure>
-            <img src=${item.symbol} title=${item.label} />
+            <img src=${item.symbol} title=${item.label || ""} />
             <figcaption>${msg}</figcaption>
           </figure>
         </div>`;

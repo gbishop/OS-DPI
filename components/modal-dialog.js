@@ -2,7 +2,6 @@ import { html } from "uhtml";
 import { Base, componentMap } from "./base";
 
 export class ModalDialog extends Base {
-  /** @type {Props} */
   static defaultProps = {
     stateName: "$modalOpen",
   };

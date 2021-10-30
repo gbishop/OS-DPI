@@ -34,6 +34,7 @@ export async function initSpeech(state) {
     const message = strip(state.get("$Speak"));
     const voiceURI = state.get("$VoiceURI");
     const voice = voices.find((voice) => voice.voiceURI == voiceURI);
+    if (!voice) return;
     const utterance = new SpeechSynthesisUtterance(message);
     utterance.voice = voice;
     utterance.lang = voice.lang;

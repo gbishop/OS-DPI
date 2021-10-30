@@ -9,7 +9,7 @@ import { log } from "../log";
  * @param {any} value
  * @param {PropertyInfo} info
  * @param {Context} context
- * @param {(name: string, value: any) => void} [hook]
+ * @param {(name: string, value: any) => void} hook
  */
 export function propEditor(component, name, value, info, context, hook) {
   function propUpdate({ target }) {
@@ -64,10 +64,14 @@ export function propEditor(component, name, value, info, context, hook) {
     case "select":
       return html`<label for=${name}>${info.name}</label>
         <select id=${name} name=${name} onchange=${propUpdate}>
-          ${info.values?.map(
-            (ov) =>
-              html`<option value=${ov} ?selected=${ov == value}>${ov}</option>`
-          )}
+          ${(info.values &&
+            info.values.map(
+              (ov) =>
+                html`<option value=${ov} ?selected=${ov == value}>
+                  ${ov}
+                </option>`
+            )) ||
+          ""}
         </select>`;
 
     case "state":
@@ -85,14 +89,16 @@ export function propEditor(component, name, value, info, context, hook) {
       });
 
     case "tags": {
-      if (!component?.designer.tags) {
+      if (!component.designer.tags) {
         component.designer.tags = [...value];
       }
+      /** @type {string[]} */
       const tags = component.designer.tags;
       function reflect() {
         const result = tags.filter(validTag);
         hook(name, result);
       }
+      /** @param {string} tag */
       function validTag(tag) {
         return tag.match(/^\$?\w+/);
       }
@@ -109,7 +115,7 @@ export function propEditor(component, name, value, info, context, hook) {
               label,
               value: tag,
               context,
-              validate: (value) => "",
+              validate: (_) => "",
               update: (_, value) => {
                 if (!value) {
                   tags.splice(index, 1);

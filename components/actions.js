@@ -4,7 +4,13 @@ import { Base } from "./base";
 import { textInput } from "./input";
 
 export class Actions extends Base {
-  init() {
+  /**
+   * @param {SomeProps} props
+   * @param {Context} context
+   * @param {Base|Null} parent
+   */
+  constructor(props, context, parent) {
+    super(props, context, parent);
     /** @type {ActionEditor} */
     this.ruleEditor = new ActionEditor({}, this.context, this);
   }
@@ -112,8 +118,20 @@ export class Actions extends Base {
 }
 
 class ActionEditor extends Base {
-  init() {
+  /**
+   * @param {SomeProps} props
+   * @param {Context} context
+   * @param {Base|Null} parent
+   */
+  constructor(props, context, parent = null) {
+    super(props, context, parent);
     this.ruleIndex = -1;
+    // keeping the checker happy
+    this.rule = context.rules.rules[0];
+    this.origin = this.rule.origin;
+    this.event = this.rule.event;
+    this.conditions = [...this.rule.conditions];
+    this.updates = Object.entries(this.rule.updates);
   }
 
   /** @param {number} index */
@@ -137,7 +155,7 @@ class ActionEditor extends Base {
   template() {
     const { state, rules, tree } = this.context;
 
-    if (this.ruleIndex < 0) return html``;
+    if (this.ruleIndex < 0 || typeof this.rule === "undefined") return html``;
 
     return html`<div class="editor">
       ${textInput({

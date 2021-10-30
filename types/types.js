@@ -1,5 +1,5 @@
 /**
- * @typedef {Object} AllProps
+ * @typedef {Object} Props
  * @property {string} scale
  * @property {string} background
  * @property {string} selected
@@ -18,7 +18,7 @@
  */
 
 /**
- * @typedef {Partial<AllProps>} Props
+ * @typedef {Partial<Props>} SomeProps
  */
 
 /** @typedef {import('../components/base').Base} Tree */
@@ -26,15 +26,15 @@
 /**
  * @typedef {Object} Context
  * @property {import("../state").State} state
- * @property {import("../rules").Rules} [rules]
- * @property {import("../data").Data} [data]
- * @property {Tree} [tree]
+ * @property {import("../rules").Rules} rules
+ * @property {import("../data").Data} data
+ * @property {Tree} tree
  */
 
 /**
  * @typedef {Object} Design
  * @property {string} type
- * @property {Props} props
+ * @property {SomeProps} props
  * @property {Design[]} children
  */
 

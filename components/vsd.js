@@ -65,7 +65,6 @@ function pct(v) {
  */
 /** @typedef {Row & vsdData} VRow */
 class VSD extends Base {
-  /** @type {Props} */
   static defaultProps = {
     tags: [],
     match: "contains",
@@ -81,7 +80,7 @@ class VSD extends Base {
     );
     const src = items.find((item) => item.src)?.src;
     return html`<div class="vsd flex show" id=${this.id}>
-      <img src=${src} />
+      <img src=${src || ""} />
       <div
         class="markers"
         ref=${(/** @type {HTMLDivElement & { observer: any }} */ node) => {
@@ -117,7 +116,7 @@ class VSD extends Base {
               ?invisible=${item.invisible}
               onClick=${rules.handler(this.name, item, "press")}
             >
-              <span>${item.label}</span>
+              <span>${item.label || ""}</span>
             </button>`
           )}
       </div>

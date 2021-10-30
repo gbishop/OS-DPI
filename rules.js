@@ -16,7 +16,8 @@ export class Rules {
     empty: () => () => [],
     increment: (/** @type {number} */ value) => (/** @type {number} */ old) =>
       old + value,
-    add_word: (value) => (old) => old ? old + " " + value : value,
+    add_word: (/** @type {string} */ value) => (/** @type {string} */ old) =>
+      old ? old + " " + value : value,
     replace_last:
       (/** @type {string} */ newWord) => (/** @type {string} */ old) =>
         [...old.split(" ").slice(0, -1), newWord].join(" "),
@@ -30,7 +31,7 @@ export class Rules {
     this.rules = rules;
     this.state = state;
     this.last = {
-      /** @type {Rule} */
+      /** @type {Rule|Null} */
       rule: null,
       /** @type {Object} */
       data: {},
@@ -148,7 +149,11 @@ export class Rules {
         }
       }
       if (this.eventQueue.length == 0) break;
-      ({ origin, event } = this.eventQueue.pop());
+      const item = this.eventQueue.pop();
+      if (item) {
+        origin = item.origin;
+        event = item.event;
+      }
       data = {};
     }
   }
@@ -172,7 +177,7 @@ export class Rules {
     };
   }
 
-  /** @param {(rule: Rule, index?: number) => any} func */
+  /** @param {(rule: Rule, index: number) => any} func */
   map(func) {
     return this.rules.map(func);
   }

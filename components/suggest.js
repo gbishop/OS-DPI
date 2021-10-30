@@ -14,7 +14,7 @@ import { render, html } from "uhtml";
 
 /** Return a callback for ref to provide suggestions on a text input
  *
- * @param {string[]|Set<string>} suggestions
+ * @param {string[]|Set<string>|undefined} suggestions
  * */
 export default function suggest(suggestions) {
   if (!suggestions) {
@@ -53,6 +53,7 @@ function input(event) {
   // find the match that contains the charPosition
   const match = matches.find(
     (match) =>
+      typeof match.index === "number" &&
       match.index <= charPosition &&
       charPosition <= match.index + match[0].length
   );
@@ -86,6 +87,7 @@ function input(event) {
  */
 function drawMenu(element) {
   const menu = element.nextElementSibling;
+  if (!menu) return;
   render(
     menu,
     html`<ul>
@@ -150,6 +152,7 @@ function insertWord(element) {
   const { index, results, prefix } = element.suggest;
   const word = results[index];
   const cp = element.selectionEnd;
+  if (typeof cp !== "number") return;
   const value = element.value;
   const start = cp - prefix.length;
   const result = value.slice(0, start) + word + value.slice(cp);

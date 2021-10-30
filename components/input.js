@@ -54,7 +54,7 @@ function createDataList(choices) {
  */
 export function textInput(options) {
   const list = createDataList((options.choices && [...options.choices]) || []);
-  return html` <label for=${options.name} ?hidden=${options.labelHidden}
+  return html` <label for=${options.name} ?hidden=${!!options.labelHidden}
       >${options.label}</label
     >
     <div class=${["suggest", options.className || ""].join(" ")}>
@@ -69,7 +69,7 @@ export function textInput(options) {
           const msg = (options.validate && options.validate(value)) || "";
           input.setCustomValidity(msg);
           input.reportValidity();
-          if (!msg) options.update(options.name, value);
+          if (!msg) options.update && options.update(options.name, value);
         }}
         list=${list.id}
         autocomplete="off"

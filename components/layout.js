@@ -19,10 +19,23 @@ export class Layout extends Base {
     scale: "1",
   };
 
+  /**
+   * @param {SomeProps} props
+   * @param {Context} context
+   * @param {Base} parent
+   */
+  constructor(props, context, parent) {
+    super(props, context, parent);
+
+    // assure that selected always has a value */
+    /** @type {Base} */
+    this.selected = this.context.tree;
+  }
+
   init() {
     const { state, tree } = this.context;
     this.setSelected(this.getNode(state.get("path")));
-    document.querySelector("div#UI").addEventListener("click", (event) => {
+    document.querySelector("div#UI")?.addEventListener("click", (event) => {
       const target = /** @type {HTMLElement} */ (event.target);
       let id = null;
       if (target instanceof HTMLButtonElement && target.dataset.id) {
@@ -114,6 +127,7 @@ export class Layout extends Base {
   }
 
   /** Create the add child menu */
+  /** @returns {Hole} */
   addMenu() {
     /** @type {string[]} */
     const allowed = this.selected.allowedChildren();
@@ -121,7 +135,7 @@ export class Layout extends Base {
       class="menu"
       ?disabled=${!allowed.length}
       style="width: 7em"
-      onchange=${(/** @type {{ target: { value: string; }; }} */ e) => {
+      onchange=${(/** @type {{ target: { value: string; }}} */ e) => {
         this.closeControls();
         this.addChild(e.target.value);
         e.target.value = "";
@@ -185,16 +199,17 @@ export class Layout extends Base {
     return html`<button
       onclick=${() => {
         this.closeControls();
-        const index = this.selected.parent.children.indexOf(this.selected);
-        this.selected.parent.children.splice(index, 1);
-        if (this.selected.parent.children.length) {
-          this.setSelected(
-            this.selected.parent.children[Math.max(0, index - 1)]
-          );
-        } else {
-          this.setSelected(this.selected.parent);
+        const parent = this.selected.parent;
+        if (parent) {
+          const index = parent.children.indexOf(this.selected);
+          parent.children.splice(index, 1);
+          if (parent.children.length) {
+            this.setSelected(parent.children[Math.max(0, index - 1)]);
+          } else {
+            this.setSelected(parent);
+          }
+          this.selected.context.state.update();
         }
-        this.selected.context.state.update();
       }}
     >
       Delete
@@ -277,7 +292,7 @@ export class Layout extends Base {
       >
         <span
           role="button"
-          onclick=${(ev) => {
+          onclick=${() => {
             if (tree.designer.expanded && tree !== this.selected) {
               this.setSelected(tree, true);
             } else {
@@ -287,7 +302,7 @@ export class Layout extends Base {
           }}
           .dataset=${{ componentId: tree.id }}
         >
-          ${tree.constructor.name || ""} ${tree.name || ""}
+          ${tree.constructor.name} ${tree.name || ""}
         </span>
         ${tree.designer.expanded
           ? html`<ul role="group" .dataset=${{ componentId: tree.id }}>

@@ -38,20 +38,37 @@ function nextId() {
 }
 
 export class Base {
-  /** @type {Props} */
-  static defaultProps = {};
+  /** @type {SomeProps} */
+  static defaultProps = {
+    scale: "1",
+    background: "",
+    selected: "",
+    unselected: "",
+    rows: 1,
+    columns: 1,
+    tags: [],
+    stateName: "",
+    match: "contains",
+    name: "",
+    label: "",
+    choices: [],
+    direction: "column",
+    value: "",
+    tabEdge: "bottom",
+  };
 
   /** @type {string[]} */
   static allowedChildren = [];
 
   /**
-   * @param {Props} props
+   * @param {SomeProps} props
    * @param {Context} context
-   * @param {Base} parent
+   * @param {Base|Null} parent
    */
   constructor(props, context, parent = null) {
     /** @type {Props} */
     this.props = {
+      ...Base.defaultProps,
       // @ts-ignore: undefined property
       ...this.constructor.defaultProps,
       ...props,
@@ -104,7 +121,7 @@ export class Base {
   }
 
   get name() {
-    return this.props.name;
+    return this.props.name || "";
   }
 
   get path() {
@@ -148,7 +165,7 @@ export class Base {
 /**
  * @param {Design} design
  * @param {Context} context
- * @param {Base} parent
+ * @param {Base|Null} parent
  */
 
 export function assemble(design, context, parent = null) {
@@ -168,9 +185,13 @@ export function assemble(design, context, parent = null) {
  * @returns {Design}
  */
 export function toDesign(tree) {
+  // @ts-ignore
+  const defaultProps = tree.constructor.defaultProps;
   return {
     type: componentMap.name(tree),
-    props: tree.props,
+    props: Object.fromEntries(
+      Object.entries(tree.props).filter(([key, _]) => key in defaultProps)
+    ),
     children: tree.children.map(toDesign),
   };
 }

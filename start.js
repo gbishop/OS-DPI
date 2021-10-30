@@ -10,7 +10,7 @@ import { Monitor } from "./components/monitor";
 
 const safe = true;
 
-/** @param {HTMLElement} where
+/** @param {Element} where
  * @param {Hole} what
  */
 function safeRender(where, what) {
@@ -39,7 +39,7 @@ import { log, logInit } from "./log";
 const pageLoaded = new Promise((resolve) => {
   window.addEventListener("load", () => {
     document.body.classList.add("loaded");
-    resolve();
+    resolve(true);
   });
 });
 
@@ -59,9 +59,12 @@ export async function start(name) {
   ]);
 
   if (localStorage.getItem(`design-${name}`)) {
-    const design = JSON.parse(localStorage.getItem(`design-${name}`));
-    layout = design.layout;
-    rulesArray = design.rulesArray;
+    const jdesign = localStorage.getItem(`design-${name}`);
+    if (jdesign) {
+      const design = JSON.parse(jdesign);
+      layout = design.layout;
+      rulesArray = design.rulesArray;
+    }
   }
 
   const state = new State(`UIState-${name}`);
@@ -73,7 +76,9 @@ export async function start(name) {
     state,
   };
   await initSpeech(state);
+  // @ts-ignore
   const tree = assemble(layout, context);
+  context.tree = tree;
 
   /** @param {() => void} f */
   function debounce(f) {
@@ -89,7 +94,8 @@ export async function start(name) {
   }
 
   function renderUI() {
-    safeRender(document.querySelector("#UI"), tree.template());
+    const UI = document.querySelector("#UI");
+    if (UI) safeRender(UI, tree.template());
     log("render UI");
   }
   state.observe(debounce(renderUI));
@@ -105,7 +111,8 @@ export async function start(name) {
   function renderDesigner() {
     if (!document.body.classList.contains("designing")) return;
     log("render designer");
-    safeRender(document.querySelector("div#designer"), designer.template());
+    const DI = document.querySelector("div#designer");
+    if (DI) safeRender(DI, designer.template());
     localStorage.setItem(
       `design-${name}`,
       JSON.stringify({
@@ -122,7 +129,8 @@ export async function start(name) {
   const monitor = new Monitor({}, { state, rules, data, tree }, null);
   function renderMonitor() {
     if (!document.body.classList.contains("designing")) return;
-    safeRender(document.querySelector("div#monitor"), monitor.template());
+    const MI = document.querySelector("div#monitor");
+    if (MI) safeRender(MI, monitor.template());
   }
   state.observe(debounce(renderMonitor));
   renderMonitor();
@@ -142,7 +150,7 @@ document.addEventListener("click", (/** @type {ClickEvent} */ event) => {
   const target = event.target;
   let text = "";
   for (let n = target; n.parentElement && !text; n = n.parentElement) {
-    text = n.textContent;
+    text = n.textContent || "";
   }
   let id = "none";
   if (target instanceof HTMLButtonElement && target.dataset.id) {

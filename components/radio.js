@@ -11,7 +11,6 @@ class Option extends Base {
 componentMap.addMap("option", Option);
 
 class Radio extends Base {
-  /** @type {Props} */
   static defaultProps = {
     label: "",
     stateName: "",
@@ -77,7 +76,7 @@ class Radio extends Base {
     >
       <fieldset class="flex">
         ${(this.props.label && html`<legend>${this.props.label}</legend>`) ||
-        null}
+        html``}
         ${choices}
       </fieldset>
     </div>`;

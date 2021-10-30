@@ -6,9 +6,9 @@ import { Actions } from "./actions";
 
 export class Designer extends Base {
   /**
-   * @param {Props} props
+   * @param {SomeProps} props
    * @param {Context} context
-   * @param {Base} parent
+   * @param {Base|Null} parent
    */
   constructor(props, context, parent) {
     super(props, context, parent);
