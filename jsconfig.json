@@ -3,10 +3,8 @@
     "baseUrl": ".",
     "checkJs": true,
     "target": "ESNext",
-    "moduleResolution": "node",
-    "paths": {
-      "uce": ["types/uce"]
-    }
+    "strictNullChecks": true,
+    "moduleResolution": "node"
   },
   "exclude": ["node_modules", "build"]
 }
