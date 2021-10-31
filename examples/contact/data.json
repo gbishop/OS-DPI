@@ -72,24 +72,6 @@
     ]
   },
   {
-    "label": "Please be careful with my computer,  I cannot speak without it.",
-    "link": "Task Please be careful with my compueter,  I cannot speak without it.",
-    "topic": "Please be careful with my compueter,  I cannot speak without it.",
-    "tags": [
-      "MENU",
-      "TASK"
-    ]
-  },
-  {
-    "label": "This is my aide Patrick.",
-    "link": "Task This is my aide Patrick.",
-    "topic": "This is my aide Patrick.",
-    "tags": [
-      "MENU",
-      "TASK"
-    ]
-  },
-  {
     "label": "Greeting & Meeting",
     "link": "Chat Greeting & Meeting",
     "topic": "Greeting & Meeting",
@@ -13172,13 +13154,6 @@
     ]
   },
   {
-    "label": "$$My page - My addresses=The Jewish Federation Apartments, 2 75 Essjay Road,Apartment 505,  Williamsville, NY, 1 4 2 2 1.  $$",
-    "tags": [
-      "GREET",
-      "My Page"
-    ]
-  },
-  {
     "label": "$$My Page - quantity descrip & number (C)=I'll take a dozen$$.       [how many?]",
     "tags": [
       "GREET",
@@ -13236,20 +13211,6 @@
   },
   {
     "label": "$$My page - My important dates=I was$$  born on January 3rd, 1944.                         [my dates]",
-    "tags": [
-      "GREET",
-      "My Page"
-    ]
-  },
-  {
-    "label": "$$My page - My addresses=275 Essjay Road, Apartment 505, Williamsville, New York.    14221.$$                       [my addresses]",
-    "tags": [
-      "GREET",
-      "My Page"
-    ]
-  },
-  {
-    "label": "$$Description - human - My vitals=My blood type is A positive.$$                     [my vitals]",
     "tags": [
       "GREET",
       "My Page"
@@ -37811,7 +37772,7 @@
     ]
   },
   {
-    "label": "275 Essjay Road, Apartment 505, Williamsville, New York.    14221.",
+    "label": "123 Smith Road, Apartment 101, Williamsville, New York.    14221.",
     "tags": [
       "LIST",
       "My page - My addresses"
@@ -38385,7 +38346,7 @@
     ]
   },
   {
-    "label": "2 7 5 Essjay Road",
+    "label": "2 7 5 Smith Road",
     "tags": [
       "LIST",
       "My Page - Neighborhood places (C)"
@@ -39666,7 +39627,7 @@
     ]
   },
   {
-    "label": "2 7 5 Essjay Road",
+    "label": "1 2 3 Smith Road",
     "tags": [
       "LIST",
       "My Page Direction Giving (C)"
@@ -39729,7 +39690,7 @@
     ]
   },
   {
-    "label": "Essjay is off of Sheridan between Harlem and Transit Roads.",
+    "label": "Smith is off of Sheridan between Harlem and Transit Roads.",
     "tags": [
       "LIST",
       "My Page Direction Giving (C)"
