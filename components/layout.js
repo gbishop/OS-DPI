@@ -228,7 +228,7 @@ export class Layout extends Base {
   /** Render props for the selected element */
   showProps() {
     return Object.entries(PropInfo)
-      .filter(([name, _]) => name in this.selected.props)
+      .filter(([name, _]) => name in this.selected.defaultProps)
       .map(([name, info]) => {
         return propEditor(
           this.selected,

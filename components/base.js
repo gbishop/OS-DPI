@@ -37,25 +37,36 @@ function nextId() {
   return `osdpi${idCounter++}`;
 }
 
+/** @type {Props} */
+const allProps = {
+  scale: "1",
+  background: "",
+  selected: "",
+  unselected: "",
+  rows: 1,
+  columns: 1,
+  tags: [],
+  stateName: "",
+  match: "contains",
+  name: "",
+  label: "",
+  choices: [],
+  direction: "column",
+  value: "",
+  tabEdge: "bottom",
+};
+
 export class Base {
-  /** @type {SomeProps} */
-  static defaultProps = {
-    scale: "1",
-    background: "",
-    selected: "",
-    unselected: "",
-    rows: 1,
-    columns: 1,
-    tags: [],
-    stateName: "",
-    match: "contains",
-    name: "",
-    label: "",
-    choices: [],
-    direction: "column",
-    value: "",
-    tabEdge: "bottom",
-  };
+  /** defaultProps is where we specify the props used by a component
+   * @type {SomeProps} */
+  static defaultProps = {};
+
+  /** Provides access to the class variable defaultProps
+   * @returns {SomeProps} */
+  get defaultProps() {
+    // @ts-ignore: undefined property
+    return this.constructor.defaultProps;
+  }
 
   /** @type {string[]} */
   static allowedChildren = [];
@@ -68,9 +79,8 @@ export class Base {
   constructor(props, context, parent = null) {
     /** @type {Props} */
     this.props = {
-      ...Base.defaultProps,
-      // @ts-ignore: undefined property
-      ...this.constructor.defaultProps,
+      ...allProps,
+      ...this.defaultProps,
       ...props,
     };
     /** @type {Context} */
