@@ -374,8 +374,15 @@ div.empty::before {
   margin-left: 10px;
 }
 
-.controls {
-  min-height: 300px;
+div.layout {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  overflow: hidden;
+}
+
+div.tree {
+  overflow-y: auto;
 }
 
 .tree ul[role="tree"] {
@@ -430,7 +437,6 @@ div.actions div.scroll {
 .actions table {
   border-collapse: collapse;
   width: 100%;
-  overflow-y: scroll;
 }
 
 .actions tr[used] {
@@ -453,13 +459,6 @@ div.actions div.scroll {
 
 .actions thead tr {
   background: white;
-}
-
-.actions th {
-  position: sticky;
-  top: 0;
-  background: white;
-  z-index: 10;
 }
 
 .actions tbody {

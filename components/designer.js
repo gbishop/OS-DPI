@@ -62,6 +62,7 @@ export class Designer extends Base {
   template() {
     return html`${this.children.map((child) => child.template())}
       <button
+        style="display: none"
         onclick=${() => {
           const { tree, rules } = this.context;
           const filename = "design.json";

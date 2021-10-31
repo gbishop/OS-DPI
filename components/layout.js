@@ -368,13 +368,15 @@ export class Layout extends Base {
     const editingTree = state.get("editingTree");
     /** @param {KeyboardEvent} event */
     const keyHandler = (event) => this.treeKeyHandler(event);
-    return html`<div class="tree">
+    return html`<div class="layout">
+      <div class="tree">
         <ul role="tree" onKeyDown=${keyHandler}>
           ${this.showTree(this.context.tree, this.selected)}
         </ul>
       </div>
       ${editingTree && this.selected ? this.controls() : html``}
-      ${colorNamesDataList()}`;
+      ${colorNamesDataList()}
+    </div>`;
   }
 
   /** Update the state

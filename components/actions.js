@@ -58,7 +58,7 @@ export class Actions extends Base {
                 ([key, value]) =>
                   html`<tr ?used=${used}>
                   <td>${key}</td>
-                  <td>${value}</td>
+                  <td class="update">${value}</td>
                 </tr></tbody>`
               )}
             </tbody>`;
