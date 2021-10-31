@@ -41,9 +41,13 @@ export class Actions extends Base {
               <tr ?used=${used}>
                 <td rowspan=${rs}>${rule.origin}</td>
                 <td rowspan=${rs}>${rule.event}</td>
-                <td rowspan=${rs}>${this.showConditions(rule.conditions)}</td>
+                <td class="conditions" rowspan=${rs}>
+                  ${this.showConditions(rule.conditions)}
+                </td>
                 <td>${(updates.length && updates[0][0]) || ""}</td>
-                <td>${(updates.length && updates[0][1]) || ""}</td>
+                <td class="update">
+                  ${(updates.length && updates[0][1]) || ""}
+                </td>
                 <td rowspan=${rs}>
                   <button onclick=${() => this.openActionEditor(index)}>
                     &#x270D;

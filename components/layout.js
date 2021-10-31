@@ -302,7 +302,7 @@ export class Layout extends Base {
           }}
           .dataset=${{ componentId: tree.id }}
         >
-          ${tree.constructor.name} ${tree.name || ""}
+          ${tree.constructor.name} ${tree.name}
         </span>
         ${tree.designer.expanded
           ? html`<ul role="group" .dataset=${{ componentId: tree.id }}>

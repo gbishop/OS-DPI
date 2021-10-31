@@ -1,5 +1,4 @@
 body {
-  font-size: 1vw;
   overflow: hidden;
   margin: 0;
   padding: 0;
@@ -422,8 +421,6 @@ div.actions {
   flex-direction: column;
   flex: 1 1 0;
   overflow: hidden;
-  font-family: monospace;
-  font-size: 15px;
 }
 
 div.actions div.scroll {
@@ -444,6 +441,14 @@ div.actions div.scroll {
 .actions th {
   border: 1px solid #999;
   padding: 0.5em;
+}
+
+.actions td.conditions {
+  overflow-wrap: anywhere;
+}
+
+.actions td.update {
+  overflow-wrap: anywhere;
 }
 
 .actions thead tr {
