@@ -18,7 +18,7 @@
           "props": {
             "tags": ["TRY"],
             "name": "vsd",
-            "scale": 10
+            "scale": 6
           },
           "children": []
         }
