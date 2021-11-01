@@ -136,13 +136,12 @@ export async function start(name) {
   renderMonitor();
 
   document.addEventListener("keydown", (event) => {
-    if (event.key == "D" && event.altKey) {
+    if (event.key == "D" && (event.ctrlKey || event.metaKey)) {
       event.preventDefault();
       document.body.classList.toggle("designing");
       state.update();
     }
   });
-  log("here");
 }
 
 /** @typedef {PointerEvent & { target: HTMLElement }} ClickEvent */
