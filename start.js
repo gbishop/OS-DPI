@@ -135,11 +135,16 @@ export async function start(name) {
   state.observe(debounce(renderMonitor));
   renderMonitor();
 
+  /** @param {KeyboardEvent} event */
   document.addEventListener("keydown", (event) => {
-    if (event.key == "D" && (event.ctrlKey || event.metaKey)) {
-      event.preventDefault();
-      document.body.classList.toggle("designing");
-      state.update();
+    if (event.key == "d") {
+      const target = /** @type {HTMLElement} */ (event.target);
+      if (target && target.tagName != "INPUT" && target.tagName != "TEXTAREA") {
+        event.preventDefault();
+        event.stopPropagation();
+        document.body.classList.toggle("designing");
+        state.update();
+      }
     }
   });
 }
