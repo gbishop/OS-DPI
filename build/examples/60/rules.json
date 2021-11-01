@@ -1,0 +1,58 @@
+[
+  {
+    "origin": "grid",
+    "event": "press",
+    "conditions": ["#label = 'Morph'"],
+    "updates": { "$modalOpen": "1" }
+  },
+  {
+    "origin": "grid",
+    "event": "press",
+    "conditions": ["#group"],
+    "updates": { "$group": "#group" }
+  },
+  {
+    "origin": "grid",
+    "event": "press",
+    "conditions": ["#label = 'Clear'"],
+    "updates": { "$Display": "''", "$Again": "''" }
+  },
+  {
+    "origin": "grid",
+    "event": "press",
+    "conditions": ["#label = 'Speak'", "$Again", "!$Display"],
+    "updates": { "$Speak": "$Again" }
+  },
+  {
+    "origin": "grid",
+    "event": "press",
+    "conditions": ["#label = 'Speak'"],
+    "updates": {
+      "$Speak": "$Display",
+      "$Display": "''",
+      "$Again": "$Display"
+    }
+  },
+  {
+    "origin": "grid",
+    "event": "press",
+    "conditions": [],
+    "updates": {
+      "$Display": "add_word(#label)",
+      "$lastToken": "#label",
+      "$group": "''"
+    }
+  },
+  {
+    "origin": "cancel",
+    "event": "press",
+    "conditions": [],
+    "updates": { "$modalOpen": "0" }
+  },
+  {
+    "origin": "conjugateGrid",
+    "event": "press",
+    "conditions": [],
+    "updates": { "$modalOpen": "0", "$Display": "replace_last(#label)" }
+  }
+]

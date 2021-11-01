@@ -1,0 +1,254 @@
+[
+  {
+    "row": 1,
+    "column": 1,
+    "tags": [],
+    "message": "like",
+    "symbol": "examples/36/ARASAAC/like.png"
+  },
+  {
+    "row": 1,
+    "column": 3,
+    "tags": [],
+    "message": "get",
+    "symbol": "examples/36/ARASAAC/get.png"
+  },
+  {
+    "row": 1,
+    "column": 2,
+    "tags": [],
+    "message": "want",
+    "symbol": "examples/36/ARASAAC/want.png"
+  },
+  {
+    "row": 1,
+    "column": 4,
+    "tags": [],
+    "message": "make",
+    "symbol": "examples/36/ARASAAC/make.png"
+  },
+  {
+    "row": 1,
+    "column": 5,
+    "tags": [],
+    "message": "good",
+    "symbol": "examples/36/ARASAAC/good.png"
+  },
+  {
+    "row": 1,
+    "column": 6,
+    "tags": [],
+    "message": "more",
+    "symbol": "examples/36/ARASAAC/more.png"
+  },
+  {
+    "row": 2,
+    "column": 1,
+    "tags": [],
+    "message": "not",
+    "symbol": "examples/36/ARASAAC/not.png"
+  },
+  {
+    "row": 2,
+    "column": 2,
+    "tags": [],
+    "message": "go",
+    "symbol": "examples/36/ARASAAC/go.png"
+  },
+  {
+    "row": 2,
+    "column": 3,
+    "tags": [],
+    "message": "look",
+    "symbol": "examples/36/ARASAAC/look.png"
+  },
+  {
+    "row": 2,
+    "column": 4,
+    "tags": [],
+    "message": "turn",
+    "symbol": "examples/36/ARASAAC/turn.png"
+  },
+  {
+    "row": 2,
+    "column": 5,
+    "tags": [],
+    "message": "help",
+    "symbol": "examples/36/ARASAAC/help.png"
+  },
+  {
+    "row": 2,
+    "column": 6,
+    "tags": [],
+    "message": "different",
+    "symbol": "examples/36/ARASAAC/different.png"
+  },
+  {
+    "row": 3,
+    "column": 1,
+    "tags": [],
+    "message": "I",
+    "symbol": "examples/36/ARASAAC/I.png"
+  },
+  {
+    "row": 3,
+    "column": 2,
+    "tags": [],
+    "message": "he",
+    "symbol": "examples/36/ARASAAC/he.png"
+  },
+  {
+    "row": 3,
+    "column": 3,
+    "tags": [],
+    "message": "open",
+    "symbol": "examples/36/ARASAAC/open.png"
+  },
+  {
+    "row": 3,
+    "column": 4,
+    "tags": [],
+    "message": "do",
+    "symbol": "examples/36/ARASAAC/do.png"
+  },
+  {
+    "row": 3,
+    "column": 5,
+    "tags": [],
+    "message": "put",
+    "symbol": "examples/36/ARASAAC/put.png"
+  },
+  {
+    "row": 3,
+    "column": 6,
+    "tags": [],
+    "message": "same",
+    "symbol": "examples/36/ARASAAC/same.png"
+  },
+  {
+    "row": 4,
+    "column": 1,
+    "tags": [],
+    "message": "you",
+    "symbol": "examples/36/ARASAAC/you.png"
+  },
+  {
+    "row": 4,
+    "column": 2,
+    "tags": [],
+    "message": "she",
+    "symbol": "examples/36/ARASAAC/she.png"
+  },
+  {
+    "row": 4,
+    "column": 3,
+    "tags": [],
+    "message": "that",
+    "symbol": "examples/36/ARASAAC/that.png"
+  },
+  {
+    "row": 4,
+    "column": 4,
+    "tags": [],
+    "message": "up",
+    "symbol": "examples/36/ARASAAC/up.png"
+  },
+  {
+    "row": 4,
+    "column": 5,
+    "tags": [],
+    "message": "all",
+    "symbol": "examples/36/ARASAAC/all.png"
+  },
+  {
+    "row": 4,
+    "column": 6,
+    "tags": [],
+    "message": "some",
+    "symbol": "examples/36/ARASAAC/some.png"
+  },
+  {
+    "row": 5,
+    "column": 1,
+    "tags": [],
+    "message": "it",
+    "symbol": "examples/36/ARASAAC/it.png"
+  },
+  {
+    "row": 5,
+    "column": 2,
+    "tags": [],
+    "message": "here",
+    "symbol": "examples/36/ARASAAC/here.png"
+  },
+  {
+    "row": 5,
+    "column": 3,
+    "tags": [],
+    "message": "in",
+    "symbol": "examples/36/ARASAAC/in.png"
+  },
+  {
+    "row": 5,
+    "column": 4,
+    "tags": [],
+    "message": "on",
+    "symbol": "examples/36/ARASAAC/on.png"
+  },
+  {
+    "row": 5,
+    "column": 5,
+    "tags": [],
+    "message": "can",
+    "symbol": "examples/36/ARASAAC/can.png"
+  },
+  {
+    "row": 5,
+    "column": 6,
+    "tags": [],
+    "message": "finished",
+    "symbol": "examples/36/ARASAAC/finished.png"
+  },
+  {
+    "row": 6,
+    "column": 1,
+    "tags": [],
+    "message": "where",
+    "symbol": "examples/36/ARASAAC/where.png"
+  },
+  {
+    "row": 6,
+    "column": 2,
+    "tags": [],
+    "message": "what",
+    "symbol": "examples/36/ARASAAC/what.png"
+  },
+  {
+    "row": 6,
+    "column": 3,
+    "tags": [],
+    "message": "why",
+    "symbol": "examples/36/ARASAAC/why.png"
+  },
+  {
+    "row": 6,
+    "column": 4,
+    "tags": [],
+    "message": "who",
+    "symbol": "examples/36/ARASAAC/who.png"
+  },
+  {
+    "row": 6,
+    "column": 5,
+    "tags": [],
+    "message": "when",
+    "symbol": "examples/36/ARASAAC/when.png"
+  },
+  {
+    "row": 6,
+    "column": 6,
+    "tags": [],
+    "message": "stop",
+    "symbol": "examples/36/ARASAAC/stop.png"
+  }
+]

@@ -1,0 +1,96 @@
+import { html } from "../_snowpack/pkg/uhtml.js";
+import { Base, toDesign } from "./base.js";
+import { TabControl, TabPanel } from "./tabcontrol.js";
+import { Layout } from "./layout.js";
+import { Actions } from "./actions.js";
+
+export class Designer extends Base {
+  /**
+   * @param {SomeProps} props
+   * @param {Context} context
+   * @param {Base|Null} parent
+   */
+  constructor(props, context, parent) {
+    super(props, context, parent);
+    const tabs = new TabControl(
+      { scale: "10", tabEdge: "top", stateName: "designerTab" },
+      this.context,
+      this
+    );
+    const layoutPanel = new TabPanel(
+      {
+        name: "Layout",
+        background: "pinkish white",
+      },
+      this.context,
+      tabs
+    );
+    layoutPanel.children = [new Layout({}, this.context, layoutPanel)];
+
+    const actionPanel = new TabPanel(
+      {
+        name: "Actions",
+        background: "greenish white",
+      },
+      this.context,
+      tabs
+    );
+    actionPanel.children = [new Actions({}, this.context, actionPanel)];
+
+    const accessPanel = new TabPanel(
+      {
+        name: "Access",
+        background: "bluish white",
+      },
+      this.context,
+      tabs
+    );
+
+    const contentPanel = new TabPanel(
+      {
+        name: "Content",
+        background: "yellowish white",
+      },
+      this.context,
+      tabs
+    );
+    tabs.children = [layoutPanel, actionPanel, accessPanel, contentPanel];
+    /** @type {Base[]} */
+    this.children = [tabs];
+  }
+
+  template() {
+    return html`${this.children.map((child) => child.template())}
+      <button
+        style="display: none"
+        onclick=${() => {
+          const { tree, rules } = this.context;
+          const filename = "design.json";
+          const data = {
+            layout: toDesign(tree),
+            rules: rules.rules,
+          };
+          const blob = new Blob([JSON.stringify(data)], { type: "text/json" });
+          const link = document.createElement("a");
+          link.download = filename;
+          link.href = window.URL.createObjectURL(blob);
+          link.dataset.downloadurl = [
+            "text/json",
+            link.download,
+            link.href,
+          ].join(":");
+
+          const evt = new MouseEvent("click", {
+            view: window,
+            bubbles: true,
+            cancelable: true,
+          });
+
+          link.dispatchEvent(evt);
+          link.remove();
+        }}
+      >
+        Download
+      </button> `;
+  }
+}

@@ -1,0 +1,705 @@
+body {
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  width: 100vw;
+  height: 100vh;
+}
+
+button {
+  font-size: inherit;
+}
+
+body.loaded {
+  opacity: 1;
+  transition: opacity 0.5s ease-in;
+}
+
+div#UI {
+  width: 100%;
+  height: 100%;
+}
+
+body.designing {
+  display: grid;
+  grid-template-rows: 50% 50%;
+  grid-template-columns: 50% 50%;
+}
+
+body.designing div#UI {
+  font-size: 0.7vw;
+  flex: 1 1 0;
+}
+
+div#designer {
+  display: none;
+}
+
+body.designing div#designer {
+  display: block;
+  overflow-y: auto;
+  flex: 1 1 0;
+  grid-row-start: 1;
+  grid-row-end: 4;
+  grid-column-start: 2;
+}
+
+.flex {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.row {
+  flex-direction: row;
+}
+
+.column {
+  flex-direction: column;
+}
+
+.grid {
+  display: grid;
+  grid-auto-rows: 1fr;
+  height: 100%;
+  width: 100%;
+}
+
+.grid button {
+  overflow-wrap: normal;
+  overflow: hidden;
+  border-radius: 5px;
+  background-color: inherit;
+}
+.grid button div {
+  display: flex;
+  height: 100%;
+}
+.grid button figure {
+  margin: 2px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  margin-block-start: 0;
+  margin-block-end: 0;
+  margin-inline-start: 0;
+  margin-inline-end: 0;
+}
+.grid button figure figcaption {
+  width: 100%;
+}
+.grid button figure img {
+  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+.grid b {
+  color: blue;
+}
+.grid .page-control {
+  display: flex;
+  flex-direction: column;
+}
+.grid .page-control .text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.grid .page-control .back-next {
+  display: flex;
+  flex: 1 1 0;
+}
+.grid .page-control .back-next button {
+  flex: 1 1 0;
+}
+
+.radio fieldset {
+  flex-flow: wrap;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  justify-content: space-around;
+  gap: 1%;
+}
+
+.radio button {
+  min-width: 45%;
+  max-width: 45%;
+}
+
+details.menu {
+  display: inline-block;
+}
+
+details.menu[disabled] {
+  pointer-events: none;
+  color: rgba(16, 16, 16, 0.3);
+  border-color: rgba(16, 16, 16, 0.3);
+}
+
+/*
+details.menu[open] > summary::before {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 80;
+  display: block;
+  cursor: default;
+  content: " ";
+  background: transparent;
+}
+*/
+
+details.menu summary {
+  border: 1px solid black;
+  display: inline;
+  padding: 5px;
+  border-radius: 5px;
+}
+
+details.menu ul {
+  position: absolute;
+  background: white;
+  border: 1px solid black;
+  border-radius: 5px;
+  list-style: none;
+  padding: 5px;
+  margin-top: 0;
+  margin-left: 0px;
+}
+
+details.menu button {
+  width: 100%;
+  text-align: left;
+  padding: 10px;
+}
+
+span.arrows {
+  font-size: 2em;
+}
+
+span.arrows button {
+  border: 0;
+  background: inherit;
+  padding: 0;
+  margin: 0;
+  vertical-align: center;
+}
+
+details ul {
+  list-style: none;
+  margin-block-start: 0;
+  padding-inline-start: 20px;
+}
+
+.color-input {
+  margin-right: 1em;
+  align-items: center;
+}
+
+.color-input input {
+  flex: 1 1 0;
+  margin-right: 0.2em;
+}
+
+.color-input .swatch {
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  border: 1px solid black;
+}
+
+div.props {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-gap: 0.25em 1em;
+  border: 1px solid black;
+  padding: 1em;
+}
+
+div.props label {
+  grid-column: 1 / 2;
+  text-align: right;
+}
+
+div.props input,
+div.props color-input,
+div.props button {
+  grid-column: 2 / 3;
+}
+
+div.props fieldset {
+  grid-column: 1 / 3;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-gap: 0.25em 1em;
+  border: 1px solid black;
+  padding: 1em;
+  padding-block-start: 0;
+}
+
+div.props fieldset div.suggest {
+  grid-column: 2 / 3;
+}
+
+div.props fieldset button {
+  grid-column: 3 / 4;
+}
+
+input[type="number"] {
+  width: 3em;
+}
+
+select option[disabled] {
+  display: none;
+}
+
+div.empty {
+  background-color: rgba(15, 15, 15, 0.3);
+  justify-content: center;
+  align-items: center;
+}
+
+div.empty::before {
+  content: "Empty";
+}
+
+.display {
+  border: 1px solid black;
+  padding: 1em;
+  box-sizing: border-box;
+  font-size: 200%;
+}
+
+.tabcontrol {
+}
+.tabcontrol .buttons button:focus {
+  outline: 0;
+}
+.tabcontrol .panels {
+  display: flex;
+}
+.tabcontrol .buttons {
+  display: flex;
+}
+.tabcontrol .buttons button {
+  flex: 1 1 0;
+}
+.tabcontrol .buttons button[active] {
+  font-weight: bold;
+}
+
+.tabcontrol.top {
+  flex-direction: column;
+}
+.tabcontrol.top .panels {
+  order: 2;
+}
+.tabcontrol.top .buttons {
+  order: 1;
+}
+.tabcontrol.top .buttons button[active] {
+  border-bottom: 1px;
+  margin-top: 0px;
+}
+.tabcontrol.top .buttons button {
+  border-top-left-radius: 1em;
+  border-top-right-radius: 1em;
+  margin-top: 10px;
+}
+
+.tabcontrol.bottom {
+  flex-direction: column;
+}
+.tabcontrol.bottom .panels {
+  order: 1;
+}
+.tabcontrol.bottom .buttons {
+  order: 2;
+}
+.tabcontrol.bottom .buttons button[active] {
+  border-top: 1px;
+  margin-bottom: 0px;
+}
+.tabcontrol.bottom .buttons button {
+  border-bottom-left-radius: 1em;
+  border-bottom-right-radius: 1em;
+  margin-bottom: 10px;
+}
+
+.tabcontrol.right {
+  flex-direction: row;
+}
+.tabcontrol.right .panels {
+  order: 1;
+}
+.tabcontrol.right .buttons {
+  order: 2;
+  flex-direction: column;
+}
+.tabcontrol.right .buttons button[active] {
+  border-left: 1px;
+  margin-right: 0;
+}
+.tabcontrol.right .buttons button {
+  border-top-right-radius: 1em;
+  border-bottom-right-radius: 1em;
+  margin-right: 10px;
+}
+
+.tabcontrol.left {
+  flex-direction: row;
+}
+.tabcontrol.left .panels {
+  order: 2;
+  flex: 1;
+}
+.tabcontrol.left .buttons {
+  order: 1;
+  flex-direction: column;
+  flex: 1;
+}
+.tabcontrol.left .buttons button[active] {
+  border-right: 1px;
+  margin-left: 0;
+}
+.tabcontrol.left .buttons button {
+  border-top-left-radius: 1em;
+  border-bottom-left-radius: 1em;
+  margin-left: 10px;
+}
+
+div.layout {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  overflow: hidden;
+}
+
+div.tree {
+  overflow-y: auto;
+}
+
+.tree ul[role="tree"] {
+  list-style-type: none;
+  padding-inline-start: 5px;
+}
+.tree ul[role="group"] {
+  list-style-type: none;
+  margin-block-start: 0;
+  padding-inline-start: 20px;
+}
+.tree li[aria-expanded] span::before {
+  cursor: pointer;
+  user-select: none;
+}
+
+.tree li[aria-expanded="false"] > span::before {
+  content: "\25B6";
+  color: black;
+  display: inline-block;
+  margin-right: 6px;
+}
+
+.tree li[aria-expanded="true"] > span::before {
+  content: "\25B6";
+  color: black;
+  display: inline-block;
+  margin-right: 6px;
+  transform: rotate(90deg);
+}
+
+.tree li[aria-selected="true"] > span {
+  background-color: pink;
+}
+
+div.highlight {
+  border: 1px solid red;
+  box-sizing: border-box;
+}
+
+div.actions {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  overflow: hidden;
+}
+
+div.actions div.scroll {
+  overflow-y: auto;
+}
+
+.actions table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.actions tr[used] {
+  font-weight: bold;
+}
+
+.actions td,
+.actions th {
+  border: 1px solid #999;
+  padding: 0.5em;
+}
+
+.actions td.conditions {
+  overflow-wrap: anywhere;
+}
+
+.actions td.update {
+  overflow-wrap: anywhere;
+}
+
+.actions thead tr {
+  background: white;
+}
+
+.actions tbody {
+  border: 2px solid black;
+  position: relative;
+  z-index: 10;
+}
+.actions thead {
+  border: 2px solid black;
+  z-index: 15;
+}
+
+.actions tbody[highlight] {
+  outline: 2px solid red;
+  z-index: 100;
+}
+
+.actions tbody:nth-child(even):after {
+  content: "";
+  background-color: rgb(0, 0, 0, 0.1);
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.actions .updates {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-gap: 0.25em 1em;
+}
+
+.actions div.editor {
+  display: grid;
+  grid-template-columns: auto 1fr 2fr;
+  grid-gap: 0.25em 1em;
+  border: 1px solid black;
+  padding: 1em;
+}
+
+.actions div.editor label {
+  grid-column: 1 / 2;
+  text-align: right;
+}
+
+.actions div.editor div.suggest {
+  grid-column: 2 / 4;
+}
+
+.actions div.editor div.suggest.key {
+  grid-column: 2 / 3;
+}
+
+.actions div.editor label.key {
+  grid-column: 1 / 2;
+}
+
+.actions div.editor div.suggest.value {
+  grid-column: 3 / 4;
+}
+
+.actions div.editor span.key {
+  grid-column: 2 / 3;
+}
+
+.actions div.editor span.key,
+.actions div.editor span.value {
+  font-weight: bold;
+}
+
+.actions div.editor div {
+  grid-column: 1 / 4;
+}
+
+.actions div.editor fieldset {
+  grid-column: 1 / 4;
+  display: grid;
+  grid-template-columns: auto 1fr 2fr auto;
+  grid-gap: 0.25em 1em;
+  border: 1px solid black;
+  padding: 1em;
+  padding-block-start: 0;
+}
+
+input:invalid {
+  background-color: #fcc;
+  border-color: red;
+}
+
+div.modal {
+  visibility: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  z-index: 100;
+  background-color: rgb(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+body.designing #UI {
+  position: relative;
+}
+
+body.designing #UI div.modal[open],
+body.designing #UI div.modal.highlight {
+  visibility: visible;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  z-index: 100;
+  background-color: rgb(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+div.modal[open] {
+  visibility: visible;
+}
+
+div.modal > div {
+  width: 80%;
+  height: 80%;
+  opacity: 1;
+  background-color: white;
+  border: 2px solid black;
+}
+
+div.vsd {
+  position: relative;
+}
+
+div.vsd button {
+  position: absolute;
+  background-color: transparent;
+  box-shadow: 0 0 0 1px white, 0 0 0 2px red;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+div.vsd button[invisible] {
+  box-shadow: none;
+  outline: none;
+  border: none;
+}
+
+div.vsd img {
+  flex: 1 1 0;
+  object-fit: contain;
+  width: 100%;
+  height: 100%;
+}
+
+div.vsd div.markers button:focus-within {
+  opacity: 1;
+}
+div.vsd button span {
+  background-color: white;
+}
+div.vsd div.markers button {
+  opacity: 0;
+}
+div.vsd.show div.markers button {
+  opacity: 1;
+}
+
+button.button {
+  height: 100%;
+  width: 100%;
+}
+
+#monitor {
+  display: flex;
+  height: 100%;
+  overflow-y: auto;
+  font-size: 75%;
+}
+
+#monitor table {
+  margin-top: 1em;
+  margin-left: 1em;
+  border-collapse: collapse;
+  border: 1px solid black;
+  height: max-content;
+}
+
+#monitor table td,
+#monitor table th {
+  border: 1px solid black;
+  padding: 0.5em;
+}
+
+  .suggest {
+    position: relative;
+    display: inline-block;
+    font-family: monospace;
+  }
+
+  .suggest input {
+    width: 100%;
+  }
+
+  .suggest div {
+    position: absolute;
+    border: 1px solid black;
+    background-color: white;
+    z-index: 10;
+  }
+
+  .suggest div:empty {
+    display: none;
+  }
+
+  .suggest ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 10px;
+  }
+
+  .suggest li[selected] {
+    background-color: #ccc;
+  }
+
+  .suggest input {
+    font-family: monospace;
+    font-size: 15px;
+  }
+`;

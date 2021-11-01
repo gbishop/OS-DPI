@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "mergerino": "./mergerino.js",
+    "uhtml": "./uhtml.js"
+  }
+}
