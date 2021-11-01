@@ -3,252 +3,253 @@
     "row": 1,
     "column": 1,
     "tags": [],
-    "message": "like",
+    "label": "like",
     "symbol": "examples/36/ARASAAC/like.png"
   },
   {
     "row": 1,
     "column": 3,
     "tags": [],
-    "message": "get",
+    "label": "get",
     "symbol": "examples/36/ARASAAC/get.png"
   },
   {
     "row": 1,
     "column": 2,
     "tags": [],
-    "message": "want",
+    "label": "want",
     "symbol": "examples/36/ARASAAC/want.png"
   },
   {
     "row": 1,
     "column": 4,
     "tags": [],
-    "message": "make",
+    "label": "make",
     "symbol": "examples/36/ARASAAC/make.png"
   },
   {
     "row": 1,
     "column": 5,
     "tags": [],
-    "message": "good",
+    "label": "good",
     "symbol": "examples/36/ARASAAC/good.png"
   },
   {
     "row": 1,
     "column": 6,
     "tags": [],
-    "message": "more",
+    "label": "more",
     "symbol": "examples/36/ARASAAC/more.png"
   },
   {
     "row": 2,
     "column": 1,
     "tags": [],
-    "message": "not",
+    "label": "not",
     "symbol": "examples/36/ARASAAC/not.png"
   },
   {
     "row": 2,
     "column": 2,
     "tags": [],
-    "message": "go",
+    "label": "go",
     "symbol": "examples/36/ARASAAC/go.png"
   },
   {
     "row": 2,
     "column": 3,
     "tags": [],
-    "message": "look",
+    "label": "look",
     "symbol": "examples/36/ARASAAC/look.png"
   },
   {
     "row": 2,
     "column": 4,
     "tags": [],
-    "message": "turn",
+    "label": "turn",
     "symbol": "examples/36/ARASAAC/turn.png"
   },
   {
     "row": 2,
     "column": 5,
     "tags": [],
-    "message": "help",
+    "label": "help",
     "symbol": "examples/36/ARASAAC/help.png"
   },
   {
     "row": 2,
     "column": 6,
     "tags": [],
-    "message": "different",
+    "label": "different",
     "symbol": "examples/36/ARASAAC/different.png"
   },
   {
     "row": 3,
     "column": 1,
     "tags": [],
-    "message": "I",
+    "label": "I",
     "symbol": "examples/36/ARASAAC/I.png"
   },
   {
     "row": 3,
     "column": 2,
     "tags": [],
-    "message": "he",
+    "label": "he",
     "symbol": "examples/36/ARASAAC/he.png"
   },
   {
     "row": 3,
     "column": 3,
     "tags": [],
-    "message": "open",
+    "label": "open",
     "symbol": "examples/36/ARASAAC/open.png"
   },
   {
     "row": 3,
     "column": 4,
     "tags": [],
-    "message": "do",
+    "label": "do",
     "symbol": "examples/36/ARASAAC/do.png"
   },
   {
     "row": 3,
     "column": 5,
     "tags": [],
-    "message": "put",
+    "label": "put",
     "symbol": "examples/36/ARASAAC/put.png"
   },
   {
     "row": 3,
     "column": 6,
     "tags": [],
-    "message": "same",
+    "label": "same",
     "symbol": "examples/36/ARASAAC/same.png"
   },
   {
     "row": 4,
     "column": 1,
     "tags": [],
-    "message": "you",
+    "label": "you",
     "symbol": "examples/36/ARASAAC/you.png"
   },
   {
     "row": 4,
     "column": 2,
     "tags": [],
-    "message": "she",
+    "label": "she",
     "symbol": "examples/36/ARASAAC/she.png"
   },
   {
     "row": 4,
     "column": 3,
     "tags": [],
-    "message": "that",
+    "label": "that",
     "symbol": "examples/36/ARASAAC/that.png"
   },
   {
     "row": 4,
     "column": 4,
     "tags": [],
-    "message": "up",
+    "label": "up",
     "symbol": "examples/36/ARASAAC/up.png"
   },
   {
     "row": 4,
     "column": 5,
     "tags": [],
-    "message": "all",
+    "label": "all",
     "symbol": "examples/36/ARASAAC/all.png"
   },
   {
     "row": 4,
     "column": 6,
     "tags": [],
-    "message": "some",
+    "label": "some",
     "symbol": "examples/36/ARASAAC/some.png"
   },
   {
     "row": 5,
     "column": 1,
     "tags": [],
-    "message": "it",
+    "label": "it",
+    "pronounce": "eeyat",
     "symbol": "examples/36/ARASAAC/it.png"
   },
   {
     "row": 5,
     "column": 2,
     "tags": [],
-    "message": "here",
+    "label": "here",
     "symbol": "examples/36/ARASAAC/here.png"
   },
   {
     "row": 5,
     "column": 3,
     "tags": [],
-    "message": "in",
+    "label": "in",
     "symbol": "examples/36/ARASAAC/in.png"
   },
   {
     "row": 5,
     "column": 4,
     "tags": [],
-    "message": "on",
+    "label": "on",
     "symbol": "examples/36/ARASAAC/on.png"
   },
   {
     "row": 5,
     "column": 5,
     "tags": [],
-    "message": "can",
+    "label": "can",
     "symbol": "examples/36/ARASAAC/can.png"
   },
   {
     "row": 5,
     "column": 6,
     "tags": [],
-    "message": "finished",
+    "label": "finished",
     "symbol": "examples/36/ARASAAC/finished.png"
   },
   {
     "row": 6,
     "column": 1,
     "tags": [],
-    "message": "where",
+    "label": "where",
     "symbol": "examples/36/ARASAAC/where.png"
   },
   {
     "row": 6,
     "column": 2,
     "tags": [],
-    "message": "what",
+    "label": "what",
     "symbol": "examples/36/ARASAAC/what.png"
   },
   {
     "row": 6,
     "column": 3,
     "tags": [],
-    "message": "why",
+    "label": "why",
     "symbol": "examples/36/ARASAAC/why.png"
   },
   {
     "row": 6,
     "column": 4,
     "tags": [],
-    "message": "who",
+    "label": "who",
     "symbol": "examples/36/ARASAAC/who.png"
   },
   {
     "row": 6,
     "column": 5,
     "tags": [],
-    "message": "when",
+    "label": "when",
     "symbol": "examples/36/ARASAAC/when.png"
   },
   {
     "row": 6,
     "column": 6,
     "tags": [],
-    "message": "stop",
+    "label": "stop",
     "symbol": "examples/36/ARASAAC/stop.png"
   }
 ]
