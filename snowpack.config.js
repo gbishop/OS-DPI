@@ -5,12 +5,14 @@
 
 const proxy = require("http2-proxy");
 
+const root = __dirname;
+
 module.exports = {
   exclude: [
     "**/thinking/**",
     "**/.git/**",
     "**/package*",
-    "**/node_modules/**",
+    `${root}/node_modules/**`,
   ],
   mount: {
     /* ... */
