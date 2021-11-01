@@ -23,6 +23,7 @@ module.exports = {
     hmr: true,
   },
   buildOptions: {
+    out: "docs",
     /* ... */
   },
   routes: [
