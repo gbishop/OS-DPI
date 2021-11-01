@@ -18,7 +18,7 @@ following these links:
   utterance-based system</a>
 
 In these demos you can switch between the developer mode and full-screen
-user-interface pressing Control-Shift-D.
+user-interface pressing the "d" except while in a text input.
 
 The Layout tab allows modifying the visual design. The Actions tab allows
 modifying the response of the system to user inputs. The Access tab will
