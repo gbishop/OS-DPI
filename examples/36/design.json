@@ -20,7 +20,7 @@
             "name": "TalkGrid",
             "rows": 6,
             "columns": 6,
-            "scale": 12,
+            "scale": 6,
             "background": "#98fb98"
           },
           "children": []
