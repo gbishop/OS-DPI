@@ -9,5 +9,6 @@ import "./modal-dialog";
 import "./vsd";
 import "./button";
 import "./monitor";
+import "./speech";
 
 export { assemble };

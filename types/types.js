@@ -15,6 +15,11 @@
  * @property {string} direction
  * @property {string} value
  * @property {string} tabEdge
+ * @property {string} voiceURI
+ * @property {string} language
+ * @property {number} pitch
+ * @property {number} rate
+ * @property {number} volume
  */
 
 /**
@@ -72,6 +77,7 @@
  * @property {string[]} [states]
  * @property {string[]} [fields]
  * @property {string} [label]
+ * @property {number} [step]
  */
 
 /** @typedef {Event & { target: HTMLInputElement } } InputEventWithTarget */

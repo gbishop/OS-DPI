@@ -38,6 +38,7 @@ export function propEditor(component, name, value, info, context, hook) {
           id=${name}
           name=${name}
           .value=${value}
+          step=${info.step || 1}
           onchange=${propUpdate}
           autocomplete="off"
         />`;
@@ -145,6 +146,18 @@ export function propEditor(component, name, value, info, context, hook) {
         </button>
       </fieldset> `;
     }
+
+    case "voiceURI":
+      return html`<label for=${name}>${info.name}</label>
+        <select
+          is="select-voice"
+          id=${name}
+          name=${name}
+          onchange=${propUpdate}
+          value=${value}
+        >
+          <option value="">Default</option>
+        </select>`;
 
     default:
       log("tbd", name);
