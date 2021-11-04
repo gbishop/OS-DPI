@@ -23,6 +23,11 @@
           "children": []
         }
       ]
+    },
+    {
+      "type": "speech",
+      "props": {},
+      "children": []
     }
   ]
 }
