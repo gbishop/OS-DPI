@@ -1,6 +1,47 @@
 import { log } from "../log.js";
-import { State } from "../state.js";
 import { strip } from "./display.js";
+import { Base, componentMap } from "./base.js";
+import { html } from "../_snowpack/pkg/uhtml.js";
+
+class Speech extends Base {
+  static defaultProps = {
+    stateName: "$Speak",
+    voiceURI: "",
+    pitch: 1,
+    rate: 1,
+    volume: 1,
+  };
+
+  async speak() {
+    const { state } = this.context;
+    const { stateName, voiceURI, pitch, rate, volume } = this.props;
+    const message = strip(state.get(stateName));
+    const voices = await getVoices();
+    const voice =
+      voiceURI && voices.find((voice) => voice.voiceURI == voiceURI);
+    const utterance = new SpeechSynthesisUtterance(message);
+    if (voice) {
+      utterance.voice = voice;
+      utterance.lang = voice.lang;
+    }
+    utterance.pitch = pitch;
+    utterance.rate = rate;
+    utterance.volume = volume;
+    log("speak", { message, voiceURI });
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utterance);
+  }
+
+  template() {
+    const { stateName } = this.props;
+    const { state } = this.context;
+    if (state.hasBeenUpdated(stateName)) {
+      this.speak();
+    }
+    return html``;
+  }
+}
+componentMap.addMap("speech", Speech);
 
 /** @type{SpeechSynthesisVoice[]} */
 let voices = [];
@@ -12,6 +53,7 @@ let voices = [];
  */
 function getVoices() {
   return new Promise(function (resolve) {
+    // iOS won't fire the voiceschanged event so we have to poll for them
     function f() {
       voices = (voices.length && voices) || speechSynthesis.getVoices();
       if (voices.length) resolve(voices);
@@ -21,36 +63,26 @@ function getVoices() {
   });
 }
 
-/**
- * Initialize speech and default voice
- */
-/** @param {State} state */
-export async function initSpeech(state) {
-  let voices = await getVoices();
-  /**
-   * Speak a message
-   */
-  function speak() {
-    const message = strip(state.get("$Speak"));
-    const voiceURI = state.get("$VoiceURI");
-    const voice = voices.find((voice) => voice.voiceURI == voiceURI);
-    if (!voice) return;
-    const utterance = new SpeechSynthesisUtterance(message);
-    utterance.voice = voice;
-    utterance.lang = voice.lang;
-    log("speak", { message, voiceURI });
-    speechSynthesis.cancel();
-    speechSynthesis.speak(utterance);
+class VoiceSelect extends HTMLSelectElement {
+  constructor() {
+    super();
+    console.log("construct select-voice");
+  }
+  connectedCallback() {
+    console.log(this, "connected");
+    this.addVoices();
   }
 
-  state.define(
-    "$VoiceURI",
-    voices.filter((voice) => voice.lang.startsWith("en"))[0].voiceURI
-  );
-  state.observe(speak, "$Speak");
-  if (speechSynthesis.onvoiceschanged !== undefined) {
-    speechSynthesis.onvoiceschanged = function () {
-      voices = speechSynthesis.getVoices();
-    };
+  async addVoices() {
+    const voices = await getVoices();
+    const current = this.getAttribute("value");
+    console.log("voices", voices, current);
+    for (const voice of voices) {
+      const item = html.node`<option value=${voice.voiceURI} ?selected=${
+        voice.voiceURI == current
+      }>${voice.name}</option>`;
+      this.add(/** @type {HTMLOptionElement} */ (item));
+    }
   }
 }
+customElements.define("select-voice", VoiceSelect, { extends: "select" });

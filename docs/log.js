@@ -1,5 +1,5 @@
 const logging = {
-  local: false,
+  local: true,
   remote: false,
 };
 

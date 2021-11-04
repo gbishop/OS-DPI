@@ -5,7 +5,6 @@ import { Data } from "./data.js";
 import { State } from "./state.js";
 import { Designer } from "./components/designer.js";
 import { toDesign } from "./components/base.js";
-import { initSpeech } from "./components/speech.js";
 import { Monitor } from "./components/monitor.js";
 
 const safe = true;
@@ -75,7 +74,6 @@ export async function start(name) {
     rules,
     state,
   };
-  await initSpeech(state);
   // @ts-ignore
   const tree = assemble(layout, context);
   context.tree = tree;
@@ -128,6 +126,7 @@ export async function start(name) {
   /* Monitor */
   const monitor = new Monitor({}, { state, rules, data, tree }, null);
   function renderMonitor() {
+    log("render monitor");
     if (!document.body.classList.contains("designing")) return;
     const MI = document.querySelector("div#monitor");
     if (MI) safeRender(MI, monitor.template());

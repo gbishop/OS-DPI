@@ -64,6 +64,11 @@
           ]
         }
       ]
+    },
+    {
+      "type": "speech",
+      "props": {},
+      "children": []
     }
   ]
 }

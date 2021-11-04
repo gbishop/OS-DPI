@@ -650,6 +650,11 @@
           ]
         }
       ]
+    },
+    {
+      "type": "speech",
+      "props": {},
+      "children": []
     }
   ]
 }

@@ -73,4 +73,27 @@ export const PropInfo = {
     name: "Unselected color",
     description: "Color of buttons that are not currently selected.",
   },
+  voiceURI: {
+    type: "voiceURI",
+    name: "Voice URI",
+    description: "Unique name for the selected voice",
+  },
+  pitch: {
+    type: "number",
+    name: "Pitch",
+    step: 0.1,
+    description: "Pitch as which utterance will be spoken.",
+  },
+  rate: {
+    type: "number",
+    name: "Rate",
+    step: 0.1,
+    description: "Rate at which utterance will be spoken.",
+  },
+  volume: {
+    type: "number",
+    name: "Volume",
+    step: 0.1,
+    description: "Volume at which utterance will be spoken.",
+  },
 };

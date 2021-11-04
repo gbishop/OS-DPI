@@ -3,10 +3,12 @@ import merge from "./_snowpack/pkg/mergerino.js";
 export class State {
   constructor(persistKey = "") {
     this.persistKey = persistKey;
-    /** @type {Map<function, string[]>} */
-    this.listeners = new Map();
+    /** @type {Set<function>} */
+    this.listeners = new Set();
     /** @type {Object} */
     this.values = {};
+    /** @type {Set<string>} */
+    this.updated = new Set();
     if (this.persistKey) {
       /* persistence */
       const persist = window.localStorage.getItem(this.persistKey);
@@ -38,30 +40,12 @@ export class State {
    * @return {void}
    */
   update = (patch = {}) => {
-    const oldValues = this.values;
-    this.values = merge(oldValues, patch);
-    const changed = new Set();
-    for (const key in this.values) {
-      if (this.values[key] !== oldValues[key]) {
-        changed.add(key);
-      }
+    for (const key in patch) {
+      this.updated.add(key);
     }
-    for (const key in oldValues) {
-      if (!(key in this.values)) {
-        changed.add(key);
-      }
-    }
-    for (const [callback, names] of this.listeners) {
-      if (
-        !names.length ||
-        names.some(
-          (name) =>
-            changed.has(name) ||
-            (name === "$Speak" && patch && "$Speak" in patch)
-        )
-      ) {
-        callback(changed);
-      }
+    this.values = merge(this.values, patch);
+    for (const callback of this.listeners) {
+      callback();
     }
 
     if (this.persistKey) {
@@ -69,15 +53,23 @@ export class State {
       window.localStorage.setItem(this.persistKey, persist);
     }
   };
-  /** observe - call this function if the named states change
+  /** observe - call this function when the state updates
    * @param {Function} callback
-   * @param {String[]} names - state names to observe (use only first level)
    */
-  observe(callback, ...names) {
-    const old = this.listeners.get(callback) || [];
-    // extract top level name from any that are dotted
-    const topLevelNames = names.map((name) => name.split(".")[0]);
-    this.listeners.set(callback, [...old, ...topLevelNames]);
+  observe(callback) {
+    this.listeners.add(callback);
+  }
+
+  /** return true if the given state has been upated since last you asked
+   * @param {string} stateName
+   * @returns boolean
+   */
+  hasBeenUpdated(stateName) {
+    const result = this.updated.has(stateName);
+    if (result) {
+      this.updated.delete(stateName);
+    }
+    return result;
   }
 
   /** define - add a named state to the global system state
