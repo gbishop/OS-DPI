@@ -1,10 +1,350 @@
-import { _ as __pika_web_default_export_for_treeshaking__ } from './common/index-4033176f.js';
-import { _ as __pika_web_default_export_for_treeshaking__$1 } from './common/index-7a1cc3cd.js';
-import { i as isArray, s as slice, a as indexOf } from './common/index-8a07eae0.js';
-import { d as diffable, p as persistent } from './common/index-1f52fa80.js';
-import { u as udomdiff } from './common/index-3ee57073.js';
-import { t as text, e as event, s as setter, b as boolean, a as aria, r as ref, c as attribute } from './common/index-a424dacd.js';
-import { c as createContent } from './common/index-31dbce2c.js';
+var umap = _ => ({
+  // About: get: _.get.bind(_)
+  // It looks like WebKit/Safari didn't optimize bind at all,
+  // so that using bind slows it down by 60%.
+  // Firefox and Chrome are just fine in both cases,
+  // so let's use the approach that works fast everywhere 👍
+  get: key => _.get(key),
+  set: (key, value) => (_.set(key, value), value)
+});
+
+const attr = /([^\s\\>"'=]+)\s*=\s*(['"]?)$/;
+const empty = /^(?:area|base|br|col|embed|hr|img|input|keygen|link|menuitem|meta|param|source|track|wbr)$/i;
+const node = /<[a-z][^>]+$/i;
+const notNode = />[^<>]*$/;
+const selfClosing = /<([a-z]+[a-z0-9:._-]*)([^>]*?)(\/>)/ig;
+const trimEnd = /\s+$/;
+
+const isNode = (template, i) => (
+    0 < i-- && (
+    node.test(template[i]) || (
+      !notNode.test(template[i]) && isNode(template, i)
+    )
+  )
+);
+
+const regular = (original, name, extra) => empty.test(name) ?
+                  original : `<${name}${extra.replace(trimEnd,'')}></${name}>`;
+
+var instrument = (template, prefix, svg) => {
+  const text = [];
+  const {length} = template;
+  for (let i = 1; i < length; i++) {
+    const chunk = template[i - 1];
+    text.push(attr.test(chunk) && isNode(template, i) ?
+      chunk.replace(
+        attr,
+        (_, $1, $2) => `${prefix}${i - 1}=${$2 || '"'}${$1}${$2 ? '' : '"'}`
+      ) :
+      `${chunk}<!--${prefix}${i - 1}-->`
+    );
+  }
+  text.push(template[length - 1]);
+  const output = text.join('').trim();
+  return svg ? output : output.replace(selfClosing, regular);
+};
+
+const {isArray} = Array;
+const {indexOf, slice} = [];
+
+const ELEMENT_NODE = 1;
+const nodeType = 111;
+
+const remove = ({firstChild, lastChild}) => {
+  const range = document.createRange();
+  range.setStartAfter(firstChild);
+  range.setEndAfter(lastChild);
+  range.deleteContents();
+  return firstChild;
+};
+
+const diffable = (node, operation) => node.nodeType === nodeType ?
+  ((1 / operation) < 0 ?
+    (operation ? remove(node) : node.lastChild) :
+    (operation ? node.valueOf() : node.firstChild)) :
+  node
+;
+
+const persistent = fragment => {
+  const {childNodes} = fragment;
+  const {length} = childNodes;
+  if (length < 2)
+    return length ? childNodes[0] : fragment;
+  const nodes = slice.call(childNodes, 0);
+  const firstChild = nodes[0];
+  const lastChild = nodes[length - 1];
+  return {
+    ELEMENT_NODE,
+    nodeType,
+    firstChild,
+    lastChild,
+    valueOf() {
+      if (childNodes.length !== length) {
+        let i = 0;
+        while (i < length)
+          fragment.appendChild(nodes[i++]);
+      }
+      return fragment;
+    }
+  };
+};
+
+/**
+ * ISC License
+ *
+ * Copyright (c) 2020, Andrea Giammarchi, @WebReflection
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+ * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+ * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+ * OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
+ */
+
+/**
+ * @param {Node} parentNode The container where children live
+ * @param {Node[]} a The list of current/live children
+ * @param {Node[]} b The list of future children
+ * @param {(entry: Node, action: number) => Node} get
+ * The callback invoked per each entry related DOM operation.
+ * @param {Node} [before] The optional node used as anchor to insert before.
+ * @returns {Node[]} The same list of future children.
+ */
+var udomdiff = (parentNode, a, b, get, before) => {
+  const bLength = b.length;
+  let aEnd = a.length;
+  let bEnd = bLength;
+  let aStart = 0;
+  let bStart = 0;
+  let map = null;
+  while (aStart < aEnd || bStart < bEnd) {
+    // append head, tail, or nodes in between: fast path
+    if (aEnd === aStart) {
+      // we could be in a situation where the rest of nodes that
+      // need to be added are not at the end, and in such case
+      // the node to `insertBefore`, if the index is more than 0
+      // must be retrieved, otherwise it's gonna be the first item.
+      const node = bEnd < bLength ?
+        (bStart ?
+          (get(b[bStart - 1], -0).nextSibling) :
+          get(b[bEnd - bStart], 0)) :
+        before;
+      while (bStart < bEnd)
+        parentNode.insertBefore(get(b[bStart++], 1), node);
+    }
+    // remove head or tail: fast path
+    else if (bEnd === bStart) {
+      while (aStart < aEnd) {
+        // remove the node only if it's unknown or not live
+        if (!map || !map.has(a[aStart]))
+          parentNode.removeChild(get(a[aStart], -1));
+        aStart++;
+      }
+    }
+    // same node: fast path
+    else if (a[aStart] === b[bStart]) {
+      aStart++;
+      bStart++;
+    }
+    // same tail: fast path
+    else if (a[aEnd - 1] === b[bEnd - 1]) {
+      aEnd--;
+      bEnd--;
+    }
+    // The once here single last swap "fast path" has been removed in v1.1.0
+    // https://github.com/WebReflection/udomdiff/blob/single-final-swap/esm/index.js#L69-L85
+    // reverse swap: also fast path
+    else if (
+      a[aStart] === b[bEnd - 1] &&
+      b[bStart] === a[aEnd - 1]
+    ) {
+      // this is a "shrink" operation that could happen in these cases:
+      // [1, 2, 3, 4, 5]
+      // [1, 4, 3, 2, 5]
+      // or asymmetric too
+      // [1, 2, 3, 4, 5]
+      // [1, 2, 3, 5, 6, 4]
+      const node = get(a[--aEnd], -1).nextSibling;
+      parentNode.insertBefore(
+        get(b[bStart++], 1),
+        get(a[aStart++], -1).nextSibling
+      );
+      parentNode.insertBefore(get(b[--bEnd], 1), node);
+      // mark the future index as identical (yeah, it's dirty, but cheap 👍)
+      // The main reason to do this, is that when a[aEnd] will be reached,
+      // the loop will likely be on the fast path, as identical to b[bEnd].
+      // In the best case scenario, the next loop will skip the tail,
+      // but in the worst one, this node will be considered as already
+      // processed, bailing out pretty quickly from the map index check
+      a[aEnd] = b[bEnd];
+    }
+    // map based fallback, "slow" path
+    else {
+      // the map requires an O(bEnd - bStart) operation once
+      // to store all future nodes indexes for later purposes.
+      // In the worst case scenario, this is a full O(N) cost,
+      // and such scenario happens at least when all nodes are different,
+      // but also if both first and last items of the lists are different
+      if (!map) {
+        map = new Map;
+        let i = bStart;
+        while (i < bEnd)
+          map.set(b[i], i++);
+      }
+      // if it's a future node, hence it needs some handling
+      if (map.has(a[aStart])) {
+        // grab the index of such node, 'cause it might have been processed
+        const index = map.get(a[aStart]);
+        // if it's not already processed, look on demand for the next LCS
+        if (bStart < index && index < bEnd) {
+          let i = aStart;
+          // counts the amount of nodes that are the same in the future
+          let sequence = 1;
+          while (++i < aEnd && i < bEnd && map.get(a[i]) === (index + sequence))
+            sequence++;
+          // effort decision here: if the sequence is longer than replaces
+          // needed to reach such sequence, which would brings again this loop
+          // to the fast path, prepend the difference before a sequence,
+          // and move only the future list index forward, so that aStart
+          // and bStart will be aligned again, hence on the fast path.
+          // An example considering aStart and bStart are both 0:
+          // a: [1, 2, 3, 4]
+          // b: [7, 1, 2, 3, 6]
+          // this would place 7 before 1 and, from that time on, 1, 2, and 3
+          // will be processed at zero cost
+          if (sequence > (index - bStart)) {
+            const node = get(a[aStart], 0);
+            while (bStart < index)
+              parentNode.insertBefore(get(b[bStart++], 1), node);
+          }
+          // if the effort wasn't good enough, fallback to a replace,
+          // moving both source and target indexes forward, hoping that some
+          // similar node will be found later on, to go back to the fast path
+          else {
+            parentNode.replaceChild(
+              get(b[bStart++], 1),
+              get(a[aStart++], -1)
+            );
+          }
+        }
+        // otherwise move the source forward, 'cause there's nothing to do
+        else
+          aStart++;
+      }
+      // this node has no meaning in the future list, so it's more than safe
+      // to remove it, and check the next live node out instead, meaning
+      // that only the live list index should be forwarded
+      else
+        parentNode.removeChild(get(a[aStart++], -1));
+    }
+  }
+  return b;
+};
+
+const aria = node => values => {
+  for (const key in values) {
+    const name = key === 'role' ? key : `aria-${key}`;
+    const value = values[key];
+    if (value == null)
+      node.removeAttribute(name);
+    else
+      node.setAttribute(name, value);
+  }
+};
+
+const attribute = (node, name) => {
+  let oldValue, orphan = true;
+  const attributeNode = document.createAttributeNS(null, name);
+  return newValue => {
+    if (oldValue !== newValue) {
+      oldValue = newValue;
+      if (oldValue == null) {
+        if (!orphan) {
+          node.removeAttributeNode(attributeNode);
+          orphan = true;
+        }
+      }
+      else {
+        attributeNode.value = newValue;
+        if (orphan) {
+          node.setAttributeNodeNS(attributeNode);
+          orphan = false;
+        }
+      }
+    }
+  };
+};
+
+const boolean = (node, key, oldValue) => newValue => {
+  if (oldValue !== !!newValue) {
+    // when IE won't be around anymore ...
+    // node.toggleAttribute(key, oldValue = !!newValue);
+    if ((oldValue = !!newValue))
+      node.setAttribute(key, '');
+    else
+      node.removeAttribute(key);
+  }
+};
+
+const data = ({dataset}) => values => {
+  for (const key in values) {
+    const value = values[key];
+    if (value == null)
+      delete dataset[key];
+    else
+      dataset[key] = value;
+  }
+};
+
+const event = (node, name) => {
+  let oldValue, type = name.slice(2);
+  if (!(name in node) && name.toLowerCase() in node)
+    type = type.toLowerCase();
+  return newValue => {
+    const info = isArray(newValue) ? newValue : [newValue, false];
+    if (oldValue !== info[0]) {
+      if (oldValue)
+        node.removeEventListener(type, oldValue, info[1]);
+      if (oldValue = info[0])
+        node.addEventListener(type, oldValue, info[1]);
+    }
+  };
+};
+
+const ref = node => {
+  let oldValue;
+  return value => {
+    if (oldValue !== value) {
+      oldValue = value;
+      if (typeof value === 'function')
+        value(node);
+      else
+        value.current = node;
+    }
+  };
+};
+
+const setter = (node, key) => key === 'dataset' ?
+  data(node) :
+  value => {
+    node[key] = value;
+  };
+
+const text = node => {
+  let oldValue;
+  return newValue => {
+    if (oldValue != newValue) {
+      oldValue = newValue;
+      node.textContent = newValue == null ? '' : newValue;
+    }
+  };
+};
 
 // from a generic path, retrieves the exact targeted node
 const reducePath = ({childNodes}, i) => childNodes[i];
@@ -141,6 +481,62 @@ function handlers(options) {
       text(node));
 }
 
+/*! (c) Andrea Giammarchi - ISC */
+var createContent = (function (document) {  var FRAGMENT = 'fragment';
+  var TEMPLATE = 'template';
+  var HAS_CONTENT = 'content' in create(TEMPLATE);
+
+  var createHTML = HAS_CONTENT ?
+    function (html) {
+      var template = create(TEMPLATE);
+      template.innerHTML = html;
+      return template.content;
+    } :
+    function (html) {
+      var content = create(FRAGMENT);
+      var template = create(TEMPLATE);
+      var childNodes = null;
+      if (/^[^\S]*?<(col(?:group)?|t(?:head|body|foot|r|d|h))/i.test(html)) {
+        var selector = RegExp.$1;
+        template.innerHTML = '<table>' + html + '</table>';
+        childNodes = template.querySelectorAll(selector);
+      } else {
+        template.innerHTML = html;
+        childNodes = template.childNodes;
+      }
+      append(content, childNodes);
+      return content;
+    };
+
+  return function createContent(markup, type) {
+    return (type === 'svg' ? createSVG : createHTML)(markup);
+  };
+
+  function append(root, childNodes) {
+    var length = childNodes.length;
+    while (length--)
+      root.appendChild(childNodes[0]);
+  }
+
+  function create(element) {
+    return element === FRAGMENT ?
+      document.createDocumentFragment() :
+      document.createElementNS('http://www.w3.org/1999/xhtml', element);
+  }
+
+  // it could use createElementNS when hasNode is there
+  // but this fallback is equally fast and easier to maintain
+  // it is also battle tested already in all IE
+  function createSVG(svg) {
+    var content = create(FRAGMENT);
+    var template = create('div');
+    template.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg">' + svg + '</svg>';
+    append(content, template.firstChild.childNodes);
+    return content;
+  }
+
+}(document));
+
 // this "hack" tells the library if the browser is IE11 or old Edge
 const isImportNodeLengthWrong = document.importNode.length != 1;
 
@@ -190,7 +586,7 @@ const prefix = 'isµ';
 // should be parsed once, and once only, as it will always represent the same
 // content, within the exact same amount of updates each time.
 // This cache relates each template to its unique content and updates.
-const cache = __pika_web_default_export_for_treeshaking__(new WeakMap);
+const cache = umap(new WeakMap);
 
 // a RegExp that helps checking nodes that cannot contain comments
 const textOnly = /^(?:plaintext|script|style|textarea|title|xmp)$/i;
@@ -222,7 +618,7 @@ const createEntry = (type, template) => {
 // Each unique template becomes a fragment, cloned once per each other
 // operation based on the same template, i.e. data => html`<p>${data}</p>`
 const mapTemplate = (type, template) => {
-  const text = __pika_web_default_export_for_treeshaking__$1(template, prefix, type === 'svg');
+  const text = instrument(template, prefix, type === 'svg');
   const content = createFragment(text, type);
   // once instrumented and reproduced as fragment, it's crawled
   // to find out where each update is in the fragment tree
@@ -378,7 +774,7 @@ const {create, defineProperties} = Object;
 // with a `for(ref[, id])` and a `node` tag too
 const tag = type => {
   // both `html` and `svg` tags have their own cache
-  const keyed = __pika_web_default_export_for_treeshaking__(new WeakMap);
+  const keyed = umap(new WeakMap);
   // keyed operations always re-use the same cache and unroll
   // the template and its interpolations right away
   const fixed = cache => (template, ...values) => unroll(
@@ -414,7 +810,7 @@ const tag = type => {
 };
 
 // each rendered node gets its own cache
-const cache$1 = __pika_web_default_export_for_treeshaking__(new WeakMap);
+const cache$1 = umap(new WeakMap);
 
 // rendering means understanding what `html` or `svg` tags returned
 // and it relates a specific node to its own unique cache.

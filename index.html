@@ -4,12 +4,6 @@
     <meta charset="UTF-8" />
     <title>PO 6</title>
     <link rel="stylesheet" href="./style.css" />
-    <script>
-      // hack so I can see where errors occur in Safari
-      window.onerror = function (message, url, linenumber) {
-        console.log("Error:", message, linenumber, url);
-      };
-    </script>
     <script type="module">
       import { start } from "./start";
       const name = window.location.hash.slice(1);
