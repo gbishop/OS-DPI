@@ -17,6 +17,9 @@ following these links:
 - <a href="https://unc-project-open-aac.github.io/OS-DPI/#contact">Contact-like
   utterance-based system</a>
 
+These demos are known to not work in Safari. Please use Google Chrome or one if
+its variants.
+
 In these demos you can switch between the developer mode and full-screen
 user-interface pressing the "d" except while in a text input.
 
