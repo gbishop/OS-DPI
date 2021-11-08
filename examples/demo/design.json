@@ -18,7 +18,7 @@
           "props": {
             "columns": 6,
             "rows": 6,
-            "scale": 12
+            "scale": 6
           },
           "children": []
         }
