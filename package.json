@@ -11,7 +11,8 @@
   "license": "ISC",
   "devDependencies": {
     "http2-proxy": "^5.0.53",
-    "snowpack": "^3.0.13"
+    "snowpack": "^3.0.13",
+    "ustyler": "^1.0.1"
   },
   "dependencies": {
     "mergerino": "^0.4.0",

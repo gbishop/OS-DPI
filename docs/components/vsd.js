@@ -1,6 +1,7 @@
 import { html } from "../_snowpack/pkg/uhtml.js";
 import { Base, componentMap } from "./base.js";
 import { styleString } from "./style.js";
+import css from "../_snowpack/pkg/ustyler.js";
 
 /** Allow await'ing for a short time
  * @param {number} ms */
@@ -125,3 +126,45 @@ class VSD extends Base {
 }
 
 componentMap.addMap("vsd", VSD);
+
+css`
+  div.vsd {
+    position: relative;
+  }
+
+  div.vsd button {
+    position: absolute;
+    background-color: transparent;
+    box-shadow: 0 0 0 1px white, 0 0 0 2px red;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  div.vsd button[invisible] {
+    box-shadow: none;
+    outline: none;
+    border: none;
+  }
+
+  div.vsd img {
+    flex: 1 1 0;
+    object-fit: contain;
+    width: 100%;
+    height: 100%;
+  }
+
+  div.vsd div.markers button:focus-within {
+    opacity: 1;
+  }
+  div.vsd button span {
+    background-color: white;
+  }
+  div.vsd div.markers button {
+    opacity: 0;
+  }
+  div.vsd.show div.markers button {
+    opacity: 1;
+  }
+`;

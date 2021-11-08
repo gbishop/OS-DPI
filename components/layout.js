@@ -4,6 +4,7 @@ import { assemble } from "./base";
 import { colorNamesDataList } from "./style";
 import { Base } from "./base";
 import { propEditor } from "./propEditor";
+import css from "ustyler";
 
 import { log } from "../log";
 
@@ -135,7 +136,7 @@ export class Layout extends Base {
       class="menu"
       ?disabled=${!allowed.length}
       style="width: 7em"
-      onchange=${(/** @type {{ target: { value: string; }}} */ e) => {
+      onchange=${(/** @type {InputEventWithTarget} */ e) => {
         this.closeControls();
         this.addChild(e.target.value);
         e.target.value = "";
@@ -258,7 +259,7 @@ export class Layout extends Base {
       <h1>Editing ${this.selected.constructor.name} ${this.selected.name}</h1>
       ${this.addMenu()} ${this.deleteCurrent()}
       <div class="props">${this.showProps()}</div>
-      <button id="controls-return" onclick=${() => this.closeControls()} }>
+      <button id="controls-return" onclick=${() => this.closeControls()}>
         Return</button
       ><button disabled>Cancel</button>
     </div>`;
@@ -281,7 +282,7 @@ export class Layout extends Base {
       if (!tree.designer.hasOwnProperty("expanded")) {
         tree.designer.expanded = level < 3;
       }
-      const expanded = !!tree.designer.designer;
+      const expanded = !!tree.designer.expanded;
       return html`<li
         role="treeitem"
         aria-expanded=${expanded}
@@ -387,3 +388,64 @@ export class Layout extends Base {
     this.context.state.update(patch);
   }
 }
+
+css`
+  div.layout {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0;
+    overflow: hidden;
+  }
+
+  div.tree {
+    overflow-y: auto;
+  }
+
+  .tree ul[role="tree"] {
+    list-style-type: none;
+    padding-inline-start: 5px;
+  }
+  .tree ul[role="group"] {
+    list-style-type: none;
+    margin-block-start: 0;
+    padding-inline-start: 20px;
+  }
+  .tree li[aria-expanded] span::before {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .tree li[aria-expanded="false"] > span::before {
+    content: "\u25B6";
+    color: black;
+    display: inline-block;
+    margin-right: 6px;
+  }
+
+  .tree li[aria-expanded="true"] > span::before {
+    content: "\u25B6";
+    color: black;
+    display: inline-block;
+    margin-right: 6px;
+    transform: rotate(90deg);
+  }
+
+  .tree li[aria-selected="true"] > span {
+    background-color: pink;
+  }
+
+  div.empty {
+    background-color: rgba(15, 15, 15, 0.3);
+    justify-content: center;
+    align-items: center;
+  }
+
+  div.empty::before {
+    content: "Empty";
+  }
+
+  div.highlight {
+    border: 1px solid red;
+    box-sizing: border-box;
+  }
+`;

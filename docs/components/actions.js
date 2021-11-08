@@ -2,6 +2,7 @@ import { log } from "../log.js";
 import { html } from "../_snowpack/pkg/uhtml.js";
 import { Base } from "./base.js";
 import { textInput } from "./input.js";
+import css from "../_snowpack/pkg/ustyler.js";
 
 export class Actions extends Base {
   /**
@@ -371,3 +372,127 @@ class ActionEditor extends Base {
     </fieldset>`;
   }
 }
+
+css`
+  div.actions {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0;
+    overflow: hidden;
+  }
+
+  div.actions div.scroll {
+    overflow-y: auto;
+  }
+
+  .actions table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  .actions tr[used] {
+    font-weight: bold;
+  }
+
+  .actions td,
+  .actions th {
+    border: 1px solid #999;
+    padding: 0.5em;
+  }
+
+  .actions td.conditions {
+    overflow-wrap: anywhere;
+  }
+
+  .actions td.update {
+    overflow-wrap: anywhere;
+  }
+
+  .actions thead tr {
+    background: white;
+  }
+
+  .actions tbody {
+    border: 2px solid black;
+    position: relative;
+    z-index: 10;
+  }
+  .actions thead {
+    border: 2px solid black;
+    z-index: 15;
+  }
+
+  .actions tbody[highlight] {
+    outline: 2px solid red;
+    z-index: 100;
+  }
+
+  .actions tbody:nth-child(even):after {
+    content: "";
+    background-color: rgb(0, 0, 0, 0.1);
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    pointer-events: none;
+  }
+
+  .actions .updates {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-gap: 0.25em 1em;
+  }
+
+  .actions div.editor {
+    display: grid;
+    grid-template-columns: auto 1fr 2fr;
+    grid-gap: 0.25em 1em;
+    border: 1px solid black;
+    padding: 1em;
+  }
+
+  .actions div.editor label {
+    grid-column: 1 / 2;
+    text-align: right;
+  }
+
+  .actions div.editor div.suggest {
+    grid-column: 2 / 4;
+  }
+
+  .actions div.editor div.suggest.key {
+    grid-column: 2 / 3;
+  }
+
+  .actions div.editor label.key {
+    grid-column: 1 / 2;
+  }
+
+  .actions div.editor div.suggest.value {
+    grid-column: 3 / 4;
+  }
+
+  .actions div.editor span.key {
+    grid-column: 2 / 3;
+  }
+
+  .actions div.editor span.key,
+  .actions div.editor span.value {
+    font-weight: bold;
+  }
+
+  .actions div.editor div {
+    grid-column: 1 / 4;
+  }
+
+  .actions div.editor fieldset {
+    grid-column: 1 / 4;
+    display: grid;
+    grid-template-columns: auto 1fr 2fr auto;
+    grid-gap: 0.25em 1em;
+    border: 1px solid black;
+    padding: 1em;
+    padding-block-start: 0;
+  }
+`;

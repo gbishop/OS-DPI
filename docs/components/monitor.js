@@ -1,5 +1,6 @@
 import { html } from "../_snowpack/pkg/uhtml.js";
 import { Base } from "./base.js";
+import css from "../_snowpack/pkg/ustyler.js";
 
 export class Monitor extends Base {
   template() {
@@ -45,3 +46,26 @@ export class Monitor extends Base {
     return html`${s}${f}`;
   }
 }
+
+css`
+  #monitor {
+    display: flex;
+    height: 100%;
+    overflow-y: auto;
+    font-size: 75%;
+  }
+
+  #monitor table {
+    margin-top: 1em;
+    margin-left: 1em;
+    border-collapse: collapse;
+    border: 1px solid black;
+    height: max-content;
+  }
+
+  #monitor table td,
+  #monitor table th {
+    border: 1px solid black;
+    padding: 0.5em;
+  }
+`;
