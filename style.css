@@ -520,6 +520,20 @@ div.actions div.scroll {
   padding-block-start: 0;
 }
 
+div.content {
+  display: flex;
+  flex-direction: column;
+  padding: 1em;
+}
+
+div.content form {
+  margin: 1em;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
+}
+
 input:invalid {
   background-color: #fcc;
   border-color: red;
