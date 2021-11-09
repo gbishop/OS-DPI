@@ -1,4 +1,5 @@
 import { render } from "uhtml";
+import { deleteDB, openDB } from "idb";
 import { assemble } from "./components/index";
 import { Rules } from "./rules";
 import { Data } from "./data";
@@ -19,20 +20,52 @@ const pageLoaded = new Promise((resolve) => {
  * @param {string} name
  */
 export async function start(name) {
-  const parts = ["design.json", "rules.json", "data.json"].map(async (file) => {
-    const resp = await fetch(`./examples/${name}/${file}`);
-    return await resp.json();
+  localStorage.setItem("name", name);
+  const stores = ["design", "rules", "data"];
+  //await deleteDB(name);
+
+  (async () => {
+    "use strict";
+
+    if (!("indexedDB" in window)) {
+      console.warn("IndexedDB not supported");
+      return;
+    }
+
+    const db = await openDB(name, 1, {
+      upgrade(db, oldVersion, newVersion, transaction) {
+        console.log("run upgrade!");
+        stores.forEach(async (storeName) => {
+          const store = db.createObjectStore(storeName, {
+            autoIncrement: true, //auto-increment may make undo easier
+          });
+        });
+      },
+    });
+  })();
+
+  let db = await openDB(name);
+  const parts = stores.map(async (file) => {
+    /* Temporarily add json files directly to database */
+    /*const resp = await (await fetch(`./examples/${name}/${file}.json`)).json();
+    let tx = db.transaction([file], 'readwrite');
+    await tx.objectStore(file).add(resp);
+    await tx.done;*/
+
+    /* Return latest iteration of the store */
+    return await db.get(file, await db.count(file));
   });
+
   let [layout, rulesArray, dataArray, _] = await Promise.all([
     ...parts,
     pageLoaded,
   ]);
 
-  if (localStorage.getItem(`design-${name}`)) {
+  /*if (localStorage.getItem(`design-${name}`)) {
     const design = JSON.parse(localStorage.getItem(`design-${name}`));
     layout = design.layout;
     rulesArray = design.rulesArray;
-  }
+  }*/
 
   const state = new State(`UIState-${name}`);
   const rules = new Rules(rulesArray, state);
@@ -58,6 +91,7 @@ export async function start(name) {
     render(document.querySelector("#UI"), tree.template());
     console.log("render UI");
   }
+
   state.observe(debounce(renderUI));
   renderUI();
   const designerState = new State(`DIState-${name}`);
