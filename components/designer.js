@@ -3,6 +3,7 @@ import { Base, toDesign } from "./base";
 import { TabControl, TabPanel } from "./tabcontrol";
 import { Layout } from "./layout";
 import { Actions } from "./actions";
+import { Content } from "./content";
 
 export class Designer extends Base {
   /**
@@ -54,6 +55,8 @@ export class Designer extends Base {
       this.context,
       tabs
     );
+    contentPanel.children = [new Content({}, this.context, contentPanel)];
+
     tabs.children = [layoutPanel, actionPanel, accessPanel, contentPanel];
     /** @type {Base[]} */
     this.children = [tabs];
