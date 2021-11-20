@@ -1,6 +1,14 @@
 {
   "imports": {
+    "@ungap/create-content": "./@ungap/create-content.js",
     "mergerino": "./mergerino.js",
-    "uhtml": "./uhtml.js"
+    "uarray": "./uarray.js",
+    "udomdiff": "./udomdiff.js",
+    "uhandlers": "./uhandlers.js",
+    "uhtml": "./uhtml.js",
+    "umap": "./umap.js",
+    "uparser": "./uparser.js",
+    "ustyler": "./ustyler.js",
+    "uwire": "./uwire.js"
   }
 }

@@ -1,6 +1,7 @@
 import { html } from "../_snowpack/pkg/uhtml.js";
 import { Base, componentMap } from "./base.js";
 import { styleString } from "./style.js";
+import css from "../_snowpack/pkg/ustyler.js";
 
 class Option extends Base {
   static defaultProps = {
@@ -88,3 +89,19 @@ class Radio extends Base {
 }
 
 componentMap.addMap("radio", Radio);
+
+css`
+  .radio fieldset {
+    flex-flow: wrap;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    justify-content: space-around;
+    gap: 1%;
+  }
+
+  .radio button {
+    min-width: 45%;
+    max-width: 45%;
+  }
+`;

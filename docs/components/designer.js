@@ -3,6 +3,7 @@ import { Base, toDesign } from "./base.js";
 import { TabControl, TabPanel } from "./tabcontrol.js";
 import { Layout } from "./layout.js";
 import { Actions } from "./actions.js";
+import css from "../_snowpack/pkg/ustyler.js";
 
 export class Designer extends Base {
   /**
@@ -94,3 +95,32 @@ export class Designer extends Base {
       </button> `;
   }
 }
+
+css`
+  body.designing {
+    display: grid;
+    grid-template-rows: 50% 50%;
+    grid-template-columns: 50% 50%;
+  }
+
+  body.designing div#UI {
+    font-size: 0.7vw;
+    flex: 1 1 0;
+  }
+
+  div#designer {
+    display: none;
+  }
+
+  body.designing div#designer {
+    display: block;
+    overflow-y: auto;
+    flex: 1 1 0;
+    grid-row-start: 1;
+    grid-row-end: 4;
+    grid-column-start: 2;
+  }
+  body.designing #UI {
+    position: relative;
+  }
+`;

@@ -1,6 +1,7 @@
 import { html } from "../_snowpack/pkg/uhtml.js";
 import { Base, componentMap } from "./base.js";
 import { styleString } from "./style.js";
+import css from "../_snowpack/pkg/ustyler.js";
 
 class Button extends Base {
   static defaultProps = {
@@ -30,3 +31,10 @@ class Button extends Base {
 }
 
 componentMap.addMap("button", Button);
+
+css`
+  button.button {
+    height: 100%;
+    width: 100%;
+  }
+`;

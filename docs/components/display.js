@@ -2,6 +2,7 @@ import { html } from "../_snowpack/pkg/uhtml.js";
 import { Base, componentMap } from "./base.js";
 import { styleString } from "./style.js";
 import merge from "../_snowpack/pkg/mergerino.js";
+import css from "../_snowpack/pkg/ustyler.js";
 
 /** Slot descriptor
  * @typedef {Object} Slot
@@ -236,3 +237,12 @@ export function strip(value) {
 }
 
 componentMap.addMap("display", Display);
+
+css`
+  .display {
+    border: 1px solid black;
+    padding: 1em;
+    box-sizing: border-box;
+    font-size: 200%;
+  }
+`;

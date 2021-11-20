@@ -1,6 +1,7 @@
 import { html } from "uhtml";
 import { Base, componentMap } from "./base";
 import { styleString } from "./style";
+import css from "ustyler";
 
 class Option extends Base {
   static defaultProps = {
@@ -88,3 +89,19 @@ class Radio extends Base {
 }
 
 componentMap.addMap("radio", Radio);
+
+css`
+  .radio fieldset {
+    flex-flow: wrap;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    justify-content: space-around;
+    gap: 1%;
+  }
+
+  .radio button {
+    min-width: 45%;
+    max-width: 45%;
+  }
+`;

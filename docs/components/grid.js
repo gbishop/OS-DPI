@@ -2,6 +2,7 @@ import { html } from "../_snowpack/pkg/uhtml.js";
 import { Base, componentMap } from "./base.js";
 import { styleString } from "./style.js";
 import { formatSlottedString } from "./helpers.js";
+import css from "../_snowpack/pkg/ustyler.js";
 
 class Grid extends Base {
   static defaultProps = {
@@ -122,3 +123,62 @@ class Grid extends Base {
   }
 }
 componentMap.addMap("grid", Grid);
+
+css`
+  .grid {
+    display: grid;
+    grid-auto-rows: 1fr;
+    height: 100%;
+    width: 100%;
+  }
+
+  .grid button {
+    overflow-wrap: normal;
+    overflow: hidden;
+    border-radius: 5px;
+    background-color: inherit;
+  }
+  .grid button div {
+    display: flex;
+    height: 100%;
+  }
+  .grid button figure {
+    margin: 2px;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    margin-block-start: 0;
+    margin-block-end: 0;
+    margin-inline-start: 0;
+    margin-inline-end: 0;
+  }
+  .grid button figure figcaption {
+    width: 100%;
+  }
+  .grid button figure img {
+    object-fit: contain;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+  }
+  .grid b {
+    color: blue;
+  }
+  .grid .page-control {
+    display: flex;
+    flex-direction: column;
+  }
+  .grid .page-control .text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .grid .page-control .back-next {
+    display: flex;
+    flex: 1 1 0;
+  }
+  .grid .page-control .back-next button {
+    flex: 1 1 0;
+  }
+`;
