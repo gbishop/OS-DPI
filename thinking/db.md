@@ -32,6 +32,22 @@ For a unified store the record structure might be like:
 - saved: True if the design has been exported to a zip file.
 - value: Data for the record.
 
+Changing the name of a DB is not possible, even changing store names is a pain.
+So I'm thinking we keep track of the design name in the records instead with a
+single DB for the app; it is shared by all the loaded designs. There could be a
+single store with different type records but since we likely have to do a
+separate query for each data type, why not have them in separate stores? Seems
+cleaner from a DB perspective. That would eliminate the _type_ field above; the
+name of the store would indicate the type.
+
+What does _saved_ mean here? I'm thinking it is set when a design is exported to
+a zip file. The idea is we're no longer dependent on the DB for persistence of
+the design. This might allow us to cleanup the DB or give us hints about what we
+could throw out. I don't think exporting a design give immediate freedom to
+delete _undo_ records. I might realize I should have saved earlier and want to
+back out changes I saved. But clearly we need to toss _undo_ records at some
+point.
+
 ## Startup
 
 If you start the app with the bare URL you get a welcome screen with:
@@ -56,7 +72,10 @@ delete designs that have been loaded. Maybe we delete undo records that are
 older than some threshold like 1 day.
 
 Undo is implemented by stepping backward through records and reloading. Should
-undo be linked across the various data types? I think not.
+undo be linked across the various data types? For example, you're in the
+_layout_ tab and you _undo_, should changes you made in the _actions_ tab also
+be undone? I'm thinking we shouldn't _undo_ things that are not currently
+visible.
 
 ## What happens if you open the same design in 2 tabs?
 
@@ -76,5 +95,8 @@ so that it is independent across tabs.
 
 ## Controls
 
-There should be buttons on the IDE to Export the current design and to Open the
-welcome page in a new tab. Any more?
+There should be buttons on the IDE to:
+
+- _Export_ the current design,
+- _Copy_ the current design with a new name, and
+- _Open_ the welcome page in a new tab
