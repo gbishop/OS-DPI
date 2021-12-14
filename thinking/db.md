@@ -48,6 +48,38 @@ delete _undo_ records. I might realize I should have saved earlier and want to
 back out changes I saved. But clearly we need to toss _undo_ records at some
 point.
 
+## Interface
+
+We should hide the db in a class with a simple interface. I'm assuming all of
+these methods are asynchronous.
+
+**designs()** returns a list of the names of the designs in the db.
+
+**versions(name, type)** returns the number of undo and redo levels of the type
+(layout | actions | ...) for the design. Used to enable the Undo and Redo
+buttons. For example, if you have made 5 edits to the _layout_ you should have 5
+_undos_ levels available. If you then use **undo**, you should have 4 _undos_
+and 1 _redo_ available.
+
+**undo(name, type)** make a previous version of the given type be the _current_
+version. Does not go past the first version.
+
+**redo(name, type)** make a later version of the given type be the _current_
+version. Does not go past the last version.
+
+**read(name, type)** returns the _current_ value. If the type is not present
+returns an empty object.
+
+**write(name, type, value)** Clears any redo records after the current version
+and then adds a new version to the given type.
+
+### Optimization
+
+I know we're trying to not think too much about optimization at this stage but I
+think the **designs** method requires reads all of the data from the database;
+is that correct? Reading megabytes to get the names seems wrong. Maybe we need
+an index?
+
 ## Startup
 
 If you start the app with the bare URL you get a welcome screen with:
