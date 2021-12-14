@@ -73,13 +73,6 @@ returns an empty object.
 **write(name, type, value)** Clears any redo records after the current version
 and then adds a new version to the given type.
 
-### Optimization
-
-I know we're trying to not think too much about optimization at this stage but I
-think the **designs** method requires reads all of the data from the database;
-is that correct? Reading megabytes to get the names seems wrong. Maybe we need
-an index?
-
 ## Startup
 
 If you start the app with the bare URL you get a welcome screen with:
