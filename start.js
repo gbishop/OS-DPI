@@ -4,8 +4,9 @@ import { Rules } from "./rules";
 import { Data } from "./data";
 import { State } from "./state";
 import { Designer } from "./components/designer";
-import { toDesign } from "./components/base";
 import { Monitor } from "./components/monitor";
+import db from "./db";
+import { log, logInit } from "./log";
 
 const safe = true;
 
@@ -32,8 +33,6 @@ function safeRender(where, what) {
   return r;
 }
 
-import { log, logInit } from "./log";
-
 /** let me wait for the page to load */
 const pageLoaded = new Promise((resolve) => {
   window.addEventListener("load", () => {
@@ -48,25 +47,16 @@ const pageLoaded = new Promise((resolve) => {
 export async function start(name) {
   logInit(name);
   log("start");
-  const parts = ["design.json", "rules.json", "data.json"].map(async (file) => {
-    const resp = await fetch(`./examples/${name}/${file}`);
-    return await resp.json();
+  const layout = await db.read(name, "layout", {
+    type: "page",
+    props: {},
+    children: [],
   });
-  let [layout, rulesArray, dataArray, _] = await Promise.all([
-    ...parts,
-    pageLoaded,
-  ]);
+  const rulesArray = await db.read(name, "actions", []);
+  const dataArray = await db.read(name, "content", []);
+  await pageLoaded;
 
-  if (localStorage.getItem(`design-${name}`)) {
-    const jdesign = localStorage.getItem(`design-${name}`);
-    if (jdesign) {
-      const design = JSON.parse(jdesign);
-      layout = design.layout;
-      rulesArray = design.rulesArray;
-    }
-  }
-
-  const state = new State(`UIState-${name}`);
+  const state = new State(`UIState`);
   const rules = new Rules(rulesArray, state);
   const data = new Data(dataArray);
   const context = {
@@ -80,15 +70,11 @@ export async function start(name) {
 
   /** @param {() => void} f */
   function debounce(f) {
-    return f;
-    /*
-     * maybe debounce is causing problems?
     let timeout = null;
     return () => {
       if (timeout) window.cancelAnimationFrame(timeout);
       timeout = window.requestAnimationFrame(f);
     };
-    */
   }
 
   function renderUI() {
@@ -100,7 +86,8 @@ export async function start(name) {
   renderUI();
 
   /* Designer */
-  const designerState = new State(`DIState-${name}`);
+  const designerState = new State(`DIState`);
+  designerState.update({ name });
   const designer = new Designer(
     {},
     { state: designerState, rules, data, tree },
@@ -111,13 +98,6 @@ export async function start(name) {
     log("render designer");
     const DI = document.querySelector("div#designer");
     if (DI) safeRender(DI, designer.template());
-    localStorage.setItem(
-      `design-${name}`,
-      JSON.stringify({
-        layout: toDesign(tree),
-        rulesArray: rules.rules,
-      })
-    );
     log("render designer");
   }
   designerState.observe(debounce(renderDesigner));

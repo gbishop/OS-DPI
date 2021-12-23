@@ -2,8 +2,9 @@ import { html } from "uhtml";
 import { PropInfo } from "../properties";
 import { assemble } from "./base";
 import { colorNamesDataList } from "./style";
-import { Base } from "./base";
+import { Base, toDesign } from "./base";
 import { propEditor } from "./propEditor";
+import db from "../db";
 import css from "ustyler";
 
 import { log } from "../log";
@@ -125,6 +126,7 @@ export class Layout extends Base {
     this.selected.children.push(child);
     this.setSelected(child, true);
     this.selected.context.state.update();
+    this.save();
   }
 
   /** Create the add child menu */
@@ -210,20 +212,12 @@ export class Layout extends Base {
             this.setSelected(parent);
           }
           this.selected.context.state.update();
+          this.save();
         }
       }}
     >
       Delete
     </button>`;
-  }
-
-  /** @param {Event & { target: HTMLInputElement }} event
-   */
-  propUpdate({ target }) {
-    const name = target.name;
-    const value = target.value;
-    this.selected.props[name] = value;
-    this.selected.context.state.update();
   }
 
   /** Render props for the selected element */
@@ -241,6 +235,7 @@ export class Layout extends Base {
             this.selected.props[name] = value;
             this.selected.context.state.update();
             this.update();
+            this.save();
           }
         );
       });
@@ -386,6 +381,14 @@ export class Layout extends Base {
   update(patch) {
     this.selected.context.state.update();
     this.context.state.update(patch);
+  }
+
+  /** save the layout to the db
+   */
+  save() {
+    const { state, tree } = this.context;
+    const layout = toDesign(tree);
+    db.write(state.get("name"), "layout", layout);
   }
 }
 

@@ -26,10 +26,8 @@ their name. My assumption is you only have a few designs loaded at a time.
 
 For a unified store the record structure might be like:
 
+- id: unique id autoincrement
 - name: The name of the design.
-- type: One of layout, actions, access, content, image or log
-- time: When this record was created for undo and crash recovery.
-- saved: True if the design has been exported to a zip file.
 - value: Data for the record.
 
 Changing the name of a DB is not possible, even changing store names is a pain.
@@ -39,14 +37,6 @@ single store with different type records but since we likely have to do a
 separate query for each data type, why not have them in separate stores? Seems
 cleaner from a DB perspective. That would eliminate the _type_ field above; the
 name of the store would indicate the type.
-
-What does _saved_ mean here? I'm thinking it is set when a design is exported to
-a zip file. The idea is we're no longer dependent on the DB for persistence of
-the design. This might allow us to cleanup the DB or give us hints about what we
-could throw out. I don't think exporting a design give immediate freedom to
-delete _undo_ records. I might realize I should have saved earlier and want to
-back out changes I saved. But clearly we need to toss _undo_ records at some
-point.
 
 ## Startup
 

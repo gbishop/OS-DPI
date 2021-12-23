@@ -3,7 +3,7 @@
     "baseUrl": ".",
     "checkJs": true,
     "target": "ESNext",
-    "strictNullChecks": true,
+    "strictNullChecks": false,
     "moduleResolution": "node"
   },
   "exclude": ["node_modules", "docs"]

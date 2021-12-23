@@ -15,6 +15,7 @@
     "ustyler": "^1.0.1"
   },
   "dependencies": {
+    "idb": "^7.0.0",
     "mergerino": "^0.4.0",
     "uhtml": "^2.7.6"
   }
