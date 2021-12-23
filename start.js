@@ -1,4 +1,4 @@
-import { render } from "uhtml";
+import { render, html } from "uhtml";
 import { assemble } from "./components/index";
 import { Rules } from "./rules";
 import { Data } from "./data";
@@ -41,12 +41,33 @@ const pageLoaded = new Promise((resolve) => {
   });
 });
 
+/** welcome screen
+ */
+async function welcome() {
+  const names = await db.names();
+  render(
+    document.getElementById("UI"),
+    html`
+      <h1>Welcome to the OS-DPI</h1>
+      <p>Maybe some explanatory text here?</p>
+      <button onclick=${() => db.readDesign()}>Open</button>
+      <ul>
+        ${names.map((name) => html`<li><a href=${"#" + name}>${name}</a></li>`)}
+      </ul>
+    `
+  );
+}
+
 /** Load data and page then go
  * @param {string} name
  */
 export async function start(name) {
   logInit(name);
-  log("start");
+  log("start", name);
+  if (!name) {
+    await welcome();
+    return;
+  }
   const layout = await db.read(name, "layout", {
     type: "page",
     props: {},
@@ -127,6 +148,8 @@ export async function start(name) {
     }
   });
 }
+
+window.addEventListener("hashchange", () => window.location.reload());
 
 /** @typedef {PointerEvent & { target: HTMLElement }} ClickEvent */
 document.addEventListener("click", (/** @type {ClickEvent} */ event) => {
