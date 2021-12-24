@@ -64,7 +64,7 @@ class Grid extends Base {
       if (item.symbol) {
         content = html`<div>
           <figure>
-            <img-db src=${item.symbol} title=${item.label || ""} />
+            <img is="img-db" dbsrc=${item.symbol} title=${item.label || ""} />
             <figcaption>${msg}</figcaption>
           </figure>
         </div>`;
@@ -157,13 +157,7 @@ css`
   .grid button figure figcaption {
     width: 100%;
   }
-  .grid button figure img-db {
-    object-fit: contain;
-    width: 100%;
-    height: 100%;
-    min-height: 0;
-  }
-  .grid button figure img-db img {
+  .grid button figure img {
     object-fit: contain;
     width: 100%;
     height: 100%;

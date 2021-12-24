@@ -3,25 +3,23 @@ import db from "../db";
 /**
  * An image that is extracted from the database
  */
-class imgFromDb extends HTMLElement {
-  constructor() {
-    super();
-    this.appendChild(new Image());
-  }
-
+class imgFromDb extends HTMLImageElement {
+  // watch for changes in dbsrc
   static get observedAttributes() {
-    return ["src"];
+    return ["dbsrc"];
   }
 
-  /** @param {string} name
+  /**
+   * Handle changes in dbsrc
+   * @param {string} name
    * @param {string} oldValue
    * @param {string} newValue */
   async attributeChangedCallback(name, oldValue, newValue) {
-    if (name === "src" && oldValue !== newValue) {
+    if (name === "dbsrc" && oldValue !== newValue) {
+      console.log("fetch", newValue);
       const url = await db.getImageURL(newValue);
-      const img = /** @type {HTMLImageElement} */ (this.firstChild);
-      img.src = url;
+      this.src = url;
     }
   }
 }
-customElements.define("img-db", imgFromDb);
+customElements.define("img-db", imgFromDb, { extends: "img" });
