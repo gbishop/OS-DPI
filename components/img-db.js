@@ -16,8 +16,10 @@ class imgFromDb extends HTMLImageElement {
    * @param {string} newValue */
   async attributeChangedCallback(name, oldValue, newValue) {
     if (name === "dbsrc" && oldValue !== newValue) {
-      console.log("fetch", newValue);
-      const url = await db.getImageURL(newValue);
+      let url = newValue;
+      // if it contains a slash treat it like an external url
+      // if not, fetch it from the db
+      if (url.indexOf("/") < 0) url = await db.getImageURL(newValue);
       this.src = url;
     }
   }
