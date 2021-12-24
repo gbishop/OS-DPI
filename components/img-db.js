@@ -9,12 +9,8 @@ class imgFromDb extends HTMLElement {
     return ["name"];
   }
 
-  attributeChangedCallback() {
-    this.render();
-  }
-
-  async render() {
-    const name = this.getAttribute("name");
+  /** @param {string} name */
+  async attributeChangedCallback(_1, _2, name) {
     const img = await db.getImage(name);
     render(this, img);
   }
