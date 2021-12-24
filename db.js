@@ -18,6 +18,7 @@ class DB {
         imageStore.createIndex("by-name", "name");
       },
     });
+    this.updateListeners = [];
   }
 
   /**
@@ -57,7 +58,9 @@ class DB {
    */
   async write(name, type, data) {
     const db = await this.dbPromise;
-    return db.put("store", { name, type, data });
+    const result = db.put("store", { name, type, data });
+    this.notify(name);
+    return result;
   }
 
   /** Undo by deleting the most recent record
@@ -72,6 +75,7 @@ class DB {
       .store.index("by-name-type");
     const cursor = await index.openCursor([name, type], "prev");
     if (cursor) await cursor.delete();
+    this.notify(name);
     return this.read(name, type);
   }
 
@@ -120,6 +124,7 @@ class DB {
         }
       }
     }
+    this.notify(name);
     window.location.hash = name;
   }
 
@@ -144,6 +149,22 @@ class DB {
     const db = await this.dbPromise;
     const record = await db.getFromIndex("images", "by-name", name);
     return URL.createObjectURL(record.content);
+  }
+
+  /** Listen for database update
+   * @param {function} callback
+   */
+  addUpdateListener(callback) {
+    this.updateListeners.push(callback);
+  }
+
+  /** Notify listeners of database update
+   * @param {string} name
+   */
+  notify(name) {
+    for (const listener of this.updateListeners) {
+      listener(name);
+    }
   }
 }
 

@@ -135,6 +135,20 @@ export async function start(name) {
   state.observe(debounce(renderMonitor));
   renderMonitor();
 
+  /* Watch for updates happening in other tabs */
+  const channel = new BroadcastChannel("os-dpi");
+  /** @param {MessageEvent} event */
+  channel.onmessage = (event) => {
+    console.log("got broadcast", event);
+    if (designerState.get("name") == event.data.name) {
+      window.location.reload();
+    }
+  };
+  db.addUpdateListener((name) => {
+    console.log("posting", name);
+    channel.postMessage({ name });
+  });
+
   /** @param {KeyboardEvent} event */
   document.addEventListener("keydown", (event) => {
     if (event.key == "d") {
