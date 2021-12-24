@@ -3,6 +3,7 @@ import { Base, componentMap } from "./base";
 import { styleString } from "./style";
 import { formatSlottedString } from "./helpers";
 import css from "ustyler";
+import "./img-db";
 
 class Grid extends Base {
   static defaultProps = {
@@ -63,7 +64,7 @@ class Grid extends Base {
       if (item.symbol) {
         content = html`<div>
           <figure>
-            <img src=${item.symbol} title=${item.label || ""} />
+            <img-db name=${item.symbol} title=${item.label || ""} />
             <figcaption>${msg}</figcaption>
           </figure>
         </div>`;
@@ -156,7 +157,13 @@ css`
   .grid button figure figcaption {
     width: 100%;
   }
-  .grid button figure img {
+  .grid button figure img-db {
+    object-fit: contain;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+  }
+  .grid button figure img-db img {
     object-fit: contain;
     width: 100%;
     height: 100%;
