@@ -135,6 +135,16 @@ class DB {
     img.title = record.name;
     return img;
   }
+
+  /** Return an image URL from the database
+   * @param {string} name
+   * @returns {Promise<string>}
+   */
+  async getImageURL(name) {
+    const db = await this.dbPromise;
+    const record = await db.getFromIndex("images", "by-name", name);
+    return URL.createObjectURL(record.content);
+  }
 }
 
 export default new DB();

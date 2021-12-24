@@ -64,7 +64,7 @@ class Grid extends Base {
       if (item.symbol) {
         content = html`<div>
           <figure>
-            <img-db name=${item.symbol} title=${item.label || ""} />
+            <img-db src=${item.symbol} title=${item.label || ""} />
             <figcaption>${msg}</figcaption>
           </figure>
         </div>`;

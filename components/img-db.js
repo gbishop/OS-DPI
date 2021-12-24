@@ -1,18 +1,27 @@
-import { render } from "uhtml";
 import db from "../db";
 
 /**
  * An image that is extracted from the database
  */
 class imgFromDb extends HTMLElement {
-  static get observedAttributes() {
-    return ["name"];
+  constructor() {
+    super();
+    this.appendChild(new Image());
   }
 
-  /** @param {string} name */
-  async attributeChangedCallback(_1, _2, name) {
-    const img = await db.getImage(name);
-    render(this, img);
+  static get observedAttributes() {
+    return ["src"];
+  }
+
+  /** @param {string} name
+   * @param {string} oldValue
+   * @param {string} newValue */
+  async attributeChangedCallback(name, oldValue, newValue) {
+    if (name === "src" && oldValue !== newValue) {
+      const url = await db.getImageURL(newValue);
+      const img = /** @type {HTMLImageElement} */ (this.firstChild);
+      img.src = url;
+    }
   }
 }
 customElements.define("img-db", imgFromDb);
