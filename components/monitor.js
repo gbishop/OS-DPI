@@ -1,11 +1,10 @@
-import { html } from "uhtml";
-import { Base } from "./base";
+import {html} from "uhtml";
+import {Base} from "./base";
 import css from "ustyler";
 
 export class Monitor extends Base {
   template() {
-    const { state, rules } = this.context;
-
+    const {state, rules} = this.context;
     const s = html`<table class="state">
       <thead>
         <tr>
@@ -15,12 +14,12 @@ export class Monitor extends Base {
       </thead>
       <tbody>
         ${Object.keys(state.values).map((key) => {
-          const value = state.get(key);
-          return html`<tr>
+      const value = state.get(key);
+      return html`<tr>
             <td>${key}</td>
             <td>${value}</td>
           </tr>`;
-        })}
+    })}
       </tbody>
     </table>`;
 
@@ -34,12 +33,12 @@ export class Monitor extends Base {
       </thead>
       <tbody>
         ${Object.keys(row).map((key) => {
-          const value = row[key];
-          return html`<tr>
+      const value = row[key];
+      return html`<tr>
             <td>#${key}</td>
             <td>${value}</td>
           </tr>`;
-        })}
+    })}
       </tbody>
     </table>`;
 

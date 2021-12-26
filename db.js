@@ -19,6 +19,35 @@ class DB {
       },
     });
     this.updateListeners = [];
+    this.fileName = "";
+    this.designName = "new_" + Math.random().toString(16).substr(2);
+    this.fileHandle = null;
+  }
+
+  /** set the name for the current design
+   * @param {string} name
+   */
+  setDesignName(name) {
+    this.designName = name;
+  }
+
+  /** rename the design
+   * @param {string} newName
+   */
+  async renameDesign(newName) {
+    console.log("rename", newName, this.designName);
+    const db = await this.dbPromise;
+    const tx = db.transaction("store", "readwrite");
+    const index = tx.store.index("by-name");
+    for await (const cursor of index.iterate(this.designName)) {
+      const record = { ...cursor.value };
+      record.name = newName;
+      cursor.update(record);
+    }
+    await tx.done;
+    this.notify({ action: "rename", name: this.designName, newName });
+    this.designName = newName;
+    window.location.hash = newName;
   }
 
   /**
@@ -35,48 +64,46 @@ class DB {
     return result;
   }
 
-  /** Return the most recent record for the name and type
-   * @param {string} name
+  /** Return the most recent record for the type
    * @param {string} type
    * @param {any} defaultValue
    * @returns {Promise<Object>}
    */
-  async read(name, type, defaultValue) {
+  async read(type, defaultValue) {
     const db = await this.dbPromise;
     const index = db
       .transaction("store", "readonly")
       .store.index("by-name-type");
-    const cursor = await index.openCursor([name, type], "prev");
+    const cursor = await index.openCursor([this.designName, type], "prev");
     return cursor?.value.data || defaultValue;
   }
 
   /** Add a new record
-   * @param {string} name
    * @param {string} type
    * @param {Object} data
    * @returns {Promise<IDBValidKey>}
    */
-  async write(name, type, data) {
+  async write(type, data) {
     const db = await this.dbPromise;
-    const result = db.put("store", { name, type, data });
-    this.notify(name);
+    const result = db.put("store", { name: this.designName, type, data });
+    this.notify({ action: "update", name: this.designName });
     return result;
   }
 
   /** Undo by deleting the most recent record
-   * @param {string} name
    * @param {string} type
    * @returns {Promise<Object>}
    */
-  async undo(name, type) {
+  async undo(type) {
     const db = await this.dbPromise;
     const index = db
       .transaction("store", "readwrite")
       .store.index("by-name-type");
-    const cursor = await index.openCursor([name, type], "prev");
+    const cursor = await index.openCursor([this.designName, type], "prev");
+    console.log({ type, cursor });
     if (cursor) await cursor.delete();
-    this.notify(name);
-    return this.read(name, type);
+    this.notify({ action: "update", name: this.designName });
+    return this.read(type);
   }
 
   /** Read a design from a zip file
@@ -89,14 +116,14 @@ class DB {
       id: "os-dpi",
     });
     // keep the handle so we can save to it later
-    this.handle = blob.handle;
-    this.name = blob.name;
-    const name = this.name.split(".")[0];
+    this.fileHandle = blob.handle;
+    this.fileName = blob.name;
+    this.designName = this.fileName.split(".")[0];
 
     // clear the previous one
     const db = await this.dbPromise;
     const index = db.transaction("store", "readwrite").store.index("by-name");
-    for await (const cursor of index.iterate(name)) {
+    for await (const cursor of index.iterate(this.designName)) {
       await cursor.delete();
     }
     // load the new one
@@ -108,7 +135,7 @@ class DB {
         const text = strFromU8(unzipped[fname]);
         const obj = JSON.parse(text);
         const type = fname.split(".")[0];
-        await this.write(name, type, obj);
+        await this.write(type, obj);
       } else if (fname.endsWith(".png")) {
         const blob = new Blob([unzipped[fname]], { type: "image/png" });
         const h = await hash(blob);
@@ -124,8 +151,59 @@ class DB {
         }
       }
     }
-    this.notify(name);
-    window.location.hash = name;
+    this.notify({ action: "update", name: this.designName });
+    window.location.hash = this.designName;
+  }
+
+  /** Save a design into a zip file
+   */
+  async saveDesign() {
+    const db = await this.dbPromise;
+
+    // collect the parts of the design
+    const layout = await this.read("layout");
+    const actions = await this.read("actions");
+    const content = await this.read("content");
+
+    const zipargs = {
+      "layout.json": strToU8(JSON.stringify(layout)),
+      "actions.json": strToU8(JSON.stringify(actions)),
+      "content.json": strToU8(JSON.stringify(content)),
+    };
+
+    // find all the image references in the content
+    // there should be a better way
+    const imageNames = new Set();
+    for (const row of content) {
+      if (row.symbol && row.symbol.indexOf("/") < 0) {
+        imageNames.add(row.symbol);
+      } else if (row.image && row.image.indexOf("/") < 0) {
+        imageNames.add(row.image);
+      }
+    }
+
+    // add the encoded image to the zipargs
+    for (const imageName of imageNames) {
+      const record = await db.getFromIndex("images", "by-name", imageName);
+      if (record) {
+        const contentBuf = await record.content.arrayBuffer();
+        const contentArray = new Uint8Array(contentBuf);
+        zipargs[imageName] = contentArray;
+      }
+    }
+    console.log("image names", imageNames);
+
+    // zip it
+    const zip = zipSync(zipargs);
+    // create a blob from the zipped result
+    const blob = new Blob([zip], { type: "application/octet-stream" });
+    const options = {
+      fileName: this.fileName || this.designName + ".osdpi",
+      extensions: [".osdpi", ".zip"],
+      id: "osdpi",
+    };
+    await fileSave(blob, options, this.fileHandle);
+    console.log("saved file");
   }
 
   /** Return an image from the database
@@ -152,18 +230,18 @@ class DB {
   }
 
   /** Listen for database update
-   * @param {function} callback
+   * @param {(message: UpdateNotification) =>void} callback
    */
   addUpdateListener(callback) {
     this.updateListeners.push(callback);
   }
 
   /** Notify listeners of database update
-   * @param {string} name
+   * @param {UpdateNotification} message
    */
-  notify(name) {
+  notify(message) {
     for (const listener of this.updateListeners) {
-      listener(name);
+      listener(message);
     }
   }
 }

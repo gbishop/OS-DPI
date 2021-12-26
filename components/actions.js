@@ -379,8 +379,8 @@ class ActionEditor extends Base {
 
   /** Save the actions */
   save() {
-    const { state, rules } = this.context;
-    db.write(state.get("name"), "actions", rules.rules);
+    const { rules } = this.context;
+    db.write("actions", rules.rules);
   }
 }
 

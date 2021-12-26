@@ -386,9 +386,9 @@ export class Layout extends Base {
   /** save the layout to the db
    */
   save() {
-    const { state, tree } = this.context;
+    const { tree } = this.context;
     const layout = toDesign(tree);
-    db.write(state.get("name"), "layout", layout);
+    db.write("layout", layout);
   }
 }
 
