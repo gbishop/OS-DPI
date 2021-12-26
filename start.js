@@ -5,6 +5,7 @@ import { Data } from "./data";
 import { State } from "./state";
 import { Designer } from "./components/designer";
 import { Monitor } from "./components/monitor";
+import { ToolBar } from "./components/toolbar";
 import db from "./db";
 import { log, logInit } from "./log";
 
@@ -65,16 +66,16 @@ export async function start(name) {
   logInit(name);
   log("start", name);
   if (!name) {
-    await welcome();
-    return;
+    return welcome();
   }
-  const layout = await db.read(name, "layout", {
+  db.setDesignName(name);
+  const layout = await db.read("layout", {
     type: "page",
     props: {},
     children: [],
   });
-  const rulesArray = await db.read(name, "actions", []);
-  const dataArray = await db.read(name, "content", []);
+  const rulesArray = await db.read("actions", []);
+  const dataArray = await db.read("content", []);
   await pageLoaded;
 
   const state = new State(`UIState`);
@@ -108,7 +109,6 @@ export async function start(name) {
 
   /* Designer */
   const designerState = new State(`DIState`);
-  designerState.update({ name });
   const designer = new Designer(
     {},
     { state: designerState, rules, data, tree },
@@ -123,6 +123,21 @@ export async function start(name) {
   }
   designerState.observe(debounce(renderDesigner));
   renderDesigner();
+
+  /* ToolBar */
+  const toolbar = new ToolBar(
+    {},
+    { state: designerState, rules, data, tree },
+    null
+  );
+  function renderToolBar() {
+    log("render ToolBar");
+    if (!document.body.classList.contains("designing")) return;
+    const TI = document.querySelector("div#toolbar");
+    if (TI) safeRender(TI, toolbar.template());
+  }
+  designerState.observe(debounce(renderToolBar));
+  renderToolBar();
 
   /* Monitor */
   const monitor = new Monitor({}, { state, rules, data, tree }, null);
@@ -140,13 +155,18 @@ export async function start(name) {
   /** @param {MessageEvent} event */
   channel.onmessage = (event) => {
     console.log("got broadcast", event);
-    if (designerState.get("name") == event.data.name) {
-      window.location.reload();
+    const message = /** @type {UpdateNotification} */ (event.data);
+    if (db.designName == message.name) {
+      if (message.action == "update") {
+        window.location.reload();
+      } else if (message.action == "rename") {
+        window.location.hash = message.newName;
+      }
     }
   };
-  db.addUpdateListener((name) => {
+  db.addUpdateListener((message) => {
     console.log("posting", name);
-    channel.postMessage({ name });
+    channel.postMessage(message);
   });
 
   /** @param {KeyboardEvent} event */

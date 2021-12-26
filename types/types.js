@@ -83,3 +83,9 @@
 /** @typedef {Event & { target: HTMLInputElement } } InputEventWithTarget */
 
 /** @typedef {import('uhtml').Hole} Hole */
+
+/** @typedef {Object} UpdateNotification
+ * @property {string} action
+ * @property {string} name
+ * @property {string} [newName]
+ */
