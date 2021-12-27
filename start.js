@@ -71,7 +71,7 @@ css`
   }
 `;
 
-/** Load data and go
+/** Load page and data then go
  */
 export async function start() {
   const name = window.location.hash.slice(1);
