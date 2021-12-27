@@ -43,6 +43,16 @@ const pageLoaded = new Promise((resolve) => {
   });
 });
 
+/** Generate a new name based on the time
+ */
+async function newName() {
+  const names = await db.names();
+  for (let i = 1; i < 100; i++) {
+    const name = `new-${i}`;
+    if (names.indexOf(name) < 0) return name;
+  }
+}
+
 /** welcome screen
  */
 async function welcome() {
@@ -54,6 +64,9 @@ async function welcome() {
         <h1>Welcome to the OS-DPI</h1>
         <p>Maybe some explanatory text here?</p>
         <button onclick=${() => db.readDesign()}>Load</button>
+        <button onclick=${async () => (window.location.hash = await newName())}>
+          New
+        </button>
         <h2>Loaded designs:</h2>
         <ul>
           ${names.map(
