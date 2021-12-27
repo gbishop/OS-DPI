@@ -17,6 +17,7 @@ export class ToolBar extends Base {
           style="width: 5em"
         />
         <button onclick=${() => db.saveDesign()}>Save</button>
+        <button onclick=${() => window.open("#", "_blank")}>Open</button>
         <button
           onclick=${async () => {
             console.log(state.values);
@@ -41,6 +42,14 @@ css`
     border: 1px solid black;
     padding: 3px;
     margin: 3px;
+    background-color: #7bafd4;
+    border-radius: 0.5em;
+  }
+  #toolbar button {
+    border-radius: 0.5em;
+  }
+  #toolbar input {
+    border-radius: 0.5em;
   }
 `;
 

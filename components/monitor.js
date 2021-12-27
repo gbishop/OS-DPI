@@ -13,13 +13,15 @@ export class Monitor extends Base {
         </tr>
       </thead>
       <tbody>
-        ${Object.keys(state.values).map((key) => {
-          const value = state.get(key);
-          return html`<tr>
-            <td>${key}</td>
-            <td>${value}</td>
-          </tr>`;
-        })}
+        ${Object.keys(state.values)
+          .filter((key) => key.startsWith("$"))
+          .map((key) => {
+            const value = state.get(key);
+            return html`<tr>
+              <td>${key}</td>
+              <td>${value}</td>
+            </tr>`;
+          })}
       </tbody>
     </table>`;
 

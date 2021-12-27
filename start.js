@@ -8,6 +8,7 @@ import { Monitor } from "./components/monitor";
 import { ToolBar } from "./components/toolbar";
 import db from "./db";
 import { log, logInit } from "./log";
+import css from "ustyler";
 
 const safe = true;
 
@@ -47,33 +48,45 @@ const pageLoaded = new Promise((resolve) => {
 async function welcome() {
   const names = await db.names();
   render(
-    document.getElementById("UI"),
+    document.body,
     html`
-      <h1>Welcome to the OS-DPI</h1>
-      <p>Maybe some explanatory text here?</p>
-      <button onclick=${() => db.readDesign()}>Open</button>
-      <ul>
-        ${names.map((name) => html`<li><a href=${"#" + name}>${name}</a></li>`)}
-      </ul>
+      <div id="welcome">
+        <h1>Welcome to the OS-DPI</h1>
+        <p>Maybe some explanatory text here?</p>
+        <button onclick=${() => db.readDesign()}>Load</button>
+        <h2>Loaded designs:</h2>
+        <ul>
+          ${names.map(
+            (name) => html`<li><a href=${"#" + name}>${name}</a></li>`
+          )}
+        </ul>
+      </div>
     `
   );
 }
 
-/** Load data and page then go
- * @param {string} name
+css`
+  #welcome {
+    padding: 1em;
+  }
+`;
+
+/** Load data and go
  */
-export async function start(name) {
+export async function start() {
+  const name = window.location.hash.slice(1);
   logInit(name);
   log("start", name);
   if (!name) {
     return welcome();
   }
   db.setDesignName(name);
-  const layout = await db.read("layout", {
+  const emptyPage = {
     type: "page",
     props: {},
     children: [],
-  });
+  };
+  const layout = await db.read("layout", emptyPage);
   const rulesArray = await db.read("actions", []);
   const dataArray = await db.read("content", []);
   await pageLoaded;
@@ -99,56 +112,35 @@ export async function start(name) {
     };
   }
 
+  /* Designer */
+  state.define("editing", false);
+  const designer = new Designer({}, { state, rules, data, tree }, null);
+
+  /* ToolBar */
+  const toolbar = new ToolBar({}, { state, rules, data, tree }, null);
+
+  /* Monitor */
+  const monitor = new Monitor({}, { state, rules, data, tree }, null);
+
   function renderUI() {
-    const UI = document.querySelector("#UI");
-    if (UI) safeRender(UI, tree.template());
+    let IDE = html``;
+    if (state.get("editing")) {
+      IDE = html`
+        <div id="designer">${designer.template()}</div>
+        <div id="monitor">${monitor.template()}</div>
+        <div id="toolbar">${toolbar.template()}</div>
+      `;
+    }
+    document.body.classList.toggle("designing", state.get("editing"));
+    safeRender(
+      document.body,
+      html`<div id="UI">${tree.template()}</div>
+        ${IDE}`
+    );
     log("render UI");
   }
   state.observe(debounce(renderUI));
   renderUI();
-
-  /* Designer */
-  const designerState = new State(`DIState`);
-  const designer = new Designer(
-    {},
-    { state: designerState, rules, data, tree },
-    null
-  );
-  function renderDesigner() {
-    if (!document.body.classList.contains("designing")) return;
-    log("render designer");
-    const DI = document.querySelector("div#designer");
-    if (DI) safeRender(DI, designer.template());
-    log("render designer");
-  }
-  designerState.observe(debounce(renderDesigner));
-  renderDesigner();
-
-  /* ToolBar */
-  const toolbar = new ToolBar(
-    {},
-    { state: designerState, rules, data, tree },
-    null
-  );
-  function renderToolBar() {
-    log("render ToolBar");
-    if (!document.body.classList.contains("designing")) return;
-    const TI = document.querySelector("div#toolbar");
-    if (TI) safeRender(TI, toolbar.template());
-  }
-  designerState.observe(debounce(renderToolBar));
-  renderToolBar();
-
-  /* Monitor */
-  const monitor = new Monitor({}, { state, rules, data, tree }, null);
-  function renderMonitor() {
-    log("render monitor");
-    if (!document.body.classList.contains("designing")) return;
-    const MI = document.querySelector("div#monitor");
-    if (MI) safeRender(MI, monitor.template());
-  }
-  state.observe(debounce(renderMonitor));
-  renderMonitor();
 
   /* Watch for updates happening in other tabs */
   const channel = new BroadcastChannel("os-dpi");
@@ -177,7 +169,7 @@ export async function start(name) {
         event.preventDefault();
         event.stopPropagation();
         document.body.classList.toggle("designing");
-        state.update();
+        state.update({ editing: !state.get("editing") });
       }
     }
   });
@@ -203,3 +195,5 @@ document.addEventListener("click", (/** @type {ClickEvent} */ event) => {
   }
   log("click", target.tagName, id, text.slice(0, 30));
 });
+
+start();

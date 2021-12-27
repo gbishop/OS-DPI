@@ -68,7 +68,7 @@ export class Designer extends Base {
 css`
   body.designing {
     display: grid;
-    grid-template-rows: 50% 50%;
+    grid-template-rows: fit-content(100%) 50% auto;
     grid-template-columns: 50% 50%;
   }
 
@@ -91,5 +91,13 @@ css`
   }
   body.designing #UI {
     position: relative;
+  }
+  body.designing #monitor {
+    grid-row-start: 3;
+    grid-column-start: 1;
+  }
+  body.designing #toolbar {
+    grid-row-start: 1;
+    grid-column-start: 1;
   }
 `;
