@@ -1,7 +1,7 @@
 import { html } from "uhtml";
 import { Base } from "./base";
 import db from "../db";
-import css from "ustyler";
+import { Data } from "../data";
 import XLSX from "xlsx";
 
 /** @param {File} file */
@@ -15,9 +15,11 @@ async function readLocalSheet(file) {
   for (let c = range.s.c; c <= range.e.c; c++) {
     header.push(sheet[XLSX.utils.encode_cell({ r: 0, c })]?.v);
   }
-  const rows = [];
+  /** @type {Rows} */
+  const dataArray = [];
   for (let r = range.s.r + 1; r <= range.e.r; r++) {
-    const row = {};
+    /** @type {Row} */
+    const row = { tags: [] };
     const tags = [];
     for (let c = range.s.c; c <= range.e.c; c++) {
       const name = header[c];
@@ -30,12 +32,13 @@ async function readLocalSheet(file) {
         row[name] = value;
       }
     }
-    if (tags.length == 0) continue;
     row["tags"] = tags;
-    rows.push(row);
+    if (Object.keys(row).length > 0) {
+      dataArray.push(row);
+    }
   }
-  await db.write("content", rows);
-  return { fields: header.filter((h) => h), rows: rows.length };
+  await db.write("content", dataArray);
+  return { fields: header.filter((h) => h), rows: dataArray.length, dataArray };
 }
 
 export class Content extends Base {
@@ -51,6 +54,7 @@ export class Content extends Base {
           document.querySelector(
             "#localLoadStatus"
           ).innerHTML = `Loaded ${result.rows} rows with ${result.fields.length} columns`;
+          this.context.data = new Data(result.dataArray);
           this.context.state.update();
         }}
       />

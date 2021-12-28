@@ -228,7 +228,8 @@ class DB {
   async getImageURL(name) {
     const db = await this.dbPromise;
     const record = await db.getFromIndex("images", "by-name", name);
-    return URL.createObjectURL(record.content);
+    if (record) return URL.createObjectURL(record.content);
+    else return name;
   }
 
   /** Listen for database update

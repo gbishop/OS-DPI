@@ -107,6 +107,8 @@ export async function start() {
   const state = new State(`UIState`);
   const rules = new Rules(rulesArray, state);
   const data = new Data(dataArray);
+  /** @type {Context} */
+  // @ts-ignore
   const context = {
     data,
     rules,
@@ -127,13 +129,13 @@ export async function start() {
 
   /* Designer */
   state.define("editing", false);
-  const designer = new Designer({}, { state, rules, data, tree }, null);
+  const designer = new Designer({}, context, null);
 
   /* ToolBar */
-  const toolbar = new ToolBar({}, { state, rules, data, tree }, null);
+  const toolbar = new ToolBar({}, context, null);
 
   /* Monitor */
-  const monitor = new Monitor({}, { state, rules, data, tree }, null);
+  const monitor = new Monitor({}, context, null);
 
   function renderUI() {
     let IDE = html``;
