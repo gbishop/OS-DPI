@@ -2,6 +2,7 @@ import { html } from "uhtml";
 import { Base, componentMap } from "./base";
 import { styleString } from "./style";
 import css from "ustyler";
+import "./img-db";
 
 /** Allow await'ing for a short time
  * @param {number} ms */
@@ -81,7 +82,7 @@ class VSD extends Base {
     );
     const src = items.find((item) => item.src)?.src;
     return html`<div class="vsd flex show" id=${this.id}>
-      <img src=${src || ""} />
+      <img is="img-db" dbsrc=${src} />
       <div
         class="markers"
         ref=${(/** @type {HTMLDivElement & { observer: any }} */ node) => {

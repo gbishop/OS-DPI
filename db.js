@@ -136,8 +136,10 @@ class DB {
         const obj = JSON.parse(text);
         const type = fname.split(".")[0];
         await this.write(type, obj);
-      } else if (fname.endsWith(".png")) {
-        const blob = new Blob([unzipped[fname]], { type: "image/png" });
+      } else if (fname.endsWith(".png") || fname.endsWith(".jpg")) {
+        const blob = new Blob([unzipped[fname]], {
+          type: `image/${fname.slice(-3)}`,
+        });
         const h = await hash(blob);
         const test = await db.get("images", h);
         if (test) {
