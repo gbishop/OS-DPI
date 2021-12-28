@@ -18,9 +18,8 @@ class Grid extends Base {
   page = 0;
   /** @type {Object}
    * @property {string} key
-   * @property {Rows} items
    */
-  cache = { key: "", items: [] };
+  cache = { key: "" };
 
   template() {
     /** @type {Partial<CSSStyleDeclaration>} */
@@ -30,12 +29,9 @@ class Grid extends Base {
     const tags = state.normalizeTags(this.props.tags);
     const key = tags.join("|");
     /** @type {Rows} */
-    let items;
-    if (this.cache.items.length && this.cache.key === key) {
-      items = this.cache.items;
-    } else {
-      items = data.getTaggedRows(tags, match);
-      this.cache.items = items;
+    let items = data.getTaggedRows(tags, match);
+    // reset the page when the key changes
+    if (this.cache.key !== key) {
       this.cache.key = key;
       this.page = 0;
     }
