@@ -62,7 +62,7 @@ function pct(v) {
  * @property {number} y
  * @property {number} w
  * @property {number} h
- * @property {string} src
+ * @property {string} image
  * @property {boolean} invisible
  */
 /** @typedef {Row & vsdData} VRow */
@@ -80,7 +80,7 @@ class VSD extends Base {
     const items = /** @type {VRow[]} */ (
       data.getTaggedRows(tags, this.props.match)
     );
-    const src = items.find((item) => item.src)?.src;
+    const src = items.find((item) => item.image)?.image;
     return html`<div class="vsd flex show" id=${this.id}>
       <img is="img-db" dbsrc=${src} />
       <div
