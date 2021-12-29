@@ -76,6 +76,8 @@ export class Content extends Base {
                 }, []);
 
                 this.context.data = new Data(result);
+                document.querySelector("#loadStatus").innerHTML = `Loaded 
+                  ${this.context.data.allrows.length} rows with ${this.context.data.allFields.length} columns`;
                 this.context.state.update();
               },
             });
@@ -91,14 +93,14 @@ export class Content extends Base {
           const target = /** @type {HTMLInputElement} */ (e.target);
           const result = await readLocalSheet(target.files[0]);
           document.querySelector(
-            "#localLoadStatus"
+            "#loadStatus"
           ).innerHTML = `Loaded ${result.rows} rows with ${result.fields.length} columns`;
           this.context.data = new Data(result.dataArray);
           console.log(this.context.data);
           this.context.state.update();
         }}
       />
-      <p id="localLoadStatus" style="margin-left: 2em"></p>
+      <p id="loadStatus" style="margin-left: 2em"></p>
     </div>`;
   }
 }
