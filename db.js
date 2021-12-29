@@ -232,6 +232,25 @@ class DB {
     else return name;
   }
 
+  /** Add an image to the database
+   * @param {Blob} blob
+   * @param {string} name
+   */
+  async addImage(blob, name) {
+    const db = await this.dbPromise;
+    const h = await hash(blob);
+    const test = await db.get("images", h);
+    if (test) {
+      console.log(name, "is dup");
+    } else {
+      await db.put("images", {
+        name: name,
+        content: blob,
+        hash: h,
+      });
+    }
+  }
+
   /** Listen for database update
    * @param {(message: UpdateNotification) =>void} callback
    */
