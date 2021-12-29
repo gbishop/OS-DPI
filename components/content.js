@@ -34,57 +34,73 @@ async function readLocalSheet(file) {
       }
     }
     row["tags"] = tags;
-    if (Object.keys(row).length > 0) {
-      dataArray.push(row);
-    }
+    dataArray.push(row);
   }
-  await db.write("content", dataArray);
-  return { fields: header.filter((h) => h), rows: dataArray.length, dataArray };
+  return dataArray;
+}
+
+async function readGoogleSheet(url) {
+  return new Promise((resolve, reject) => {
+    sheetrock({
+      url,
+      target: document.createElement("div"),
+      callback: async (
+        /** @type {object} error */ error,
+        /** @type {object} options */ options,
+        /** @type {object} response */ response
+      ) => {
+        console.log({ error, options, response });
+        const header = response.rows[0].labels;
+        const dataArray = [];
+        for (let r = 1; r < response.rows.length; r++) {
+          /** @type {Row} */
+          const row = { tags: [] };
+          const tags = row.tags;
+          for (let c = 0; c < header.length; c++) {
+            const name = header[c];
+            if (!name) continue;
+            const value = response.rows[r].cellsArray[c];
+            if (!value) continue;
+            if (name.startsWith("tags")) {
+              tags.push(value);
+            } else {
+              row[name] = value;
+            }
+          }
+          dataArray.push(row);
+        }
+
+        resolve(dataArray);
+      },
+    });
+  });
 }
 
 export class Content extends Base {
   template() {
-    return html` <div class="content">
+    const data = this.context.data;
+    return html`<div class="content">
+      <h1>Content</h1>
+      <p>
+        ${data.allrows.length} rows with these fields:
+        ${String(data.allFields).replaceAll(",", ", ")}
+      </p>
       <label for="remoteFileInput">Load a Google Sheets spreadsheet: </label>
       <input
         id="remoteFileInput"
         type="url"
         required="true"
         aria-required="true"
-        onkeydown=${async (/** @type {InputEvent} e */ e) => {
+        onkeydown=${async (/** @type {KeyboardEvent} e */ e) => {
           const target = /** @type {HTMLInputElement} */ (e.target);
           if (target.checkValidity() && e.key == "Enter") {
-            sheetrock({
-              url: e.target.value,
-              target: document.createElement("div"),
-              callback: (
-                /** @type {object} error */ error,
-                /** @type {object} options */ options,
-                /** @type {object} response */ response
-              ) => {
-                const result = response.rows.reduce((dataArr, rowObj, i) => {
-                  if (i) {
-                    let datum = {};
-                    for (let j = 0; j < rowObj.labels.length; j++) {
-                      datum[rowObj.labels[j].toLowerCase()] =
-                        rowObj.cellsArray[j];
-                      if (!("tags" in datum)) datum["tags"] = [];
-                    }
-                    dataArr.push(datum);
-                  }
-                  return dataArr;
-                }, []);
-
-                this.context.data = new Data(result);
-                document.querySelector("#loadStatus").innerHTML = `Loaded 
-                  ${this.context.data.allrows.length} rows with ${this.context.data.allFields.length} columns`;
-                this.context.state.update();
-              },
-            });
+            const result = await readGoogleSheet(target.value);
+            this.context.data = new Data(result);
+            this.context.state.update();
           }
         }}
       />
-
+      <br />
       <label for="localFileInput">Load a local spreadsheet: </label>
       <input
         id="localFileInput"
@@ -92,15 +108,10 @@ export class Content extends Base {
         onchange=${async (/** @type {InputEvent} e */ e) => {
           const target = /** @type {HTMLInputElement} */ (e.target);
           const result = await readLocalSheet(target.files[0]);
-          document.querySelector(
-            "#loadStatus"
-          ).innerHTML = `Loaded ${result.rows} rows with ${result.fields.length} columns`;
-          this.context.data = new Data(result.dataArray);
-          console.log(this.context.data);
+          this.context.data = new Data(result);
           this.context.state.update();
         }}
       />
-      <p id="loadStatus" style="margin-left: 2em"></p>
     </div>`;
   }
 }
