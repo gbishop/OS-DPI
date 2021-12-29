@@ -21,7 +21,7 @@ async function readLocalSheet(file) {
   for (let r = range.s.r + 1; r <= range.e.r; r++) {
     /** @type {Row} */
     const row = { tags: [] };
-    const tags = [];
+    const tags = row.tags;
     for (let c = range.s.c; c <= range.e.c; c++) {
       const name = header[c];
       if (!name) continue;
@@ -33,8 +33,7 @@ async function readLocalSheet(file) {
         row[name] = value;
       }
     }
-    row["tags"] = tags;
-    dataArray.push(row);
+    if (row.tags.length > 0 || Object.keys(row).length > 1) dataArray.push(row);
   }
   return dataArray;
 }
@@ -67,6 +66,7 @@ async function readGoogleSheet(url) {
               row[name] = value;
             }
           }
+
           dataArray.push(row);
         }
 
@@ -95,6 +95,7 @@ export class Content extends Base {
           const target = /** @type {HTMLInputElement} */ (e.target);
           if (target.checkValidity() && e.key == "Enter") {
             const result = await readGoogleSheet(target.value);
+            await db.write("content", result);
             this.context.data = new Data(result);
             this.context.state.update();
           }
@@ -108,6 +109,7 @@ export class Content extends Base {
         onchange=${async (/** @type {InputEvent} e */ e) => {
           const target = /** @type {HTMLInputElement} */ (e.target);
           const result = await readLocalSheet(target.files[0]);
+          await db.write("content", result);
           this.context.data = new Data(result);
           this.context.state.update();
         }}
