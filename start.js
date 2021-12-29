@@ -56,6 +56,8 @@ async function newName() {
 /** welcome screen
  */
 async function welcome() {
+  // clear any values left over
+  sessionStorage.clear();
   const names = await db.names();
   render(
     document.body,
@@ -165,7 +167,7 @@ export async function start() {
     const message = /** @type {UpdateNotification} */ (event.data);
     if (db.designName == message.name) {
       if (message.action == "update") {
-        window.location.reload();
+        start();
       } else if (message.action == "rename") {
         window.location.hash = message.newName;
       }
@@ -190,7 +192,7 @@ export async function start() {
   });
 }
 
-window.addEventListener("hashchange", () => window.location.reload());
+window.addEventListener("hashchange", start);
 
 /** @typedef {PointerEvent & { target: HTMLElement }} ClickEvent */
 document.addEventListener("click", (/** @type {ClickEvent} */ event) => {
