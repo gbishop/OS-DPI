@@ -12,9 +12,9 @@ export class ToolBar extends Base {
         <input
           id="designName"
           type="text"
-          value=${db.designName}
+          .value=${db.designName}
+          .size=${Math.max(db.designName.length, 12)}
           onchange=${(event) => db.renameDesign(event.target.value)}
-          style="width: 5em"
         />
         <button onclick=${() => db.saveDesign()}>Save</button>
         <button onclick=${() => window.open("#", "_blank")}>Open</button>

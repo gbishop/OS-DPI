@@ -43,22 +43,15 @@ const pageLoaded = new Promise((resolve) => {
   });
 });
 
-/** Generate a new name based on the time
- */
-async function newName() {
-  const names = await db.names();
-  for (let i = 1; i < 100; i++) {
-    const name = `new-${i}`;
-    if (names.indexOf(name) < 0) return name;
-  }
-}
-
 /** welcome screen
  */
 async function welcome() {
   // clear any values left over
   sessionStorage.clear();
   const names = await db.names();
+  const saved = await db.saved();
+  // setup data for the table
+  names.sort();
   render(
     document.body,
     html`
@@ -66,15 +59,46 @@ async function welcome() {
         <h1>Welcome to the OS-DPI</h1>
         <p>Maybe some explanatory text here?</p>
         <button onclick=${() => db.readDesign()}>Load</button>
-        <button onclick=${async () => (window.location.hash = await newName())}>
+        <button
+          onclick=${async () =>
+            (window.location.hash = await db.uniqueName("new"))}
+        >
           New
         </button>
         <h2>Loaded designs:</h2>
-        <ul>
-          ${names.map(
-            (name) => html`<li><a href=${"#" + name}>${name}</a></li>`
-          )}
-        </ul>
+        ${names.map((name) => {
+          const isSaved = saved.indexOf(name) >= 0;
+          const ref = {};
+          return html`<ul>
+            <li>
+              <a href=${"#" + name}>${name}</a>
+              ${isSaved ? "Saved" : "Not saved"}
+
+              <button
+                ?disabled=${!isSaved}
+                onclick=${async () => {
+                  await db.delete(name);
+                  welcome();
+                }}
+                ref=${ref}
+              >
+                Unload
+              </button>
+              ${!isSaved
+                ? html`<label for=${name}>Enable unload without saving: </label>
+                    <input
+                      id=${name}
+                      type="checkbox"
+                      onchange=${({ currentTarget }) => {
+                        if (ref.current)
+                          ref.current.disabled =
+                            !currentTarget.checked && !isSaved;
+                      }}
+                    />`
+                : html``}
+            </li>
+          </ul> `;
+        })}
       </div>
     `
   );
@@ -131,7 +155,7 @@ export async function start() {
   }
 
   /* Designer */
-  state.define("editing", false);
+  state.define("editing", layout === emptyPage);
   const designer = new Designer({}, context, null);
 
   /* ToolBar */

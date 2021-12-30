@@ -4,23 +4,32 @@ import { fileOpen, fileSave } from "browser-fs-access";
 
 class DB {
   constructor() {
-    this.dbPromise = openDB("os-dpi", 1, {
-      async upgrade(db) {
-        let objectStore = db.createObjectStore("store", {
-          keyPath: "id",
-          autoIncrement: true,
-        });
-        objectStore.createIndex("by-name", "name");
-        objectStore.createIndex("by-name-type", ["name", "type"]);
-        let imageStore = db.createObjectStore("images", {
-          keyPath: "hash",
-        });
-        imageStore.createIndex("by-name", "name");
+    this.dbPromise = openDB("os-dpi", 2, {
+      upgrade(db, oldVersion, newVersion) {
+        console.log(oldVersion, newVersion);
+        if (oldVersion < 1) {
+          let objectStore = db.createObjectStore("store", {
+            keyPath: "id",
+            autoIncrement: true,
+          });
+          objectStore.createIndex("by-name", "name");
+          objectStore.createIndex("by-name-type", ["name", "type"]);
+          let imageStore = db.createObjectStore("images", {
+            keyPath: "hash",
+          });
+          imageStore.createIndex("by-name", "name");
+        }
+        if (oldVersion < 2) {
+          // keep track of the id of records that have been saved
+          db.createObjectStore("saved", {
+            keyPath: "name",
+          });
+        }
       },
     });
     this.updateListeners = [];
+    this.designName = "";
     this.fileName = "";
-    this.designName = "new_" + Math.random().toString(16).substr(2);
     this.fileHandle = null;
   }
 
@@ -37,6 +46,7 @@ class DB {
   async renameDesign(newName) {
     console.log("rename", newName, this.designName);
     const db = await this.dbPromise;
+    newName = await this.uniqueName(newName);
     const tx = db.transaction("store", "readwrite");
     const index = tx.store.index("by-name");
     for await (const cursor of index.iterate(this.designName)) {
@@ -62,6 +72,46 @@ class DB {
       result.push(/** @type {string} */ (cursor.key));
     }
     return result;
+  }
+
+  /**
+   * return list of names of saved designs in the db
+   * @returns {Promise<string[]>}
+   */
+  async saved() {
+    const db = await this.dbPromise;
+    const result = [];
+    for (const key of await db.getAllKeys("saved")) {
+      result.push(key.toString());
+    }
+    return result;
+  }
+
+  /**
+   * Create a unique name for new design
+   * @param {string} name - the desired name
+   * @returns {Promise<string>}
+   */
+  async uniqueName(name = "new") {
+    // strip any -number off the end of base
+    name = name.replace(/-\d+$/, "") || name;
+    // replace characters we don't want with _
+    name = name.replaceAll(/[^a-zA-Z0-9]/g, "_");
+    // replace multiple _ with one
+    name = name.replaceAll(/_+/g, "_");
+    // remove trailing _
+    name = name.replace(/_+$/, "");
+    // remove leading _
+    name = name.replace(/^_+/, "");
+    // if we're left with nothing the call it noname
+    name = name || "noname";
+    const allNames = await this.names();
+    if (allNames.indexOf(name) < 0) return name;
+    const base = name;
+    for (let i = 1; true; i++) {
+      const name = `${base}-${i}`;
+      if (allNames.indexOf(name) < 0) return name;
+    }
   }
 
   /** Return the most recent record for the type
@@ -102,6 +152,7 @@ class DB {
     const cursor = await index.openCursor([this.designName, type], "prev");
     console.log({ type, cursor });
     if (cursor) await cursor.delete();
+    db.delete("saved", this.designName);
     this.notify({ action: "update", name: this.designName });
     return this.read(type);
   }
@@ -115,17 +166,19 @@ class DB {
       description: "OS-DPI designs",
       id: "os-dpi",
     });
+    const db = await this.dbPromise;
     // keep the handle so we can save to it later
     this.fileHandle = blob.handle;
     this.fileName = blob.name;
-    this.designName = this.fileName.split(".")[0];
+    // normalize the fileName to make the design name
+    let name = this.fileName;
+    // strip off the suffix
+    name = name.substring(0, name.lastIndexOf("."));
+    // make sure it is unique
+    name = await this.uniqueName(name);
 
-    // clear the previous one
-    const db = await this.dbPromise;
-    const index = db.transaction("store", "readwrite").store.index("by-name");
-    for await (const cursor of index.iterate(this.designName)) {
-      await cursor.delete();
-    }
+    this.designName = name;
+
     // load the new one
     const zippedBuf = await readAsArrayBuffer(blob);
     const zippedArray = new Uint8Array(zippedBuf);
@@ -153,6 +206,7 @@ class DB {
         }
       }
     }
+    db.put("saved", { name: this.designName });
     this.notify({ action: "update", name: this.designName });
     window.location.hash = this.designName;
   }
@@ -205,7 +259,21 @@ class DB {
       id: "osdpi",
     };
     await fileSave(blob, options, this.fileHandle);
+    db.put("saved", { name: this.designName });
     console.log("saved file");
+  }
+
+  /** Delete a design from the database
+   * @param {string} name - the name of the design to delete
+   */
+  async delete(name) {
+    const db = await this.dbPromise;
+    const tx = db.transaction("store", "readwrite");
+    const index = tx.store.index("by-name");
+    for await (const cursor of index.iterate(name)) {
+      cursor.delete();
+    }
+    await tx.done;
   }
 
   /** Return an image from the database
