@@ -43,6 +43,7 @@ async function readGoogleSheet(url) {
     sheetrock({
       url,
       target: document.createElement("div"),
+      reset: true,
       callback: async (
         /** @type {object} error */ error,
         /** @type {object} options */ options,
@@ -50,6 +51,7 @@ async function readGoogleSheet(url) {
       ) => {
         console.log({ error, options, response });
         const header = response.rows[0].labels;
+        console.log({ header });
         const dataArray = [];
         for (let r = 1; r < response.rows.length; r++) {
           /** @type {Row} */
@@ -78,6 +80,7 @@ async function readGoogleSheet(url) {
 
 export class Content extends Base {
   template() {
+    console.log("in content");
     const data = this.context.data;
     return html`<div class="content">
       <h1>Content</h1>
