@@ -10,7 +10,7 @@ const root = __dirname;
 module.exports = {
   exclude: [
     "**/thinking/**",
-    "**/.git/**",
+    "**/.git/**/*",
     "**/package*",
     `${root}/node_modules/**`,
   ],
