@@ -2,7 +2,6 @@ import { Base } from "./base";
 import css from "ustyler";
 import db from "../db";
 import { html } from "uhtml";
-import { start } from "../start";
 
 export class ToolBar extends Base {
   template() {
@@ -27,7 +26,7 @@ export class ToolBar extends Base {
             if (["layout", "actions"].indexOf(tab) >= 0) {
               console.log("undo", tab);
               await db.undo(tab);
-              start();
+              this.context.restart();
             }
           }}
         >

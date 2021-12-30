@@ -21,22 +21,9 @@ export class Layout extends Base {
     scale: "1",
   };
 
-  /**
-   * @param {SomeProps} props
-   * @param {Context} context
-   * @param {Base} parent
-   */
-  constructor(props, context, parent) {
-    super(props, context, parent);
-
-    // assure that selected always has a value */
-    /** @type {Base} */
-    this.selected = this.context.tree;
-  }
-
   init() {
     const { state, tree } = this.context;
-    this.setSelected(this.getNode(state.get("path")));
+    this.setSelected(this.getNode(state.get("path")), state.get("editingTree"));
     document.querySelector("div#UI")?.addEventListener("click", (event) => {
       const target = /** @type {HTMLElement} */ (event.target);
       let id = null;

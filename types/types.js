@@ -34,6 +34,7 @@
  * @property {import("../rules").Rules} rules
  * @property {import("../data").Data} data
  * @property {Tree} tree
+ * @property {function} restart
  */
 
 /**
