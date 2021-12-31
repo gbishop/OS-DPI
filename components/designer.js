@@ -71,7 +71,7 @@ export class Designer extends Base {
 css`
   body.designing {
     display: grid;
-    grid-template-rows: fit-content(100%) 50% auto;
+    grid-template-rows: 2.5em 50% auto;
     grid-template-columns: 50% 50%;
   }
 
