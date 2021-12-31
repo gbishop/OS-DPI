@@ -319,6 +319,19 @@ class DB {
     }
   }
 
+  /** List image names
+   * @returns {Promise<string[]>}
+   * */
+  async listImages() {
+    const db = await this.dbPromise;
+    const index = db.transaction("images", "readonly").store.index("by-name");
+    const result = [];
+    for await (const cursor of index.iterate(null, "nextunique")) {
+      result.push(/** @type {string} */ (cursor.key));
+    }
+    return result;
+  }
+
   /** Listen for database update
    * @param {(message: UpdateNotification) =>void} callback
    */

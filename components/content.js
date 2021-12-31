@@ -1,8 +1,9 @@
-import { html } from "uhtml";
+import { html, render } from "uhtml";
 import { Base } from "./base";
 import db from "../db";
 import { Data } from "../data";
 import XLSX from "xlsx";
+import css from "ustyler";
 
 /** @param {Blob} blob */
 async function readSheetFromBlob(blob) {
@@ -88,7 +89,12 @@ export class Content extends Base {
         }}
       >
         <label for="remoteFileInput">URL: </label>
-        <input id="remoteFileInput" name="url" type="url" />
+        <input
+          id="remoteFileInput"
+          name="url"
+          type="url"
+          placeholder="Enter a URL"
+        />
         <input type="submit" value="Load" />
       </form>
       <br />
@@ -110,6 +116,62 @@ export class Content extends Base {
         }}
       />
       <div id="messages" ref=${refMessages}></div>
+      <h2>Load images</h2>
+      <label for="images">Upload images: </label>
+      <input
+        id="images"
+        type="file"
+        multiple
+        accept=".png,.jpg"
+        onchange=${async (/** @type {InputEventWithTarget} */ event) => {
+          const input = /** @type {HTMLInputElement} */ (event.currentTarget);
+          if (!input || !input.files || !input.files.length) {
+            return;
+          }
+          for (const file of input.files) {
+            await db.addImage(file, file.name);
+          }
+          this.context.state.update();
+        }}
+      />
+      <h2>Currently loaded images</h2>
+      <ol style="column-count: 3">
+        ${(/** @type {HTMLElement} */ comment) => {
+          /* I'm experimenting here. db.listImages() is asynchronous but I don't want
+           * to convert this entire application to the async version of uhtml. Can I
+           * inject content asynchronously using the callback mechanism he provides?
+           * As I understand it, when an interpolation is a function he places a
+           * comment node in the output and passes it to the function.
+           * I am using the comment node to find the parent container, then rendering
+           * the asynchronous content when it becomes available being careful to keep
+           * the comment node in the output. It seems to work, is it safe?
+           */
+          db.listImages().then((names) => {
+            const list = names.map((name) => html`<li>${name}</li>`);
+            render(comment.parentNode, html`${comment}${list}`);
+          });
+        }}
+      </ol>
     </div>`;
   }
 }
+
+css`
+  .content form {
+    display: flex;
+    width: 100%;
+    gap: 0.5em;
+  }
+
+  .content form input[type="url"] {
+    flex: 1;
+    max-width: 60%;
+  }
+
+  .content div#messages {
+    color: red;
+    font-size: 2em;
+    padding-left: 1em;
+    padding-top: 1em;
+  }
+`;
