@@ -3,11 +3,10 @@ import { Base } from "./base";
 import db from "../db";
 import { Data } from "../data";
 import XLSX from "xlsx";
-import sheetrock from "sheetrock";
 
-/** @param {File} file */
-async function readLocalSheet(file) {
-  const data = await file.arrayBuffer();
+/** @param {Blob} blob */
+async function readSheetFromBlob(blob) {
+  const data = await blob.arrayBuffer();
   const workbook = XLSX.read(data);
   const sheetName = workbook.SheetNames[0];
   const sheet = workbook.Sheets[sheetName];
@@ -38,50 +37,14 @@ async function readLocalSheet(file) {
   return dataArray;
 }
 
-async function readGoogleSheet(url) {
-  return new Promise((resolve, reject) => {
-    sheetrock({
-      url,
-      target: document.createElement("div"),
-      reset: true,
-      callback: async (
-        /** @type {object} error */ error,
-        /** @type {object} options */ options,
-        /** @type {object} response */ response
-      ) => {
-        console.log({ error, options, response });
-        const header = response.rows[0].labels;
-        console.log({ header });
-        const dataArray = [];
-        for (let r = 1; r < response.rows.length; r++) {
-          /** @type {Row} */
-          const row = { tags: [] };
-          const tags = row.tags;
-          for (let c = 0; c < header.length; c++) {
-            const name = header[c];
-            if (!name) continue;
-            const value = response.rows[r].cellsArray[c];
-            if (!value) continue;
-            if (name.startsWith("tags")) {
-              tags.push(value);
-            } else {
-              row[name] = value;
-            }
-          }
-
-          dataArray.push(row);
-        }
-
-        resolve(dataArray);
-      },
-    });
-  });
-}
-
 export class Content extends Base {
   template() {
     console.log("in content");
     const data = this.context.data;
+    /**
+     * A reference to the error messages div
+     * @type {{current: HTMLInputElement}} */
+    const refMessages = { current: null };
     return html`<div class="content">
       <h1>Content</h1>
       <p>
@@ -92,12 +55,24 @@ export class Content extends Base {
       <input
         id="remoteFileInput"
         type="url"
-        required="true"
-        aria-required="true"
         onkeydown=${async (/** @type {KeyboardEvent} e */ e) => {
           const target = /** @type {HTMLInputElement} */ (e.target);
           if (target.checkValidity() && e.key == "Enter") {
-            const result = await readGoogleSheet(target.value);
+            const urlEnd = target.value.indexOf("/edit");
+            try {
+              if (urlEnd < 0) throw new Error("Invalid Google Sheets URL");
+              const sheetURL =
+                target.value.slice(0, urlEnd) +
+                "/gviz/tq?tqx=out:csv&tq=SELECT *";
+              const response = await fetch(sheetURL);
+              if (!response.ok)
+                throw new Error(`Fetching the URL failed: ${response.status}`);
+              const blob = await response.blob();
+              var result = await readSheetFromBlob(blob);
+            } catch (e) {
+              refMessages.current.innerHTML = e.message;
+              return;
+            }
             await db.write("content", result);
             this.context.data = new Data(result);
             this.context.state.update();
@@ -111,12 +86,18 @@ export class Content extends Base {
         type="file"
         onchange=${async (/** @type {InputEvent} e */ e) => {
           const target = /** @type {HTMLInputElement} */ (e.target);
-          const result = await readLocalSheet(target.files[0]);
+          try {
+            var result = await readSheetFromBlob(target.files[0]);
+          } catch (e) {
+            refMessages.current.innerHTML = e.message;
+            return;
+          }
           await db.write("content", result);
           this.context.data = new Data(result);
           this.context.state.update();
         }}
       />
+      <div id="messages" ref=${refMessages}></div>
     </div>`;
   }
 }
