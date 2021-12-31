@@ -39,32 +39,40 @@ async function readSheetFromBlob(blob) {
 
 export class Content extends Base {
   template() {
-    console.log("in content");
     const data = this.context.data;
     /**
      * A reference to the error messages div
      * @type {{current: HTMLInputElement}} */
     const refMessages = { current: null };
+    /**
+     * A reference to the load button so I can enabled when the url is valid
+     * @type {{current: HTMLInputElement}} */
     return html`<div class="content">
       <h1>Content</h1>
       <p>
         ${data.allrows.length} rows with these fields:
         ${String(data.allFields).replaceAll(",", ", ")}
       </p>
-      <label for="remoteFileInput">Load a Google Sheets spreadsheet: </label>
-      <input
-        id="remoteFileInput"
-        type="url"
-        onkeydown=${async (/** @type {KeyboardEvent} e */ e) => {
-          const target = /** @type {HTMLInputElement} */ (e.target);
-          if (target.checkValidity() && e.key == "Enter") {
-            const urlEnd = target.value.indexOf("/edit");
+      <h2>Load content from spreadsheets</h2>
+      <form
+        onsubmit=${(/** @type {SubmitEvent} */ e) => {
+          e.preventDefault();
+          console.log("submit", e);
+          const form = e.target;
+          /** @type {string} */
+          let URL = form[0].value;
+          if (URL.length === 0) return;
+          // check for a Google Sheets URL
+          if (
+            URL.match(/https:\/\/docs.google.com\/spreadsheets\/.*\/edit.*/)
+          ) {
+            // hack Google Sheets URL to use the gviz interface
+            URL = URL.replace(/\/edit.*$/, "/gviz/tq?tqx=out:csv&tq=SELECT *");
+          }
+          // do this part asynchronously
+          (async () => {
             try {
-              if (urlEnd < 0) throw new Error("Invalid Google Sheets URL");
-              const sheetURL =
-                target.value.slice(0, urlEnd) +
-                "/gviz/tq?tqx=out:csv&tq=SELECT *";
-              const response = await fetch(sheetURL);
+              const response = await fetch(URL);
               if (!response.ok)
                 throw new Error(`Fetching the URL failed: ${response.status}`);
               const blob = await response.blob();
@@ -76,11 +84,15 @@ export class Content extends Base {
             await db.write("content", result);
             this.context.data = new Data(result);
             this.context.state.update();
-          }
+          })();
         }}
-      />
+      >
+        <label for="remoteFileInput">URL: </label>
+        <input id="remoteFileInput" name="url" type="url" />
+        <input type="submit" value="Load" />
+      </form>
       <br />
-      <label for="localFileInput">Load a local spreadsheet: </label>
+      <label for="localFileInput">Local: </label>
       <input
         id="localFileInput"
         type="file"
