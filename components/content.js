@@ -59,6 +59,8 @@ export class Content extends Base {
         onsubmit=${(/** @type {SubmitEvent} */ e) => {
           e.preventDefault();
           console.log("submit", e);
+          // clear messages
+          refMessages.current.innerHTML = "";
           const form = e.target;
           /** @type {string} */
           let URL = form[0].value;
@@ -103,6 +105,8 @@ export class Content extends Base {
         id="localFileInput"
         type="file"
         onchange=${async (/** @type {InputEvent} e */ e) => {
+          // clear messages
+          refMessages.current.innerHTML = "";
           const target = /** @type {HTMLInputElement} */ (e.target);
           try {
             var result = await readSheetFromBlob(target.files[0]);
@@ -130,6 +134,12 @@ export class Content extends Base {
           }
           for (const file of input.files) {
             await db.addImage(file, file.name);
+            // ask any live images to refresh
+            for (const img of document.querySelectorAll(
+              `img[dbsrc="${file.name}"]`
+            )) {
+              /** @type {ImgDb} */ (img).refresh();
+            }
           }
           this.context.state.update();
         }}

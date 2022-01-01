@@ -5,26 +5,20 @@ import { fileOpen, fileSave } from "browser-fs-access";
 class DB {
   constructor() {
     this.dbPromise = openDB("os-dpi", 2, {
-      upgrade(db, oldVersion, newVersion) {
-        console.log(oldVersion, newVersion);
-        if (oldVersion < 1) {
-          let objectStore = db.createObjectStore("store", {
-            keyPath: "id",
-            autoIncrement: true,
-          });
-          objectStore.createIndex("by-name", "name");
-          objectStore.createIndex("by-name-type", ["name", "type"]);
-          let imageStore = db.createObjectStore("images", {
-            keyPath: "hash",
-          });
-          imageStore.createIndex("by-name", "name");
-        }
-        if (oldVersion < 2) {
-          // keep track of the id of records that have been saved
-          db.createObjectStore("saved", {
-            keyPath: "name",
-          });
-        }
+      upgrade(db) {
+        let objectStore = db.createObjectStore("store", {
+          keyPath: "id",
+          autoIncrement: true,
+        });
+        objectStore.createIndex("by-name", "name");
+        objectStore.createIndex("by-name-type", ["name", "type"]);
+        db.createObjectStore("images", {
+          keyPath: "name",
+        });
+        // keep track of the id of records that have been saved
+        db.createObjectStore("saved", {
+          keyPath: "name",
+        });
       },
     });
     this.updateListeners = [];
@@ -136,6 +130,7 @@ class DB {
   async write(type, data) {
     const db = await this.dbPromise;
     const result = db.put("store", { name: this.designName, type, data });
+    db.delete("saved", this.designName);
     this.notify({ action: "update", name: this.designName });
     return result;
   }
@@ -193,17 +188,10 @@ class DB {
         const blob = new Blob([unzipped[fname]], {
           type: `image/${fname.slice(-3)}`,
         });
-        const h = await hash(blob);
-        const test = await db.get("images", h);
-        if (test) {
-          console.log(fname, "is dup");
-        } else {
-          await db.put("images", {
-            name: fname,
-            content: blob,
-            hash: h,
-          });
-        }
+        await db.put("images", {
+          name: fname,
+          content: blob,
+        });
       }
     }
     db.put("saved", { name: this.designName });
@@ -240,7 +228,7 @@ class DB {
 
     // add the encoded image to the zipargs
     for (const imageName of imageNames) {
-      const record = await db.getFromIndex("images", "by-name", imageName);
+      const record = await db.get("images", imageName);
       if (record) {
         const contentBuf = await record.content.arrayBuffer();
         const contentArray = new Uint8Array(contentBuf);
@@ -282,9 +270,11 @@ class DB {
    */
   async getImage(name) {
     const db = await this.dbPromise;
-    const record = await db.getFromIndex("images", "by-name", name);
+    const record = await db.get("images", name);
     const img = new Image();
-    img.src = URL.createObjectURL(record.content);
+    if (record) {
+      img.src = URL.createObjectURL(record.content);
+    }
     img.title = record.name;
     return img;
   }
@@ -295,7 +285,7 @@ class DB {
    */
   async getImageURL(name) {
     const db = await this.dbPromise;
-    const record = await db.getFromIndex("images", "by-name", name);
+    const record = await db.get("images", name);
     if (record) return URL.createObjectURL(record.content);
     else return name;
   }
@@ -306,17 +296,10 @@ class DB {
    */
   async addImage(blob, name) {
     const db = await this.dbPromise;
-    const h = await hash(blob);
-    const test = await db.get("images", h);
-    if (test) {
-      console.log(name, "is dup");
-    } else {
-      await db.put("images", {
-        name: name,
-        content: blob,
-        hash: h,
-      });
-    }
+    return db.put("images", {
+      name: name,
+      content: blob,
+    });
   }
 
   /** List image names
@@ -324,10 +307,10 @@ class DB {
    * */
   async listImages() {
     const db = await this.dbPromise;
-    const index = db.transaction("images", "readonly").store.index("by-name");
+    const keys = await db.getAllKeys("images");
     const result = [];
-    for await (const cursor of index.iterate(null, "nextunique")) {
-      result.push(/** @type {string} */ (cursor.key));
+    for (const key of keys) {
+      result.push(key.toString());
     }
     return result;
   }

@@ -90,3 +90,5 @@
  * @property {string} name
  * @property {string} [newName]
  */
+
+/** @typedef {import("../components/img-db.js").imgFromDb} ImgDb */
