@@ -306,11 +306,7 @@ class ActionEditor extends Base {
       state.update();
       this.save();
     };
-    const allStates = new Set([
-      ...tree.allStates(),
-      ...rules.allStates(),
-      "$Speak",
-    ]);
+    const allStates = new Set([...tree.allStates(), ...rules.allStates()]);
     const allFields = new Set(data.allFields);
     const both = new Set([...allStates, ...allFields]);
     // value updates
