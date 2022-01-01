@@ -139,7 +139,9 @@ export async function start() {
     data,
     rules,
     state,
-    restart: start,
+    restart: () => {
+      start();
+    },
   };
   // @ts-ignore
   const tree = assemble(layout, context);

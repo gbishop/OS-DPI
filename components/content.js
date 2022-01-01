@@ -134,7 +134,7 @@ export class Content extends Base {
           }
           for (const file of input.files) {
             await db.addImage(file, file.name);
-            // ask any live images to refresh
+            // ask any live images with this name to refresh
             for (const img of document.querySelectorAll(
               `img[dbsrc="${file.name}"]`
             )) {
