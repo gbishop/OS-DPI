@@ -56,8 +56,18 @@ async function welcome() {
     document.body,
     html`
       <div id="welcome">
-        <h1>Welcome to the OS-DPI</h1>
-        <p>Maybe some explanatory text here?</p>
+        <div id="head">
+          <img class="icon" src="./icon.png" />
+          <div>
+            <h1>Welcome to the Project Open AAC OS-DPI</h1>
+            <p>
+              With this tool you can create experimental AAC interfaces. Start
+              by loading a design from an ".osdpi" file or by creating a new
+              one. Switch between the IDE and the User Interface with the "d"
+              key.
+            </p>
+          </div>
+        </div>
         <button onclick=${() => db.readDesign()}>Load</button>
         <button
           onclick=${async () =>
@@ -107,6 +117,17 @@ async function welcome() {
 css`
   #welcome {
     padding: 1em;
+  }
+  #welcome #head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+  #welcome #head div {
+    padding-left: 1em;
+  }
+  #welcome #head div p {
+    max-width: 40em;
   }
 `;
 
