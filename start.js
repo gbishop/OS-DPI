@@ -142,6 +142,11 @@ export async function start() {
     if (params.get("fetch")) {
       await pleaseWait(db.readDesignFromURL(params.get("fetch")));
       console.log("reloading", db.designName);
+      window.history.replaceState(
+        {},
+        document.title,
+        window.location.origin + window.location.pathname + "#" + db.designName
+      );
     }
   }
   const name = window.location.hash.slice(1);
