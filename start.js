@@ -8,6 +8,7 @@ import { Monitor } from "./components/monitor";
 import { ToolBar } from "./components/toolbar";
 import db from "./db";
 import { log, logInit } from "./log";
+import pleaseWait from "./components/wait";
 import css from "ustyler";
 
 const safe = true;
@@ -68,7 +69,7 @@ async function welcome() {
             </p>
           </div>
         </div>
-        <button onclick=${() => db.readDesign()}>Load</button>
+        <button onclick=${() => db.readDesignFromFile()}>Load</button>
         <button
           onclick=${async () =>
             (window.location.hash = await db.uniqueName("new"))}
@@ -134,9 +135,18 @@ css`
 /** Load page and data then go
  */
 export async function start() {
+  console.log("start");
+  if (window.location.search && !window.location.hash.slice(1)) {
+    console.log("fetching");
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("fetch")) {
+      await pleaseWait(db.readDesignFromURL(params.get("fetch")));
+      console.log("reloading", db.designName);
+    }
+  }
   const name = window.location.hash.slice(1);
   logInit(name);
-  log("start", name);
+  console.log("start", name);
   if (!name) {
     return welcome();
   }

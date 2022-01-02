@@ -4,6 +4,7 @@ import db from "../db";
 import { Data } from "../data";
 import XLSX from "xlsx";
 import css from "ustyler";
+import pleaseWait from "./wait";
 
 /** @param {Blob} blob */
 async function readSheetFromBlob(blob) {
@@ -41,13 +42,6 @@ async function readSheetFromBlob(blob) {
 export class Content extends Base {
   template() {
     const data = this.context.data;
-    /**
-     * A reference to the error messages div
-     * @type {{current: HTMLInputElement}} */
-    const refMessages = { current: null };
-    /**
-     * A reference to the load button so I can enabled when the url is valid
-     * @type {{current: HTMLInputElement}} */
     return html`<div class="content">
       <h1>Content</h1>
       <p>
@@ -60,7 +54,6 @@ export class Content extends Base {
           e.preventDefault();
           console.log("submit", e);
           // clear messages
-          refMessages.current.innerHTML = "";
           const form = e.target;
           /** @type {string} */
           let URL = form[0].value;
@@ -73,21 +66,18 @@ export class Content extends Base {
             URL = URL.replace(/\/edit.*$/, "/gviz/tq?tqx=out:csv&tq=SELECT *");
           }
           // do this part asynchronously
-          (async () => {
-            try {
+          pleaseWait(
+            (async () => {
               const response = await fetch(URL);
               if (!response.ok)
                 throw new Error(`Fetching the URL failed: ${response.status}`);
               const blob = await response.blob();
               var result = await readSheetFromBlob(blob);
-            } catch (e) {
-              refMessages.current.innerHTML = e.message;
-              return;
-            }
-            await db.write("content", result);
-            this.context.data = new Data(result);
-            this.context.state.update();
-          })();
+              await db.write("content", result);
+              this.context.data = new Data(result);
+              this.context.state.update();
+            })()
+          );
         }}
       >
         <label for="remoteFileInput">URL: </label>
@@ -106,20 +96,13 @@ export class Content extends Base {
         type="file"
         onchange=${async (/** @type {InputEvent} e */ e) => {
           // clear messages
-          refMessages.current.innerHTML = "";
           const target = /** @type {HTMLInputElement} */ (e.target);
-          try {
-            var result = await readSheetFromBlob(target.files[0]);
-          } catch (e) {
-            refMessages.current.innerHTML = e.message;
-            return;
-          }
+          var result = await pleaseWait(readSheetFromBlob(target.files[0]));
           await db.write("content", result);
           this.context.data = new Data(result);
           this.context.state.update();
         }}
       />
-      <div id="messages" ref=${refMessages}></div>
       <h2>Load images</h2>
       <label for="images">Upload images: </label>
       <input

@@ -38,7 +38,6 @@ class DB {
    * @param {string} newName
    */
   async renameDesign(newName) {
-    console.log("rename", newName, this.designName);
     const db = await this.dbPromise;
     newName = await this.uniqueName(newName);
     const tx = db.transaction("store", "readwrite");
@@ -87,6 +86,8 @@ class DB {
    * @returns {Promise<string>}
    */
   async uniqueName(name = "new") {
+    // strip off any suffix
+    name = name.replace(/\.osdpi$|\.zip$/, "");
     // strip any -number off the end of base
     name = name.replace(/-\d+$/, "") || name;
     // replace characters we don't want with _
@@ -145,30 +146,58 @@ class DB {
       .transaction("store", "readwrite")
       .store.index("by-name-type");
     const cursor = await index.openCursor([this.designName, type], "prev");
-    console.log({ type, cursor });
     if (cursor) await cursor.delete();
     db.delete("saved", this.designName);
     this.notify({ action: "update", name: this.designName });
     return this.read(type);
   }
 
-  /** Read a design from a zip file
+  /** Read a design from a local file
    */
-  async readDesign() {
+  async readDesignFromFile() {
     const blob = await fileOpen({
       mimeTypes: ["application/octet-stream"],
       extensions: [".osdpi", ".zip"],
       description: "OS-DPI designs",
       id: "os-dpi",
     });
-    const db = await this.dbPromise;
     // keep the handle so we can save to it later
     this.fileHandle = blob.handle;
-    this.fileName = blob.name;
+    return this.readDesignFromBlob(blob, blob.name);
+  }
+
+  /** Read a design from a URL
+   * @param {string} url
+   */
+  async readDesignFromURL(url) {
+    const response = await fetch(url);
+    if (!response.ok)
+      throw new Error(`Fetching the URL failed: ${response.status}`);
+    const blob = await response.blob();
+    // parse the URL
+    const urlParts = new URL(url, window.location.origin);
+    let name = "";
+    const pathParts = urlParts.pathname.split("/");
+    if (
+      pathParts.length > 0 &&
+      pathParts[pathParts.length - 1].endsWith(".osdpi")
+    ) {
+      name = pathParts[pathParts.length - 1];
+    } else {
+      name = "new";
+    }
+    return this.readDesignFromBlob(blob, name);
+  }
+
+  /** Read a design from a zip file
+   * @param {Blob} blob
+   * @param {string} filename
+   */
+  async readDesignFromBlob(blob, filename) {
+    const db = await this.dbPromise;
+    this.fileName = filename;
     // normalize the fileName to make the design name
     let name = this.fileName;
-    // strip off the suffix
-    name = name.substring(0, name.lastIndexOf("."));
     // make sure it is unique
     name = await this.uniqueName(name);
 
@@ -235,7 +264,6 @@ class DB {
         zipargs[imageName] = contentArray;
       }
     }
-    console.log("image names", imageNames);
 
     // zip it
     const zip = zipSync(zipargs);
@@ -248,7 +276,6 @@ class DB {
     };
     await fileSave(blob, options, this.fileHandle);
     db.put("saved", { name: this.designName });
-    console.log("saved file");
   }
 
   /** Delete a design from the database
