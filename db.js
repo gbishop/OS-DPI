@@ -171,8 +171,10 @@ class DB {
    */
   async readDesignFromURL(url) {
     const response = await fetch(url);
-    if (!response.ok)
-      throw new Error(`Fetching the URL failed: ${response.status}`);
+    if (!response.ok) {
+      console.log("throwing error");
+      throw new Error(`Fetching the URL (${url}) failed: ${response.status}`);
+    }
     const blob = await response.blob();
     // parse the URL
     const urlParts = new URL(url, window.location.origin);

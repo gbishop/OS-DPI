@@ -24,12 +24,21 @@ export default async function wait(promise, message = "Please wait") {
     return result;
   } catch (e) {
     clearTimeout(timer);
-    render(
-      div,
-      html`<div>
-        <p class="error">${e.message}</p>
-        <button onclick=${() => div.remove()}>OK</button>
-      </div>`
+    return new Promise((resolve) =>
+      render(
+        div,
+        html`<div>
+          <p class="error">${e.message}</p>
+          <button
+            onclick=${() => {
+              div.remove();
+              resolve(e.message);
+            }}
+          >
+            OK
+          </button>
+        </div>`
+      )
     );
   }
 }
