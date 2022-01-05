@@ -27,6 +27,7 @@ export class TabControl extends Base {
         const color = panel.props.background;
         if (index == 0 && !activeTabName) {
           activeTabName = tabName;
+          state.update({ [this.props.stateName]: tabName });
         }
         const active = activeTabName == tabName || panels.length === 1;
         panel.active = active;

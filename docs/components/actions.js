@@ -2,6 +2,7 @@ import { log } from "../log.js";
 import { html } from "../_snowpack/pkg/uhtml.js";
 import { Base } from "./base.js";
 import { textInput } from "./input.js";
+import db from "../db.js";
 import css from "../_snowpack/pkg/ustyler.js";
 
 export class Actions extends Base {
@@ -122,6 +123,13 @@ export class Actions extends Base {
   }
 }
 
+/** @class ActionEditor
+ * @property {Rule} rule
+ * @property {string} origin
+ * @property {string} event
+ * @property {string[]} conditions
+ * @property {Object} updates
+ */
 class ActionEditor extends Base {
   /**
    * @param {SomeProps} props
@@ -131,12 +139,8 @@ class ActionEditor extends Base {
   constructor(props, context, parent = null) {
     super(props, context, parent);
     this.ruleIndex = -1;
-    // keeping the checker happy
+    // fool the checker
     this.rule = context.rules.rules[0];
-    this.origin = this.rule.origin;
-    this.event = this.rule.event;
-    this.conditions = [...this.rule.conditions];
-    this.updates = Object.entries(this.rule.updates);
   }
 
   /** @param {number} index */
@@ -160,7 +164,7 @@ class ActionEditor extends Base {
   template() {
     const { state, rules, tree } = this.context;
 
-    if (this.ruleIndex < 0 || typeof this.rule === "undefined") return html``;
+    if (this.ruleIndex < 0 || !this.rule) return html``;
 
     return html`<div class="editor">
       ${textInput({
@@ -300,12 +304,9 @@ class ActionEditor extends Base {
         )
       );
       state.update();
+      this.save();
     };
-    const allStates = new Set([
-      ...tree.allStates(),
-      ...rules.allStates(),
-      "$Speak",
-    ]);
+    const allStates = new Set([...tree.allStates(), ...rules.allStates()]);
     const allFields = new Set(data.allFields);
     const both = new Set([...allStates, ...allFields]);
     // value updates
@@ -370,6 +371,12 @@ class ActionEditor extends Base {
         Add update
       </button>
     </fieldset>`;
+  }
+
+  /** Save the actions */
+  save() {
+    const { rules } = this.context;
+    db.write("actions", rules.rules);
   }
 }
 

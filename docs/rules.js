@@ -57,7 +57,7 @@ export class Rules {
     // translate #name into field references
     exp = exp.replaceAll(/#(\w+)/g, "data.$1");
 
-    log("eic", expression, exp);
+    // log("eic", expression, exp);
 
     return exp;
   }
@@ -89,7 +89,7 @@ export class Rules {
     const variables = Object.keys(context);
     const values = Object.values(context);
     const exp = this.translate(expression);
-    log("eic", expression, exp);
+    // log("eic", expression, exp);
     // log("variables", variables);
     const func = Function(...variables, `return ${exp}`);
     return func(...values);

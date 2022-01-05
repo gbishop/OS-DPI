@@ -2,6 +2,7 @@ import { html } from "../_snowpack/pkg/uhtml.js";
 import { Base, componentMap } from "./base.js";
 import { styleString } from "./style.js";
 import css from "../_snowpack/pkg/ustyler.js";
+import "./img-db.js";
 
 /** Allow await'ing for a short time
  * @param {number} ms */
@@ -61,7 +62,7 @@ function pct(v) {
  * @property {number} y
  * @property {number} w
  * @property {number} h
- * @property {string} src
+ * @property {string} image
  * @property {boolean} invisible
  */
 /** @typedef {Row & vsdData} VRow */
@@ -79,9 +80,9 @@ class VSD extends Base {
     const items = /** @type {VRow[]} */ (
       data.getTaggedRows(tags, this.props.match)
     );
-    const src = items.find((item) => item.src)?.src;
+    const src = items.find((item) => item.image)?.image;
     return html`<div class="vsd flex show" id=${this.id}>
-      <img src=${src || ""} />
+      <img is="img-db" dbsrc=${src} />
       <div
         class="markers"
         ref=${(/** @type {HTMLDivElement & { observer: any }} */ node) => {

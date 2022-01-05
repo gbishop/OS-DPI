@@ -241,8 +241,11 @@ componentMap.addMap("display", Display);
 css`
   .display {
     border: 1px solid black;
-    padding: 1em;
+    padding: 0.25em;
     box-sizing: border-box;
     font-size: 200%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 `;

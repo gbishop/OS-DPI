@@ -5,7 +5,6 @@ import css from "../_snowpack/pkg/ustyler.js";
 export class Monitor extends Base {
   template() {
     const { state, rules } = this.context;
-
     const s = html`<table class="state">
       <thead>
         <tr>
@@ -14,13 +13,15 @@ export class Monitor extends Base {
         </tr>
       </thead>
       <tbody>
-        ${Object.keys(state.values).map((key) => {
-          const value = state.get(key);
-          return html`<tr>
-            <td>${key}</td>
-            <td>${value}</td>
-          </tr>`;
-        })}
+        ${Object.keys(state.values)
+          .filter((key) => key.startsWith("$"))
+          .map((key) => {
+            const value = state.get(key);
+            return html`<tr>
+              <td>${key}</td>
+              <td>${value}</td>
+            </tr>`;
+          })}
       </tbody>
     </table>`;
 
