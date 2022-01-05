@@ -17,6 +17,8 @@ following these links:
   Scene Display</a>
 - <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/contact.osdpi">Contact-like
   utterance-based system</a>
+  <a href="https://unc-project-open-aac.github.io/OS-DPI/#new">Start a new
+  design</a>
 
 **These demos are known to not work in Safari.** Please use Google Chrome or one
 if its variants.
