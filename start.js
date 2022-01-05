@@ -9,6 +9,7 @@ import { ToolBar } from "./components/toolbar";
 import db from "./db";
 import { log, logInit } from "./log";
 import pleaseWait from "./components/wait";
+import { fileOpen } from "browser-fs-access";
 import css from "ustyler";
 
 const safe = true;
@@ -22,13 +23,9 @@ function safeRender(where, what) {
     try {
       r = render(where, what);
     } catch (error) {
-      log("crash", error);
-      const id = where.id;
-      const div = document.createElement("div");
-      r = render(div, what);
-      where.id = "";
-      div.id = id;
-      where.replaceWith(div);
+      console.log("crash", error);
+      window.location.reload();
+      return;
     }
   } else {
     r = render(where, what);
@@ -69,7 +66,19 @@ async function welcome() {
             </p>
           </div>
         </div>
-        <button onclick=${() => db.readDesignFromFile()}>Load</button>
+        <button
+          onclick=${() =>
+            fileOpen({
+              mimeTypes: ["application/octet-stream"],
+              extensions: [".osdpi", ".zip"],
+              description: "OS-DPI designs",
+              id: "os-dpi",
+            })
+              .then((file) => pleaseWait(db.readDesignFromFile(file)))
+              .then(() => (window.location.hash = db.designName))}
+        >
+          Load
+        </button>
         <button
           onclick=${async () =>
             (window.location.hash = await db.uniqueName("new"))}
@@ -88,7 +97,7 @@ async function welcome() {
               <button
                 ?disabled=${!isSaved}
                 onclick=${async () => {
-                  await db.delete(name);
+                  await db.unload(name);
                   welcome();
                 }}
                 ref=${ref}
@@ -135,13 +144,12 @@ css`
 /** Load page and data then go
  */
 export async function start() {
-  console.log("start");
+  KeyHandler.state = null;
+
   if (window.location.search && !window.location.hash.slice(1)) {
-    console.log("fetching");
     const params = new URLSearchParams(window.location.search);
     if (params.get("fetch")) {
       await pleaseWait(db.readDesignFromURL(params.get("fetch")));
-      console.log("reloading", db.designName);
       window.history.replaceState(
         {},
         document.title,
@@ -151,7 +159,6 @@ export async function start() {
   }
   const name = window.location.hash.slice(1);
   logInit(name);
-  console.log("start", name);
   if (!name) {
     return welcome();
   }
@@ -192,6 +199,9 @@ export async function start() {
     };
   }
 
+  /* Configure the keyhandler */
+  KeyHandler.state = state;
+
   /* Designer */
   state.define("editing", layout === emptyPage);
   const designer = new Designer({}, context, null);
@@ -217,45 +227,58 @@ export async function start() {
       html`<div id="UI">${tree.template()}</div>
         ${IDE}`
     );
-    log("render UI");
+    console.log("render UI");
   }
   state.observe(debounce(renderUI));
   renderUI();
+}
 
-  /* Watch for updates happening in other tabs */
-  const channel = new BroadcastChannel("os-dpi");
-  /** @param {MessageEvent} event */
-  channel.onmessage = (event) => {
-    console.log("got broadcast", event);
-    const message = /** @type {UpdateNotification} */ (event.data);
-    if (db.designName == message.name) {
-      if (message.action == "update") {
-        start();
-      } else if (message.action == "rename") {
-        window.location.hash = message.newName;
-      }
+/* Watch for updates happening in other tabs */
+const channel = new BroadcastChannel("os-dpi");
+/** @param {MessageEvent} event */
+channel.onmessage = (event) => {
+  const message = /** @type {UpdateNotification} */ (event.data);
+  if (db.designName == message.name) {
+    if (message.action == "update") {
+      start();
+    } else if (message.action == "rename") {
+      window.location.hash = message.newName;
     }
-  };
-  db.addUpdateListener((message) => {
-    console.log("posting", name);
-    channel.postMessage(message);
-  });
+  }
+};
+db.addUpdateListener((message) => {
+  channel.postMessage(message);
+});
+
+const KeyHandler = {
+  /** @type {State} */
+  state: null,
 
   /** @param {KeyboardEvent} event */
-  document.addEventListener("keydown", (event) => {
+  handleEvent(event) {
     if (event.key == "d") {
+      console.log("keydown");
       const target = /** @type {HTMLElement} */ (event.target);
       if (target && target.tagName != "INPUT" && target.tagName != "TEXTAREA") {
         event.preventDefault();
         event.stopPropagation();
-        document.body.classList.toggle("designing");
-        state.update({ editing: !state.get("editing") });
+        if (this.state) {
+          document.body.classList.toggle("designing");
+          this.state.update({ editing: !this.state.get("editing") });
+        }
       }
     }
-  });
-}
+  },
+};
 
-window.addEventListener("hashchange", start);
+document.addEventListener("keydown", KeyHandler);
+
+window.addEventListener("hashchange", (e) => {
+  console.log("hashchange", window.location.hash, e);
+  sessionStorage.clear();
+  // window.location.reload();
+  start();
+});
 
 /** @typedef {PointerEvent & { target: HTMLElement }} ClickEvent */
 document.addEventListener("click", (/** @type {ClickEvent} */ event) => {
@@ -273,7 +296,7 @@ document.addEventListener("click", (/** @type {ClickEvent} */ event) => {
       id = div.id;
     }
   }
-  log("click", target.tagName, id, text.slice(0, 30));
+  console.log("click", target.tagName, id, text.slice(0, 30));
 });
 
 start();

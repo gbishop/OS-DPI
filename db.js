@@ -1,11 +1,17 @@
 import { openDB } from "idb/with-async-ittr";
 import { zipSync, strToU8, unzipSync, strFromU8 } from "fflate";
-import { fileOpen, fileSave } from "browser-fs-access";
+import { fileSave } from "browser-fs-access";
 
 class DB {
   constructor() {
-    this.dbPromise = openDB("os-dpi", 2, {
+    this.dbPromise = openDB("os-dpi", 3, {
       upgrade(db) {
+        try {
+          db.deleteObjectStore("store");
+          db.deleteObjectStore("images");
+          db.deleteObjectStore("saved");
+          db.deleteObjectStore("url");
+        } catch (e) {}
         let objectStore = db.createObjectStore("store", {
           keyPath: "id",
           autoIncrement: true,
@@ -15,9 +21,14 @@ class DB {
         db.createObjectStore("images", {
           keyPath: "name",
         });
-        // keep track of the id of records that have been saved
-        db.createObjectStore("saved", {
+        // keep track of the name and ETag (if any) of designs that have been saved
+        let savedStore = db.createObjectStore("saved", {
           keyPath: "name",
+        });
+        savedStore.createIndex("by-etag", "etag");
+        // track etags for urls
+        db.createObjectStore("url", {
+          keyPath: "url",
         });
       },
     });
@@ -25,6 +36,8 @@ class DB {
     this.designName = "";
     this.fileName = "";
     this.fileHandle = null;
+    this.fileVersion = 0.0;
+    this.fileUid = "";
   }
 
   /** set the name for the current design
@@ -48,9 +61,18 @@ class DB {
       cursor.update(record);
     }
     await tx.done;
+    const stx = db.transaction("saved", "readwrite");
+    const cursor = await stx.store.openCursor(this.designName);
+    if (cursor) {
+      const saved = cursor.value;
+      cursor.delete();
+      saved.name = newName;
+      stx.store.put(saved);
+    }
+    await stx.done;
+
     this.notify({ action: "rename", name: this.designName, newName });
     this.designName = newName;
-    window.location.hash = newName;
   }
 
   /**
@@ -153,32 +175,51 @@ class DB {
   }
 
   /** Read a design from a local file
+   * @param {import("browser-fs-access").FileWithHandle} file
    */
-  async readDesignFromFile() {
-    const blob = await fileOpen({
-      mimeTypes: ["application/octet-stream"],
-      extensions: [".osdpi", ".zip"],
-      description: "OS-DPI designs",
-      id: "os-dpi",
-    });
+  async readDesignFromFile(file) {
     // keep the handle so we can save to it later
-    this.fileHandle = blob.handle;
-    return this.readDesignFromBlob(blob, blob.name);
+    this.fileHandle = file.handle;
+    return this.readDesignFromBlob(file, file.name);
   }
 
   /** Read a design from a URL
    * @param {string} url
    */
   async readDesignFromURL(url) {
-    const response = await fetch(url);
+    const db = await this.dbPromise;
+    // have we seen this url before?
+    const urlRecord = await db.get("url", url);
+    /** @type {HeadersInit} */
+    const headers = {}; // for the fetch
+    let name = "";
+    if (urlRecord) {
+      /** @type {string} */
+      const etag = urlRecord.etag;
+      // do we have any saved designs with this etag?
+      const savedKey = await db.getKeyFromIndex("saved", "by-etag", etag);
+      if (savedKey) {
+        // yes we have a previously saved design from this url
+        // set the headers to check if it has changed
+        headers["If-None-Match"] = etag;
+        name = savedKey.toString();
+      }
+    }
+
+    const response = await fetch(url, { headers });
+    if (response.status == 304) {
+      // we already have it
+      console.log("no need to fetch, we have it", name);
+      this.designName = name;
+      return;
+    }
     if (!response.ok) {
-      console.log("throwing error");
       throw new Error(`Fetching the URL (${url}) failed: ${response.status}`);
     }
-    const blob = await response.blob();
-    // parse the URL
+    const etag = response.headers.get("ETag");
+    db.put("url", { url, etag });
+
     const urlParts = new URL(url, window.location.origin);
-    let name = "";
     const pathParts = urlParts.pathname.split("/");
     if (
       pathParts.length > 0 &&
@@ -186,18 +227,26 @@ class DB {
     ) {
       name = pathParts[pathParts.length - 1];
     } else {
-      name = "new";
+      throw new Error(`Design files should have .osdpi suffix`);
     }
-    return this.readDesignFromBlob(blob, name);
+
+    const blob = await response.blob();
+    // parse the URL
+    return this.readDesignFromBlob(blob, name, etag);
   }
 
   /** Read a design from a zip file
    * @param {Blob} blob
    * @param {string} filename
    */
-  async readDesignFromBlob(blob, filename) {
+  async readDesignFromBlob(blob, filename, etag = "none") {
     const db = await this.dbPromise;
     this.fileName = filename;
+
+    const zippedBuf = await readAsArrayBuffer(blob);
+    const zippedArray = new Uint8Array(zippedBuf);
+    const unzipped = unzipSync(zippedArray);
+
     // normalize the fileName to make the design name
     let name = this.fileName;
     // make sure it is unique
@@ -205,10 +254,6 @@ class DB {
 
     this.designName = name;
 
-    // load the new one
-    const zippedBuf = await readAsArrayBuffer(blob);
-    const zippedArray = new Uint8Array(zippedBuf);
-    const unzipped = unzipSync(zippedArray);
     for (const fname in unzipped) {
       if (fname.endsWith("json")) {
         const text = strFromU8(unzipped[fname]);
@@ -225,9 +270,9 @@ class DB {
         });
       }
     }
-    db.put("saved", { name: this.designName });
+    await db.put("saved", { name: this.designName, etag });
     this.notify({ action: "update", name: this.designName });
-    window.location.hash = this.designName;
+    return;
   }
 
   /** Save a design into a zip file
@@ -280,10 +325,10 @@ class DB {
     db.put("saved", { name: this.designName });
   }
 
-  /** Delete a design from the database
+  /** Unload a design from the database
    * @param {string} name - the name of the design to delete
    */
-  async delete(name) {
+  async unload(name) {
     const db = await this.dbPromise;
     const tx = db.transaction("store", "readwrite");
     const index = tx.store.index("by-name");
@@ -291,6 +336,7 @@ class DB {
       cursor.delete();
     }
     await tx.done;
+    db.delete("saved", name);
   }
 
   /** Return an image from the database
@@ -371,11 +417,4 @@ function readAsArrayBuffer(blob) {
     fr.onloadend = () => fr.result instanceof ArrayBuffer && resolve(fr.result);
     fr.readAsArrayBuffer(blob);
   });
-}
-
-/** Compute the hash of a blob for de-duping the database
- * @param {Blob} blob */
-async function hash(blob) {
-  const buf = await readAsArrayBuffer(blob);
-  return crypto.subtle.digest("SHA-256", buf);
 }
