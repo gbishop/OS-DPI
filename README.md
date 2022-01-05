@@ -9,12 +9,13 @@ in modern browsers.
 You can see a few simple and rough demos of the current capabilities by
 following these links:
 
-- <a href="https://unc-project-open-aac.github.io/OS-DPI/#36">Single words</a>
-- <a href="https://unc-project-open-aac.github.io/OS-DPI/#60">Single words with
-  morphs</a>
-- <a href="https://unc-project-open-aac.github.io/OS-DPI/#vsd">Visual Scene
-  Display</a>
-- <a href="https://unc-project-open-aac.github.io/OS-DPI/#contact">Contact-like
+- <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/36.osdpi">Single
+  words</a>
+- <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/60.osdpi">Single
+  words with morphs</a>
+- <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/vsd.osdpi">Visual
+  Scene Display</a>
+- <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/contact.osdpi">Contact-like
   utterance-based system</a>
 
 **These demos are known to not work in Safari.** Please use Google Chrome or one
