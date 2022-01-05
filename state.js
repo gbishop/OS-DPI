@@ -11,7 +11,7 @@ export class State {
     this.updated = new Set();
     if (this.persistKey) {
       /* persistence */
-      const persist = window.localStorage.getItem(this.persistKey);
+      const persist = window.sessionStorage.getItem(this.persistKey);
       if (persist) {
         this.values = JSON.parse(persist);
       }
@@ -50,7 +50,7 @@ export class State {
 
     if (this.persistKey) {
       const persist = JSON.stringify(this.values);
-      window.localStorage.setItem(this.persistKey, persist);
+      window.sessionStorage.setItem(this.persistKey, persist);
     }
   };
   /** observe - call this function when the state updates

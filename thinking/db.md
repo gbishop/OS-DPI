@@ -26,10 +26,8 @@ their name. My assumption is you only have a few designs loaded at a time.
 
 For a unified store the record structure might be like:
 
+- id: unique id autoincrement
 - name: The name of the design.
-- type: One of layout, actions, access, content, image or log
-- time: When this record was created for undo and crash recovery.
-- saved: True if the design has been exported to a zip file.
 - value: Data for the record.
 
 Changing the name of a DB is not possible, even changing store names is a pain.

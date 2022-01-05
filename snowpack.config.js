@@ -10,7 +10,7 @@ const root = __dirname;
 module.exports = {
   exclude: [
     "**/thinking/**",
-    "**/.git/**",
+    "**/.git/**/*",
     "**/package*",
     `${root}/node_modules/**`,
   ],
@@ -28,6 +28,13 @@ module.exports = {
     out: "docs",
     /* ... */
   },
+  /*
+  optimize: {
+    bundle: true,
+    minify: true,
+    target: "es2018",
+  },
+  */
   routes: [
     {
       src: "/log",

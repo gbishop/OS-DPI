@@ -1,8 +1,0 @@
-[
-  {
-    "origin": "grid",
-    "event": "press",
-    "conditions": [],
-    "updates": { "$Display": "#label", "$Speak": "#label" }
-  }
-]

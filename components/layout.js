@@ -2,8 +2,9 @@ import { html } from "uhtml";
 import { PropInfo } from "../properties";
 import { assemble } from "./base";
 import { colorNamesDataList } from "./style";
-import { Base } from "./base";
+import { Base, toDesign } from "./base";
 import { propEditor } from "./propEditor";
+import db from "../db";
 import css from "ustyler";
 
 import { log } from "../log";
@@ -20,22 +21,9 @@ export class Layout extends Base {
     scale: "1",
   };
 
-  /**
-   * @param {SomeProps} props
-   * @param {Context} context
-   * @param {Base} parent
-   */
-  constructor(props, context, parent) {
-    super(props, context, parent);
-
-    // assure that selected always has a value */
-    /** @type {Base} */
-    this.selected = this.context.tree;
-  }
-
   init() {
     const { state, tree } = this.context;
-    this.setSelected(this.getNode(state.get("path")));
+    this.setSelected(this.getNode(state.get("path")), state.get("editingTree"));
     document.querySelector("div#UI")?.addEventListener("click", (event) => {
       const target = /** @type {HTMLElement} */ (event.target);
       let id = null;
@@ -125,6 +113,7 @@ export class Layout extends Base {
     this.selected.children.push(child);
     this.setSelected(child, true);
     this.selected.context.state.update();
+    this.save();
   }
 
   /** Create the add child menu */
@@ -210,20 +199,12 @@ export class Layout extends Base {
             this.setSelected(parent);
           }
           this.selected.context.state.update();
+          this.save();
         }
       }}
     >
       Delete
     </button>`;
-  }
-
-  /** @param {Event & { target: HTMLInputElement }} event
-   */
-  propUpdate({ target }) {
-    const name = target.name;
-    const value = target.value;
-    this.selected.props[name] = value;
-    this.selected.context.state.update();
   }
 
   /** Render props for the selected element */
@@ -241,6 +222,7 @@ export class Layout extends Base {
             this.selected.props[name] = value;
             this.selected.context.state.update();
             this.update();
+            this.save();
           }
         );
       });
@@ -386,6 +368,14 @@ export class Layout extends Base {
   update(patch) {
     this.selected.context.state.update();
     this.context.state.update(patch);
+  }
+
+  /** save the layout to the db
+   */
+  save() {
+    const { tree } = this.context;
+    const layout = toDesign(tree);
+    db.write("layout", layout);
   }
 }
 

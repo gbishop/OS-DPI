@@ -34,6 +34,7 @@
  * @property {import("../rules").Rules} rules
  * @property {import("../data").Data} data
  * @property {Tree} tree
+ * @property {function} restart
  */
 
 /**
@@ -83,3 +84,11 @@
 /** @typedef {Event & { target: HTMLInputElement } } InputEventWithTarget */
 
 /** @typedef {import('uhtml').Hole} Hole */
+
+/** @typedef {Object} UpdateNotification
+ * @property {string} action
+ * @property {string} name
+ * @property {string} [newName]
+ */
+
+/** @typedef {import("../components/img-db.js").imgFromDb} ImgDb */

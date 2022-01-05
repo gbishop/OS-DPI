@@ -2,6 +2,7 @@ import { html } from "uhtml";
 import { Base, componentMap } from "./base";
 import { styleString } from "./style";
 import css from "ustyler";
+import "./img-db";
 
 /** Allow await'ing for a short time
  * @param {number} ms */
@@ -61,7 +62,7 @@ function pct(v) {
  * @property {number} y
  * @property {number} w
  * @property {number} h
- * @property {string} src
+ * @property {string} image
  * @property {boolean} invisible
  */
 /** @typedef {Row & vsdData} VRow */
@@ -79,9 +80,9 @@ class VSD extends Base {
     const items = /** @type {VRow[]} */ (
       data.getTaggedRows(tags, this.props.match)
     );
-    const src = items.find((item) => item.src)?.src;
+    const src = items.find((item) => item.image)?.image;
     return html`<div class="vsd flex show" id=${this.id}>
-      <img src=${src || ""} />
+      <img is="img-db" dbsrc=${src} />
       <div
         class="markers"
         ref=${(/** @type {HTMLDivElement & { observer: any }} */ node) => {

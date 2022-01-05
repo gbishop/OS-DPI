@@ -1,8 +1,9 @@
 import { html } from "uhtml";
-import { Base, toDesign } from "./base";
+import { Base } from "./base";
 import { TabControl, TabPanel } from "./tabcontrol";
 import { Layout } from "./layout";
 import { Actions } from "./actions";
+import { Content } from "./content";
 import css from "ustyler";
 
 export class Designer extends Base {
@@ -55,51 +56,22 @@ export class Designer extends Base {
       this.context,
       tabs
     );
+    contentPanel.children = [new Content({}, this.context, contentPanel)];
+
     tabs.children = [layoutPanel, actionPanel, accessPanel, contentPanel];
     /** @type {Base[]} */
     this.children = [tabs];
   }
 
   template() {
-    return html`${this.children.map((child) => child.template())}
-      <button
-        style="display: none"
-        onclick=${() => {
-          const { tree, rules } = this.context;
-          const filename = "design.json";
-          const data = {
-            layout: toDesign(tree),
-            rules: rules.rules,
-          };
-          const blob = new Blob([JSON.stringify(data)], { type: "text/json" });
-          const link = document.createElement("a");
-          link.download = filename;
-          link.href = window.URL.createObjectURL(blob);
-          link.dataset.downloadurl = [
-            "text/json",
-            link.download,
-            link.href,
-          ].join(":");
-
-          const evt = new MouseEvent("click", {
-            view: window,
-            bubbles: true,
-            cancelable: true,
-          });
-
-          link.dispatchEvent(evt);
-          link.remove();
-        }}
-      >
-        Download
-      </button> `;
+    return html`${this.children.map((child) => child.template())} `;
   }
 }
 
 css`
   body.designing {
     display: grid;
-    grid-template-rows: 50% 50%;
+    grid-template-rows: 2.5em 50% auto;
     grid-template-columns: 50% 50%;
   }
 
@@ -122,5 +94,13 @@ css`
   }
   body.designing #UI {
     position: relative;
+  }
+  body.designing #monitor {
+    grid-row-start: 3;
+    grid-column-start: 1;
+  }
+  body.designing #toolbar {
+    grid-row-start: 1;
+    grid-column-start: 1;
   }
 `;

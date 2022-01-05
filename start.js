@@ -1,11 +1,16 @@
-import { render } from "uhtml";
+import { render, html } from "uhtml";
 import { assemble } from "./components/index";
 import { Rules } from "./rules";
 import { Data } from "./data";
 import { State } from "./state";
 import { Designer } from "./components/designer";
-import { toDesign } from "./components/base";
 import { Monitor } from "./components/monitor";
+import { ToolBar } from "./components/toolbar";
+import db from "./db";
+import { log, logInit } from "./log";
+import pleaseWait from "./components/wait";
+import { fileOpen } from "browser-fs-access";
+import css from "ustyler";
 
 const safe = true;
 
@@ -18,21 +23,15 @@ function safeRender(where, what) {
     try {
       r = render(where, what);
     } catch (error) {
-      log("crash", error);
-      const id = where.id;
-      const div = document.createElement("div");
-      r = render(div, what);
-      where.id = "";
-      div.id = id;
-      where.replaceWith(div);
+      console.log("crash", error);
+      window.location.reload();
+      return;
     }
   } else {
     r = render(where, what);
   }
   return r;
 }
-
-import { log, logInit } from "./log";
 
 /** let me wait for the page to load */
 const pageLoaded = new Promise((resolve) => {
@@ -42,37 +41,150 @@ const pageLoaded = new Promise((resolve) => {
   });
 });
 
-/** Load data and page then go
- * @param {string} name
+/** welcome screen
  */
-export async function start(name) {
-  logInit(name);
-  log("start");
-  const parts = ["design.json", "rules.json", "data.json"].map(async (file) => {
-    const resp = await fetch(`./examples/${name}/${file}`);
-    return await resp.json();
-  });
-  let [layout, rulesArray, dataArray, _] = await Promise.all([
-    ...parts,
-    pageLoaded,
-  ]);
+async function welcome() {
+  // clear any values left over
+  sessionStorage.clear();
+  const names = await db.names();
+  const saved = await db.saved();
+  // setup data for the table
+  names.sort();
+  render(
+    document.body,
+    html`
+      <div id="welcome">
+        <div id="head">
+          <img class="icon" src="./icon.png" />
+          <div>
+            <h1>Welcome to the Project Open AAC OS-DPI</h1>
+            <p>
+              With this tool you can create experimental AAC interfaces. Start
+              by loading a design from an ".osdpi" file or by creating a new
+              one. Switch between the IDE and the User Interface with the "d"
+              key.
+            </p>
+          </div>
+        </div>
+        <button
+          onclick=${() =>
+            fileOpen({
+              mimeTypes: ["application/octet-stream"],
+              extensions: [".osdpi", ".zip"],
+              description: "OS-DPI designs",
+              id: "os-dpi",
+            })
+              .then((file) => pleaseWait(db.readDesignFromFile(file)))
+              .then(() => (window.location.hash = db.designName))}
+        >
+          Load
+        </button>
+        <button
+          onclick=${async () =>
+            (window.location.hash = await db.uniqueName("new"))}
+        >
+          New
+        </button>
+        <h2>Loaded designs:</h2>
+        ${names.map((name) => {
+          const isSaved = saved.indexOf(name) >= 0;
+          const ref = {};
+          return html`<ul>
+            <li>
+              <a href=${"#" + name}>${name}</a>
+              ${isSaved ? "Saved" : "Not saved"}
 
-  if (localStorage.getItem(`design-${name}`)) {
-    const jdesign = localStorage.getItem(`design-${name}`);
-    if (jdesign) {
-      const design = JSON.parse(jdesign);
-      layout = design.layout;
-      rulesArray = design.rulesArray;
+              <button
+                ?disabled=${!isSaved}
+                onclick=${async () => {
+                  await db.unload(name);
+                  welcome();
+                }}
+                ref=${ref}
+              >
+                Unload
+              </button>
+              ${!isSaved
+                ? html`<label for=${name}>Enable unload without saving: </label>
+                    <input
+                      id=${name}
+                      type="checkbox"
+                      onchange=${({ currentTarget }) => {
+                        if (ref.current)
+                          ref.current.disabled =
+                            !currentTarget.checked && !isSaved;
+                      }}
+                    />`
+                : html``}
+            </li>
+          </ul> `;
+        })}
+      </div>
+    `
+  );
+}
+
+css`
+  #welcome {
+    padding: 1em;
+  }
+  #welcome #head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+  #welcome #head div {
+    padding-left: 1em;
+  }
+  #welcome #head div p {
+    max-width: 40em;
+  }
+`;
+
+/** Load page and data then go
+ */
+export async function start() {
+  KeyHandler.state = null;
+
+  if (window.location.search && !window.location.hash.slice(1)) {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("fetch")) {
+      await pleaseWait(db.readDesignFromURL(params.get("fetch")));
+      window.history.replaceState(
+        {},
+        document.title,
+        window.location.origin + window.location.pathname + "#" + db.designName
+      );
     }
   }
+  const name = window.location.hash.slice(1);
+  logInit(name);
+  if (!name) {
+    return welcome();
+  }
+  db.setDesignName(name);
+  const emptyPage = {
+    type: "page",
+    props: {},
+    children: [],
+  };
+  const layout = await db.read("layout", emptyPage);
+  const rulesArray = await db.read("actions", []);
+  const dataArray = await db.read("content", []);
+  await pageLoaded;
 
-  const state = new State(`UIState-${name}`);
+  const state = new State(`UIState`);
   const rules = new Rules(rulesArray, state);
   const data = new Data(dataArray);
+  /** @type {Context} */
+  // @ts-ignore
   const context = {
     data,
     rules,
     state,
+    restart: () => {
+      start();
+    },
   };
   // @ts-ignore
   const tree = assemble(layout, context);
@@ -80,73 +192,93 @@ export async function start(name) {
 
   /** @param {() => void} f */
   function debounce(f) {
-    return f;
-    /*
-     * maybe debounce is causing problems?
     let timeout = null;
     return () => {
       if (timeout) window.cancelAnimationFrame(timeout);
       timeout = window.requestAnimationFrame(f);
     };
-    */
   }
 
+  /* Configure the keyhandler */
+  KeyHandler.state = state;
+
+  /* Designer */
+  state.define("editing", layout === emptyPage);
+  const designer = new Designer({}, context, null);
+
+  /* ToolBar */
+  const toolbar = new ToolBar({}, context, null);
+
+  /* Monitor */
+  const monitor = new Monitor({}, context, null);
+
   function renderUI() {
-    const UI = document.querySelector("#UI");
-    if (UI) safeRender(UI, tree.template());
-    log("render UI");
+    let IDE = html``;
+    if (state.get("editing")) {
+      IDE = html`
+        <div id="designer">${designer.template()}</div>
+        <div id="monitor">${monitor.template()}</div>
+        <div id="toolbar">${toolbar.template()}</div>
+      `;
+    }
+    document.body.classList.toggle("designing", state.get("editing"));
+    safeRender(
+      document.body,
+      html`<div id="UI">${tree.template()}</div>
+        ${IDE}`
+    );
+    console.log("render UI");
   }
   state.observe(debounce(renderUI));
   renderUI();
+}
 
-  /* Designer */
-  const designerState = new State(`DIState-${name}`);
-  const designer = new Designer(
-    {},
-    { state: designerState, rules, data, tree },
-    null
-  );
-  function renderDesigner() {
-    if (!document.body.classList.contains("designing")) return;
-    log("render designer");
-    const DI = document.querySelector("div#designer");
-    if (DI) safeRender(DI, designer.template());
-    localStorage.setItem(
-      `design-${name}`,
-      JSON.stringify({
-        layout: toDesign(tree),
-        rulesArray: rules.rules,
-      })
-    );
-    log("render designer");
+/* Watch for updates happening in other tabs */
+const channel = new BroadcastChannel("os-dpi");
+/** @param {MessageEvent} event */
+channel.onmessage = (event) => {
+  const message = /** @type {UpdateNotification} */ (event.data);
+  if (db.designName == message.name) {
+    if (message.action == "update") {
+      start();
+    } else if (message.action == "rename") {
+      window.location.hash = message.newName;
+    }
   }
-  designerState.observe(debounce(renderDesigner));
-  renderDesigner();
+};
+db.addUpdateListener((message) => {
+  channel.postMessage(message);
+});
 
-  /* Monitor */
-  const monitor = new Monitor({}, { state, rules, data, tree }, null);
-  function renderMonitor() {
-    log("render monitor");
-    if (!document.body.classList.contains("designing")) return;
-    const MI = document.querySelector("div#monitor");
-    if (MI) safeRender(MI, monitor.template());
-  }
-  state.observe(debounce(renderMonitor));
-  renderMonitor();
+const KeyHandler = {
+  /** @type {State} */
+  state: null,
 
   /** @param {KeyboardEvent} event */
-  document.addEventListener("keydown", (event) => {
+  handleEvent(event) {
     if (event.key == "d") {
+      console.log("keydown");
       const target = /** @type {HTMLElement} */ (event.target);
       if (target && target.tagName != "INPUT" && target.tagName != "TEXTAREA") {
         event.preventDefault();
         event.stopPropagation();
-        document.body.classList.toggle("designing");
-        state.update();
+        if (this.state) {
+          document.body.classList.toggle("designing");
+          this.state.update({ editing: !this.state.get("editing") });
+        }
       }
     }
-  });
-}
+  },
+};
+
+document.addEventListener("keydown", KeyHandler);
+
+window.addEventListener("hashchange", (e) => {
+  console.log("hashchange", window.location.hash, e);
+  sessionStorage.clear();
+  // window.location.reload();
+  start();
+});
 
 /** @typedef {PointerEvent & { target: HTMLElement }} ClickEvent */
 document.addEventListener("click", (/** @type {ClickEvent} */ event) => {
@@ -164,5 +296,7 @@ document.addEventListener("click", (/** @type {ClickEvent} */ event) => {
       id = div.id;
     }
   }
-  log("click", target.tagName, id, text.slice(0, 30));
+  console.log("click", target.tagName, id, text.slice(0, 30));
 });
+
+start();
