@@ -13,10 +13,9 @@ export default async function wait(promise, message = "Please wait") {
   const div = document.createElement("div");
   div.id = "PleaseWait";
   document.body.appendChild(div);
-  const timer = window.setTimeout(
-    () => render(div, html`<div><p class="message">${message}</p></div>`),
-    500
-  );
+  const timer = window.setTimeout(() => {
+    render(div, html`<div><p class="message">${message}</p></div>`);
+  }, 500);
   try {
     const result = await promise;
     clearTimeout(timer);
@@ -24,7 +23,7 @@ export default async function wait(promise, message = "Please wait") {
     return result;
   } catch (e) {
     clearTimeout(timer);
-    return new Promise((resolve) =>
+    return new Promise((resolve) => {
       render(
         div,
         html`<div>
@@ -38,8 +37,8 @@ export default async function wait(promise, message = "Please wait") {
             OK
           </button>
         </div>`
-      )
-    );
+      );
+    });
   }
 }
 
