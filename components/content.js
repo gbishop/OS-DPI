@@ -2,6 +2,7 @@ import { html, render } from "uhtml";
 import { Base } from "./base";
 import db from "../db";
 import { Data } from "../data";
+import { fileOpen } from "browser-fs-access";
 import XLSX from "xlsx";
 import css from "ustyler";
 import pleaseWait from "./wait";
@@ -40,6 +41,10 @@ async function readSheetFromBlob(blob) {
 }
 
 export class Content extends Base {
+  init() {
+    this.sheetHandle = null;
+    this.sheetMessage = "";
+  }
   template() {
     const data = this.context.data;
     return html`<div class="content">
@@ -87,24 +92,42 @@ export class Content extends Base {
           type="url"
           placeholder="Enter a URL"
         />
-        <input type="submit" value="Load" />
+        <input type="submit" value="Load remote sheet" />
       </form>
       <br />
-      <label for="localFileInput">Local: </label>
-      <input
-        id="localFileInput"
-        type="file"
-        onchange=${async (/** @type {InputEvent} e */ e) => {
-          // clear messages
-          const target = /** @type {HTMLInputElement} */ (e.target);
-          if (target.files.length > 0) {
-            var result = await pleaseWait(readSheetFromBlob(target.files[0]));
-            await db.write("content", result);
-            this.context.data = new Data(result);
-            this.context.state.update();
+      <button
+        onclick=${async () => {
+          this.sheetMessage = "";
+          try {
+            const blob = await fileOpen();
+            if (blob) {
+              this.sheetHandle = blob.handle;
+              const result = await pleaseWait(readSheetFromBlob(blob));
+              await db.write("content", result);
+              this.sheetMessage = `Loaded ${blob.name}`;
+              this.context.state.update();
+            }
+          } catch (e) {
+            this.sheetHandle = null;
           }
         }}
-      />
+      >
+        Load local sheet
+      </button>
+      <button
+        ?disabled=${!this.sheetHandle}
+        onclick=${async () => {
+          const blob = await this.sheetHandle.getFile();
+          const result = await pleaseWait(readSheetFromBlob(blob));
+          await db.write("content", result);
+          this.sheetMessage = `Reloaded ${blob.name}`;
+          this.context.data = new Data(result);
+          this.context.state.update();
+        }}
+      >
+        Reload local sheet
+      </button>
+      <span>${this.sheetMessage}</span>
       <h2>Load images</h2>
       <label for="images">Upload images: </label>
       <input
