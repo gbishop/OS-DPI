@@ -2,6 +2,7 @@ import { html, render } from "../_snowpack/pkg/uhtml.js";
 import { Base } from "./base.js";
 import db from "../db.js";
 import { Data } from "../data.js";
+import { fileOpen } from "../_snowpack/pkg/browser-fs-access.js";
 import XLSX from "../_snowpack/pkg/xlsx.js";
 import css from "../_snowpack/pkg/ustyler.js";
 import pleaseWait from "./wait.js";
@@ -40,6 +41,10 @@ async function readSheetFromBlob(blob) {
 }
 
 export class Content extends Base {
+  init() {
+    this.sheetHandle = null;
+    this.sheetMessage = "";
+  }
   template() {
     const data = this.context.data;
     return html`<div class="content">
@@ -87,22 +92,42 @@ export class Content extends Base {
           type="url"
           placeholder="Enter a URL"
         />
-        <input type="submit" value="Load" />
+        <input type="submit" value="Load remote sheet" />
       </form>
       <br />
-      <label for="localFileInput">Local: </label>
-      <input
-        id="localFileInput"
-        type="file"
-        onchange=${async (/** @type {InputEvent} e */ e) => {
-          // clear messages
-          const target = /** @type {HTMLInputElement} */ (e.target);
-          var result = await pleaseWait(readSheetFromBlob(target.files[0]));
+      <button
+        onclick=${async () => {
+          this.sheetMessage = "";
+          try {
+            const blob = await fileOpen();
+            if (blob) {
+              this.sheetHandle = blob.handle;
+              const result = await pleaseWait(readSheetFromBlob(blob));
+              await db.write("content", result);
+              this.sheetMessage = `Loaded ${blob.name}`;
+              this.context.state.update();
+            }
+          } catch (e) {
+            this.sheetHandle = null;
+          }
+        }}
+      >
+        Load local sheet
+      </button>
+      <button
+        ?disabled=${!this.sheetHandle}
+        onclick=${async () => {
+          const blob = await this.sheetHandle.getFile();
+          const result = await pleaseWait(readSheetFromBlob(blob));
           await db.write("content", result);
+          this.sheetMessage = `Reloaded ${blob.name}`;
           this.context.data = new Data(result);
           this.context.state.update();
         }}
-      />
+      >
+        Reload local sheet
+      </button>
+      <span>${this.sheetMessage}</span>
       <h2>Load images</h2>
       <label for="images">Upload images: </label>
       <input
@@ -116,12 +141,14 @@ export class Content extends Base {
             return;
           }
           for (const file of input.files) {
-            await db.addImage(file, file.name);
-            // ask any live images with this name to refresh
-            for (const img of document.querySelectorAll(
-              `img[dbsrc="${file.name}"]`
-            )) {
-              /** @type {ImgDb} */ (img).refresh();
+            if (file && file.type.startsWith("image/")) {
+              await db.addImage(file, file.name);
+              // ask any live images with this name to refresh
+              for (const img of document.querySelectorAll(
+                `img[dbsrc="${file.name}"]`
+              )) {
+                /** @type {ImgDb} */ (img).refresh();
+              }
             }
           }
           this.context.state.update();
