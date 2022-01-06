@@ -99,7 +99,11 @@ export class Content extends Base {
         onclick=${async () => {
           this.sheetMessage = "";
           try {
-            const blob = await fileOpen();
+            const blob = await fileOpen({
+              extensions: [".csv", ".tsv", ".ods", ".xls", ".xlsx"],
+              description: "Spreadsheets",
+              id: "os-dpi",
+            });
             if (blob) {
               this.sheetHandle = blob.handle;
               const result = await pleaseWait(readSheetFromBlob(blob));
@@ -117,6 +121,7 @@ export class Content extends Base {
       <button
         ?disabled=${!this.sheetHandle}
         onclick=${async () => {
+          // @ts-ignore
           const blob = await this.sheetHandle.getFile();
           const result = await pleaseWait(readSheetFromBlob(blob));
           await db.write("content", result);
