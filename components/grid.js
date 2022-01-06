@@ -51,7 +51,7 @@ class Grid extends Base {
 
     for (let i = offset; i < Math.min(items.length, perPage + offset); i++) {
       const item = items[i];
-      let itemIndex = i;
+      let itemIndex = ((+item.row - 1)*columns + (+item.column-1))%perPage || i;
       while (offset + result.length < itemIndex) {
         result.push(html`<button tabindex="-1" disabled></button>`);
       }
