@@ -97,10 +97,12 @@ export class Content extends Base {
         onchange=${async (/** @type {InputEvent} e */ e) => {
           // clear messages
           const target = /** @type {HTMLInputElement} */ (e.target);
-          var result = await pleaseWait(readSheetFromBlob(target.files[0]));
-          await db.write("content", result);
-          this.context.data = new Data(result);
-          this.context.state.update();
+          if (target.files.length > 0) {
+            var result = await pleaseWait(readSheetFromBlob(target.files[0]));
+            await db.write("content", result);
+            this.context.data = new Data(result);
+            this.context.state.update();
+          }
         }}
       />
       <h2>Load images</h2>
@@ -116,12 +118,14 @@ export class Content extends Base {
             return;
           }
           for (const file of input.files) {
-            await db.addImage(file, file.name);
-            // ask any live images with this name to refresh
-            for (const img of document.querySelectorAll(
-              `img[dbsrc="${file.name}"]`
-            )) {
-              /** @type {ImgDb} */ (img).refresh();
+            if (file && file.type.startsWith("image/")) {
+              await db.addImage(file, file.name);
+              // ask any live images with this name to refresh
+              for (const img of document.querySelectorAll(
+                `img[dbsrc="${file.name}"]`
+              )) {
+                /** @type {ImgDb} */ (img).refresh();
+              }
             }
           }
           this.context.state.update();
