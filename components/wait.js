@@ -22,6 +22,7 @@ export default async function wait(promise, message = "Please wait") {
     div.remove();
     return result;
   } catch (e) {
+    console.trace("wait error");
     clearTimeout(timer);
     return new Promise((resolve) => {
       render(
