@@ -49,6 +49,15 @@ class Grid extends Base {
     }
     const offset = this.page * perPage;
 
+    /* If items contain row and column fields,
+    sort items accodingly, and let the default 
+    behavior of grid take care of the rest */
+    if(items.some((item) => "row" in item) && 
+       items.some((item) => "column" in item))
+      items.sort((a, b) => +a.row > +b.row 
+        || +a.row==+b.row 
+        && +a.column > +b.column);
+
     for (let i = offset; i < Math.min(items.length, perPage + offset); i++) {
       const item = items[i];
       let itemIndex = ((+item.row - 1)*columns + (+item.column-1))%perPage || i;
