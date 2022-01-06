@@ -1,7 +1,7 @@
 export class Data {
   /** @param {Rows} rows */
   constructor(rows) {
-    this.allrows = rows;
+    this.allrows = (Array.isArray(rows) && rows) || [];
     this.allFields = rows.reduce(
       (previous, current) =>
         Array.from(
