@@ -3,6 +3,7 @@ import { PropInfo } from "../properties.js";
 import { assemble } from "./base.js";
 import { colorNamesDataList } from "./style.js";
 import { Base, toDesign } from "./base.js";
+import { Stack } from "./stack.js";
 import { propEditor } from "./propEditor.js";
 import db from "../db.js";
 import css from "../_snowpack/pkg/ustyler.js";
@@ -112,7 +113,6 @@ export class Layout extends Base {
     );
     this.selected.children.push(child);
     this.setSelected(child, true);
-    this.selected.context.state.update();
     this.save();
   }
 
@@ -133,6 +133,166 @@ export class Layout extends Base {
     >
       <option selected disabled value="">Add</option>
       ${allowed.map((type) => html`<option value=${type}>${type}</option>`)}
+    </select>`;
+  }
+
+  /** Move a component within its parent stack
+   * @param {string} command
+   */
+  moveChild(command) {
+    const selected = this.selected;
+    const index = selected.index;
+    const parent = selected.parent;
+    if (!parent) return;
+    const siblings = parent.children;
+    const grandparent = parent?.parent;
+    switch (command) {
+      case "up":
+        if (index > 0) {
+          // swap with previous
+          [siblings[index - 1], siblings[index]] = [
+            siblings[index],
+            siblings[index - 1],
+          ];
+        } else if (index == 0) {
+          // move up into grandparent
+          if (
+            grandparent &&
+            parent instanceof Stack &&
+            grandparent instanceof Stack
+          ) {
+            parent.children.splice(index, 1);
+            grandparent.children.splice(parent.index, 0, selected);
+            selected.parent = grandparent;
+          }
+        }
+        this.save();
+        break;
+      case "down":
+        if (index < siblings.length - 1) {
+          // swap with next
+          [siblings[index + 1], siblings[index]] = [
+            siblings[index],
+            siblings[index + 1],
+          ];
+        } else if (index < siblings.length) {
+          // move down into grandparent
+          if (
+            grandparent &&
+            parent instanceof Stack &&
+            grandparent instanceof Stack
+          ) {
+            parent.children.splice(index, 1);
+            grandparent.children.splice(parent.index + 1, 0, selected);
+            selected.parent = grandparent;
+          }
+        }
+        this.save();
+        break;
+      case "new":
+        // replace with a stack containing selected
+        if (parent instanceof Stack) {
+          const newStack = assemble(
+            { type: "stack", props: {}, children: [] },
+            selected.context,
+            parent
+          );
+          parent.children.splice(index, 1, newStack);
+          newStack.children.push(selected);
+          selected.parent = newStack;
+          this.save();
+        }
+        break;
+      case "above": {
+        // move into the stack immediately above
+        const stack = selected.previousSibling();
+        if (stack && stack instanceof Stack) {
+          parent.children.splice(index, 1);
+          stack.children.push(selected);
+          selected.parent = stack;
+          this.save();
+        }
+        break;
+      }
+      case "below": {
+        // move into the stack immediately below
+        const stack = selected.nextSibling();
+        if (stack && stack instanceof Stack) {
+          parent.children.splice(index, 1);
+          stack.children.splice(0, 0, selected);
+          selected.parent = stack;
+          this.save();
+        }
+        break;
+      }
+      case "split":
+        // split the current stack here
+        if (
+          grandparent &&
+          parent instanceof Stack &&
+          grandparent instanceof Stack
+        ) {
+          const stack = assemble(
+            { type: "stack", props: {}, children: [] },
+            selected.context,
+            grandparent
+          );
+          stack.children = parent.children.splice(index);
+          stack.children.forEach((child) => (child.parent = stack));
+          grandparent.children.splice(parent.index + 1, 0, stack);
+          this.save();
+        }
+        break;
+    }
+  }
+
+  /** Create the move menu
+   * @returns {Hole} */
+  moveMenu() {
+    const selected = this.selected;
+    const index = selected.index;
+    const parent = selected.parent;
+    const siblings = parent?.children || [];
+    const grandparent = parent?.parent;
+    const isStack = parent instanceof Stack;
+    const previous = selected.previousSibling();
+    const next = selected.nextSibling();
+    return html`<select
+      class="menu"
+      onchange=${(/** @type {InputEventWithTarget} */ e) => {
+        const value = e.target.value;
+        if (value) {
+          this.moveChild(value);
+        }
+        e.target.value = "";
+      }}
+    >
+      <option selected disabled value="">Move</option>
+      <option
+        value="up"
+        ?disabled=${index == 0 &&
+        (!grandparent || !(grandparent instanceof Stack) || !isStack)}
+      >
+        Move up
+      </option>
+      <option
+        value="down"
+        ?disabled=${index == siblings.length - 1 &&
+        (!grandparent || !(grandparent instanceof Stack) || !isStack)}
+      >
+        Move down
+      </option>
+      <option value="new" ?disabled=${!isStack}>Move into new stack</option>
+      <option
+        value="above"
+        ?disabled=${!isStack || !(previous instanceof Stack)}
+      >
+        Move into stack above
+      </option>
+      <option value="below" ?disabled=${!isStack || !(next instanceof Stack)}>
+        Move into stack below
+      </option>
+      <option value="split" ?disabled=${!isStack}>Split stack here</option>
     </select>`;
   }
 
@@ -198,7 +358,6 @@ export class Layout extends Base {
           } else {
             this.setSelected(parent);
           }
-          this.selected.context.state.update();
           this.save();
         }
       }}
@@ -220,8 +379,6 @@ export class Layout extends Base {
           this.context,
           (name, value) => {
             this.selected.props[name] = value;
-            this.selected.context.state.update();
-            this.update();
             this.save();
           }
         );
@@ -239,7 +396,7 @@ export class Layout extends Base {
     log("controls");
     return html`<div class="controls">
       <h1>Editing ${this.selected.constructor.name} ${this.selected.name}</h1>
-      ${this.addMenu()} ${this.deleteCurrent()}
+      ${this.addMenu()} ${this.deleteCurrent()} ${this.moveMenu()}
       <div class="props">${this.showProps()}</div>
       <button id="controls-return" onclick=${() => this.closeControls()}>
         Return</button
@@ -366,13 +523,13 @@ export class Layout extends Base {
    * @param {Object} [patch]
    */
   update(patch) {
-    this.selected.context.state.update();
     this.context.state.update(patch);
   }
 
   /** save the layout to the db
    */
   save() {
+    this.update();
     const { tree } = this.context;
     const layout = toDesign(tree);
     db.write("layout", layout);

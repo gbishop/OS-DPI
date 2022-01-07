@@ -106,6 +106,11 @@ export class Base {
     return html``;
   }
 
+  get index() {
+    const siblings = this.parent?.children || [];
+    return siblings.indexOf(this);
+  }
+
   nextSibling() {
     const siblings = this.parent?.children || [];
     const ndx = siblings.indexOf(this);

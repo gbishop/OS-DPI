@@ -2,7 +2,7 @@ import { Base, componentMap } from "./base.js";
 import { html } from "../_snowpack/pkg/uhtml.js";
 import { styleString } from "./style.js";
 
-class Stack extends Base {
+export class Stack extends Base {
   static defaultProps = { direction: "column", background: "", scale: "1" };
   static allowedChildren = [
     "stack",
