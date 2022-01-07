@@ -2,7 +2,7 @@ import { Base, componentMap } from "./base";
 import { html } from "uhtml";
 import { styleString } from "./style";
 
-class Stack extends Base {
+export class Stack extends Base {
   static defaultProps = { direction: "column", background: "", scale: "1" };
   static allowedChildren = [
     "stack",
