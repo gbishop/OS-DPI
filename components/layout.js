@@ -136,6 +136,39 @@ export class Layout extends Base {
     </select>`;
   }
 
+  /** Move a component within its parent stack
+   * @param {string} command
+   */
+  moveChild(command) {
+    const selected = this.selected;
+    const index = selected.index;
+    switch (command) {
+      case "up":
+    }
+  }
+
+  /** Create the move menu
+   * @returns {Hole} */
+  moveMenu() {
+    return html`<select
+      class="menu"
+      onchange=${(/** @type {InputEventWithTarget} */ e) => {
+        const value = e.target.value;
+        if (value) {
+          this.moveChild(value);
+        }
+      }}
+    >
+      <option selected disabled value="">Move</option>
+      <option value="up">Move up</option>
+      <option value="down">Move down</option>
+      <option value="new">Move into new stack</option>
+      <option value="above">Move into stack above</option>
+      <option value="below">Move into stack below</option>
+      <option value="split">Split stack here</option>
+    </select>`;
+  }
+
   /** Get a list of all children
    * @param {Tree} tree
    * @returns {Tree[]}
@@ -239,7 +272,7 @@ export class Layout extends Base {
     log("controls");
     return html`<div class="controls">
       <h1>Editing ${this.selected.constructor.name} ${this.selected.name}</h1>
-      ${this.addMenu()} ${this.deleteCurrent()}
+      ${this.addMenu()} ${this.deleteCurrent()} ${this.moveMenu()}
       <div class="props">${this.showProps()}</div>
       <button id="controls-return" onclick=${() => this.closeControls()}>
         Return</button
