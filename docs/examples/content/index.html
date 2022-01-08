@@ -5,8 +5,8 @@
     <title></title>
     <script>
       (async () => {
-        const user = location.hostname.split(".")[0];
-        const repo = location.path.split("/")[1];
+        const user = window.location.hostname.split(".")[0];
+        const repo = window.location.path.split("/")[1];
         const path = `https://api.github.com/repos/${user}/${repo}/contents/${location.path
           .split("/")
           .slice(2)
