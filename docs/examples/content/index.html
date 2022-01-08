@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title></title>
+    <script>
+      (async () => {
+        const user = location.domain.split(".")[0];
+        const repo = location.path.split("/")[1];
+        const path = `https://api.github.com/repos/${user}/${repo}/contents/${location.path
+          .split("/")
+          .slice(2)
+          .join("/")}/`;
+        console.log({ user, repo, path });
+        const response = await fetch(path);
+        const data = await response.json();
+        let htmlString = "<ul>";
+        for (let file of data) {
+          htmlString += `<li><a href="${file.path}">${file.name}</a></li>`;
+        }
+        htmlString += "</ul>";
+        document.body.innerHTML = htmlString;
+      })();
+    </script>
+  </head>
+  <body>
+    https://api.github.com/repos/unc-project-open-aac/OS-DPI/contents/examples/content
+    https://unc-project-open-aac.github.io/OS-DPI/examples/content/36.csv
+  </body>
+</html>
