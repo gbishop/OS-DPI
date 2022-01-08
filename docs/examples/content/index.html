@@ -17,7 +17,7 @@
         const data = await response.json();
         let htmlString = "<ul>";
         for (let file of data) {
-          htmlString += `<li><a href="${file.path}">${file.download_name}</a></li>`;
+          htmlString += `<li><a href="${file.download_url}">${file.name}</a></li>`;
         }
         htmlString += "</ul>";
         document.body.innerHTML = htmlString;
