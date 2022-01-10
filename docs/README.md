@@ -21,7 +21,8 @@ following these links:
   design</a>
 
 You can download the content used in these demonstrations in the
-<a href="examples/">examples</a> folder.
+<a href="https://unc-project-open-aac.github.io/OS-DPI/examples/">examples</a>
+folder.
 
 **These demos are known to not work in Safari.** Please use Google Chrome or one
 if its variants.

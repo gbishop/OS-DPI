@@ -1,10 +1,10 @@
-import { html } from "../_snowpack/pkg/uhtml.js";
+import { html } from "../snowpack/pkg/uhtml.js";
 import { Base } from "./base.js";
 import { TabControl, TabPanel } from "./tabcontrol.js";
 import { Layout } from "./layout.js";
 import { Actions } from "./actions.js";
 import { Content } from "./content.js";
-import css from "../_snowpack/pkg/ustyler.js";
+import css from "../snowpack/pkg/ustyler.js";
 
 export class Designer extends Base {
   /**

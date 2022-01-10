@@ -1,10 +1,10 @@
-import { html, render } from "../_snowpack/pkg/uhtml.js";
+import { html, render } from "../snowpack/pkg/uhtml.js";
 import { Base } from "./base.js";
 import db from "../db.js";
 import { Data } from "../data.js";
-import { fileOpen } from "../_snowpack/pkg/browser-fs-access.js";
-import XLSX from "../_snowpack/pkg/xlsx.js";
-import css from "../_snowpack/pkg/ustyler.js";
+import { fileOpen } from "../snowpack/pkg/browser-fs-access.js";
+import XLSX from "../snowpack/pkg/xlsx.js";
+import css from "../snowpack/pkg/ustyler.js";
 import pleaseWait from "./wait.js";
 
 /** @param {Blob} blob */

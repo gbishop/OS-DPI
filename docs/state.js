@@ -1,4 +1,4 @@
-import merge from "./_snowpack/pkg/mergerino.js";
+import merge from "./snowpack/pkg/mergerino.js";
 
 export class State {
   constructor(persistKey = "") {

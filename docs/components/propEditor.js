@@ -1,8 +1,8 @@
-import { html } from "../_snowpack/pkg/uhtml.js";
+import { html } from "../snowpack/pkg/uhtml.js";
 import { validateColor, getColor } from "./style.js";
 import { textInput } from "./input.js";
 import { log } from "../log.js";
-import css from "../_snowpack/pkg/ustyler.js";
+import css from "../snowpack/pkg/ustyler.js";
 
 /**
  * @param {Tree} component

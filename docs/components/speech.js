@@ -1,7 +1,7 @@
 import { log } from "../log.js";
 import { strip } from "./display.js";
 import { Base, componentMap } from "./base.js";
-import { html } from "../_snowpack/pkg/uhtml.js";
+import { html } from "../snowpack/pkg/uhtml.js";
 
 class Speech extends Base {
   static defaultProps = {

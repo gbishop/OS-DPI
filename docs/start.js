@@ -1,4 +1,4 @@
-import { render, html } from "./_snowpack/pkg/uhtml.js";
+import { render, html } from "./snowpack/pkg/uhtml.js";
 import { assemble } from "./components/index.js";
 import { Rules } from "./rules.js";
 import { Data } from "./data.js";
@@ -9,8 +9,8 @@ import { ToolBar } from "./components/toolbar.js";
 import db from "./db.js";
 import { log, logInit } from "./log.js";
 import pleaseWait from "./components/wait.js";
-import { fileOpen } from "./_snowpack/pkg/browser-fs-access.js";
-import css from "./_snowpack/pkg/ustyler.js";
+import { fileOpen } from "./snowpack/pkg/browser-fs-access.js";
+import css from "./snowpack/pkg/ustyler.js";
 
 const safe = true;
 

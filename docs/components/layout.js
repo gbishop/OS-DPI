@@ -1,4 +1,4 @@
-import { html } from "../_snowpack/pkg/uhtml.js";
+import { html } from "../snowpack/pkg/uhtml.js";
 import { PropInfo } from "../properties.js";
 import { assemble } from "./base.js";
 import { colorNamesDataList } from "./style.js";
@@ -6,7 +6,7 @@ import { Base, toDesign } from "./base.js";
 import { Stack } from "./stack.js";
 import { propEditor } from "./propEditor.js";
 import db from "../db.js";
-import css from "../_snowpack/pkg/ustyler.js";
+import css from "../snowpack/pkg/ustyler.js";
 
 import { log } from "../log.js";
 

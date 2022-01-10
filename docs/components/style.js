@@ -1,5 +1,5 @@
 import { log } from "../log.js";
-import { html, render } from "../_snowpack/pkg/uhtml.js";
+import { html, render } from "../snowpack/pkg/uhtml.js";
 import { ColorNames } from "./color-names.js";
 
 /** @param {Event & { target: HTMLInputElement }} event

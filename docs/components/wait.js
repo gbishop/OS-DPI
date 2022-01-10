@@ -1,5 +1,5 @@
-import { html, render } from "../_snowpack/pkg/uhtml.js";
-import css from "../_snowpack/pkg/ustyler.js";
+import { html, render } from "../snowpack/pkg/uhtml.js";
+import css from "../snowpack/pkg/ustyler.js";
 
 /**
  * Handle displaying a "please wait" message and error reporting for

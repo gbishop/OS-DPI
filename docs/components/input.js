@@ -1,6 +1,6 @@
 /** Variations on encapsulated input controls */
 
-import { html } from "../_snowpack/pkg/uhtml.js";
+import { html } from "../snowpack/pkg/uhtml.js";
 import suggest from "./suggest.js";
 
 /**
