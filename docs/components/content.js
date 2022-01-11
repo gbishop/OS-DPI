@@ -109,6 +109,7 @@ export class Content extends Base {
               const result = await pleaseWait(readSheetFromBlob(blob));
               await db.write("content", result);
               this.sheetMessage = `Loaded ${blob.name}`;
+              this.context.data = new Data(result);
               this.context.state.update();
             }
           } catch (e) {
