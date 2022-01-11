@@ -1,4 +1,4 @@
-import { html } from "../snowpack/pkg/uhtml.js";
+import { html } from "../_snowpack/pkg/uhtml.js";
 
 /**
  * Edit slots markup to replace with values

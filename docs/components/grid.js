@@ -1,8 +1,8 @@
-import { html } from "../snowpack/pkg/uhtml.js";
+import { html } from "../_snowpack/pkg/uhtml.js";
 import { Base, componentMap } from "./base.js";
 import { styleString } from "./style.js";
 import { formatSlottedString } from "./helpers.js";
-import css from "../snowpack/pkg/ustyler.js";
+import css from "../_snowpack/pkg/ustyler.js";
 import "./img-db.js";
 
 class Grid extends Base {

@@ -1,7 +1,7 @@
 import { Base } from "./base.js";
-import css from "../snowpack/pkg/ustyler.js";
+import css from "../_snowpack/pkg/ustyler.js";
 import db from "../db.js";
-import { html } from "../snowpack/pkg/uhtml.js";
+import { html } from "../_snowpack/pkg/uhtml.js";
 
 export class ToolBar extends Base {
   template() {

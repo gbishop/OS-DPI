@@ -1,8 +1,8 @@
-import { html } from "../snowpack/pkg/uhtml.js";
+import { html } from "../_snowpack/pkg/uhtml.js";
 import { Base, componentMap } from "./base.js";
 import { styleString } from "./style.js";
-import merge from "../snowpack/pkg/mergerino.js";
-import css from "../snowpack/pkg/ustyler.js";
+import merge from "../_snowpack/pkg/mergerino.js";
+import css from "../_snowpack/pkg/ustyler.js";
 
 /** Slot descriptor
  * @typedef {Object} Slot

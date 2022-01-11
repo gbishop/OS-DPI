@@ -1,6 +1,6 @@
-import { openDB } from "./snowpack/pkg/idb/with-async-ittr.js";
-import { zipSync, strToU8, unzipSync, strFromU8 } from "./snowpack/pkg/fflate.js";
-import { fileSave } from "./snowpack/pkg/browser-fs-access.js";
+import { openDB } from "./_snowpack/pkg/idb/with-async-ittr.js";
+import { zipSync, strToU8, unzipSync, strFromU8 } from "./_snowpack/pkg/fflate.js";
+import { fileSave } from "./_snowpack/pkg/browser-fs-access.js";
 
 class DB {
   constructor() {
