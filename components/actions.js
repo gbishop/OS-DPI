@@ -222,9 +222,10 @@ class ActionEditor extends Base {
         </button>
         <button
           ?disabled=${this.ruleIndex < 0}
-          onclick=${() => {
+          onclick=${async () => {
             const R = rules.rules;
             R.splice(this.ruleIndex, 1);
+            await this.save();
             this.close();
           }}
         >
@@ -296,7 +297,7 @@ class ActionEditor extends Base {
     const { state, rules, data, tree } = this.context;
     const updates = this.updates;
 
-    const reflect = () => {
+    const reflect = async () => {
       // these should be filtered to remove bad ones
       this.rule.updates = Object.fromEntries(
         this.updates.filter(
@@ -304,7 +305,7 @@ class ActionEditor extends Base {
         )
       );
       state.update();
-      this.save();
+      await this.save();
     };
     const allStates = new Set([...tree.allStates(), ...rules.allStates()]);
     const allFields = new Set(data.allFields);
@@ -374,9 +375,9 @@ class ActionEditor extends Base {
   }
 
   /** Save the actions */
-  save() {
+  async save() {
     const { rules } = this.context;
-    db.write("actions", rules.rules);
+    await db.write("actions", rules.rules);
   }
 }
 
