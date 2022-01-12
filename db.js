@@ -148,19 +148,16 @@ class DB {
   /** Add a new record
    * @param {string} type
    * @param {Object} data
-   * @returns {Promise<IDBValidKey>}
    */
   async write(type, data) {
     const db = await this.dbPromise;
-    const result = db.put("store", { name: this.designName, type, data });
-    db.delete("saved", this.designName);
+    await db.put("store", { name: this.designName, type, data });
+    await db.delete("saved", this.designName);
     this.notify({ action: "update", name: this.designName });
-    return result;
   }
 
   /** Undo by deleting the most recent record
    * @param {string} type
-   * @returns {Promise<Object>}
    */
   async undo(type) {
     const db = await this.dbPromise;
@@ -169,9 +166,8 @@ class DB {
       .store.index("by-name-type");
     const cursor = await index.openCursor([this.designName, type], "prev");
     if (cursor) await cursor.delete();
-    db.delete("saved", this.designName);
+    await db.delete("saved", this.designName);
     this.notify({ action: "update", name: this.designName });
-    return this.read(type);
   }
 
   /** Read a design from a local file
@@ -217,7 +213,7 @@ class DB {
       throw new Error(`Fetching the URL (${url}) failed: ${response.status}`);
     }
     const etag = response.headers.get("ETag");
-    db.put("url", { url, etag });
+    await db.put("url", { url, etag });
 
     const urlParts = new URL(url, window.location.origin);
     const pathParts = urlParts.pathname.split("/");
@@ -322,7 +318,7 @@ class DB {
       id: "osdpi",
     };
     await fileSave(blob, options, this.fileHandle);
-    db.put("saved", { name: this.designName });
+    await db.put("saved", { name: this.designName });
   }
 
   /** Unload a design from the database
@@ -336,7 +332,7 @@ class DB {
       cursor.delete();
     }
     await tx.done;
-    db.delete("saved", name);
+    await db.delete("saved", name);
   }
 
   /** Return an image from the database

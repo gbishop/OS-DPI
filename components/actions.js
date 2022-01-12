@@ -174,7 +174,10 @@ class ActionEditor extends Base {
         value: this.rule.origin,
         context: this.context,
         validate: (value) => (value.match(/^\w+$/) ? "" : "Invalid origin"),
-        update: (name, value) => (this.rule[name] = value),
+        update: (name, value) => {
+          this.rule[name] = value;
+          this.save();
+        },
         suggestions: tree.all(/\w+/g, ["name"]),
       })}
       ${textInput({
@@ -185,7 +188,10 @@ class ActionEditor extends Base {
         context: this.context,
         validate: (value) =>
           ["press"].indexOf(value) >= 0 ? "" : "Invalid event",
-        update: (name, value) => (this.rule[name] = value),
+        update: (name, value) => {
+          this.rule[name] = value;
+          this.save();
+        },
         suggestions: new Set(["press"]),
       })}
       ${this.editConditions()} ${this.editUpdates()}
@@ -201,6 +207,7 @@ class ActionEditor extends Base {
             ];
             this.ruleIndex -= 1;
             state.update({ ruleIndex: this.ruleIndex });
+            this.save();
           }}
         >
           Move earlier
@@ -216,6 +223,7 @@ class ActionEditor extends Base {
             ];
             this.ruleIndex += 1;
             state.update({ ruleIndex: this.ruleIndex });
+            this.save();
           }}
         >
           Move later
@@ -247,6 +255,7 @@ class ActionEditor extends Base {
         (condition) => condition.length > 0
       );
       context.state.update();
+      this.save();
     };
     return html`<fieldset>
       <legend>Conditions</legend>
