@@ -8,8 +8,18 @@ document.addEventListener("keydown", (/** @type {KeyboardEvent} */ event) => {
     (event.key === "?" || event.key === "/") &&
     (event.ctrlKey || event.metaKey)
   ) {
-    console.log("help", event);
     event.preventDefault();
-    window.open(wiki + event.target.id, "help");
+    console.log("help", event);
+    const target = /** @type {Element} */ (event.target);
+    let help = target.getAttribute("help");
+    if (!help) {
+      const node = target.closest("[help]");
+      if (node) {
+        help = node.getAttribute("help");
+      } else {
+        help = "";
+      }
+    }
+    window.open(wiki + help, "help");
   }
 });

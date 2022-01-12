@@ -20,7 +20,7 @@ export class Actions extends Base {
   template() {
     const { state, rules } = this.context;
     const ruleIndex = state.get("ruleIndex");
-    return html`<div class="actions">
+    return html`<div class="actions" help="Actions tab">
       <div class="scroll">
         <table>
           <thead>
@@ -51,7 +51,10 @@ export class Actions extends Base {
                   ${(updates.length && updates[0][1]) || ""}
                 </td>
                 <td rowspan=${rs}>
-                  <button onclick=${() => this.openActionEditor(index)}>
+                  <button
+                    onclick=${() => this.openActionEditor(index)}
+                    title="Edit action"
+                  >
                     &#x270D;
                   </button>
                 </td>
@@ -68,6 +71,7 @@ export class Actions extends Base {
           <tr>
             <td colspan="6">
               <button
+                help="Add an action"
                 onclick=${() => {
                   rules.rules.push({
                     origin: "",
@@ -173,6 +177,7 @@ class ActionEditor extends Base {
         label: "Origin",
         value: this.rule.origin,
         context: this.context,
+        help: "Action Origin",
         validate: (value) => (value.match(/^\w+$/) ? "" : "Invalid origin"),
         update: (name, value) => {
           this.rule[name] = value;
@@ -186,6 +191,7 @@ class ActionEditor extends Base {
         label: "Event",
         value: this.rule.event,
         context: this.context,
+        help: "Action Event",
         validate: (value) =>
           ["press"].indexOf(value) >= 0 ? "" : "Invalid event",
         update: (name, value) => {
@@ -196,9 +202,10 @@ class ActionEditor extends Base {
       })}
       ${this.editConditions()} ${this.editUpdates()}
       <div>
-        <button onclick=${() => this.close()}>Return</button>
+        <button onclick=${() => this.close()} help="Return">Return</button>
         <button
           ?disabled=${this.ruleIndex < 1}
+          help="Move action earlier"
           onclick=${() => {
             const R = rules.rules;
             [R[this.ruleIndex - 1], R[this.ruleIndex]] = [
@@ -215,6 +222,7 @@ class ActionEditor extends Base {
         <button
           ?disabled=${this.ruleIndex < 0 ||
           this.ruleIndex >= rules.rules.length - 1}
+          help="Move action later"
           onclick=${() => {
             const R = rules.rules;
             [R[this.ruleIndex + 1], R[this.ruleIndex]] = [
@@ -230,6 +238,7 @@ class ActionEditor extends Base {
         </button>
         <button
           ?disabled=${this.ruleIndex < 0}
+          help="Delete action"
           onclick=${async () => {
             const R = rules.rules;
             R.splice(this.ruleIndex, 1);
@@ -257,7 +266,7 @@ class ActionEditor extends Base {
       context.state.update();
       this.save();
     };
-    return html`<fieldset>
+    return html`<fieldset help="Action Conditions">
       <legend>Conditions</legend>
       ${conditions.map((string, index) => {
         const id = `conditions_${index}`;
@@ -282,6 +291,7 @@ class ActionEditor extends Base {
             },
             suggestions,
           })}<button
+            title="Delete condition"
             onclick=${() => {
               conditions.splice(index, 1);
               reflect();
@@ -320,7 +330,7 @@ class ActionEditor extends Base {
     const allFields = new Set(data.allFields);
     const both = new Set([...allStates, ...allFields]);
     // value updates
-    return html`<fieldset>
+    return html`<fieldset help="Action Updates">
       <legend>Updates</legend>
       ${updates.length > 0
         ? html` <span class="key">State</span>
@@ -363,6 +373,7 @@ class ActionEditor extends Base {
         });
         return html`${keyInput} ${valueInput}
           <button
+            title="Delete action update"
             onclick=${() => {
               updates.splice(index, 1);
               reflect();
