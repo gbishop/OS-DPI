@@ -6,6 +6,7 @@ export const PropInfo = {
     type: "state",
     name: "State",
     description: "Name of the state variable controlling this element.",
+    help: "state",
   },
   rows: {
     type: "number",

@@ -8,6 +8,7 @@ import suggest from "./suggest.js";
  * @property {string} type
  * @property {string} name
  * @property {string} label
+ * @property {string} [help]
  * @property {boolean} [labelHidden]
  * @property {string|string[]} value
  * @property {Context} context
@@ -63,6 +64,7 @@ export function textInput(options) {
         id=${options.name}
         name=${options.name}
         .value=${options.value}
+        help=${options.help}
         onchange=${(/** @type {InputEventWithTarget} */ event) => {
           const input = event.target;
           const value = input.value.trim();

@@ -125,6 +125,7 @@ export class Layout extends Base {
       class="menu"
       ?disabled=${!allowed.length}
       style="width: 7em"
+      help="Add component"
       onchange=${(/** @type {InputEventWithTarget} */ e) => {
         this.closeControls();
         this.addChild(e.target.value);
@@ -259,6 +260,7 @@ export class Layout extends Base {
     const next = selected.nextSibling();
     return html`<select
       class="menu"
+      help="Move component"
       onchange=${(/** @type {InputEventWithTarget} */ e) => {
         const value = e.target.value;
         if (value) {
@@ -347,6 +349,7 @@ export class Layout extends Base {
   /** Delete the current tree node */
   deleteCurrent() {
     return html`<button
+      help="Delete component"
       onclick=${() => {
         this.closeControls();
         const parent = this.selected.parent;
@@ -398,9 +401,13 @@ export class Layout extends Base {
       <h1>Editing ${this.selected.constructor.name} ${this.selected.name}</h1>
       ${this.addMenu()} ${this.deleteCurrent()} ${this.moveMenu()}
       <div class="props">${this.showProps()}</div>
-      <button id="controls-return" onclick=${() => this.closeControls()}>
+      <button
+        id="controls-return"
+        help="Return"
+        onclick=${() => this.closeControls()}
+      >
         Return</button
-      ><button disabled>Cancel</button>
+      ><button disabled help="Cancel">Cancel</button>
     </div>`;
   }
   /**
@@ -429,6 +436,7 @@ export class Layout extends Base {
         tabindex=${selected === tree ? 0 : -1}
         ref=${setCurrent}
         .dataset=${{ componentId: tree.id }}
+        help=${tree.constructor.name + " Component"}
       >
         <span
           role="button"
@@ -459,6 +467,7 @@ export class Layout extends Base {
         tabindex=${selected === tree ? 0 : -1}
         ref=${setCurrent}
         .dataset=${{ componentId: tree.id }}
+        help=${tree.constructor.name + " Component"}
       >
         <span
           role="button"
@@ -508,7 +517,7 @@ export class Layout extends Base {
     const editingTree = state.get("editingTree");
     /** @param {KeyboardEvent} event */
     const keyHandler = (event) => this.treeKeyHandler(event);
-    return html`<div class="layout">
+    return html`<div class="layout" help="Layout tab">
       <div class="tree">
         <ul role="tree" onKeyDown=${keyHandler}>
           ${this.showTree(this.context.tree, this.selected)}
