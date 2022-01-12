@@ -68,7 +68,9 @@ class Grid extends Base {
         (a, b) =>
           (+a.page > +b.page) ||
           (a.page == b.page && +a.row > +b.row) ||
-          (a.page == b.page && +a.row == +b.row && +a.column > +b.column)
+          (a.page == b.page && +a.row == +b.row && +a.column > +b.column) ? 1
+          : (a.page == b.page && +a.row == +b.row && +a.column == +b.column) ? 0
+          : -1 
       );
     }
 
