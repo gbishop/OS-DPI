@@ -4,8 +4,12 @@
 const wiki = "https://github.com/UNC-Project-Open-AAC/OS-DPI/wiki/";
 
 document.addEventListener("keydown", (/** @type {KeyboardEvent} */ event) => {
-  if (event.key === "?" && (event.ctrlKey || event.metaKey)) {
+  if (
+    (event.key === "?" || event.key === "/") &&
+    (event.ctrlKey || event.metaKey)
+  ) {
     console.log("help", event);
+    event.preventDefault();
     window.open(wiki + event.target.id, "help");
   }
 });
