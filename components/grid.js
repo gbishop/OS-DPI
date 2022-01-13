@@ -75,11 +75,11 @@ class Grid extends Base {
     }
 
     for (let i = offset; i < Math.min(items.length, pageLen + offset); i++) {
-      console.log(pageLen, offset);
       const item = items[i];
-      let itemIndex = offset+((+item.row - 1)*columns + (+item.column-1)) || i;
+      /*Skip entries that are out of bounds of declared grid dimensions*/
       if(+item.row > rows || +item.column > columns)
-        throw new Error('Row or column dimension is out of bounds of layout.');
+        continue;
+      let itemIndex = offset+((+item.row - 1)*columns + (+item.column-1)) || i;
       while (offset + result.length < itemIndex && itemIndex < offset + perPage) {
         result.push(html`<button tabindex="-1" disabled></button>`);
       }
