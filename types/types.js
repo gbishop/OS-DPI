@@ -52,6 +52,7 @@
  * @property {string} [symbol]
  * @property {number} [row]
  * @property {number} [column]
+ * @property {number} [page]
  * @property {Object} [details]
  * */
 

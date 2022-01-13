@@ -41,9 +41,7 @@ class Grid extends Base {
 
     const pageLimit = Math.max(...items.map(item => item.page));  //highest page referenced in content sheet
     let perPage = rows * columns;
-    const pageLen = items.filter(item => item.page == this.page+1).length || perPage; //no. of items on current page
-    this.pageBoundaries[this.page+1] = this.pageBoundaries[this.page]+pageLen; //record starting index for next page
-
+    
     let pages = 1;
     if (pageLimit > 1 || items.length > perPage) {
       perPage = rows * columns - 1;
@@ -53,6 +51,8 @@ class Grid extends Base {
       this.page = 0;
     }
 
+    const pageLen = items.filter(item => item.page == this.page+1).length || perPage; //no. of items on current page
+    this.pageBoundaries[this.page+1] = this.pageBoundaries[this.page]+pageLen; //record starting index for next page
     /* Lookup offset value, or calculate it from dimensions if no page field */
     const offset = this.pageBoundaries[this.page] || this.page * perPage;
 
@@ -68,11 +68,14 @@ class Grid extends Base {
         (a, b) =>
           (+a.page > +b.page) ||
           (a.page == b.page && +a.row > +b.row) ||
-          (a.page == b.page && +a.row == +b.row && +a.column > +b.column)
+          (a.page == b.page && +a.row == +b.row && +a.column > +b.column) ? 1
+          : (a.page == b.page && +a.row == +b.row && +a.column == +b.column) ? 0
+          : -1 
       );
     }
 
     for (let i = offset; i < Math.min(items.length, pageLen + offset); i++) {
+      console.log(pageLen, offset);
       const item = items[i];
       let itemIndex = offset+((+item.row - 1)*columns + (+item.column-1)) || i;
       if(+item.row > rows || +item.column > columns)
