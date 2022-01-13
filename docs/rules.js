@@ -12,12 +12,14 @@ import { State } from "./state.js";
 export class Rules {
   Functions = {
     append: (/** @type {any} */ value) => (/** @type {any[]} */ old) =>
-      [...old, value],
+      [...(old || []), value],
     empty: () => () => [],
     increment: (/** @type {number} */ value) => (/** @type {number} */ old) =>
       old + value,
     add_word: (/** @type {string} */ value) => (/** @type {string} */ old) =>
       old ? old + " " + value : value,
+    add_letter: (/** @type {string} */ value) => (/** @type {string} */ old) =>
+      old ? old + value : value,
     replace_last:
       (/** @type {string} */ newWord) => (/** @type {string} */ old) =>
         [...old.split(" ").slice(0, -1), newWord].join(" "),
