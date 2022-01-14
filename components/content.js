@@ -28,7 +28,10 @@ async function readSheetFromBlob(blob) {
       /** @type {string} */
       const name = header[c];
       if (!name) continue;
-      const value = sheet[XLSX.utils.encode_cell({ r, c })]?.v;
+      let value = sheet[XLSX.utils.encode_cell({ r, c })]?.v;
+      if (typeof value === "undefined") continue;
+      // force it to be a string
+      value = "" + value;
       if (!value) continue;
       if (name.toLowerCase().startsWith("tags")) {
         tags.push(value);
