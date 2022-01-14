@@ -25,11 +25,12 @@ async function readSheetFromBlob(blob) {
     const row = { tags: [] };
     const tags = row.tags;
     for (let c = range.s.c; c <= range.e.c; c++) {
+      /** @type {string} */
       const name = header[c];
       if (!name) continue;
       const value = sheet[XLSX.utils.encode_cell({ r, c })]?.v;
       if (!value) continue;
-      if (name.startsWith("tags")) {
+      if (name.toLowerCase().startsWith("tags")) {
         tags.push(value);
       } else {
         row[name] = value;
