@@ -7,51 +7,6 @@ import XLSX from "xlsx";
 import css from "ustyler";
 import pleaseWait from "./wait";
 
-/** Get a number from the sheet
- * @param {Row} row
- * @param {string} name
- * @param {any} value
- */
-function handleNumber(row, name, value) {
-  if (typeof value === "number") {
-    row[name] = Math.floor(value);
-  } else if (value && typeof value === "string") {
-    value = parseInt(value, 10);
-    if (isNaN(value)) {
-      value = 0;
-    }
-    row[name] = value;
-  }
-}
-
-/** Get a string from the sheet
- * @param {Row} row
- * @param {string} name
- * @param {any} value
- */
-function handleString(row, name, value) {
-  if (typeof value === "number") {
-    value = value.toString(10);
-  }
-  if (value && typeof value === "string") {
-    row[name] = value;
-  }
-}
-
-/** Get a tag from the sheet
- * @param {Row} row
- * @param {string} _
- * @param {any} value
- */
-function handleTag(row, _, value) {
-  if (typeof value === "number") {
-    value = value.toString(10);
-  }
-  if (value && typeof value === "string") {
-    row.tags.push(value);
-  }
-}
-
 /** @param {Blob} blob */
 async function readSheetFromBlob(blob) {
   const data = await blob.arrayBuffer();
@@ -62,6 +17,7 @@ async function readSheetFromBlob(blob) {
   const names = [];
   const handlers = [];
   const validColumns = [];
+  // process the header and choose a handler for each column
   for (let c = range.s.c; c <= range.e.c; c++) {
     let columnName = sheet[XLSX.utils.encode_cell({ r: 0, c })]?.v;
     if (typeof columnName !== "string" || !columnName) {
@@ -74,17 +30,18 @@ async function readSheetFromBlob(blob) {
       case "row":
       case "column":
       case "page":
-        handlers.push(handleNumber);
+        handlers.push("number");
         break;
       default:
         if (columnName.startsWith("tag")) {
-          handlers.push(handleTag);
+          handlers.push("tag");
         } else {
-          handlers.push(handleString);
+          handlers.push("string");
         }
         break;
     }
   }
+  // Process the rows
   /** @type {Rows} */
   const dataArray = [];
   for (let r = range.s.r + 1; r <= range.e.r; r++) {
@@ -95,7 +52,35 @@ async function readSheetFromBlob(blob) {
       const name = names[i];
       const c = validColumns[i];
       let value = sheet[XLSX.utils.encode_cell({ r, c })]?.v;
-      handlers[i](row, name, value);
+      switch (handlers[i]) {
+        case "string":
+          if (typeof value === "number") {
+            value = value.toString(10);
+          }
+          if (value && typeof value === "string") {
+            row[name] = value;
+          }
+          break;
+        case "tag":
+          if (typeof value === "number") {
+            value = value.toString(10);
+          }
+          if (value && typeof value === "string") {
+            row.tags.push(value);
+          }
+          break;
+        case "number":
+          if (typeof value === "number") {
+            row[name] = Math.floor(value);
+          } else if (value && typeof value === "string") {
+            value = parseInt(value, 10);
+            if (isNaN(value)) {
+              value = 0;
+            }
+            row[name] = value;
+          }
+          break;
+      }
     }
     if (row.tags.length > 0 || Object.keys(row).length > 1) dataArray.push(row);
   }
@@ -119,7 +104,6 @@ export class Content extends Base {
       <form
         onsubmit=${(/** @type {SubmitEvent} */ e) => {
           e.preventDefault();
-          console.log("submit", e);
           // clear messages
           const form = e.target;
           /** @type {string} */

@@ -31,6 +31,7 @@ export function propEditor(component, name, value, info, context, hook) {
           help=${info.name}
           onchange=${propUpdate}
           autocomplete="off"
+          ?disabled=${info.disabled && info.disabled(component.props)}
         />`;
 
     case "number":
@@ -44,6 +45,7 @@ export function propEditor(component, name, value, info, context, hook) {
           help=${info.name}
           onchange=${propUpdate}
           autocomplete="off"
+          ?disabled=${info.disabled && info.disabled(component.props)}
         />`;
 
     case "color":
@@ -59,6 +61,7 @@ export function propEditor(component, name, value, info, context, hook) {
             onchange=${(/** @type {InputEventWithTarget} */ event) =>
               validateColor(event) && propUpdate(event)}
             autocomplete="off"
+            ?disabled=${info.disabled && info.disabled(component.props)}
           />
           <div
             class="swatch"
@@ -73,15 +76,16 @@ export function propEditor(component, name, value, info, context, hook) {
           name=${name}
           onchange=${propUpdate}
           help=${info.name}
+          ?disabled=${info.disabled && info.disabled(component.props)}
         >
           ${(info.values &&
-            info.values.map(
-              (ov) =>
-                html`<option value=${ov} ?selected=${ov == value}>
-                  ${ov}
+            Object.keys(info.values).map(
+              (opt) =>
+                html`<option value=${opt} ?selected=${opt == value}>
+                  ${info.values[opt]}
                 </option>`
             )) ||
-          ""}
+          html``}
         </select>`;
 
     case "state":
@@ -166,6 +170,7 @@ export function propEditor(component, name, value, info, context, hook) {
           help=${name}
           onchange=${propUpdate}
           value=${value}
+          ?disabled=${info.disabled && info.disabled(component.props)}
         >
           <option value="">Default</option>
         </select>`;
@@ -241,5 +246,9 @@ css`
   input:invalid {
     background-color: #fcc;
     border-color: red;
+  }
+
+  select#itemPlacement[value="row column from content"] ~ input#rows {
+    display: none;
   }
 `;

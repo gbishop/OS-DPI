@@ -7,6 +7,7 @@ import "./img-db";
 
 class Grid extends Base {
   static defaultProps = {
+    itemPlacement: "fill",
     rows: 3,
     columns: 3,
     tags: [],
@@ -15,127 +16,157 @@ class Grid extends Base {
     background: "white",
     scale: "1",
   };
-  page = 0;
-  pageBoundaries = {0: 0};  //track starting indices of pages
+  page = 1;
+  pageBoundaries = { 0: 0 }; //track starting indices of pages
   /** @type {Object}
    * @property {string} key
    */
   cache = { key: "" };
 
+  /** @param {Row} item */
+  gridCell(item) {
+    const { rules } = this.context;
+    const { background, name } = this.props;
+    let content;
+    let msg = formatSlottedString(item.label || "");
+    if (item.symbol) {
+      content = html`<div>
+        <figure>
+          <img is="img-db" dbsrc=${item.symbol} title=${item.label || ""} />
+          <figcaption>${msg}</figcaption>
+        </figure>
+      </div>`;
+    } else {
+      content = msg;
+    }
+    return html`<button
+      onClick=${rules.handler(name, item, "press")}
+      style=${styleString({ backgroundColor: background })}
+      tabindex="-1"
+    >
+      ${content}
+    </button>`;
+  }
+
+  emptyCell() {
+    return html`<button tabindex="-1" disabled></button>`;
+  }
+
+  /** @param {Number} pages */
+  pageSelector(pages) {
+    const { state } = this.context;
+    const { background } = this.props;
+
+    return html`<div class="page-control">
+      <div class="text">Page ${this.page} of ${pages}</div>
+      <div class="back-next">
+        <button
+          onClick=${() => {
+            this.page = ((((this.page - 2) % pages) + pages) % pages) + 1;
+            state.update(); // trigger redraw
+          }}
+          style=${styleString({ backgroundColor: background })}
+          .disabled=${this.page == 1}
+          tabindex="-1"
+        >
+          &#9754;</button
+        ><button
+          onClick=${() => {
+            this.page = (this.page % pages) + 1;
+            state.update(); // trigger redraw
+          }}
+          style=${styleString({ backgroundColor: background })}
+          .disabled=${this.page == pages}
+          tabindex="-1"
+        >
+          &#9755;
+        </button>
+      </div>
+    </div>`;
+  }
+
   template() {
     /** @type {Partial<CSSStyleDeclaration>} */
     const style = {};
-    const { data, state, rules } = this.context;
-    const { rows, columns, match, name, background } = this.props;
+    const { data, state } = this.context;
+    let { rows, columns, match, name, itemPlacement } = this.props;
     const tags = state.normalizeTags(this.props.tags);
-    const key = tags.join("|");
+    const cacheKey = tags.join("|");
     /** @type {Rows} */
     let items = data.getTaggedRows(tags, match);
     // reset the page when the key changes
-    if (this.cache.key !== key) {
-      this.cache.key = key;
-      this.page = 0;
+    if (this.cache.key !== cacheKey) {
+      this.cache.key = cacheKey;
+      this.page = 1;
     }
+    let maxPage = 1;
     const result = [];
+    if (itemPlacement === "content") {
+      // collect the items for the current page
+      // and get the dimensions
+      let maxRow = 0,
+        maxColumn = 0;
+      const itemMap = new Map();
+      /** @param {number} row
+       * @param {number} column
+       */
+      const itemKey = (row, column) => row * 1000 + column;
+
+      for (const item of items) {
+        // ignore items without row and column
+        if (!item.row || !item.column) continue;
+        // get the max page value if any
+        maxPage = Math.max(maxPage, item.page || 1);
+        // collect the items on this page
+        if (this.page == (item.page || 1)) {
+          maxRow = Math.max(maxRow, item.row);
+          maxColumn = Math.max(maxColumn, item.column);
+          const key = itemKey(item.row, item.column);
+          // only use the first one
+          if (!itemMap.has(key)) itemMap.set(key, item);
+        }
+      }
+      rows = maxRow;
+      columns = maxColumn;
+      for (let row = 1; row <= rows; row++) {
+        for (let column = 1; column <= columns; column++) {
+          if (maxPage > 1 && row == rows && column == columns) {
+            // draw the page selector in the last cell
+            result.push(this.pageSelector(maxPage));
+          } else {
+            const key = itemKey(row, column);
+            if (itemMap.has(key)) {
+              result.push(this.gridCell(itemMap.get(key)));
+            } else {
+              result.push(this.emptyCell());
+            }
+          }
+        }
+      }
+    } else if (itemPlacement === "fill") {
+      // fill items sequentially
+      let perPage = rows * columns;
+      if (items.length > perPage) {
+        perPage = perPage - 1;
+      }
+      maxPage = Math.ceil(items.length / perPage);
+      // get the items on this page
+      items = items.slice((this.page - 1) * perPage, this.page * perPage);
+      // render them into the result
+      for (const item of items) {
+        result.push(this.gridCell(item));
+      }
+      // fill any spaces that remain
+      for (let i = items.length; i < perPage; i++) {
+        result.push(this.emptyCell());
+      }
+      // draw the page selector if needed
+      if (maxPage > 1) {
+        result.push(this.pageSelector(maxPage));
+      }
+    }
+
     style.gridTemplate = `repeat(${rows}, calc(100% / ${rows})) / repeat(${columns}, 1fr)`;
-
-    const pageLimit = Math.max(...items.map(item => item.page));  //highest page referenced in content sheet
-    let perPage = rows * columns;
-    
-    let pages = 1;
-    if (pageLimit > 1 || items.length > perPage) {
-      perPage = rows * columns - 1;
-      pages = pageLimit || Math.ceil(items.length / perPage);
-    }
-    if (this.page >= pages) {
-      this.page = 0;
-    }
-
-    const pageLen = items.filter(item => item.page == this.page+1).length || perPage; //no. of items on current page
-    this.pageBoundaries[this.page+1] = this.pageBoundaries[this.page]+pageLen; //record starting index for next page
-    /* Lookup offset value, or calculate it from dimensions if no page field */
-    const offset = this.pageBoundaries[this.page] || this.page * perPage;
-
-    /* If items contain page and/or row and column fields,
-    sort items accodingly, and let the default 
-    behavior of grid take care of the rest */
-    if (
-      items.some((item) => "page" in item) ||
-      (items.some((item) => "row" in item) &&
-      items.some((item) => "column" in item))
-    ) {
-      items.sort(
-        (a, b) =>
-          (+a.page > +b.page) ||
-          (a.page == b.page && +a.row > +b.row) ||
-          (a.page == b.page && +a.row == +b.row && +a.column > +b.column) ? 1
-          : (a.page == b.page && +a.row == +b.row && +a.column == +b.column) ? 0
-          : -1 
-      );
-    }
-
-    for (let i = offset; i < Math.min(items.length, pageLen + offset); i++) {
-      const item = items[i];
-      /*Skip entries that are out of bounds of declared grid dimensions*/
-      if(+item.row > rows || +item.column > columns)
-        continue;
-      let itemIndex = offset+((+item.row - 1)*columns + (+item.column-1)) || i;
-      while (offset + result.length < itemIndex && itemIndex < offset + perPage) {
-        result.push(html`<button tabindex="-1" disabled></button>`);
-      }
-      let content;
-      let msg = formatSlottedString(item.label || "");
-      if (item.symbol) {
-        content = html`<div>
-          <figure>
-            <img is="img-db" dbsrc=${item.symbol} title=${item.label || ""} />
-            <figcaption>${msg}</figcaption>
-          </figure>
-        </div>`;
-      } else {
-        content = msg;
-      }
-      result.push(
-        html`<button
-          onClick=${rules.handler(name, item, "press")}
-          style=${styleString({ backgroundColor: background })}
-          tabindex="-1"
-        >
-          ${content}
-        </button>`
-      );
-    }
-    while (result.length < perPage) {
-      result.push(html`<button tabindex="-1" disabled></button>`);
-    }
-    if (this.page < pages-1 || perPage < rows * columns) {
-      result.push(html`<div class="page-control">
-        <div class="text">Page ${this.page + 1} of ${pages}</div>
-        <div class="back-next">
-          <button
-            onClick=${() => {
-              this.page = (((this.page - 1) % pages) + pages) % pages;
-              state.update(); // trigger redraw
-            }}
-            style=${styleString({ backgroundColor: background })}
-            .disabled=${perPage >= items.length}
-            tabindex="-1"
-          >
-            &#9754;</button
-          ><button
-            onClick=${() => {
-              this.page = (this.page + 1) % pages;
-              state.update(); // trigger redraw
-            }}
-            style=${styleString({ backgroundColor: background })}
-            .disabled=${perPage >= items.length}
-            tabindex="-1"
-          >
-            &#9755;
-          </button>
-        </div>
-      </div>`);
-    }
 
     return html`<div
       class="grid"

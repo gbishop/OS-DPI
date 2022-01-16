@@ -20,6 +20,8 @@
  * @property {number} pitch
  * @property {number} rate
  * @property {number} volume
+ * @property {string} gridSize
+ * @property {string} itemPlacement
  */
 
 /**
@@ -72,7 +74,7 @@
  * @property {string} type
  * @property {string} name
  * @property {string} description
- * @property {string[]} [values]
+ * @property {Object<string,string>} [values]
  * @property {string} [style]
  * @property {(event: InputEventWithTarget) => boolean} [validate]
  * @property {string} [addMessage]
@@ -80,6 +82,7 @@
  * @property {string[]} [fields]
  * @property {string} [label]
  * @property {number} [step]
+ * @property {(props:Props) => boolean} [disabled]
  */
 
 /** @typedef {Event & { target: HTMLInputElement } } InputEventWithTarget */
