@@ -1,0 +1,19 @@
+{
+  "imports": {
+    "@ungap/create-content": "./@ungap/create-content.js",
+    "browser-fs-access": "./browser-fs-access.js",
+    "cross-fetch": "./cross-fetch.js",
+    "fflate": "./fflate.js",
+    "idb/with-async-ittr": "./idb/with-async-ittr.js",
+    "mergerino": "./mergerino.js",
+    "uarray": "./uarray.js",
+    "udomdiff": "./udomdiff.js",
+    "uhandlers": "./uhandlers.js",
+    "uhtml": "./uhtml.js",
+    "umap": "./umap.js",
+    "uparser": "./uparser.js",
+    "ustyler": "./ustyler.js",
+    "uwire": "./uwire.js",
+    "xlsx": "./xlsx.js"
+  }
+}

@@ -5,16 +5,22 @@
   "main": "index.js",
   "scripts": {
     "start": "snowpack dev",
-    "build": "snowpack build"
+    "build": "snowpack build; rm -rf docs/node_modules; touch docs/.nojekyll;"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "http2-proxy": "^5.0.53",
-    "snowpack": "^3.0.13"
+    "snowpack": "^3.0.13",
+    "ustyler": "^1.0.1"
   },
   "dependencies": {
+    "browser-fs-access": "^0.23.0",
+    "fflate": "^0.7.2",
+    "idb": "^7.0.0",
     "mergerino": "^0.4.0",
-    "uhtml": "^2.7.6"
+    "sheetrock": "^1.2.0",
+    "uhtml": "^2.7.6",
+    "xlsx": "^0.17.4"
   }
 }

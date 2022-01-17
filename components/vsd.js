@@ -1,6 +1,8 @@
 import { html } from "uhtml";
 import { Base, componentMap } from "./base";
 import { styleString } from "./style";
+import css from "ustyler";
+import "./img-db";
 
 /** Allow await'ing for a short time
  * @param {number} ms */
@@ -60,7 +62,7 @@ function pct(v) {
  * @property {number} y
  * @property {number} w
  * @property {number} h
- * @property {string} src
+ * @property {string} image
  * @property {boolean} invisible
  */
 /** @typedef {Row & vsdData} VRow */
@@ -78,9 +80,9 @@ class VSD extends Base {
     const items = /** @type {VRow[]} */ (
       data.getTaggedRows(tags, this.props.match)
     );
-    const src = items.find((item) => item.src)?.src;
+    const src = items.find((item) => item.image)?.image;
     return html`<div class="vsd flex show" id=${this.id}>
-      <img src=${src || ""} />
+      <img is="img-db" dbsrc=${src} />
       <div
         class="markers"
         ref=${(/** @type {HTMLDivElement & { observer: any }} */ node) => {
@@ -125,3 +127,45 @@ class VSD extends Base {
 }
 
 componentMap.addMap("vsd", VSD);
+
+css`
+  div.vsd {
+    position: relative;
+  }
+
+  div.vsd button {
+    position: absolute;
+    background-color: transparent;
+    box-shadow: 0 0 0 1px white, 0 0 0 2px red;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  div.vsd button[invisible] {
+    box-shadow: none;
+    outline: none;
+    border: none;
+  }
+
+  div.vsd img {
+    flex: 1 1 0;
+    object-fit: contain;
+    width: 100%;
+    height: 100%;
+  }
+
+  div.vsd div.markers button:focus-within {
+    opacity: 1;
+  }
+  div.vsd button span {
+    background-color: white;
+  }
+  div.vsd div.markers button {
+    opacity: 0;
+  }
+  div.vsd.show div.markers button {
+    opacity: 1;
+  }
+`;

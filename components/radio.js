@@ -1,6 +1,7 @@
 import { html } from "uhtml";
 import { Base, componentMap } from "./base";
 import { styleString } from "./style";
+import css from "ustyler";
 
 class Option extends Base {
   static defaultProps = {
@@ -13,7 +14,7 @@ componentMap.addMap("option", Option);
 class Radio extends Base {
   static defaultProps = {
     label: "",
-    stateName: "",
+    stateName: "$radio",
     unselected: "lightgray",
     selected: "pink",
     scale: "1",
@@ -52,7 +53,7 @@ class Radio extends Base {
     let current = state.get(stateName);
     const choices = this.children.map((child, index) => {
       const disabled = !this.valid(child.props.value);
-      if (!current && !disabled) {
+      if (stateName && !current && !disabled && child.props.value) {
         current = child.props.value;
         state.update({ [stateName]: current });
       }
@@ -88,3 +89,19 @@ class Radio extends Base {
 }
 
 componentMap.addMap("radio", Radio);
+
+css`
+  .radio fieldset {
+    flex-flow: wrap;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    justify-content: space-around;
+    gap: 1%;
+  }
+
+  .radio button {
+    min-width: 45%;
+    max-width: 45%;
+  }
+`;

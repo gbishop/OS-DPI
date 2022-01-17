@@ -12,12 +12,14 @@ import { State } from "./state";
 export class Rules {
   Functions = {
     append: (/** @type {any} */ value) => (/** @type {any[]} */ old) =>
-      [...old, value],
+      [...(old || []), value],
     empty: () => () => [],
     increment: (/** @type {number} */ value) => (/** @type {number} */ old) =>
       old + value,
     add_word: (/** @type {string} */ value) => (/** @type {string} */ old) =>
       old ? old + " " + value : value,
+    add_letter: (/** @type {string} */ value) => (/** @type {string} */ old) =>
+      old ? old + value : value,
     replace_last:
       (/** @type {string} */ newWord) => (/** @type {string} */ old) =>
         [...old.split(" ").slice(0, -1), newWord].join(" "),
@@ -57,7 +59,7 @@ export class Rules {
     // translate #name into field references
     exp = exp.replaceAll(/#(\w+)/g, "data.$1");
 
-    log("eic", expression, exp);
+    // log("eic", expression, exp);
 
     return exp;
   }
@@ -89,7 +91,7 @@ export class Rules {
     const variables = Object.keys(context);
     const values = Object.values(context);
     const exp = this.translate(expression);
-    log("eic", expression, exp);
+    // log("eic", expression, exp);
     // log("variables", variables);
     const func = Function(...variables, `return ${exp}`);
     return func(...values);

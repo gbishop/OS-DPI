@@ -1,8 +1,0 @@
-[
-  {
-    "origin": "TalkGrid",
-    "event": "press",
-    "conditions": [],
-    "updates": { "$Display": "#message" }
-  }
-]

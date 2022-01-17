@@ -2,6 +2,8 @@ import { log } from "../log";
 import { html } from "uhtml";
 import { Base } from "./base";
 import { textInput } from "./input";
+import db from "../db";
+import css from "ustyler";
 
 export class Actions extends Base {
   /**
@@ -18,7 +20,7 @@ export class Actions extends Base {
   template() {
     const { state, rules } = this.context;
     const ruleIndex = state.get("ruleIndex");
-    return html`<div class="actions">
+    return html`<div class="actions" help="Actions tab">
       <div class="scroll">
         <table>
           <thead>
@@ -49,7 +51,10 @@ export class Actions extends Base {
                   ${(updates.length && updates[0][1]) || ""}
                 </td>
                 <td rowspan=${rs}>
-                  <button onclick=${() => this.openActionEditor(index)}>
+                  <button
+                    onclick=${() => this.openActionEditor(index)}
+                    title="Edit action"
+                  >
                     &#x270D;
                   </button>
                 </td>
@@ -66,6 +71,7 @@ export class Actions extends Base {
           <tr>
             <td colspan="6">
               <button
+                help="Add an action"
                 onclick=${() => {
                   rules.rules.push({
                     origin: "",
@@ -121,6 +127,13 @@ export class Actions extends Base {
   }
 }
 
+/** @class ActionEditor
+ * @property {Rule} rule
+ * @property {string} origin
+ * @property {string} event
+ * @property {string[]} conditions
+ * @property {Object} updates
+ */
 class ActionEditor extends Base {
   /**
    * @param {SomeProps} props
@@ -130,12 +143,8 @@ class ActionEditor extends Base {
   constructor(props, context, parent = null) {
     super(props, context, parent);
     this.ruleIndex = -1;
-    // keeping the checker happy
+    // fool the checker
     this.rule = context.rules.rules[0];
-    this.origin = this.rule.origin;
-    this.event = this.rule.event;
-    this.conditions = [...this.rule.conditions];
-    this.updates = Object.entries(this.rule.updates);
   }
 
   /** @param {number} index */
@@ -159,7 +168,7 @@ class ActionEditor extends Base {
   template() {
     const { state, rules, tree } = this.context;
 
-    if (this.ruleIndex < 0 || typeof this.rule === "undefined") return html``;
+    if (this.ruleIndex < 0 || !this.rule) return html``;
 
     return html`<div class="editor">
       ${textInput({
@@ -168,8 +177,12 @@ class ActionEditor extends Base {
         label: "Origin",
         value: this.rule.origin,
         context: this.context,
+        help: "Action Origin",
         validate: (value) => (value.match(/^\w+$/) ? "" : "Invalid origin"),
-        update: (name, value) => (this.rule[name] = value),
+        update: (name, value) => {
+          this.rule[name] = value;
+          this.save();
+        },
         suggestions: tree.all(/\w+/g, ["name"]),
       })}
       ${textInput({
@@ -178,16 +191,21 @@ class ActionEditor extends Base {
         label: "Event",
         value: this.rule.event,
         context: this.context,
+        help: "Action Event",
         validate: (value) =>
           ["press"].indexOf(value) >= 0 ? "" : "Invalid event",
-        update: (name, value) => (this.rule[name] = value),
+        update: (name, value) => {
+          this.rule[name] = value;
+          this.save();
+        },
         suggestions: new Set(["press"]),
       })}
       ${this.editConditions()} ${this.editUpdates()}
       <div>
-        <button onclick=${() => this.close()}>Return</button>
+        <button onclick=${() => this.close()} help="Return">Return</button>
         <button
           ?disabled=${this.ruleIndex < 1}
+          help="Move action earlier"
           onclick=${() => {
             const R = rules.rules;
             [R[this.ruleIndex - 1], R[this.ruleIndex]] = [
@@ -196,6 +214,7 @@ class ActionEditor extends Base {
             ];
             this.ruleIndex -= 1;
             state.update({ ruleIndex: this.ruleIndex });
+            this.save();
           }}
         >
           Move earlier
@@ -203,6 +222,7 @@ class ActionEditor extends Base {
         <button
           ?disabled=${this.ruleIndex < 0 ||
           this.ruleIndex >= rules.rules.length - 1}
+          help="Move action later"
           onclick=${() => {
             const R = rules.rules;
             [R[this.ruleIndex + 1], R[this.ruleIndex]] = [
@@ -211,15 +231,18 @@ class ActionEditor extends Base {
             ];
             this.ruleIndex += 1;
             state.update({ ruleIndex: this.ruleIndex });
+            this.save();
           }}
         >
           Move later
         </button>
         <button
           ?disabled=${this.ruleIndex < 0}
-          onclick=${() => {
+          help="Delete action"
+          onclick=${async () => {
             const R = rules.rules;
             R.splice(this.ruleIndex, 1);
+            await this.save();
             this.close();
           }}
         >
@@ -241,8 +264,9 @@ class ActionEditor extends Base {
         (condition) => condition.length > 0
       );
       context.state.update();
+      this.save();
     };
-    return html`<fieldset>
+    return html`<fieldset help="Action Conditions">
       <legend>Conditions</legend>
       ${conditions.map((string, index) => {
         const id = `conditions_${index}`;
@@ -267,6 +291,7 @@ class ActionEditor extends Base {
             },
             suggestions,
           })}<button
+            title="Delete condition"
             onclick=${() => {
               conditions.splice(index, 1);
               reflect();
@@ -291,7 +316,7 @@ class ActionEditor extends Base {
     const { state, rules, data, tree } = this.context;
     const updates = this.updates;
 
-    const reflect = () => {
+    const reflect = async () => {
       // these should be filtered to remove bad ones
       this.rule.updates = Object.fromEntries(
         this.updates.filter(
@@ -299,16 +324,13 @@ class ActionEditor extends Base {
         )
       );
       state.update();
+      await this.save();
     };
-    const allStates = new Set([
-      ...tree.allStates(),
-      ...rules.allStates(),
-      "$Speak",
-    ]);
+    const allStates = new Set([...tree.allStates(), ...rules.allStates()]);
     const allFields = new Set(data.allFields);
     const both = new Set([...allStates, ...allFields]);
     // value updates
-    return html`<fieldset>
+    return html`<fieldset help="Action Updates">
       <legend>Updates</legend>
       ${updates.length > 0
         ? html` <span class="key">State</span>
@@ -351,6 +373,7 @@ class ActionEditor extends Base {
         });
         return html`${keyInput} ${valueInput}
           <button
+            title="Delete action update"
             onclick=${() => {
               updates.splice(index, 1);
               reflect();
@@ -370,4 +393,134 @@ class ActionEditor extends Base {
       </button>
     </fieldset>`;
   }
+
+  /** Save the actions */
+  async save() {
+    const { rules } = this.context;
+    await db.write("actions", rules.rules);
+  }
 }
+
+css`
+  div.actions {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0;
+    overflow: hidden;
+  }
+
+  div.actions div.scroll {
+    overflow-y: auto;
+  }
+
+  .actions table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  .actions tr[used] {
+    font-weight: bold;
+  }
+
+  .actions td,
+  .actions th {
+    border: 1px solid #999;
+    padding: 0.5em;
+  }
+
+  .actions td.conditions {
+    overflow-wrap: anywhere;
+  }
+
+  .actions td.update {
+    overflow-wrap: anywhere;
+  }
+
+  .actions thead tr {
+    background: white;
+  }
+
+  .actions tbody {
+    border: 2px solid black;
+    position: relative;
+    z-index: 10;
+  }
+  .actions thead {
+    border: 2px solid black;
+    z-index: 15;
+  }
+
+  .actions tbody[highlight] {
+    outline: 2px solid red;
+    z-index: 100;
+  }
+
+  .actions tbody:nth-child(even):after {
+    content: "";
+    background-color: rgb(0, 0, 0, 0.1);
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    pointer-events: none;
+  }
+
+  .actions .updates {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-gap: 0.25em 1em;
+  }
+
+  .actions div.editor {
+    display: grid;
+    grid-template-columns: auto 1fr 2fr;
+    grid-gap: 0.25em 1em;
+    border: 1px solid black;
+    padding: 1em;
+  }
+
+  .actions div.editor label {
+    grid-column: 1 / 2;
+    text-align: right;
+  }
+
+  .actions div.editor div.suggest {
+    grid-column: 2 / 4;
+  }
+
+  .actions div.editor div.suggest.key {
+    grid-column: 2 / 3;
+  }
+
+  .actions div.editor label.key {
+    grid-column: 1 / 2;
+  }
+
+  .actions div.editor div.suggest.value {
+    grid-column: 3 / 4;
+  }
+
+  .actions div.editor span.key {
+    grid-column: 2 / 3;
+  }
+
+  .actions div.editor span.key,
+  .actions div.editor span.value {
+    font-weight: bold;
+  }
+
+  .actions div.editor div {
+    grid-column: 1 / 4;
+  }
+
+  .actions div.editor fieldset {
+    grid-column: 1 / 4;
+    display: grid;
+    grid-template-columns: auto 1fr 2fr auto;
+    grid-gap: 0.25em 1em;
+    border: 1px solid black;
+    padding: 1em;
+    padding-block-start: 0;
+  }
+`;

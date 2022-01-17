@@ -106,6 +106,11 @@ export class Base {
     return html``;
   }
 
+  get index() {
+    const siblings = this.parent?.children || [];
+    return siblings.indexOf(this);
+  }
+
   nextSibling() {
     const siblings = this.parent?.children || [];
     const ndx = siblings.indexOf(this);
@@ -208,7 +213,7 @@ export function toDesign(tree) {
 
 class Page extends Base {
   static defaultProps = {};
-  static allowedChildren = ["stack", "modal dialog"];
+  static allowedChildren = ["stack", "modal dialog", "speech"];
 
   template() {
     return html`${this.children.map((child) => child.template())}`;

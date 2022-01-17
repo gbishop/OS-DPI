@@ -1,6 +1,7 @@
 import { html } from "uhtml";
 import { Base, componentMap } from "./base";
 import { styleString } from "./style";
+import css from "ustyler";
 
 class Button extends Base {
   static defaultProps = {
@@ -30,3 +31,10 @@ class Button extends Base {
 }
 
 componentMap.addMap("button", Button);
+
+css`
+  button.button {
+    height: 100%;
+    width: 100%;
+  }
+`;

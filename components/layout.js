@@ -2,8 +2,11 @@ import { html } from "uhtml";
 import { PropInfo } from "../properties";
 import { assemble } from "./base";
 import { colorNamesDataList } from "./style";
-import { Base } from "./base";
+import { Base, toDesign } from "./base";
+import { Stack } from "./stack";
 import { propEditor } from "./propEditor";
+import db from "../db";
+import css from "ustyler";
 
 import { log } from "../log";
 
@@ -19,22 +22,9 @@ export class Layout extends Base {
     scale: "1",
   };
 
-  /**
-   * @param {SomeProps} props
-   * @param {Context} context
-   * @param {Base} parent
-   */
-  constructor(props, context, parent) {
-    super(props, context, parent);
-
-    // assure that selected always has a value */
-    /** @type {Base} */
-    this.selected = this.context.tree;
-  }
-
   init() {
     const { state, tree } = this.context;
-    this.setSelected(this.getNode(state.get("path")));
+    this.setSelected(this.getNode(state.get("path")), state.get("editingTree"));
     document.querySelector("div#UI")?.addEventListener("click", (event) => {
       const target = /** @type {HTMLElement} */ (event.target);
       let id = null;
@@ -123,7 +113,7 @@ export class Layout extends Base {
     );
     this.selected.children.push(child);
     this.setSelected(child, true);
-    this.selected.context.state.update();
+    this.save();
   }
 
   /** Create the add child menu */
@@ -135,7 +125,8 @@ export class Layout extends Base {
       class="menu"
       ?disabled=${!allowed.length}
       style="width: 7em"
-      onchange=${(/** @type {{ target: { value: string; }}} */ e) => {
+      help="Add component"
+      onchange=${(/** @type {InputEventWithTarget} */ e) => {
         this.closeControls();
         this.addChild(e.target.value);
         e.target.value = "";
@@ -143,6 +134,167 @@ export class Layout extends Base {
     >
       <option selected disabled value="">Add</option>
       ${allowed.map((type) => html`<option value=${type}>${type}</option>`)}
+    </select>`;
+  }
+
+  /** Move a component within its parent stack
+   * @param {string} command
+   */
+  moveChild(command) {
+    const selected = this.selected;
+    const index = selected.index;
+    const parent = selected.parent;
+    if (!parent) return;
+    const siblings = parent.children;
+    const grandparent = parent?.parent;
+    switch (command) {
+      case "up":
+        if (index > 0) {
+          // swap with previous
+          [siblings[index - 1], siblings[index]] = [
+            siblings[index],
+            siblings[index - 1],
+          ];
+        } else if (index == 0) {
+          // move up into grandparent
+          if (
+            grandparent &&
+            parent instanceof Stack &&
+            grandparent instanceof Stack
+          ) {
+            parent.children.splice(index, 1);
+            grandparent.children.splice(parent.index, 0, selected);
+            selected.parent = grandparent;
+          }
+        }
+        this.save();
+        break;
+      case "down":
+        if (index < siblings.length - 1) {
+          // swap with next
+          [siblings[index + 1], siblings[index]] = [
+            siblings[index],
+            siblings[index + 1],
+          ];
+        } else if (index < siblings.length) {
+          // move down into grandparent
+          if (
+            grandparent &&
+            parent instanceof Stack &&
+            grandparent instanceof Stack
+          ) {
+            parent.children.splice(index, 1);
+            grandparent.children.splice(parent.index + 1, 0, selected);
+            selected.parent = grandparent;
+          }
+        }
+        this.save();
+        break;
+      case "new":
+        // replace with a stack containing selected
+        if (parent instanceof Stack) {
+          const newStack = assemble(
+            { type: "stack", props: {}, children: [] },
+            selected.context,
+            parent
+          );
+          parent.children.splice(index, 1, newStack);
+          newStack.children.push(selected);
+          selected.parent = newStack;
+          this.save();
+        }
+        break;
+      case "above": {
+        // move into the stack immediately above
+        const stack = selected.previousSibling();
+        if (stack && stack instanceof Stack) {
+          parent.children.splice(index, 1);
+          stack.children.push(selected);
+          selected.parent = stack;
+          this.save();
+        }
+        break;
+      }
+      case "below": {
+        // move into the stack immediately below
+        const stack = selected.nextSibling();
+        if (stack && stack instanceof Stack) {
+          parent.children.splice(index, 1);
+          stack.children.splice(0, 0, selected);
+          selected.parent = stack;
+          this.save();
+        }
+        break;
+      }
+      case "split":
+        // split the current stack here
+        if (
+          grandparent &&
+          parent instanceof Stack &&
+          grandparent instanceof Stack
+        ) {
+          const stack = assemble(
+            { type: "stack", props: {}, children: [] },
+            selected.context,
+            grandparent
+          );
+          stack.children = parent.children.splice(index);
+          stack.children.forEach((child) => (child.parent = stack));
+          grandparent.children.splice(parent.index + 1, 0, stack);
+          this.save();
+        }
+        break;
+    }
+  }
+
+  /** Create the move menu
+   * @returns {Hole} */
+  moveMenu() {
+    const selected = this.selected;
+    const index = selected.index;
+    const parent = selected.parent;
+    const siblings = parent?.children || [];
+    const grandparent = parent?.parent;
+    const isStack = parent instanceof Stack;
+    const previous = selected.previousSibling();
+    const next = selected.nextSibling();
+    return html`<select
+      class="menu"
+      help="Move component"
+      onchange=${(/** @type {InputEventWithTarget} */ e) => {
+        const value = e.target.value;
+        if (value) {
+          this.moveChild(value);
+        }
+        e.target.value = "";
+      }}
+    >
+      <option selected disabled value="">Move</option>
+      <option
+        value="up"
+        ?disabled=${index == 0 &&
+        (!grandparent || !(grandparent instanceof Stack) || !isStack)}
+      >
+        Move up
+      </option>
+      <option
+        value="down"
+        ?disabled=${index == siblings.length - 1 &&
+        (!grandparent || !(grandparent instanceof Stack) || !isStack)}
+      >
+        Move down
+      </option>
+      <option value="new" ?disabled=${!isStack}>Move into new stack</option>
+      <option
+        value="above"
+        ?disabled=${!isStack || !(previous instanceof Stack)}
+      >
+        Move into stack above
+      </option>
+      <option value="below" ?disabled=${!isStack || !(next instanceof Stack)}>
+        Move into stack below
+      </option>
+      <option value="split" ?disabled=${!isStack}>Split stack here</option>
     </select>`;
   }
 
@@ -197,6 +349,7 @@ export class Layout extends Base {
   /** Delete the current tree node */
   deleteCurrent() {
     return html`<button
+      help="Delete component"
       onclick=${() => {
         this.closeControls();
         const parent = this.selected.parent;
@@ -208,21 +361,12 @@ export class Layout extends Base {
           } else {
             this.setSelected(parent);
           }
-          this.selected.context.state.update();
+          this.save();
         }
       }}
     >
       Delete
     </button>`;
-  }
-
-  /** @param {Event & { target: HTMLInputElement }} event
-   */
-  propUpdate({ target }) {
-    const name = target.name;
-    const value = target.value;
-    this.selected.props[name] = value;
-    this.selected.context.state.update();
   }
 
   /** Render props for the selected element */
@@ -238,8 +382,7 @@ export class Layout extends Base {
           this.context,
           (name, value) => {
             this.selected.props[name] = value;
-            this.selected.context.state.update();
-            this.update();
+            this.save();
           }
         );
       });
@@ -256,11 +399,15 @@ export class Layout extends Base {
     log("controls");
     return html`<div class="controls">
       <h1>Editing ${this.selected.constructor.name} ${this.selected.name}</h1>
-      ${this.addMenu()} ${this.deleteCurrent()}
+      ${this.addMenu()} ${this.deleteCurrent()} ${this.moveMenu()}
       <div class="props">${this.showProps()}</div>
-      <button id="controls-return" onclick=${() => this.closeControls()} }>
+      <button
+        id="controls-return"
+        help="Return"
+        onclick=${() => this.closeControls()}
+      >
         Return</button
-      ><button disabled>Cancel</button>
+      ><button disabled help="Cancel">Cancel</button>
     </div>`;
   }
   /**
@@ -281,7 +428,7 @@ export class Layout extends Base {
       if (!tree.designer.hasOwnProperty("expanded")) {
         tree.designer.expanded = level < 3;
       }
-      const expanded = !!tree.designer.designer;
+      const expanded = !!tree.designer.expanded;
       return html`<li
         role="treeitem"
         aria-expanded=${expanded}
@@ -289,6 +436,7 @@ export class Layout extends Base {
         tabindex=${selected === tree ? 0 : -1}
         ref=${setCurrent}
         .dataset=${{ componentId: tree.id }}
+        help=${tree.constructor.name + " Component"}
       >
         <span
           role="button"
@@ -319,6 +467,7 @@ export class Layout extends Base {
         tabindex=${selected === tree ? 0 : -1}
         ref=${setCurrent}
         .dataset=${{ componentId: tree.id }}
+        help=${tree.constructor.name + " Component"}
       >
         <span
           role="button"
@@ -368,7 +517,7 @@ export class Layout extends Base {
     const editingTree = state.get("editingTree");
     /** @param {KeyboardEvent} event */
     const keyHandler = (event) => this.treeKeyHandler(event);
-    return html`<div class="layout">
+    return html`<div class="layout" help="Layout tab">
       <div class="tree">
         <ul role="tree" onKeyDown=${keyHandler}>
           ${this.showTree(this.context.tree, this.selected)}
@@ -383,7 +532,76 @@ export class Layout extends Base {
    * @param {Object} [patch]
    */
   update(patch) {
-    this.selected.context.state.update();
     this.context.state.update(patch);
   }
+
+  /** save the layout to the db
+   */
+  save() {
+    this.update();
+    const { tree } = this.context;
+    const layout = toDesign(tree);
+    db.write("layout", layout);
+  }
 }
+
+css`
+  div.layout {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0;
+    overflow: hidden;
+  }
+
+  div.tree {
+    overflow-y: auto;
+  }
+
+  .tree ul[role="tree"] {
+    list-style-type: none;
+    padding-inline-start: 5px;
+  }
+  .tree ul[role="group"] {
+    list-style-type: none;
+    margin-block-start: 0;
+    padding-inline-start: 20px;
+  }
+  .tree li[aria-expanded] span::before {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .tree li[aria-expanded="false"] > span::before {
+    content: "\u25B6";
+    color: black;
+    display: inline-block;
+    margin-right: 6px;
+  }
+
+  .tree li[aria-expanded="true"] > span::before {
+    content: "\u25B6";
+    color: black;
+    display: inline-block;
+    margin-right: 6px;
+    transform: rotate(90deg);
+  }
+
+  .tree li[aria-selected="true"] > span {
+    background-color: pink;
+  }
+
+  div.empty {
+    background-color: rgba(15, 15, 15, 0.3);
+    justify-content: center;
+    align-items: center;
+  }
+
+  div.empty::before {
+    content: "Empty";
+  }
+
+  div.highlight {
+    border: 1px solid red;
+    box-sizing: border-box;
+  }
+`;
