@@ -24,10 +24,18 @@ const attribute = (node, name) => {
         }
       }
       else {
-        attributeNode.value = newValue;
-        if (orphan) {
-          node.setAttributeNodeNS(attributeNode);
-          orphan = false;
+        const value =  newValue;
+        if (value == null) {
+          if (!orphan)
+            node.removeAttributeNode(attributeNode);
+            orphan = true;
+        }
+        else {
+          attributeNode.value = value;
+          if (orphan) {
+            node.setAttributeNodeNS(attributeNode);
+            orphan = false;
+          }
         }
       }
     }
@@ -56,9 +64,9 @@ const data = ({dataset}) => values => {
 };
 
 const event = (node, name) => {
-  let oldValue, type = name.slice(2);
-  if (!(name in node) && name.toLowerCase() in node)
-    type = type.toLowerCase();
+  let oldValue, lower, type = name.slice(2);
+  if (!(name in node) && (lower = name.toLowerCase()) in node)
+    type = lower.slice(2);
   return newValue => {
     const info = isArray(newValue) ? newValue : [newValue, false];
     if (oldValue !== info[0]) {

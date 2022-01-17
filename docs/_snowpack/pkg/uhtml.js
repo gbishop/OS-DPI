@@ -3,7 +3,7 @@ import { _ as __pika_web_default_export_for_treeshaking__$1 } from './common/ind
 import { i as isArray, s as slice, a as indexOf } from './common/index-8a07eae0.js';
 import { d as diffable, p as persistent } from './common/index-1f52fa80.js';
 import { u as udomdiff } from './common/index-3ee57073.js';
-import { t as text, e as event, s as setter, b as boolean, a as aria, r as ref, c as attribute } from './common/index-a424dacd.js';
+import { t as text, e as event, s as setter, b as boolean, a as aria, r as ref, c as attribute } from './common/index-4248dd17.js';
 import { c as createContent } from './common/index-31dbce2c.js';
 
 // from a generic path, retrieves the exact targeted node
