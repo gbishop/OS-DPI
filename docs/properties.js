@@ -6,17 +6,24 @@ export const PropInfo = {
     type: "state",
     name: "State",
     description: "Name of the state variable controlling this element.",
-    help: "state",
+  },
+  itemPlacement: {
+    type: "select",
+    values: { fill: "fill", content: "use row and column from content" },
+    name: "Item placement",
+    description: "How to place items in the grid",
   },
   rows: {
     type: "number",
     name: "Rows",
     description: "Number of rows in a grid",
+    disabled: (props) => props.itemPlacement != "fill",
   },
   columns: {
     type: "number",
     name: "Columns",
     description: "Number of columns in a grid.",
+    disabled: (props) => props.itemPlacement != "fill",
   },
   tags: {
     type: "tags",
@@ -26,13 +33,13 @@ export const PropInfo = {
   },
   match: {
     type: "select",
-    values: ["contains", "sequence"],
+    values: { contains: "contains", sequence: "sequence" },
     name: "Match",
     description: "How to match the tags.",
   },
   direction: {
     type: "select",
-    values: ["row", "column"],
+    values: { row: "row", column: "column" },
     name: "Direction",
     description: "Which way to stack elements.",
   },

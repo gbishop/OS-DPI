@@ -31,7 +31,9 @@ export class Data {
       result = this.allrows.filter((row) => {
         return (
           tags.length == row.tags.length &&
-          tags.every((tag, i) => row.tags[i] == tag)
+          tags.every(
+            (tag, i) => row.tags[i] == tag || row.tags[i] === "*" || tag === "*"
+          )
         );
       });
     }
