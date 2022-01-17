@@ -89,7 +89,7 @@ class Grid extends Base {
     /** @type {Partial<CSSStyleDeclaration>} */
     const style = {};
     const { data, state } = this.context;
-    let { rows, columns, match, name, itemPlacement } = this.props;
+    let { rows, columns, match, itemPlacement } = this.props;
     const tags = state.normalizeTags(this.props.tags);
     const cacheKey = tags.join("|");
     /** @type {Rows} */
