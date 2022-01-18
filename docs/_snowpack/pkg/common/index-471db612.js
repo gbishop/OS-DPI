@@ -1,5 +1,17 @@
 import { i as isArray } from './index-8a07eae0.js';
 
+// flag for foreign checks (slower path, fast by default)
+let useForeign = false;
+
+class Foreign {
+  constructor(handler, value) {
+    useForeign = true;
+    this._ = (...args) => handler(...args, value);
+  }
+}
+
+const foreign = (handler, value) => new Foreign(handler, value);
+
 const aria = node => values => {
   for (const key in values) {
     const name = key === 'role' ? key : `aria-${key}`;
@@ -24,7 +36,8 @@ const attribute = (node, name) => {
         }
       }
       else {
-        const value =  newValue;
+        const value = useForeign && (newValue instanceof Foreign) ?
+                        newValue._(node, name) : newValue;
         if (value == null) {
           if (!orphan)
             node.removeAttributeNode(attributeNode);
@@ -107,4 +120,4 @@ const text = node => {
   };
 };
 
-export { aria as a, boolean as b, attribute as c, event as e, ref as r, setter as s, text as t };
+export { aria as a, boolean as b, attribute as c, event as e, foreign as f, ref as r, setter as s, text as t };

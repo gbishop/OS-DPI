@@ -20,6 +20,9 @@ export function propEditor(component, name, value, info, context, hook) {
     hook(name, value);
   }
   const label = html`<label for=${name}>${info.name}</label>`;
+  const help = `${component.constructor.name}#${info.name
+    .toLowerCase()
+    .replace(" ", "-")}`;
   switch (info.type) {
     case "string":
       return html`<label for=${name}>${info.name}</label>
@@ -28,7 +31,7 @@ export function propEditor(component, name, value, info, context, hook) {
           id=${name}
           name=${name}
           .value=${value}
-          help=${info.name}
+          help=${help}
           onchange=${propUpdate}
           autocomplete="off"
           ?disabled=${info.disabled && info.disabled(component.props)}
@@ -42,7 +45,7 @@ export function propEditor(component, name, value, info, context, hook) {
           name=${name}
           .value=${value}
           step=${info.step || 1}
-          help=${info.name}
+          help=${help}
           onchange=${propUpdate}
           autocomplete="off"
           ?disabled=${info.disabled && info.disabled(component.props)}
@@ -57,7 +60,7 @@ export function propEditor(component, name, value, info, context, hook) {
             name=${name}
             .value=${value}
             list="ColorNames"
-            help=${info.name}
+            help=${help}
             onchange=${(/** @type {InputEventWithTarget} */ event) =>
               validateColor(event) && propUpdate(event)}
             autocomplete="off"
@@ -75,7 +78,7 @@ export function propEditor(component, name, value, info, context, hook) {
           id=${name}
           name=${name}
           onchange=${propUpdate}
-          help=${info.name}
+          help=${help}
           ?disabled=${info.disabled && info.disabled(component.props)}
         >
           ${(info.values &&
@@ -97,7 +100,7 @@ export function propEditor(component, name, value, info, context, hook) {
         label: info.name,
         value,
         context,
-        help: info.name,
+        help,
         validate: (value) => (value.match(/^\$\w+$/) ? "" : "Invalid state"),
         update: hook,
         suggestions: states,
@@ -119,7 +122,7 @@ export function propEditor(component, name, value, info, context, hook) {
       }
       const { tree, rules } = context;
       let states = new Set([...tree.allStates(), ...rules.allStates()]);
-      return html`<fieldset help=${info.name}>
+      return html`<fieldset help=${help}>
         <legend>Tags</legend>
         ${tags.map((tag, index) => {
           const id = `tags_${index}`;
@@ -167,7 +170,7 @@ export function propEditor(component, name, value, info, context, hook) {
           is="select-voice"
           id=${name}
           name=${name}
-          help=${name}
+          help=${help}
           onchange=${propUpdate}
           value=${value}
           ?disabled=${info.disabled && info.disabled(component.props)}
