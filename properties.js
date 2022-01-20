@@ -72,7 +72,8 @@ export const PropInfo = {
   fontSize: {
     type: "number",
     name: "Font Size",
-    description: "Font size for the text in this element."
+    description: "Font size for the text in this element.",
+    step: 0.5
   },
   selected: {
     type: "color",
