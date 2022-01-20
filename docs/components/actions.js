@@ -193,7 +193,7 @@ class ActionEditor extends Base {
         context: this.context,
         help: "Actions#event",
         validate: (value) =>
-          ["press"].indexOf(value) >= 0 ? "" : "Invalid event",
+          ["press", "init"].indexOf(value) >= 0 ? "" : "Invalid event",
         update: (name, value) => {
           this.rule[name] = value;
           this.save();
