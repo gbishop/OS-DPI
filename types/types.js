@@ -2,6 +2,7 @@
  * @typedef {Object} Props
  * @property {string} scale
  * @property {string} background
+ * @property {string} fontSize
  * @property {string} selected
  * @property {string} unselected
  * @property {number} rows

@@ -69,6 +69,11 @@ export const PropInfo = {
     name: "Background color",
     description: "Color of the background.",
   },
+  fontSize: {
+    type: "number",
+    name: "Font Size",
+    description: "Font size for the text in this element."
+  },
   selected: {
     type: "color",
     style: "color",
