@@ -94,6 +94,7 @@ class Grid extends Base {
     const cacheKey = tags.join("|");
     /** @type {Rows} */
     let items = data.getTaggedRows(tags, match);
+    console.log({ tags, items });
     // reset the page when the key changes
     if (this.cache.key !== cacheKey) {
       this.cache.key = cacheKey;

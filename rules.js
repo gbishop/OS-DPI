@@ -42,6 +42,7 @@ export class Rules {
       /** @type {string} */
       origin: "",
     };
+    this.applyRules("", "init", {});
   }
 
   /** translate an expression from Excel-like to Javascript

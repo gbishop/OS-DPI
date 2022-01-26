@@ -116,7 +116,6 @@ export class State {
         if (t.startsWith("$")) return this.get(t) || "";
         else return t;
       })
-      .filter((t) => t.length)
       .flat();
   }
 }

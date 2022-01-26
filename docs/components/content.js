@@ -67,7 +67,10 @@ async function readSheetFromBlob(blob) {
           }
           if (value && typeof value === "string") {
             row.tags.push(value);
+          } else {
+            row.tags.push("");
           }
+
           break;
         case "number":
           if (typeof value === "number") {
