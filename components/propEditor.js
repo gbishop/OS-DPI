@@ -45,6 +45,8 @@ export function propEditor(component, name, value, info, context, hook) {
           name=${name}
           .value=${value}
           step=${info.step || 1}
+          min=${info.min}
+          max=${info.max}
           help=${help}
           onchange=${propUpdate}
           autocomplete="off"

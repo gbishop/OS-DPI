@@ -10,7 +10,7 @@ import pleaseWait from "./wait";
 /** @param {Blob} blob */
 async function readSheetFromBlob(blob) {
   const data = await blob.arrayBuffer();
-  const workbook = XLSX.read(data);
+  const workbook = XLSX.read(data, {codepage: 65001});
   const sheetName = workbook.SheetNames[0];
   const sheet = workbook.Sheets[sheetName];
   const range = XLSX.utils.decode_range(sheet["!ref"]);
