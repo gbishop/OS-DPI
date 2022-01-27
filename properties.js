@@ -73,7 +73,8 @@ export const PropInfo = {
     type: "number",
     name: "Font Size",
     description: "Font size for the text in this element.",
-    step: 0.5
+    step: 0.5,
+    min: 0.5,
   },
   selected: {
     type: "color",

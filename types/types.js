@@ -83,6 +83,8 @@
  * @property {string[]} [fields]
  * @property {string} [label]
  * @property {number} [step]
+ * @property {number} [min]
+ * @property {number} [max]
  * @property {(props:Props) => boolean} [disabled]
  */
 
