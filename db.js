@@ -9,6 +9,7 @@ class DB {
         try {
           db.deleteObjectStore("store");
           db.deleteObjectStore("images");
+          db.deleteObjectStore("audio");
           db.deleteObjectStore("saved");
           db.deleteObjectStore("url");
         } catch (e) {}
@@ -19,6 +20,9 @@ class DB {
         objectStore.createIndex("by-name", "name");
         objectStore.createIndex("by-name-type", ["name", "type"]);
         db.createObjectStore("images", {
+          keyPath: "name",
+        });
+        db.createObjectStore("audio", {
           keyPath: "name",
         });
         // keep track of the name and ETag (if any) of designs that have been saved
@@ -361,24 +365,32 @@ class DB {
     else return name;
   }
 
-  /** Add an image to the database
+  /** Add media to the database
    * @param {Blob} blob
    * @param {string} name
+   * @param {string} store
    */
-  async addImage(blob, name) {
+  async addMedia(blob, name, store) {
+    /* go ahead and block improper accesses */
+    if(!(store == "images" || store == "audio"))
+      throw new Error("Forbidden access to store");
     const db = await this.dbPromise;
-    return db.put("images", {
+    return db.put(`${store}`, {
       name: name,
       content: blob,
     });
   }
 
-  /** List image names
+  /** List media entries from a given store
+   * @param {string} store
    * @returns {Promise<string[]>}
    * */
-  async listImages() {
+  async listMedia(store) {
+    /* go ahead and block improper accesses */
+    if(!(store == "images" || store == "audio"))
+      throw new Error("Forbidden access to store");
     const db = await this.dbPromise;
-    const keys = await db.getAllKeys("images");
+    const keys = await db.getAllKeys(`${store}`);
     const result = [];
     for (const key of keys) {
       result.push(key.toString());

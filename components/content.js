@@ -183,6 +183,28 @@ export class Content extends Base {
         Reload local sheet
       </button>
       <span>${this.sheetMessage}</span>
+
+      <h2>Load audio clips</h2>
+      <label for="audio">Upload audio clips: </label>
+      <input
+        id="audio"
+        type="file"
+        multiple
+        accept=".mp3,.wav,.ogg"
+        onchange=${async (/** @type {InputEventWithTarget} */ event) => {
+          const input = /** @type {HTMLInputElement} */ (event.currentTarget);
+          if (!input || !input.files || !input.files.length) {
+            return;
+          }
+          for (const file of input.files) {
+            if (file && file.type.startsWith("audio/")) {
+              await db.addMedia(file, file.name, "audio");
+            }
+          }
+          this.context.state.update();
+        }}
+      />
+
       <h2>Load images</h2>
       <label for="images">Upload images: </label>
       <input
@@ -197,7 +219,7 @@ export class Content extends Base {
           }
           for (const file of input.files) {
             if (file && file.type.startsWith("image/")) {
-              await db.addImage(file, file.name);
+              await db.addMedia(file, file.name, "images");
               // ask any live images with this name to refresh
               for (const img of document.querySelectorAll(
                 `img[dbsrc="${file.name}"]`
@@ -209,6 +231,24 @@ export class Content extends Base {
           this.context.state.update();
         }}
       />
+      <h2>Currently loaded audio files</h2>
+      <ol style="column-count: 3">
+        ${(/** @type {HTMLElement} */ comment) => {
+          /* I'm experimenting here. db.listImages() is asynchronous but I don't want
+           * to convert this entire application to the async version of uhtml. Can I
+           * inject content asynchronously using the callback mechanism he provides?
+           * As I understand it, when an interpolation is a function he places a
+           * comment node in the output and passes it to the function.
+           * I am using the comment node to find the parent container, then rendering
+           * the asynchronous content when it becomes available being careful to keep
+           * the comment node in the output. It seems to work, is it safe?
+           */
+          db.listMedia("audio").then((names) => {
+            const list = names.map((name) => html`<li>${name}</li>`);
+            render(comment.parentNode, html`${comment}${list}`);
+          });
+        }}
+      </ol>
       <h2>Currently loaded images</h2>
       <ol style="column-count: 3">
         ${(/** @type {HTMLElement} */ comment) => {
@@ -221,7 +261,7 @@ export class Content extends Base {
            * the asynchronous content when it becomes available being careful to keep
            * the comment node in the output. It seems to work, is it safe?
            */
-          db.listImages().then((names) => {
+          db.listMedia("images").then((names) => {
             const list = names.map((name) => html`<li>${name}</li>`);
             render(comment.parentNode, html`${comment}${list}`);
           });
