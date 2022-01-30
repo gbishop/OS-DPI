@@ -8,8 +8,7 @@ class DB {
       upgrade(db) {
         try {
           db.deleteObjectStore("store");
-          db.deleteObjectStore("images");
-          db.deleteObjectStore("audio");
+          db.deleteObjectStore("media");
           db.deleteObjectStore("saved");
           db.deleteObjectStore("url");
         } catch (e) {}
@@ -19,10 +18,7 @@ class DB {
         });
         objectStore.createIndex("by-name", "name");
         objectStore.createIndex("by-name-type", ["name", "type"]);
-        db.createObjectStore("images", {
-          keyPath: "name",
-        });
-        db.createObjectStore("audio", {
+        db.createObjectStore("media", {
           keyPath: "name",
         });
         // keep track of the name and ETag (if any) of designs that have been saved
@@ -264,7 +260,7 @@ class DB {
         const blob = new Blob([unzipped[fname]], {
           type: `image/${fname.slice(-3)}`,
         });
-        await db.put("images", {
+        await db.put("media", {
           name: fname,
           content: blob,
         });
@@ -304,7 +300,7 @@ class DB {
 
     // add the encoded image to the zipargs
     for (const imageName of imageNames) {
-      const record = await db.get("images", imageName);
+      const record = await db.get("media", imageName);
       if (record) {
         const contentBuf = await record.content.arrayBuffer();
         const contentArray = new Uint8Array(contentBuf);
@@ -345,7 +341,7 @@ class DB {
    */
   async getImage(name) {
     const db = await this.dbPromise;
-    const record = await db.get("images", name);
+    const record = await db.get("media", name);
     const img = new Image();
     if (record) {
       img.src = URL.createObjectURL(record.content);
@@ -354,13 +350,27 @@ class DB {
     return img;
   }
 
+  /** Return an audio file from the database
+   * @param {string} name
+   * @returns {Promise<HTMLAudioElement>}
+   */
+  async getAudio(name) {
+    const db = await this.dbPromise;
+    const record = await db.get("media", name);
+    const audio = new Audio();
+    if (record) {
+      audio.src = URL.createObjectURL(record.content);
+    }
+    return audio;
+  }
+
   /** Return an image URL from the database
    * @param {string} name
    * @returns {Promise<string>}
    */
-  async getImageURL(name) {
+  async getMediaURL(name) {
     const db = await this.dbPromise;
-    const record = await db.get("images", name);
+    const record = await db.get("media", name);
     if (record) return URL.createObjectURL(record.content);
     else return name;
   }
@@ -368,29 +378,22 @@ class DB {
   /** Add media to the database
    * @param {Blob} blob
    * @param {string} name
-   * @param {string} store
    */
-  async addMedia(blob, name, store) {
-    /* go ahead and block improper accesses */
-    if(!(store == "images" || store == "audio"))
-      throw new Error("Forbidden access to store");
+  async addMedia(blob, name) {
     const db = await this.dbPromise;
-    return db.put(`${store}`, {
+    return db.put("media", {
       name: name,
       content: blob,
     });
   }
 
   /** List media entries from a given store
-   * @param {string} store
    * @returns {Promise<string[]>}
    * */
-  async listMedia(store) {
+  async listMedia() {
     /* go ahead and block improper accesses */
-    if(!(store == "images" || store == "audio"))
-      throw new Error("Forbidden access to store");
     const db = await this.dbPromise;
-    const keys = await db.getAllKeys(`${store}`);
+    const keys = await db.getAllKeys("media");
     const result = [];
     for (const key of keys) {
       result.push(key.toString());
