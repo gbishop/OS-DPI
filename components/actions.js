@@ -178,7 +178,7 @@ class ActionEditor extends Base {
         value: this.rule.origin,
         context: this.context,
         help: "Actions#origin",
-        validate: (value) => (value.match(/^\w+$/) ? "" : "Invalid origin"),
+        validate: (value) => (value.match(/^\w+$|\*/) ? "" : "Invalid origin"),
         update: (name, value) => {
           this.rule[name] = value;
           this.save();
