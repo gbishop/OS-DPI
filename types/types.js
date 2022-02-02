@@ -2,6 +2,7 @@
  * @typedef {Object} Props
  * @property {string} scale
  * @property {string} background
+ * @property {string} fontSize
  * @property {string} selected
  * @property {string} unselected
  * @property {number} rows
@@ -82,6 +83,8 @@
  * @property {string[]} [fields]
  * @property {string} [label]
  * @property {number} [step]
+ * @property {number} [min]
+ * @property {number} [max]
  * @property {(props:Props) => boolean} [disabled]
  */
 

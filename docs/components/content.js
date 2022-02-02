@@ -10,7 +10,7 @@ import pleaseWait from "./wait.js";
 /** @param {Blob} blob */
 async function readSheetFromBlob(blob) {
   const data = await blob.arrayBuffer();
-  const workbook = XLSX.read(data);
+  const workbook = XLSX.read(data, { codepage: 65001 });
   const sheetName = workbook.SheetNames[0];
   const sheet = workbook.Sheets[sheetName];
   const range = XLSX.utils.decode_range(sheet["!ref"]);
@@ -24,7 +24,7 @@ async function readSheetFromBlob(blob) {
       continue;
     }
     columnName = columnName.toLowerCase();
-    names.push(columnName);
+    names.push(columnName.trim(" "));
     validColumns.push(c);
     switch (columnName) {
       case "row":
@@ -54,7 +54,10 @@ async function readSheetFromBlob(blob) {
       let value = sheet[XLSX.utils.encode_cell({ r, c })]?.v;
       switch (handlers[i]) {
         case "string":
-          if (typeof value === "number") {
+          if (typeof value === "undefined") {
+            value = "";
+          }
+          if (typeof value !== "string") {
             value = value.toString(10);
           }
           if (value && typeof value === "string") {
