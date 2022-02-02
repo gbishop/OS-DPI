@@ -18,9 +18,7 @@ class DB {
         });
         objectStore.createIndex("by-name", "name");
         objectStore.createIndex("by-name-type", ["name", "type"]);
-        db.createObjectStore("media", {
-          keyPath: "name",
-        });
+        db.createObjectStore("media");
         // keep track of the name and ETag (if any) of designs that have been saved
         let savedStore = db.createObjectStore("saved", {
           keyPath: "name",
@@ -263,6 +261,14 @@ class DB {
         await db.put("media", {
           name: fname,
           content: blob,
+        }, [name, fname]);
+      } else if (fname.endsWith(".mp3") || fname.endsWith(".wav")) {
+        const blob = new Blob([unzipped[fname]], {
+          type: `audio/${fname.slice(-3)}`,
+        });
+        await db.put("media", {
+          name: fname,
+          content: blob,
         });
       }
     }
@@ -341,7 +347,7 @@ class DB {
    */
   async getImage(name) {
     const db = await this.dbPromise;
-    const record = await db.get("media", name);
+    const record = await db.get("media", [this.designName, name]);
     const img = new Image();
     if (record) {
       img.src = URL.createObjectURL(record.content);
@@ -356,7 +362,7 @@ class DB {
    */
   async getAudio(name) {
     const db = await this.dbPromise;
-    const record = await db.get("media", name);
+    const record = await db.get("media", [this.designName, name]);
     const audio = new Audio();
     if (record) {
       audio.src = URL.createObjectURL(record.content);
@@ -370,7 +376,7 @@ class DB {
    */
   async getMediaURL(name) {
     const db = await this.dbPromise;
-    const record = await db.get("media", name);
+    const record = await db.get("media", [this.designName, name]);
     if (record) return URL.createObjectURL(record.content);
     else return name;
   }
@@ -381,17 +387,16 @@ class DB {
    */
   async addMedia(blob, name) {
     const db = await this.dbPromise;
-    return db.put("media", {
+    return await db.put("media", {
       name: name,
       content: blob,
-    });
+    }, [this.designName, name]);
   }
 
   /** List media entries from a given store
    * @returns {Promise<string[]>}
    * */
   async listMedia() {
-    /* go ahead and block improper accesses */
     const db = await this.dbPromise;
     const keys = await db.getAllKeys("media");
     const result = [];
