@@ -131,7 +131,10 @@ export class Rules {
       log("context", context);
       for (const rule of this.rules) {
         log("rule", rule);
-        if (origin != rule.origin || event != rule.event) {
+        if (
+          (origin != rule.origin && rule.origin != "*") ||
+          event != rule.event
+        ) {
           continue;
         }
         const result = rule.conditions.every((restriction) =>
