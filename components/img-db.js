@@ -34,7 +34,7 @@ export class imgFromDb extends HTMLImageElement {
   async updateSrcFromDb(url) {
     // if it contains a slash treat it like an external url
     // if not, fetch it from the db
-    if (url.indexOf("/") < 0) url = await db.getImageURL(url);
+    if (url.indexOf("/") < 0) url = await db.getMediaURL(url);
     this.src = url;
   }
 }

@@ -186,6 +186,28 @@ export class Content extends Base {
         Reload local sheet
       </button>
       <span>${this.sheetMessage}</span>
+
+      <h2>Load audio clips</h2>
+      <label for="audio">Upload audio clips: </label>
+      <input
+        id="audio"
+        type="file"
+        multiple
+        accept=".mp3,.wav,.ogg"
+        onchange=${async (/** @type {InputEventWithTarget} */ event) => {
+          const input = /** @type {HTMLInputElement} */ (event.currentTarget);
+          if (!input || !input.files || !input.files.length) {
+            return;
+          }
+          for (const file of input.files) {
+            if (file && file.type.startsWith("audio/")) {
+              await db.addMedia(file, file.name);
+            }
+          }
+          this.context.state.update();
+        }}
+      />
+
       <h2>Load images</h2>
       <label for="images">Upload images: </label>
       <input
@@ -200,7 +222,7 @@ export class Content extends Base {
           }
           for (const file of input.files) {
             if (file && file.type.startsWith("image/")) {
-              await db.addImage(file, file.name);
+              await db.addMedia(file, file.name);
               // ask any live images with this name to refresh
               for (const img of document.querySelectorAll(
                 `img[dbsrc="${file.name}"]`
@@ -212,7 +234,7 @@ export class Content extends Base {
           this.context.state.update();
         }}
       />
-      <h2>Currently loaded images</h2>
+      <h2>Currently loaded media files</h2>
       <ol style="column-count: 3">
         ${(/** @type {HTMLElement} */ comment) => {
           /* I'm experimenting here. db.listImages() is asynchronous but I don't want
@@ -224,7 +246,7 @@ export class Content extends Base {
            * the asynchronous content when it becomes available being careful to keep
            * the comment node in the output. It seems to work, is it safe?
            */
-          db.listImages().then((names) => {
+          db.listMedia().then((names) => {
             const list = names.map((name) => html`<li>${name}</li>`);
             render(comment.parentNode, html`${comment}${list}`);
           });

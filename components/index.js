@@ -10,6 +10,7 @@ import "./vsd";
 import "./button";
 import "./monitor";
 import "./speech";
+import "./audio";
 import "./help";
 
 export { assemble };

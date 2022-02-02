@@ -8,7 +8,7 @@ class DB {
       upgrade(db) {
         try {
           db.deleteObjectStore("store");
-          db.deleteObjectStore("images");
+          db.deleteObjectStore("media");
           db.deleteObjectStore("saved");
           db.deleteObjectStore("url");
         } catch (e) {}
@@ -18,9 +18,7 @@ class DB {
         });
         objectStore.createIndex("by-name", "name");
         objectStore.createIndex("by-name-type", ["name", "type"]);
-        db.createObjectStore("images", {
-          keyPath: "name",
-        });
+        db.createObjectStore("media");
         // keep track of the name and ETag (if any) of designs that have been saved
         let savedStore = db.createObjectStore("saved", {
           keyPath: "name",
@@ -260,10 +258,18 @@ class DB {
         const blob = new Blob([unzipped[fname]], {
           type: `image/${fname.slice(-3)}`,
         });
-        await db.put("images", {
+        await db.put("media", {
           name: fname,
           content: blob,
+        }, [name, fname]);
+      } else if (fname.endsWith(".mp3") || fname.endsWith(".wav")) {
+        const blob = new Blob([unzipped[fname]], {
+          type: `audio/${fname.slice(-3)}`,
         });
+        await db.put("media", {
+          name: fname,
+          content: blob,
+        }, [name, fname]);
       }
     }
     await db.put("saved", { name: this.designName, etag });
@@ -287,24 +293,17 @@ class DB {
       "content.json": strToU8(JSON.stringify(content)),
     };
 
-    // find all the image references in the content
-    // there should be a better way
-    const imageNames = new Set();
-    for (const row of content) {
-      if (row.symbol && row.symbol.indexOf("/") < 0) {
-        imageNames.add(row.symbol);
-      } else if (row.image && row.image.indexOf("/") < 0) {
-        imageNames.add(row.image);
-      }
-    }
+    const mediaKeys = (await db.getAllKeys("media")).filter(pair =>
+      Object.values(pair).includes(this.designName)
+    );
 
     // add the encoded image to the zipargs
-    for (const imageName of imageNames) {
-      const record = await db.get("images", imageName);
+    for (const key of mediaKeys) {
+      const record = await db.get("media", key);
       if (record) {
         const contentBuf = await record.content.arrayBuffer();
         const contentArray = new Uint8Array(contentBuf);
-        zipargs[imageName] = contentArray;
+        zipargs[key[1]] = contentArray;
       }
     }
 
@@ -341,7 +340,7 @@ class DB {
    */
   async getImage(name) {
     const db = await this.dbPromise;
-    const record = await db.get("images", name);
+    const record = await db.get("media", [this.designName, name]);
     const img = new Image();
     if (record) {
       img.src = URL.createObjectURL(record.content);
@@ -350,38 +349,52 @@ class DB {
     return img;
   }
 
+  /** Return an audio file from the database
+   * @param {string} name
+   * @returns {Promise<HTMLAudioElement>}
+   */
+  async getAudio(name) {
+    const db = await this.dbPromise;
+    const record = await db.get("media", [this.designName, name]);
+    const audio = new Audio();
+    if (record) {
+      audio.src = URL.createObjectURL(record.content);
+    }
+    return audio;
+  }
+
   /** Return an image URL from the database
    * @param {string} name
    * @returns {Promise<string>}
    */
-  async getImageURL(name) {
+  async getMediaURL(name) {
     const db = await this.dbPromise;
-    const record = await db.get("images", name);
+    const record = await db.get("media", [this.designName, name]);
     if (record) return URL.createObjectURL(record.content);
     else return name;
   }
 
-  /** Add an image to the database
+  /** Add media to the database
    * @param {Blob} blob
    * @param {string} name
    */
-  async addImage(blob, name) {
+  async addMedia(blob, name) {
     const db = await this.dbPromise;
-    return db.put("images", {
+    return await db.put("media", {
       name: name,
       content: blob,
-    });
+    }, [this.designName, name]);
   }
 
-  /** List image names
+  /** List media entries from a given store
    * @returns {Promise<string[]>}
    * */
-  async listImages() {
+  async listMedia() {
     const db = await this.dbPromise;
-    const keys = await db.getAllKeys("images");
+    const keys = await db.getAllKeys("media");
     const result = [];
     for (const key of keys) {
-      result.push(key.toString());
+      result.push(key[1].toString());
     }
     return result;
   }
