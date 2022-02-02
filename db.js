@@ -394,7 +394,7 @@ class DB {
     const keys = await db.getAllKeys("media");
     const result = [];
     for (const key of keys) {
-      result.push(key.toString());
+      result.push(key[1].toString());
     }
     return result;
   }
