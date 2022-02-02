@@ -269,7 +269,7 @@ class DB {
         await db.put("media", {
           name: fname,
           content: blob,
-        });
+        }, [name, fname]);
       }
     }
     await db.put("saved", { name: this.designName, etag });
@@ -293,24 +293,17 @@ class DB {
       "content.json": strToU8(JSON.stringify(content)),
     };
 
-    // find all the image references in the content
-    // there should be a better way
-    const imageNames = new Set();
-    for (const row of content) {
-      if (row.symbol && row.symbol.indexOf("/") < 0) {
-        imageNames.add(row.symbol);
-      } else if (row.image && row.image.indexOf("/") < 0) {
-        imageNames.add(row.image);
-      }
-    }
+    const mediaKeys = (await db.getAllKeys("media")).filter(pair =>
+      Object.values(pair).includes(this.designName)
+    );
 
     // add the encoded image to the zipargs
-    for (const imageName of imageNames) {
-      const record = await db.get("media", imageName);
+    for (const key of mediaKeys) {
+      const record = await db.get("media", key);
       if (record) {
         const contentBuf = await record.content.arrayBuffer();
         const contentArray = new Uint8Array(contentBuf);
-        zipargs[imageName] = contentArray;
+        zipargs[key[1]] = contentArray;
       }
     }
 
