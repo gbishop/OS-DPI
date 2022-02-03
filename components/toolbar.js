@@ -19,8 +19,8 @@ export class ToolBar extends Base {
               .renameDesign(event.target.value)
               .then(() => (window.location.hash = db.designName))}
         />
-        <button onclick=${() => db.saveDesign()}>Save</button>
-        <button onclick=${() => window.open("#", "_blank")}>Open</button>
+        <button onclick=${() => db.saveDesign()}>Export</button>
+        <button onclick=${() => window.open("#", "_blank")}>Import</button>
         <button
           onclick=${async () => {
             console.log(state.values);
