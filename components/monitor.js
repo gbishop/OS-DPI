@@ -44,24 +44,37 @@ export class Monitor extends Base {
       </tbody>
     </table>`;
 
-    return html`${s}${f}`;
+    return html`<button
+        onclick=${() => {
+          state.clear();
+          rules.doInit();
+        }}
+      >
+        Clear state
+      </button>
+      <div>${s}${f}</div>`;
   }
 }
 
 css`
   #monitor {
+    margin-top: 1em;
+    margin-left: 1em;
+  }
+
+  #monitor div {
     display: flex;
     height: 100%;
     overflow-y: auto;
     font-size: 75%;
+    margin-top: 0.2em;
   }
 
   #monitor table {
-    margin-top: 1em;
-    margin-left: 1em;
     border-collapse: collapse;
     border: 1px solid black;
     height: max-content;
+    margin-right: 1em;
   }
 
   #monitor table td,
