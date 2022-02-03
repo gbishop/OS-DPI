@@ -53,6 +53,19 @@ export class State {
       window.sessionStorage.setItem(this.persistKey, persist);
     }
   };
+
+  /** clear - reset the state
+   */
+  clear() {
+    const userState = Object.keys(this.values).filter((name) =>
+      name.startsWith("$")
+    );
+    const patch = Object.fromEntries(
+      userState.map((name) => [name, undefined])
+    );
+    this.update(patch);
+  }
+
   /** observe - call this function when the state updates
    * @param {Function} callback
    */
