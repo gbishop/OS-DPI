@@ -412,7 +412,9 @@ class DB {
    * */
   async listMedia() {
     const db = await this.dbPromise;
-    const keys = await db.getAllKeys("media");
+    const keys = (await db.getAllKeys("media")).filter(
+      (key) => key[0] == this.designName //only show resources from this design
+    );
     const result = [];
     for (const key of keys) {
       result.push(key[1].toString());

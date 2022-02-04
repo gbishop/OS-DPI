@@ -42,6 +42,12 @@ export class Rules {
       /** @type {string} */
       origin: "",
     };
+    this.doInit();
+  }
+
+  /** run the init rule if any
+   */
+  doInit() {
     this.applyRules("", "init", {});
   }
 

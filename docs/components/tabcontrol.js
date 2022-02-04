@@ -5,7 +5,7 @@ import css from "../_snowpack/pkg/ustyler.js";
 
 export class TabControl extends Base {
   static defaultProps = {
-    stateName: "a-tab-control",
+    stateName: "$tabControl",
     activeTab: "",
     background: "",
     scale: "6",
@@ -27,7 +27,6 @@ export class TabControl extends Base {
         const color = panel.props.background;
         if (index == 0 && !activeTabName) {
           activeTabName = tabName;
-          state.update({ [this.props.stateName]: tabName });
         }
         const active = activeTabName == tabName || panels.length === 1;
         panel.active = active;
@@ -173,5 +172,9 @@ css`
     border-top-left-radius: 1em;
     border-bottom-left-radius: 1em;
     margin-left: 10px;
+  }
+
+  .tabcontrol.none .buttons {
+    display: none;
   }
 `;
