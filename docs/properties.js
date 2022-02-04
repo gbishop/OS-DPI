@@ -43,6 +43,18 @@ export const PropInfo = {
     name: "Direction",
     description: "Which way to stack elements.",
   },
+  tabEdge: {
+    type: "select",
+    values: {
+      bottom: "bottom",
+      top: "top",
+      left: "left",
+      right: "right",
+      none: "no tabs",
+    },
+    name: "Tab Edge",
+    description: "Which edge the tabs appear on a tab control",
+  },
   name: {
     type: "string",
     name: "Name",
@@ -68,6 +80,13 @@ export const PropInfo = {
     style: "backgroundColor",
     name: "Background color",
     description: "Color of the background.",
+  },
+  fontSize: {
+    type: "number",
+    name: "Font Size",
+    description: "Font size for the text in this element.",
+    step: 0.5,
+    min: 0.5,
   },
   selected: {
     type: "color",

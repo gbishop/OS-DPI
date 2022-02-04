@@ -12,6 +12,7 @@ module.exports = {
     "**/thinking/**",
     "**/.git/**/*",
     "**/package*",
+    "**/Designs In Progress/**",
     `${root}/node_modules/**`,
   ],
   mount: {
