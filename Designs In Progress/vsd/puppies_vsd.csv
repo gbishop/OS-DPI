@@ -1,0 +1,9 @@
+tags_0,image,label,aoi,x,y,w,h,invisible,group
+pg1,puppy_p1.jpg,,,,,,,,
+pg1,,,text,40,82,20,6,TRUE,
+pg1,,,image,34,1,32,80,TRUE,
+pg1,,,,90,90,10,10,TRUE,pg2
+pg2,puppy_p2.jpg,,,,,,,,
+pg2,,,text,40,82,20,6,TRUE,
+pg2,,,image,34,1,32,80,TRUE,
+pg2,,,,0,90,10,10,TRUE,pg1

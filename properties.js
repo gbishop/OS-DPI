@@ -43,6 +43,18 @@ export const PropInfo = {
     name: "Direction",
     description: "Which way to stack elements.",
   },
+  tabEdge: {
+    type: "select",
+    values: {
+      bottom: "bottom",
+      top: "top",
+      left: "left",
+      right: "right",
+      none: "no tabs",
+    },
+    name: "Tab Edge",
+    description: "Which edge the tabs appear on a tab control",
+  },
   name: {
     type: "string",
     name: "Name",

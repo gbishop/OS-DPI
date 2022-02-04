@@ -89,22 +89,12 @@ function input(event) {
 function drawMenu(element) {
   const menu = element.nextElementSibling;
   if (!menu) return;
-  console.log("dm", element.suggest);
   render(
     menu,
-    html`<ul onclick=${() => console.log("here")}>
+    html`<ul>
       ${element.suggest.results.map(
         (result, i) =>
-          html`<li
-            ?selected=${i == element.suggest.index}
-            onclick=${() => {
-              console.log("here", i);
-              element.suggest.index = i;
-              insertWord(element);
-            }}
-          >
-            ${result}
-          </li>`
+          html`<li ?selected=${i == element.suggest.index}>${result}</li>`
       )}
     </ul>`
   );
@@ -121,8 +111,7 @@ function hideMenu(element) {
 
 /** @param {Event & { target: InputWithSuggest } } event */
 function blur(event) {
-  console.log("blur");
-  // hideMenu(event.target);
+  hideMenu(event.target);
 }
 
 /** @param {KeyboardEvent & { target: InputWithSuggest } } event */
