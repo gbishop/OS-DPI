@@ -4,30 +4,39 @@ import { fileSave } from "browser-fs-access";
 
 class DB {
   constructor() {
-    this.dbPromise = openDB("os-dpi", 3, {
-      upgrade(db) {
-        try {
-          db.deleteObjectStore("store");
-          db.deleteObjectStore("media");
-          db.deleteObjectStore("saved");
-          db.deleteObjectStore("url");
-        } catch (e) {}
-        let objectStore = db.createObjectStore("store", {
-          keyPath: "id",
-          autoIncrement: true,
-        });
-        objectStore.createIndex("by-name", "name");
-        objectStore.createIndex("by-name-type", ["name", "type"]);
-        db.createObjectStore("media");
-        // keep track of the name and ETag (if any) of designs that have been saved
-        let savedStore = db.createObjectStore("saved", {
-          keyPath: "name",
-        });
-        savedStore.createIndex("by-etag", "etag");
-        // track etags for urls
-        db.createObjectStore("url", {
-          keyPath: "url",
-        });
+    this.dbPromise = openDB("os-dpi", 4, {
+      upgrade(db, oldVersion, newVersion) {
+        if (oldVersion < 3) {
+          for (const name of ["store", "media", "saved", "url"]) {
+            try {
+              db.deleteObjectStore(name);
+            } catch (e) {}
+          }
+        } else if (oldVersion == 3) {
+          db.deleteObjectStore("images");
+        }
+        if (oldVersion < 3) {
+          let objectStore = db.createObjectStore("store", {
+            keyPath: "id",
+            autoIncrement: true,
+          });
+          objectStore.createIndex("by-name", "name");
+          objectStore.createIndex("by-name-type", ["name", "type"]);
+        }
+        if (newVersion >= 4) {
+          db.createObjectStore("media");
+        }
+        if (oldVersion < 3) {
+          // keep track of the name and ETag (if any) of designs that have been saved
+          let savedStore = db.createObjectStore("saved", {
+            keyPath: "name",
+          });
+          savedStore.createIndex("by-etag", "etag");
+          // track etags for urls
+          db.createObjectStore("url", {
+            keyPath: "url",
+          });
+        }
       },
     });
     this.updateListeners = [];
@@ -258,18 +267,26 @@ class DB {
         const blob = new Blob([unzipped[fname]], {
           type: `image/${fname.slice(-3)}`,
         });
-        await db.put("media", {
-          name: fname,
-          content: blob,
-        }, [name, fname]);
+        await db.put(
+          "media",
+          {
+            name: fname,
+            content: blob,
+          },
+          [name, fname]
+        );
       } else if (fname.endsWith(".mp3") || fname.endsWith(".wav")) {
         const blob = new Blob([unzipped[fname]], {
           type: `audio/${fname.slice(-3)}`,
         });
-        await db.put("media", {
-          name: fname,
-          content: blob,
-        }, [name, fname]);
+        await db.put(
+          "media",
+          {
+            name: fname,
+            content: blob,
+          },
+          [name, fname]
+        );
       }
     }
     await db.put("saved", { name: this.designName, etag });
@@ -293,7 +310,7 @@ class DB {
       "content.json": strToU8(JSON.stringify(content)),
     };
 
-    const mediaKeys = (await db.getAllKeys("media")).filter(pair =>
+    const mediaKeys = (await db.getAllKeys("media")).filter((pair) =>
       Object.values(pair).includes(this.designName)
     );
 
@@ -380,10 +397,14 @@ class DB {
    */
   async addMedia(blob, name) {
     const db = await this.dbPromise;
-    return await db.put("media", {
-      name: name,
-      content: blob,
-    }, [this.designName, name]);
+    return await db.put(
+      "media",
+      {
+        name: name,
+        content: blob,
+      },
+      [this.designName, name]
+    );
   }
 
   /** List media entries from a given store
