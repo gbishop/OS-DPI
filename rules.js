@@ -64,7 +64,7 @@ export class Rules {
     // translate $name into state references
     exp = exp.replaceAll(/\$\w+/g, "state.get('$&')");
     // translate #name into field references
-    exp = exp.replaceAll(/#(\w+)/g, "data.$1");
+    exp = exp.replaceAll(/#(\w+)/g, "data['$1']");
 
     // log("eic", expression, exp);
 

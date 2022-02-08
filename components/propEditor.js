@@ -2,6 +2,7 @@ import { html } from "uhtml";
 import { validateColor, getColor } from "./style";
 import { textInput } from "./input";
 import { log } from "../log";
+import { comparators } from "../data";
 import css from "ustyler";
 
 /**
@@ -108,63 +109,8 @@ export function propEditor(component, name, value, info, context, hook) {
         suggestions: states,
       });
 
-    case "tags": {
-      if (!component.designer.tags) {
-        component.designer.tags = [...value];
-      }
-      /** @type {string[]} */
-      const tags = component.designer.tags;
-      function reflect() {
-        const result = tags.filter(validTag);
-        hook(name, result);
-      }
-      /** @param {string} tag */
-      function validTag(tag) {
-        return tag.match(/^\$?\w+/);
-      }
-      const { tree, rules } = context;
-      let states = new Set([...tree.allStates(), ...rules.allStates()]);
-      return html`<fieldset help=${help}>
-        <legend>Tags</legend>
-        ${tags.map((tag, index) => {
-          const id = `tags_${index}`;
-          const label = `${index + 1}`;
-          return html`${textInput({
-              type: "text",
-              name: id,
-              label,
-              value: tag,
-              context,
-              validate: (_) => "",
-              update: (_, value) => {
-                if (!value) {
-                  tags.splice(index, 1);
-                } else {
-                  tags[index] = value;
-                }
-                reflect();
-              },
-              suggestions: states,
-            })}<button
-              onclick=${() => {
-                tags.splice(index, 1);
-                reflect();
-              }}
-            >
-              X
-            </button>`;
-        })}
-        <button
-          style="grid-column: 2 / 3"
-          onclick=${() => {
-            tags.push("");
-            reflect();
-          }}
-        >
-          Add tag
-        </button>
-      </fieldset> `;
-    }
+    case "filters":
+      return editFilters(component, name, value, info, context, hook);
 
     case "voiceURI":
       return html`<label for=${name}>${info.name}</label>
@@ -184,6 +130,99 @@ export function propEditor(component, name, value, info, context, hook) {
       log("tbd", name);
       return html`<p>${name}</p>`;
   }
+}
+
+/**
+ * @param {Tree} component
+ * @param {string} name
+ * @param {any} value
+ * @param {PropertyInfo} info
+ * @param {Context} context
+ * @param {(name: string, value: any) => void} hook
+ */
+function editFilters(component, name, value, info, context, hook) {
+  if (!component.designer.filters) {
+    component.designer.filters = [...value];
+  }
+  /** @type {ContentFilter[]} */
+  const filters = component.designer.filters;
+  function reflect() {
+    const result = filters.filter(validFilter);
+    hook(name, result);
+  }
+  /** @param {ContentFilter} filter */
+  function validFilter(filter) {
+    return (
+      filter.field.match(/^#\w+$/) &&
+      filter.operator in comparators &&
+      filter.value.match(/\$\w+$|[^$].*/)
+    );
+  }
+  const { tree, rules, data } = context;
+  const allStates = new Set([...tree.allStates(), ...rules.allStates()]);
+  const allFields = new Set(data.allFields);
+  const both = new Set([...allStates, ...allFields]);
+  // value updates
+  return html`<fieldset help="Layout#filters">
+    <legend>Filters</legend>
+    ${filters.length > 0
+      ? html`<span class="field">Field</span>
+          <span class="operator">Operator</span>
+          <span class="value">Value</span>`
+      : ""}
+    ${filters.map((filter, index) => {
+      const idv = `value_${index + 1}`;
+      const idk = `field_${index + 1}`;
+      const ido = `op_${index + 1}`;
+      const fieldInput = html`<select class="field" name=${idk}>
+        ${data.allFields.map(
+          (field) => html`<option value=${field}>${field}</option>`
+        )}
+      </select>`;
+      const opInput = html`<select class="operator" name=${ido}>
+        ${Object.keys(comparators).map(
+          (op) => html`<option value=${op}>${op}</option>`
+        )}
+      </select>`;
+      const valueInput = textInput({
+        type: "text",
+        className: "value",
+        name: idv,
+        label: `${index} value`,
+        labelHidden: true,
+        value: filter.value,
+        context,
+        suggestions: allStates,
+        validate: (value) =>
+          value.length == 0 || rules.validateExpression(value)
+            ? ""
+            : "Invalid value",
+        update: (_, value) => {
+          filters[index].value = value;
+          reflect();
+        },
+      });
+      return html`${fieldInput} ${opInput} ${valueInput}
+        <button
+          title="Delete action update"
+          onclick=${() => {
+            filters.splice(index, 1);
+            reflect();
+          }}
+        >
+          X
+        </button>`;
+    })}
+    <button
+      style="grid-column: 1/4"
+      onclick=${() => {
+        filters.push({ field: "", operator: "equals", value: "" });
+        reflect();
+      }}
+    >
+      Add filter
+    </button>
+  </fieldset>`;
 }
 
 css`
@@ -209,19 +248,20 @@ css`
   div.props fieldset {
     grid-column: 1 / 3;
     display: grid;
-    grid-template-columns: auto 1fr auto;
-    grid-gap: 0.25em 1em;
-    border: 1px solid black;
-    padding: 1em;
-    padding-block-start: 0;
+    grid-template-columns: auto auto auto auto auto;
   }
 
-  div.props fieldset div.suggest {
+  div.props fieldset .field {
+    grid-column: 1 / 2;
+  }
+  div.props fieldset .operator {
     grid-column: 2 / 3;
   }
-
-  div.props fieldset button {
+  div.props fieldset .value {
     grid-column: 3 / 4;
+  }
+  div.props fieldset button {
+    grid-column: 4 / 5;
   }
 
   input[type="number"] {

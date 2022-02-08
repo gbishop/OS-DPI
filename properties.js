@@ -25,11 +25,11 @@ export const PropInfo = {
     description: "Number of columns in a grid.",
     disabled: (props) => props.itemPlacement != "fill",
   },
-  tags: {
-    type: "tags",
-    name: "Tags",
-    description: "A list of tags to match",
-    addMessage: "Add a tag",
+  filters: {
+    type: "filters",
+    name: "Content Filters",
+    description: "A list of filters to match",
+    addMessage: "Add a filter",
   },
   match: {
     type: "select",

@@ -10,8 +10,7 @@ class Grid extends Base {
     itemPlacement: "fill",
     rows: 3,
     columns: 3,
-    tags: [],
-    match: "contains",
+    filters: [{ field: "#name", operator: "equals", value: "foo" }],
     name: "grid",
     background: "white",
     scale: "1",
@@ -89,16 +88,19 @@ class Grid extends Base {
     /** @type {Partial<CSSStyleDeclaration>} */
     const style = {};
     const { data, state } = this.context;
-    let { rows, columns, match, itemPlacement } = this.props;
-    const tags = state.normalizeTags(this.props.tags);
-    const cacheKey = tags.join("|");
+    let { rows, columns, filters, itemPlacement } = this.props;
+    console.log({ filters });
     /** @type {Rows} */
-    let items = data.getTaggedRows(tags, match);
+    let items = data.getRows(filters, state);
     // reset the page when the key changes
+    // TODO: Fix this
+    this.page = 1;
+    /*
     if (this.cache.key !== cacheKey) {
       this.cache.key = cacheKey;
       this.page = 1;
     }
+    */
     let maxPage = 1;
     const result = [];
     if (itemPlacement === "content") {

@@ -1,3 +1,29 @@
+/** Implement comparison operators
+ * @typedef {function(string, string): boolean} Comparator
+ *
+ * @type {Object<string, Comparator>}
+ */
+export const comparators = {
+  equals: (f, v) => f == v || f === "*" || v === "*",
+  "starts with": (f, v) => f.startsWith(v) || f === "*" || v === "*",
+};
+
+/** Test a row with a filter
+ * @param {ContentFilter} filter
+ * @param {Row} row
+ * @param {State} state
+ * @returns {boolean}
+ */
+function match(filter, row, state) {
+  const field = row[filter.field.slice(1)] || "";
+  let value = filter.value;
+  if (value.startsWith("$")) {
+    value = state.get(value) || "";
+  }
+  const comparator = comparators[filter.operator];
+  return comparator(field, value);
+}
+
 export class Data {
   /** @param {Rows} rows */
   constructor(rows) {
@@ -17,44 +43,28 @@ export class Data {
   /**
    * Extract rows with the given tags
    *
-   * @param {string[]} tags - Tags that must be in each row
-   * @param {string} match - how to match
+   * @param {ContentFilter[]} filters - each filter must return true
+   * @param {State} state
    * @return {Rows} Rows with the given tags
    */
-  getTaggedRows(tags, match) {
-    let result = [];
-    if (match == "contains") {
-      // all the tags must be in the row somewhere
-      result = this.allrows.filter((row) => {
-        return tags.every((tag) => row.tags.indexOf(tag) >= 0);
-      });
-    } else if (match == "sequence") {
-      // all the tags must match those coming from the row in order
-      // and any remaining tags in the row must be empty
-      result = this.allrows.filter((row) => {
-        return (
-          tags.every(
-            (tag, i) => row.tags[i] == tag || row.tags[i] === "*" || tag === "*"
-          ) &&
-          row.tags
-            .slice(tags.length)
-            .every((tag) => tag.length === 0 || tag === "*")
-        );
-      });
-    }
+  getRows(filters, state) {
+    // all the filters must match the row
+    const result = this.allrows.filter((row) =>
+      filters.every((filter) => match(filter, row, state))
+    );
     // console.log("gtr result", result);
     return result;
   }
 
   /**
-   * Test if tagged rows exist
+   * Test if any rows exist after filtering
    *
-   * @param {string[]} tags - Tags that must be in each row
+   * @param {ContentFilter[]} filters
    * @return {Boolean} true if tag combination occurs
    */
-  hasTaggedRows(tags) {
+  hasTaggedRows(filters) {
     return this.allrows.some((row) =>
-      tags.every((tag) => row.tags.indexOf(tag) >= 0)
+      filters.every((filter) => row.tags.indexOf(tag) >= 0)
     );
   }
 }

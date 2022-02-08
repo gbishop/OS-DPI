@@ -33,11 +33,7 @@ async function readSheetFromBlob(blob) {
         handlers.push("number");
         break;
       default:
-        if (columnName.startsWith("tag")) {
-          handlers.push("tag");
-        } else {
-          handlers.push("string");
-        }
+        handlers.push("string");
         break;
     }
   }
@@ -46,7 +42,7 @@ async function readSheetFromBlob(blob) {
   const dataArray = [];
   for (let r = range.s.r + 1; r <= range.e.r; r++) {
     /** @type {Row} */
-    const row = { tags: [] };
+    const row = {};
     for (let i = 0; i < validColumns.length; i++) {
       /** @type {string} */
       const name = names[i];
@@ -64,17 +60,6 @@ async function readSheetFromBlob(blob) {
             row[name] = value;
           }
           break;
-        case "tag":
-          if (typeof value === "number") {
-            value = value.toString(10);
-          }
-          if (value && typeof value === "string") {
-            row.tags.push(value);
-          } else {
-            row.tags.push("");
-          }
-
-          break;
         case "number":
           if (typeof value === "number") {
             row[name] = Math.floor(value);
@@ -88,7 +73,7 @@ async function readSheetFromBlob(blob) {
           break;
       }
     }
-    if (row.tags.length > 0 || Object.keys(row).length > 1) dataArray.push(row);
+    if (Object.keys(row).length > 0) dataArray.push(row);
   }
   return dataArray;
 }
@@ -115,6 +100,7 @@ export class Content extends Base {
           /** @type {string} */
           let URL = form[0].value;
           if (URL.length === 0) return;
+          sessionStorage.setItem("remoteSheetUrl", URL);
           // check for a Google Sheets URL
           if (
             URL.match(/https:\/\/docs.google.com\/spreadsheets\/.*\/edit.*/)
@@ -142,6 +128,7 @@ export class Content extends Base {
           id="remoteFileInput"
           name="url"
           type="url"
+          value=${sessionStorage.getItem("remoteSheetUrl")}
           placeholder="Enter a URL"
         />
         <input type="submit" value="Load remote sheet" />

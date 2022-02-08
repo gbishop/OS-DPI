@@ -1,4 +1,13 @@
 /**
+ * Allow comparing a field in the content to a constant or state variable
+ *
+ * @typedef {Object} ContentFilter
+ * @property {string} field
+ * @property {string} operator
+ * @property {string} value
+ */
+
+/**
  * @typedef {Object} Props
  * @property {string} scale
  * @property {string} background
@@ -7,7 +16,7 @@
  * @property {string} unselected
  * @property {number} rows
  * @property {number} columns
- * @property {string[]} tags
+ * @property {ContentFilter[]} filters
  * @property {string} stateName
  * @property {string} match
  * @property {string} name
@@ -32,6 +41,10 @@
 /** @typedef {import('../components/base').Base} Tree */
 
 /**
+ * @typedef {import("../state").State} State
+ */
+
+/**
  * @typedef {Object} Context
  * @property {import("../state").State} state
  * @property {import("../rules").Rules} rules
@@ -49,7 +62,6 @@
 
 /**
  * @typedef {Object} Row
- * @property {string[]} tags
  * @property {string} [message]
  * @property {string} [label]
  * @property {string} [symbol]
