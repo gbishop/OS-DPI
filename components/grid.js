@@ -10,7 +10,7 @@ class Grid extends Base {
     itemPlacement: "fill",
     rows: 3,
     columns: 3,
-    filters: [{ field: "#name", operator: "equals", value: "foo" }],
+    filters: [{ field: "#label", operator: "equals", value: "foo" }],
     name: "grid",
     background: "white",
     scale: "1",

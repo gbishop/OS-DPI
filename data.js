@@ -4,8 +4,12 @@
  * @type {Object<string, Comparator>}
  */
 export const comparators = {
-  equals: (f, v) => f == v || f === "*" || v === "*",
-  "starts with": (f, v) => f.startsWith(v) || f === "*" || v === "*",
+  equals: (f, v) =>
+    f.localeCompare(v, undefined, { sensitivity: "base" }) === 0 ||
+    f === "*" ||
+    v === "*",
+  "starts with": (f, v) =>
+    f.toUpperCase().startsWith(v.toUpperCase()) || f === "*" || v === "*",
 };
 
 /** Test a row with a filter
@@ -21,7 +25,9 @@ function match(filter, row, state) {
     value = state.get(value) || "";
   }
   const comparator = comparators[filter.operator];
-  return comparator(field, value);
+  let r = comparator(field, value);
+  // console.log(`match "${field}" "${value}", ${r}`);
+  return r;
 }
 
 export class Data {

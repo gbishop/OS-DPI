@@ -152,6 +152,7 @@ function editFilters(component, name, value, info, context, hook) {
   }
   /** @param {ContentFilter} filter */
   function validFilter(filter) {
+    console.log("valid", filter);
     return (
       filter.field.match(/^#\w+$/) &&
       filter.operator in comparators &&
@@ -162,47 +163,66 @@ function editFilters(component, name, value, info, context, hook) {
   const allStates = new Set([...tree.allStates(), ...rules.allStates()]);
   const allFields = new Set(data.allFields);
   const both = new Set([...allStates, ...allFields]);
-  // value updates
-  return html`<fieldset help="Layout#filters">
-    <legend>Filters</legend>
-    ${filters.length > 0
-      ? html`<span class="field">Field</span>
-          <span class="operator">Operator</span>
-          <span class="value">Value</span>`
-      : ""}
-    ${filters.map((filter, index) => {
-      const idv = `value_${index + 1}`;
-      const idk = `field_${index + 1}`;
-      const ido = `op_${index + 1}`;
-      const fieldInput = html`<select class="field" name=${idk}>
-        ${data.allFields.map(
-          (field) => html`<option value=${field}>${field}</option>`
-        )}
-      </select>`;
-      const opInput = html`<select class="operator" name=${ido}>
-        ${Object.keys(comparators).map(
-          (op) => html`<option value=${op}>${op}</option>`
-        )}
-      </select>`;
-      const valueInput = textInput({
-        type: "text",
-        className: "value",
-        name: idv,
-        label: `${index} value`,
-        labelHidden: true,
-        value: filter.value,
-        context,
-        suggestions: allStates,
-        validate: (value) =>
-          value.length == 0 || rules.validateExpression(value)
-            ? ""
-            : "Invalid value",
-        update: (_, value) => {
-          filters[index].value = value;
-          reflect();
-        },
-      });
-      return html`${fieldInput} ${opInput} ${valueInput}
+  const filterRows = filters.map((filter, index) => {
+    console.log({ filter, index });
+    const fieldInput = html`<select
+      class="field"
+      onChange=${(event) => {
+        console.log(event);
+        filters[index].field = event.target.value;
+        reflect();
+      }}
+    >
+      <option value="">Choose a field</option>
+      ${data.allFields.map(
+        (fieldName) =>
+          html`<option
+            value=${fieldName}
+            ?selected=${fieldName == filter.field}
+          >
+            ${fieldName}
+          </option>`
+      )}
+    </select>`;
+    const opInput = html`<select
+      class="operator"
+      onChange=${(event) => {
+        console.log(event);
+        filters[index].operator = event.target.value;
+        reflect();
+      }}
+    >
+      ${Object.keys(comparators).map(
+        (op) =>
+          html`<option value=${op} ?selected=${op == filter.operator}>
+            ${op}
+          </option>`
+      )}
+    </select>`;
+    const valueInput = textInput({
+      type: "text",
+      className: "value",
+      name: "value",
+      label: "",
+      labelHidden: true,
+      value: filter.value,
+      context,
+      suggestions: allStates,
+      validate: (value) =>
+        value.length == 0 || rules.validateExpression(value)
+          ? ""
+          : "Invalid value",
+      update: (_, value) => {
+        filters[index].value = value;
+        reflect();
+      },
+    });
+    return html`<tr>
+      <td>${index + 1}</td>
+      <td>${fieldInput}</td>
+      <td>${opInput}</td>
+      <td>${valueInput}</td>
+      <td>
         <button
           title="Delete action update"
           onclick=${() => {
@@ -211,8 +231,30 @@ function editFilters(component, name, value, info, context, hook) {
           }}
         >
           X
-        </button>`;
-    })}
+        </button>
+      </td>
+    </tr>`;
+  });
+  let filterTable = html``;
+  if (filters.length > 0) {
+    filterTable = html`<table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Field</th>
+          <th>Operator</th>
+          <th>Value</th>
+          <th>X</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filterRows}
+      </tbody>
+    </table>`;
+  }
+  return html`<fieldset help="Layout#filters">
+    <legend>Filters</legend>
+    ${filterTable}
     <button
       style="grid-column: 1/4"
       onclick=${() => {

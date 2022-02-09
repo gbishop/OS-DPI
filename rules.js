@@ -22,7 +22,7 @@ export class Rules {
       old ? old + value : value,
     replace_last:
       (/** @type {string} */ newWord) => (/** @type {string} */ old) =>
-        [...old.split(" ").slice(0, -1), newWord].join(" "),
+        [...(old || "").split(" ").slice(0, -1), newWord].join(" "),
   };
 
   /**
