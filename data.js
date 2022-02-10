@@ -1,3 +1,5 @@
+import { evalInContext } from "./eval";
+
 /** Implement comparison operators
  * @typedef {function(string, string): boolean} Comparator
  *
@@ -15,18 +17,13 @@ export const comparators = {
 /** Test a row with a filter
  * @param {ContentFilter} filter
  * @param {Row} row
- * @param {State} state
  * @returns {boolean}
  */
-function match(filter, row, state) {
+function match(filter, row) {
   const field = row[filter.field.slice(1)] || "";
   let value = filter.value;
-  if (value.startsWith("$")) {
-    value = state.get(value) || "";
-  }
   const comparator = comparators[filter.operator];
   let r = comparator(field, value);
-  // console.log(`match "${field}" "${value}", ${r}`);
   return r;
 }
 
@@ -51,12 +48,19 @@ export class Data {
    *
    * @param {ContentFilter[]} filters - each filter must return true
    * @param {State} state
-   * @return {Rows} Rows with the given tags
+   * @return {Rows} Rows that pass the filters
    */
   getRows(filters, state) {
     // all the filters must match the row
+    console.log({ state });
+    const boundFilters = filters.map((filter) =>
+      Object.assign({}, filter, {
+        value: evalInContext(filter.value, { state }),
+      })
+    );
+    console.log({ filters, boundFilters });
     const result = this.allrows.filter((row) =>
-      filters.every((filter) => match(filter, row, state))
+      boundFilters.every((filter) => match(filter, row))
     );
     // console.log("gtr result", result);
     return result;
@@ -66,11 +70,18 @@ export class Data {
    * Test if any rows exist after filtering
    *
    * @param {ContentFilter[]} filters
+   * @param {State} state
    * @return {Boolean} true if tag combination occurs
    */
-  hasTaggedRows(filters) {
-    return this.allrows.some((row) =>
-      filters.every((filter) => row.tags.indexOf(tag) >= 0)
+  hasTaggedRows(filters, state) {
+    const boundFilters = filters.map((filter) =>
+      Object.assign({}, filter, {
+        value: evalInContext(filter.value, { state }),
+      })
     );
+    const result = this.allrows.some((row) =>
+      boundFilters.every((filter) => match(filter, row))
+    );
+    return result;
   }
 }

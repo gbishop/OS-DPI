@@ -23,7 +23,8 @@ export class State {
    * @param {any} defaultValue
    * @returns {any}
    */
-  get(name, defaultValue = undefined) {
+  get(name, defaultValue = "") {
+    console.log({ name });
     if (name && name.length) {
       return name
         .split(".")

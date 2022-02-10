@@ -18,21 +18,23 @@ class Radio extends Base {
     unselected: "lightgray",
     selected: "pink",
     scale: "1",
-    tags: [],
   };
   static allowedChildren = ["option"];
 
   /**
-   * true if there exist rows with the this.tags and the value
+   * true if there exist rows with the this.filters and the value
    * @arg {string} value
    * @returns {boolean}
    */
   valid(value) {
+    return true;
+    /*
     const { data, state } = this.context;
     return (
-      !this.props.tags.length ||
-      data.hasTaggedRows(state.normalizeTags([...this.props.tags, value]))
+      !this.props.filters.length ||
+      data.hasTaggedRows([...this.props.filters, { ], state)
     );
+    */
   }
 
   /**

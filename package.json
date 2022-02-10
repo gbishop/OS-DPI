@@ -15,6 +15,7 @@
     "ustyler": "^1.0.1"
   },
   "dependencies": {
+    "angular-expressions": "^1.1.4",
     "browser-fs-access": "^0.23.0",
     "fflate": "^0.7.2",
     "idb": "^7.0.0",

@@ -69,6 +69,7 @@
  * @property {number} [column]
  * @property {number} [page]
  * @property {Object} [details]
+ * @property {string} [sheetName]
  * */
 
 /**

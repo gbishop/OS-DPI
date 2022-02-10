@@ -42,7 +42,7 @@ async function readSheetFromBlob(blob) {
     // Process the rows
     for (let r = range.s.r + 1; r <= range.e.r; r++) {
       /** @type {Row} */
-      const row = {};
+      const row = { sheetName };
       for (let i = 0; i < validColumns.length; i++) {
         /** @type {string} */
         const name = names[i];
@@ -73,11 +73,13 @@ async function readSheetFromBlob(blob) {
             break;
         }
       }
-      if (Object.keys(row).length > 0) dataArray.push(row);
+      if (Object.keys(row).length > 1) dataArray.push(row);
     }
   }
   return dataArray;
 }
+
+async function saveSheet(type) {}
 
 export class Content extends Base {
   init() {
@@ -174,6 +176,15 @@ export class Content extends Base {
         Reload local sheet
       </button>
       <span>${this.sheetMessage}</span>
+      <h2>Save content as a spreadsheet</h2>
+      <label for="sheetType">Spreadsheet type</label>
+      <select id="sheetType" onchange=${(e) => saveSheet(e.target.value)}>
+        <option value="">Choose your format</option>
+        <option value="xlsx">Excel .xlsx</option>
+        <option value="xls">Excel .xls</option>
+        <option value="ods">ODF Spreadsheet .ods</option>
+        <option value="csv">Comma Separated Values .csv</option>
+      </select>
 
       <h2>Load audio clips</h2>
       <label for="audio">Upload audio clips: </label>

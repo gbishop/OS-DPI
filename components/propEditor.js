@@ -3,6 +3,7 @@ import { validateColor, getColor } from "./style";
 import { textInput } from "./input";
 import { log } from "../log";
 import { comparators } from "../data";
+import { validateExpression } from "../eval";
 import css from "ustyler";
 
 /**
@@ -209,9 +210,7 @@ function editFilters(component, name, value, info, context, hook) {
       context,
       suggestions: allStates,
       validate: (value) =>
-        value.length == 0 || rules.validateExpression(value)
-          ? ""
-          : "Invalid value",
+        value.length == 0 || validateExpression(value) ? "" : "Invalid value",
       update: (_, value) => {
         filters[index].value = value;
         reflect();
