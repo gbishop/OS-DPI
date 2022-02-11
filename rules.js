@@ -61,15 +61,11 @@ export class Rules {
    * @param {Object} data - data associated with the event
    */
   applyRules(origin, event, data) {
-    log({ origin, event, data });
     this.last = { origin, event, data, rule: null };
     // first for the event then for any that got queued.
     while (true) {
       const context = { ...Functions, state: this.state, data };
-      log("applyRules", origin, event, data);
-      log("context", context);
       for (const rule of this.rules) {
-        log("rule", rule);
         if (
           (origin != rule.origin && rule.origin != "*") ||
           event != rule.event
@@ -80,7 +76,6 @@ export class Rules {
           evalInContext(restriction, context)
         );
         if (result) {
-          log("got it");
           this.last.rule = rule;
           const patch = Object.fromEntries(
             Object.entries(rule.updates).map(([$var, value]) => [
@@ -88,7 +83,6 @@ export class Rules {
               evalInContext(value, context),
             ])
           );
-          log("patch", patch);
           this.state.update(patch);
           break;
         }
@@ -117,7 +111,6 @@ export class Rules {
       if (e instanceof PointerEvent && e.altKey) {
         ev = "alt-" + event;
       }
-      // log("handler", e, origin, event, data);
       this.applyRules(origin, ev || e.type, data);
     };
   }

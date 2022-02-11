@@ -18,7 +18,6 @@ export function propEditor(component, name, value, info, context, hook) {
   function propUpdate({ target }) {
     const name = target.name;
     const value = target.value;
-    log({ name, value });
     hook(name, value);
   }
   const label = html`<label for=${name}>${info.name}</label>`;
@@ -164,7 +163,6 @@ function editFilters(component, name, value, info, context, hook) {
   }
   /** @param {ContentFilter} filter */
   function validFilter(filter) {
-    console.log("valid", filter);
     return (
       filter.field.match(/^#\w+$/) &&
       filter.operator in comparators &&
@@ -176,11 +174,9 @@ function editFilters(component, name, value, info, context, hook) {
   const allFields = new Set(data.allFields);
   const both = new Set([...allStates, ...allFields]);
   const filterRows = filters.map((filter, index) => {
-    console.log({ filter, index });
     const fieldInput = html`<select
       class="field"
       onChange=${(event) => {
-        console.log(event);
         filters[index].field = event.target.value;
         reflect();
       }}
@@ -199,7 +195,6 @@ function editFilters(component, name, value, info, context, hook) {
     const opInput = html`<select
       class="operator"
       onChange=${(event) => {
-        console.log(event);
         filters[index].operator = event.target.value;
         reflect();
       }}

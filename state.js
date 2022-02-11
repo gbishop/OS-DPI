@@ -24,7 +24,6 @@ export class State {
    * @returns {any}
    */
   get(name, defaultValue = "") {
-    console.log({ name });
     if (name && name.length) {
       return name
         .split(".")

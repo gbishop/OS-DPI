@@ -227,7 +227,6 @@ export async function start() {
       html`<div id="UI">${tree.template()}</div>
         ${IDE}`
     );
-    console.log("render UI");
   }
   state.observe(debounce(renderUI));
   renderUI();
@@ -257,7 +256,6 @@ const KeyHandler = {
   /** @param {KeyboardEvent} event */
   handleEvent(event) {
     if (event.key == "d") {
-      console.log("keydown");
       const target = /** @type {HTMLElement} */ (event.target);
       if (target && target.tagName != "INPUT" && target.tagName != "TEXTAREA") {
         event.preventDefault();
@@ -274,7 +272,6 @@ const KeyHandler = {
 document.addEventListener("keydown", KeyHandler);
 
 window.addEventListener("hashchange", (e) => {
-  console.log("hashchange", window.location.hash, e);
   sessionStorage.clear();
   // window.location.reload();
   start();
@@ -296,7 +293,6 @@ document.addEventListener("click", (/** @type {ClickEvent} */ event) => {
       id = div.id;
     }
   }
-  console.log("click", target.tagName, id, text.slice(0, 30));
 });
 
 start();

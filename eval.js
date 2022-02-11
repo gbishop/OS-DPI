@@ -73,7 +73,6 @@ function access(state, data) {
  */
 export function evalInContext(expression, context) {
   const te = translate(expression);
-  console.log({ expression, te, context });
   const exp = expressions.compile(te);
   return exp({ ...context, access: access(context.state, context.data) });
 }
