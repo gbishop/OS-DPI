@@ -95,6 +95,17 @@ export function propEditor(component, name, value, info, context, hook) {
           html``}
         </select>`;
 
+    case "checkbox":
+      return html`<label for=${name}>${info.name}</label>
+        <input
+          type="checkbox"
+          id=${name}
+          name=${name}
+          .checked=${value}
+          help=${help}
+          onchange=${(e) => hook(name, e.target.checked)}
+        />`;
+
     case "state":
       const { tree, rules } = context;
       let states = new Set([...tree.allStates(), ...rules.allStates()]);

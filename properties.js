@@ -7,24 +7,6 @@ export const PropInfo = {
     name: "State",
     description: "Name of the state variable controlling this element.",
   },
-  itemPlacement: {
-    type: "select",
-    values: { fill: "fill", content: "use row and column from content" },
-    name: "Item placement",
-    description: "How to place items in the grid",
-  },
-  rows: {
-    type: "number",
-    name: "Rows",
-    description: "Number of rows in a grid",
-    disabled: (props) => props.itemPlacement != "fill",
-  },
-  columns: {
-    type: "number",
-    name: "Columns",
-    description: "Number of columns in a grid.",
-    disabled: (props) => props.itemPlacement != "fill",
-  },
   filters: {
     type: "filters",
     name: "Content Filters",
@@ -74,6 +56,23 @@ export const PropInfo = {
     type: "number",
     name: "Scale",
     description: "Comparative size of this element compared to its siblings.",
+  },
+  fillItems: {
+    type: "checkbox",
+    name: "Fill",
+    description: "How to place items in the grid",
+  },
+  rows: {
+    type: "number",
+    name: "Rows",
+    description: "Number of rows in a grid",
+    disabled: (props) => !props.fillItems,
+  },
+  columns: {
+    type: "number",
+    name: "Columns",
+    description: "Number of columns in a grid.",
+    disabled: (props) => !props.fillItems,
   },
   background: {
     type: "color",

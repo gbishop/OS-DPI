@@ -31,7 +31,7 @@
  * @property {number} rate
  * @property {number} volume
  * @property {string} gridSize
- * @property {string} itemPlacement
+ * @property {boolean} fillItems
  */
 
 /**

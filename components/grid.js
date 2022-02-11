@@ -7,7 +7,7 @@ import "./img-db";
 
 class Grid extends Base {
   static defaultProps = {
-    itemPlacement: "fill",
+    fillItems: false,
     rows: 3,
     columns: 3,
     filters: [],
@@ -88,7 +88,7 @@ class Grid extends Base {
     /** @type {Partial<CSSStyleDeclaration>} */
     const style = {};
     const { data, state } = this.context;
-    let { rows, columns, filters, itemPlacement } = this.props;
+    let { rows, columns, filters, fillItems } = this.props;
     /** @type {Rows} */
     let items = data.getRows(filters, state, this.cache);
     // reset the page when the key changes
@@ -97,7 +97,7 @@ class Grid extends Base {
     }
     let maxPage = 1;
     const result = [];
-    if (itemPlacement === "content") {
+    if (!fillItems) {
       // collect the items for the current page
       // and get the dimensions
       let maxRow = 0,
@@ -139,7 +139,7 @@ class Grid extends Base {
           }
         }
       }
-    } else if (itemPlacement === "fill") {
+    } else {
       // fill items sequentially
       let perPage = rows * columns;
       if (items.length > perPage) {
