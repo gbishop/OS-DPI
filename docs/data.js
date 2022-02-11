@@ -1,3 +1,32 @@
+import { evalInContext } from "./eval.js";
+
+/** Implement comparison operators
+ * @typedef {function(string, string): boolean} Comparator
+ *
+ * @type {Object<string, Comparator>}
+ */
+export const comparators = {
+  equals: (f, v) =>
+    f.localeCompare(v, undefined, { sensitivity: "base" }) === 0 ||
+    f === "*" ||
+    v === "*",
+  "starts with": (f, v) =>
+    f.toUpperCase().startsWith(v.toUpperCase()) || f === "*" || v === "*",
+};
+
+/** Test a row with a filter
+ * @param {ContentFilter} filter
+ * @param {Row} row
+ * @returns {boolean}
+ */
+function match(filter, row) {
+  const field = row[filter.field.slice(1)] || "";
+  let value = filter.value;
+  const comparator = comparators[filter.operator];
+  let r = comparator(field, value);
+  return r;
+}
+
 export class Data {
   /** @param {Rows} rows */
   constructor(rows) {
@@ -12,49 +41,60 @@ export class Data {
         ),
       []
     );
+    this.loadTime = new Date();
   }
 
   /**
    * Extract rows with the given tags
    *
-   * @param {string[]} tags - Tags that must be in each row
-   * @param {string} match - how to match
-   * @return {Rows} Rows with the given tags
+   * @param {ContentFilter[]} filters - each filter must return true
+   * @param {State} state
+   * @param {RowCache} [cache]
+   * @return {Rows} Rows that pass the filters
    */
-  getTaggedRows(tags, match) {
-    let result = [];
-    if (match == "contains") {
-      // all the tags must be in the row somewhere
-      result = this.allrows.filter((row) => {
-        return tags.every((tag) => row.tags.indexOf(tag) >= 0);
-      });
-    } else if (match == "sequence") {
-      // all the tags must match those coming from the row in order
-      // and any remaining tags in the row must be empty
-      result = this.allrows.filter((row) => {
-        return (
-          tags.every(
-            (tag, i) => row.tags[i] == tag || row.tags[i] === "*" || tag === "*"
-          ) &&
-          row.tags
-            .slice(tags.length)
-            .every((tag) => tag.length === 0 || tag === "*")
-        );
-      });
+  getRows(filters, state, cache) {
+    // all the filters must match the row
+    const boundFilters = filters.map((filter) =>
+      Object.assign({}, filter, {
+        value: evalInContext(filter.value, { state }),
+      })
+    );
+    if (cache) {
+      const newKey = JSON.stringify(boundFilters);
+      if (cache.key == newKey && cache.loadTime == this.loadTime) {
+        cache.updated = false;
+        return cache.rows;
+      }
+      cache.key = newKey;
+    }
+    const result = this.allrows.filter((row) =>
+      boundFilters.every((filter) => match(filter, row))
+    );
+    if (cache) {
+      cache.rows = result;
+      cache.updated = true;
+      cache.loadTime = this.loadTime;
     }
     // console.log("gtr result", result);
     return result;
   }
 
   /**
-   * Test if tagged rows exist
+   * Test if any rows exist after filtering
    *
-   * @param {string[]} tags - Tags that must be in each row
+   * @param {ContentFilter[]} filters
+   * @param {State} state
    * @return {Boolean} true if tag combination occurs
    */
-  hasTaggedRows(tags) {
-    return this.allrows.some((row) =>
-      tags.every((tag) => row.tags.indexOf(tag) >= 0)
+  hasTaggedRows(filters, state) {
+    const boundFilters = filters.map((filter) =>
+      Object.assign({}, filter, {
+        value: evalInContext(filter.value, { state }),
+      })
     );
+    const result = this.allrows.some((row) =>
+      boundFilters.every((filter) => match(filter, row))
+    );
+    return result;
   }
 }

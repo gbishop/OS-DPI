@@ -23,7 +23,7 @@ export class State {
    * @param {any} defaultValue
    * @returns {any}
    */
-  get(name, defaultValue = undefined) {
+  get(name, defaultValue = "") {
     if (name && name.length) {
       return name
         .split(".")

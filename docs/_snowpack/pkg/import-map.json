@@ -1,6 +1,7 @@
 {
   "imports": {
     "@ungap/create-content": "./@ungap/create-content.js",
+    "angular-expressions": "./angular-expressions.js",
     "browser-fs-access": "./browser-fs-access.js",
     "cross-fetch": "./cross-fetch.js",
     "fflate": "./fflate.js",

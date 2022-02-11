@@ -11,87 +11,75 @@ import pleaseWait from "./wait.js";
 async function readSheetFromBlob(blob) {
   const data = await blob.arrayBuffer();
   const workbook = XLSX.read(data, { codepage: 65001 });
-  const sheetName = workbook.SheetNames[0];
-  const sheet = workbook.Sheets[sheetName];
-  const range = XLSX.utils.decode_range(sheet["!ref"]);
-  const names = [];
-  const handlers = [];
-  const validColumns = [];
-  // process the header and choose a handler for each column
-  for (let c = range.s.c; c <= range.e.c; c++) {
-    let columnName = sheet[XLSX.utils.encode_cell({ r: 0, c })]?.v;
-    if (typeof columnName !== "string" || !columnName) {
-      continue;
-    }
-    columnName = columnName.toLowerCase();
-    names.push(columnName.trim(" "));
-    validColumns.push(c);
-    switch (columnName) {
-      case "row":
-      case "column":
-      case "page":
-        handlers.push("number");
-        break;
-      default:
-        if (columnName.startsWith("tag")) {
-          handlers.push("tag");
-        } else {
-          handlers.push("string");
-        }
-        break;
-    }
-  }
-  // Process the rows
   /** @type {Rows} */
   const dataArray = [];
-  for (let r = range.s.r + 1; r <= range.e.r; r++) {
-    /** @type {Row} */
-    const row = { tags: [] };
-    for (let i = 0; i < validColumns.length; i++) {
-      /** @type {string} */
-      const name = names[i];
-      const c = validColumns[i];
-      let value = sheet[XLSX.utils.encode_cell({ r, c })]?.v;
-      switch (handlers[i]) {
-        case "string":
-          if (typeof value === "undefined") {
-            value = "";
-          }
-          if (typeof value !== "string") {
-            value = value.toString(10);
-          }
-          if (value && typeof value === "string") {
-            row[name] = value;
-          }
+  for (const sheetName of workbook.SheetNames) {
+    const sheet = workbook.Sheets[sheetName];
+    const range = XLSX.utils.decode_range(sheet["!ref"]);
+    const names = [];
+    const handlers = [];
+    const validColumns = [];
+    // process the header and choose a handler for each column
+    for (let c = range.s.c; c <= range.e.c; c++) {
+      let columnName = sheet[XLSX.utils.encode_cell({ r: 0, c })]?.v;
+      if (typeof columnName !== "string" || !columnName) {
+        continue;
+      }
+      columnName = columnName.toLowerCase();
+      names.push(columnName.trim(" "));
+      validColumns.push(c);
+      switch (columnName) {
+        case "row":
+        case "column":
+        case "page":
+          handlers.push("number");
           break;
-        case "tag":
-          if (typeof value === "number") {
-            value = value.toString(10);
-          }
-          if (value && typeof value === "string") {
-            row.tags.push(value);
-          } else {
-            row.tags.push("");
-          }
-
-          break;
-        case "number":
-          if (typeof value === "number") {
-            row[name] = Math.floor(value);
-          } else if (value && typeof value === "string") {
-            value = parseInt(value, 10);
-            if (isNaN(value)) {
-              value = 0;
-            }
-            row[name] = value;
-          }
+        default:
+          handlers.push("string");
           break;
       }
     }
-    if (row.tags.length > 0 || Object.keys(row).length > 1) dataArray.push(row);
+    // Process the rows
+    for (let r = range.s.r + 1; r <= range.e.r; r++) {
+      /** @type {Row} */
+      const row = { sheetName };
+      for (let i = 0; i < validColumns.length; i++) {
+        /** @type {string} */
+        const name = names[i];
+        const c = validColumns[i];
+        let value = sheet[XLSX.utils.encode_cell({ r, c })]?.v;
+        switch (handlers[i]) {
+          case "string":
+            if (typeof value === "undefined") {
+              value = "";
+            }
+            if (typeof value !== "string") {
+              value = value.toString(10);
+            }
+            if (value && typeof value === "string") {
+              row[name] = value;
+            }
+            break;
+          case "number":
+            if (typeof value === "number") {
+              row[name] = Math.floor(value);
+            } else if (value && typeof value === "string") {
+              value = parseInt(value, 10);
+              if (isNaN(value)) {
+                value = 0;
+              }
+              row[name] = value;
+            }
+            break;
+        }
+      }
+      if (Object.keys(row).length > 1) dataArray.push(row);
+    }
   }
   return dataArray;
 }
+
+async function saveSheet(type) {}
 
 export class Content extends Base {
   init() {
@@ -115,6 +103,7 @@ export class Content extends Base {
           /** @type {string} */
           let URL = form[0].value;
           if (URL.length === 0) return;
+          sessionStorage.setItem("remoteSheetUrl", URL);
           // check for a Google Sheets URL
           if (
             URL.match(/https:\/\/docs.google.com\/spreadsheets\/.*\/edit.*/)
@@ -142,6 +131,7 @@ export class Content extends Base {
           id="remoteFileInput"
           name="url"
           type="url"
+          value=${sessionStorage.getItem("remoteSheetUrl")}
           placeholder="Enter a URL"
         />
         <input type="submit" value="Load remote sheet" />
@@ -186,6 +176,37 @@ export class Content extends Base {
         Reload local sheet
       </button>
       <span>${this.sheetMessage}</span>
+      <h2>Save content as a spreadsheet</h2>
+      <label for="sheetType">Spreadsheet type</label>
+      <select id="sheetType" onchange=${(e) => saveSheet(e.target.value)}>
+        <option value="">Choose your format</option>
+        <option value="xlsx">Excel .xlsx</option>
+        <option value="xls">Excel .xls</option>
+        <option value="ods">ODF Spreadsheet .ods</option>
+        <option value="csv">Comma Separated Values .csv</option>
+      </select>
+
+      <h2>Load audio clips</h2>
+      <label for="audio">Upload audio clips: </label>
+      <input
+        id="audio"
+        type="file"
+        multiple
+        accept=".mp3,.wav,.ogg"
+        onchange=${async (/** @type {InputEventWithTarget} */ event) => {
+          const input = /** @type {HTMLInputElement} */ (event.currentTarget);
+          if (!input || !input.files || !input.files.length) {
+            return;
+          }
+          for (const file of input.files) {
+            if (file && file.type.startsWith("audio/")) {
+              await db.addMedia(file, file.name);
+            }
+          }
+          this.context.state.update();
+        }}
+      />
+
       <h2>Load images</h2>
       <label for="images">Upload images: </label>
       <input
@@ -200,7 +221,7 @@ export class Content extends Base {
           }
           for (const file of input.files) {
             if (file && file.type.startsWith("image/")) {
-              await db.addImage(file, file.name);
+              await db.addMedia(file, file.name);
               // ask any live images with this name to refresh
               for (const img of document.querySelectorAll(
                 `img[dbsrc="${file.name}"]`
@@ -212,7 +233,7 @@ export class Content extends Base {
           this.context.state.update();
         }}
       />
-      <h2>Currently loaded images</h2>
+      <h2>Currently loaded media files</h2>
       <ol style="column-count: 3">
         ${(/** @type {HTMLElement} */ comment) => {
           /* I'm experimenting here. db.listImages() is asynchronous but I don't want
@@ -224,7 +245,7 @@ export class Content extends Base {
            * the asynchronous content when it becomes available being careful to keep
            * the comment node in the output. It seems to work, is it safe?
            */
-          db.listImages().then((names) => {
+          db.listMedia().then((names) => {
             const list = names.map((name) => html`<li>${name}</li>`);
             render(comment.parentNode, html`${comment}${list}`);
           });

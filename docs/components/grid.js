@@ -7,11 +7,10 @@ import "./img-db.js";
 
 class Grid extends Base {
   static defaultProps = {
-    itemPlacement: "fill",
+    fillItems: false,
     rows: 3,
     columns: 3,
-    tags: [],
-    match: "contains",
+    filters: [],
     name: "grid",
     background: "white",
     scale: "1",
@@ -21,7 +20,7 @@ class Grid extends Base {
   /** @type {Object}
    * @property {string} key
    */
-  cache = { key: "" };
+  cache = {};
 
   /** @param {Row} item */
   gridCell(item) {
@@ -89,19 +88,16 @@ class Grid extends Base {
     /** @type {Partial<CSSStyleDeclaration>} */
     const style = {};
     const { data, state } = this.context;
-    let { rows, columns, match, itemPlacement } = this.props;
-    const tags = state.normalizeTags(this.props.tags);
-    const cacheKey = tags.join("|");
+    let { rows, columns, filters, fillItems } = this.props;
     /** @type {Rows} */
-    let items = data.getTaggedRows(tags, match);
+    let items = data.getRows(filters, state, this.cache);
     // reset the page when the key changes
-    if (this.cache.key !== cacheKey) {
-      this.cache.key = cacheKey;
+    if (this.cache.updated) {
       this.page = 1;
     }
     let maxPage = 1;
     const result = [];
-    if (itemPlacement === "content") {
+    if (!fillItems) {
       // collect the items for the current page
       // and get the dimensions
       let maxRow = 0,
@@ -143,7 +139,7 @@ class Grid extends Base {
           }
         }
       }
-    } else if (itemPlacement === "fill") {
+    } else {
       // fill items sequentially
       let perPage = rows * columns;
       if (items.length > perPage) {

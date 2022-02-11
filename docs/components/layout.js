@@ -60,7 +60,6 @@ export class Layout extends Base {
   /** @param {Tree} selection
    */
   setSelected(selection, editingTree = false, highlight = true) {
-    log("setSelected", selection.constructor.name, selection.id);
     this.selected = selection;
     this.makeVisible(this.selected);
     const state = this.context.state;
@@ -395,8 +394,6 @@ export class Layout extends Base {
 
   /** Render the controls */
   controls() {
-    log("selected", this.selected);
-    log("controls");
     return html`<div class="controls">
       <h1>Editing ${this.selected.constructor.name} ${this.selected.name}</h1>
       ${this.addMenu()} ${this.deleteCurrent()} ${this.moveMenu()}
