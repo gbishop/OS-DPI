@@ -77,6 +77,7 @@
  * @property {Row[]} [rows]
  * @property {string} [key]
  * @property {boolean} [updated]
+ * @property {Date} [loadTime]
  */
 
 /**

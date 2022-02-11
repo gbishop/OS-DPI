@@ -41,6 +41,7 @@ export class Data {
         ),
       []
     );
+    this.loadTime = new Date();
   }
 
   /**
@@ -60,7 +61,7 @@ export class Data {
     );
     if (cache) {
       const newKey = JSON.stringify(boundFilters);
-      if (cache.key == newKey) {
+      if (cache.key == newKey && cache.loadTime == this.loadTime) {
         cache.updated = false;
         return cache.rows;
       }
@@ -72,6 +73,7 @@ export class Data {
     if (cache) {
       cache.rows = result;
       cache.updated = true;
+      cache.loadTime = this.loadTime;
     }
     // console.log("gtr result", result);
     return result;
