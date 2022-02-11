@@ -48,20 +48,31 @@ export class Data {
    *
    * @param {ContentFilter[]} filters - each filter must return true
    * @param {State} state
+   * @param {RowCache} [cache]
    * @return {Rows} Rows that pass the filters
    */
-  getRows(filters, state) {
+  getRows(filters, state, cache) {
     // all the filters must match the row
-    console.log({ state });
     const boundFilters = filters.map((filter) =>
       Object.assign({}, filter, {
         value: evalInContext(filter.value, { state }),
       })
     );
-    console.log({ filters, boundFilters });
+    if (cache) {
+      const newKey = JSON.stringify(boundFilters);
+      if (cache.key == newKey) {
+        cache.updated = false;
+        return cache.rows;
+      }
+      cache.key = newKey;
+    }
     const result = this.allrows.filter((row) =>
       boundFilters.every((filter) => match(filter, row))
     );
+    if (cache) {
+      cache.rows = result;
+      cache.updated = true;
+    }
     // console.log("gtr result", result);
     return result;
   }

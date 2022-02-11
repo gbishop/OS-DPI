@@ -73,6 +73,13 @@
  * */
 
 /**
+ * @typedef {Object} RowCache
+ * @property {Row[]} [rows]
+ * @property {string} [key]
+ * @property {boolean} [updated]
+ */
+
+/**
  * @typedef {Row[]} Rows
  */
 

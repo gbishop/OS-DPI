@@ -20,7 +20,7 @@ class Grid extends Base {
   /** @type {Object}
    * @property {string} key
    */
-  cache = { key: "" };
+  cache = {};
 
   /** @param {Row} item */
   gridCell(item) {
@@ -89,18 +89,12 @@ class Grid extends Base {
     const style = {};
     const { data, state } = this.context;
     let { rows, columns, filters, itemPlacement } = this.props;
-    console.log({ filters });
     /** @type {Rows} */
-    let items = data.getRows(filters, state);
+    let items = data.getRows(filters, state, this.cache);
     // reset the page when the key changes
-    // TODO: Fix this
-    this.page = 1;
-    /*
-    if (this.cache.key !== cacheKey) {
-      this.cache.key = cacheKey;
+    if (this.cache.updated) {
       this.page = 1;
     }
-    */
     let maxPage = 1;
     const result = [];
     if (itemPlacement === "content") {
