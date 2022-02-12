@@ -84,7 +84,8 @@ async function readSheetFromBlob(blob) {
  * @param {Row[]} rows
  * @param {string} type
  */
-async function saveContent(name, rows, type) {
+function saveContent(name, rows, type) {
+  if (!type) return;
   const sheetNames = new Set(rows.map((row) => row.sheetName || "sheet1"));
   const workbook = XLSX.utils.book_new();
   for (const sheetName of sheetNames) {
@@ -202,10 +203,11 @@ export class Content extends Base {
       <label for="sheetType">Spreadsheet type</label>
       <select
         id="sheetType"
-        onchange=${(e) =>
-          saveContent(db.designName, data.allrows, e.target.value)}
+        onchange=${(e) => {
+          saveContent(db.designName, data.allrows, e.target.value);
+        }}
       >
-        <option value="">Choose your format</option>
+        <option selected value="">Choose your format</option>
         <option value="xlsx">Excel .xlsx</option>
         <option value="xls">Excel .xls</option>
         <option value="ods">ODF Spreadsheet .ods</option>
