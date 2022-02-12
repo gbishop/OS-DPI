@@ -77,7 +77,7 @@ async function welcome() {
               .then((file) => pleaseWait(db.readDesignFromFile(file)))
               .then(() => (window.location.hash = db.designName))}
         >
-          Load
+          Import
         </button>
         <button
           onclick=${async () =>
@@ -166,7 +166,13 @@ export async function start() {
   const emptyPage = {
     type: "page",
     props: {},
-    children: [],
+    children: [
+      {
+        type: "speech",
+        props: {},
+        children: [],
+      },
+    ],
   };
   const layout = await db.read("layout", emptyPage);
   const rulesArray = await db.read("actions", []);
