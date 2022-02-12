@@ -79,7 +79,30 @@ async function readSheetFromBlob(blob) {
   return dataArray;
 }
 
-async function saveSheet(type) {}
+/** Save the content as a spreadsheet
+ * @param {string} name
+ * @param {Row[]} rows
+ * @param {string} type
+ */
+function saveContent(name, rows, type) {
+  if (!type) return;
+  const sheetNames = new Set(rows.map((row) => row.sheetName || "sheet1"));
+  const workbook = XLSX.utils.book_new();
+  for (const sheetName of sheetNames) {
+    let sheetRows = rows.filter(
+      (row) => sheetName == (row.sheetName || "sheet1")
+    );
+    if (type != "csv") {
+      sheetRows = sheetRows.map((row) => {
+        const { sheetName, ...rest } = row;
+        return rest;
+      });
+    }
+    const worksheet = XLSX.utils.json_to_sheet(sheetRows);
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+  }
+  XLSX.writeFile(workbook, `${name}.${type}`);
+}
 
 export class Content extends Base {
   init() {
@@ -178,8 +201,13 @@ export class Content extends Base {
       <span>${this.sheetMessage}</span>
       <h2>Save content as a spreadsheet</h2>
       <label for="sheetType">Spreadsheet type</label>
-      <select id="sheetType" onchange=${(e) => saveSheet(e.target.value)}>
-        <option value="">Choose your format</option>
+      <select
+        id="sheetType"
+        onchange=${(e) => {
+          saveContent(db.designName, data.allrows, e.target.value);
+        }}
+      >
+        <option selected value="">Choose your format</option>
         <option value="xlsx">Excel .xlsx</option>
         <option value="xls">Excel .xls</option>
         <option value="ods">ODF Spreadsheet .ods</option>
