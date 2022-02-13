@@ -2,6 +2,7 @@ import { log } from "../log.js";
 import { html } from "../_snowpack/pkg/uhtml.js";
 import { Base } from "./base.js";
 import { textInput } from "./input.js";
+import { validateExpression } from "../eval.js";
 import db from "../db.js";
 import css from "../_snowpack/pkg/ustyler.js";
 
@@ -280,7 +281,7 @@ class ActionEditor extends Base {
             value: string,
             context,
             validate: (value) =>
-              value.length == 0 || context.rules.validateExpression(value)
+              value.length == 0 || validateExpression(value)
                 ? ""
                 : "Invalid condition",
             update: (_, value) => {
@@ -365,7 +366,7 @@ class ActionEditor extends Base {
           context: this.context,
           suggestions: both,
           validate: (value) =>
-            value.length == 0 || rules.validateExpression(value)
+            value.length == 0 || validateExpression(value)
               ? ""
               : "Invalid value",
           update: (_, value) => {

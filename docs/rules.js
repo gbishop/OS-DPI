@@ -4,27 +4,13 @@
 
 import { log } from "./log.js";
 import { State } from "./state.js";
+import { evalInContext, Functions } from "./eval.js";
 
 /**
  * functions for updating states
  */
 
 export class Rules {
-  Functions = {
-    append: (/** @type {any} */ value) => (/** @type {any[]} */ old) =>
-      [...(old || []), value],
-    empty: () => () => [],
-    increment: (/** @type {number} */ value) => (/** @type {number} */ old) =>
-      old + value,
-    add_word: (/** @type {string} */ value) => (/** @type {string} */ old) =>
-      old ? old + " " + value : value,
-    add_letter: (/** @type {string} */ value) => (/** @type {string} */ old) =>
-      old ? old + value : value,
-    replace_last:
-      (/** @type {string} */ newWord) => (/** @type {string} */ old) =>
-        [...old.split(" ").slice(0, -1), newWord].join(" "),
-  };
-
   /**
    * @param {Rule[]} rules
    * @param {State} state
@@ -51,59 +37,6 @@ export class Rules {
     this.applyRules("", "init", {});
   }
 
-  /** translate an expression from Excel-like to Javascript
-   * @param {string} expression
-   * @return {string}
-   */
-  translate(expression) {
-    /* translate the expression from the excel like form to javascript
-       this is a hack, we should have a parser
-    */
-    // translate single = to ==
-    let exp = expression.replaceAll(/(?<![=<>!])=/g, "==");
-    // translate $name into state references
-    exp = exp.replaceAll(/\$\w+/g, "state.get('$&')");
-    // translate #name into field references
-    exp = exp.replaceAll(/#(\w+)/g, "data.$1");
-
-    // log("eic", expression, exp);
-
-    return exp;
-  }
-
-  /**
-   * validate an expression string
-   * @param {string} expression
-   * @return {boolean}
-   */
-  validateExpression(expression) {
-    const exp = this.translate(expression);
-    try {
-      Function(`return ${exp};`);
-    } catch (error) {
-      log("validate", error);
-      return false;
-    }
-    return true;
-  }
-
-  /**
-   * evaluate a string as an expression in a given context
-   *
-   * @param {string} expression - expression to evaluate
-   * @param {Object} context - context for the evaluation
-   * @return {boolean} value returned by the expression
-   */
-  evalInContext(expression, context) {
-    const variables = Object.keys(context);
-    const values = Object.values(context);
-    const exp = this.translate(expression);
-    // log("eic", expression, exp);
-    // log("variables", variables);
-    const func = Function(...variables, `return ${exp}`);
-    return func(...values);
-  }
-
   /** @typedef {Object} eventQueueItem
    * @property {string} origin
    * @property {string} event
@@ -128,15 +61,11 @@ export class Rules {
    * @param {Object} data - data associated with the event
    */
   applyRules(origin, event, data) {
-    log({ origin, event, data });
     this.last = { origin, event, data, rule: null };
     // first for the event then for any that got queued.
     while (true) {
-      const context = { ...this.Functions, state: this.state, data };
-      log("applyRules", origin, event, data);
-      log("context", context);
+      const context = { ...Functions, state: this.state, data };
       for (const rule of this.rules) {
-        log("rule", rule);
         if (
           (origin != rule.origin && rule.origin != "*") ||
           event != rule.event
@@ -144,18 +73,16 @@ export class Rules {
           continue;
         }
         const result = rule.conditions.every((restriction) =>
-          this.evalInContext(restriction, context)
+          evalInContext(restriction, context)
         );
         if (result) {
-          log("got it");
           this.last.rule = rule;
           const patch = Object.fromEntries(
             Object.entries(rule.updates).map(([$var, value]) => [
               $var,
-              this.evalInContext(value, context),
+              evalInContext(value, context),
             ])
           );
-          log("patch", patch);
           this.state.update(patch);
           break;
         }
@@ -184,7 +111,6 @@ export class Rules {
       if (e instanceof PointerEvent && e.altKey) {
         ev = "alt-" + event;
       }
-      // log("handler", e, origin, event, data);
       this.applyRules(origin, ev || e.type, data);
     };
   }

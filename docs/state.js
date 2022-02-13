@@ -23,7 +23,7 @@ export class State {
    * @param {any} defaultValue
    * @returns {any}
    */
-  get(name, defaultValue = undefined) {
+  get(name, defaultValue = "") {
     if (name && name.length) {
       return name
         .split(".")
@@ -39,7 +39,7 @@ export class State {
    * @param {Object} patch - the changes to make to the state
    * @return {void}
    */
-  update = (patch = {}) => {
+  update(patch = {}) {
     for (const key in patch) {
       this.updated.add(key);
     }
@@ -52,7 +52,18 @@ export class State {
       const persist = JSON.stringify(this.values);
       window.sessionStorage.setItem(this.persistKey, persist);
     }
-  };
+  }
+
+  /**
+   * return a new state with the patch applied
+   * @param {Object} patch - changes to apply
+   * @return {State} - new independent state
+   */
+  clone(patch = {}) {
+    const result = new State();
+    result.values = merge(this.values, patch);
+    return result;
+  }
 
   /** clear - reset the state
    */

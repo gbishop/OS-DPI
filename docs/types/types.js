@@ -1,4 +1,13 @@
 /**
+ * Allow comparing a field in the content to a constant or state variable
+ *
+ * @typedef {Object} ContentFilter
+ * @property {string} field
+ * @property {string} operator
+ * @property {string} value
+ */
+
+/**
  * @typedef {Object} Props
  * @property {string} scale
  * @property {string} background
@@ -7,7 +16,7 @@
  * @property {string} unselected
  * @property {number} rows
  * @property {number} columns
- * @property {string[]} tags
+ * @property {ContentFilter[]} filters
  * @property {string} stateName
  * @property {string} match
  * @property {string} name
@@ -22,7 +31,7 @@
  * @property {number} rate
  * @property {number} volume
  * @property {string} gridSize
- * @property {string} itemPlacement
+ * @property {boolean} fillItems
  */
 
 /**
@@ -30,6 +39,10 @@
  */
 
 /** @typedef {import('../components/base').Base} Tree */
+
+/**
+ * @typedef {import("../state").State} State
+ */
 
 /**
  * @typedef {Object} Context
@@ -49,7 +62,6 @@
 
 /**
  * @typedef {Object} Row
- * @property {string[]} tags
  * @property {string} [message]
  * @property {string} [label]
  * @property {string} [symbol]
@@ -57,7 +69,16 @@
  * @property {number} [column]
  * @property {number} [page]
  * @property {Object} [details]
+ * @property {string} [sheetName]
  * */
+
+/**
+ * @typedef {Object} RowCache
+ * @property {Row[]} [rows]
+ * @property {string} [key]
+ * @property {boolean} [updated]
+ * @property {Date} [loadTime]
+ */
 
 /**
  * @typedef {Row[]} Rows

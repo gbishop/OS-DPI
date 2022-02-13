@@ -2,6 +2,8 @@ import { html } from "uhtml";
 import { validateColor, getColor } from "./style";
 import { textInput } from "./input";
 import { log } from "../log";
+import { comparators } from "../data";
+import { validateExpression } from "../eval";
 import css from "ustyler";
 
 /**
@@ -16,7 +18,6 @@ export function propEditor(component, name, value, info, context, hook) {
   function propUpdate({ target }) {
     const name = target.name;
     const value = target.value;
-    log({ name, value });
     hook(name, value);
   }
   const label = html`<label for=${name}>${info.name}</label>`;
@@ -93,6 +94,17 @@ export function propEditor(component, name, value, info, context, hook) {
           html``}
         </select>`;
 
+    case "checkbox":
+      return html`<label for=${name}>${info.name}</label>
+        <input
+          type="checkbox"
+          id=${name}
+          name=${name}
+          .checked=${value}
+          help=${help}
+          onchange=${(e) => hook(name, e.target.checked)}
+        />`;
+
     case "state":
       const { tree, rules } = context;
       let states = new Set([...tree.allStates(), ...rules.allStates()]);
@@ -108,63 +120,8 @@ export function propEditor(component, name, value, info, context, hook) {
         suggestions: states,
       });
 
-    case "tags": {
-      if (!component.designer.tags) {
-        component.designer.tags = [...value];
-      }
-      /** @type {string[]} */
-      const tags = component.designer.tags;
-      function reflect() {
-        const result = tags.filter(validTag);
-        hook(name, result);
-      }
-      /** @param {string} tag */
-      function validTag(tag) {
-        return tag.match(/^\$?\w+/);
-      }
-      const { tree, rules } = context;
-      let states = new Set([...tree.allStates(), ...rules.allStates()]);
-      return html`<fieldset help=${help}>
-        <legend>Tags</legend>
-        ${tags.map((tag, index) => {
-          const id = `tags_${index}`;
-          const label = `${index + 1}`;
-          return html`${textInput({
-              type: "text",
-              name: id,
-              label,
-              value: tag,
-              context,
-              validate: (_) => "",
-              update: (_, value) => {
-                if (!value) {
-                  tags.splice(index, 1);
-                } else {
-                  tags[index] = value;
-                }
-                reflect();
-              },
-              suggestions: states,
-            })}<button
-              onclick=${() => {
-                tags.splice(index, 1);
-                reflect();
-              }}
-            >
-              X
-            </button>`;
-        })}
-        <button
-          style="grid-column: 2 / 3"
-          onclick=${() => {
-            tags.push("");
-            reflect();
-          }}
-        >
-          Add tag
-        </button>
-      </fieldset> `;
-    }
+    case "filters":
+      return editFilters(component, name, value, info, context, hook);
 
     case "voiceURI":
       return html`<label for=${name}>${info.name}</label>
@@ -184,6 +141,135 @@ export function propEditor(component, name, value, info, context, hook) {
       log("tbd", name);
       return html`<p>${name}</p>`;
   }
+}
+
+/**
+ * @param {Tree} component
+ * @param {string} name
+ * @param {any} value
+ * @param {PropertyInfo} info
+ * @param {Context} context
+ * @param {(name: string, value: any) => void} hook
+ */
+function editFilters(component, name, value, info, context, hook) {
+  if (!component.designer.filters) {
+    component.designer.filters = [...value];
+  }
+  /** @type {ContentFilter[]} */
+  const filters = component.designer.filters;
+  function reflect() {
+    const result = filters.filter(validFilter);
+    hook(name, result);
+  }
+  /** @param {ContentFilter} filter */
+  function validFilter(filter) {
+    return (
+      filter.field.match(/^#\w+$/) &&
+      filter.operator in comparators &&
+      filter.value.match(/\$\w+$|[^$].*/)
+    );
+  }
+  const { tree, rules, data } = context;
+  const allStates = new Set([...tree.allStates(), ...rules.allStates()]);
+  const allFields = new Set(data.allFields);
+  const both = new Set([...allStates, ...allFields]);
+  const filterRows = filters.map((filter, index) => {
+    const fieldInput = html`<select
+      class="field"
+      onChange=${(event) => {
+        filters[index].field = event.target.value;
+        reflect();
+      }}
+    >
+      <option value="">Choose a field</option>
+      ${data.allFields.map(
+        (fieldName) =>
+          html`<option
+            value=${fieldName}
+            ?selected=${fieldName == filter.field}
+          >
+            ${fieldName}
+          </option>`
+      )}
+    </select>`;
+    const opInput = html`<select
+      class="operator"
+      onChange=${(event) => {
+        filters[index].operator = event.target.value;
+        reflect();
+      }}
+    >
+      ${Object.keys(comparators).map(
+        (op) =>
+          html`<option value=${op} ?selected=${op == filter.operator}>
+            ${op}
+          </option>`
+      )}
+    </select>`;
+    const valueInput = textInput({
+      type: "text",
+      className: "value",
+      name: "value",
+      label: "",
+      labelHidden: true,
+      value: filter.value,
+      context,
+      suggestions: allStates,
+      validate: (value) =>
+        value.length == 0 || validateExpression(value) ? "" : "Invalid value",
+      update: (_, value) => {
+        filters[index].value = value;
+        reflect();
+      },
+    });
+    return html`<tr>
+      <td>${index + 1}</td>
+      <td>${fieldInput}</td>
+      <td>${opInput}</td>
+      <td>${valueInput}</td>
+      <td>
+        <button
+          title="Delete action update"
+          onclick=${() => {
+            filters.splice(index, 1);
+            reflect();
+          }}
+        >
+          X
+        </button>
+      </td>
+    </tr>`;
+  });
+  let filterTable = html``;
+  if (filters.length > 0) {
+    filterTable = html`<table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Field</th>
+          <th>Operator</th>
+          <th>Value</th>
+          <th>X</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filterRows}
+      </tbody>
+    </table>`;
+  }
+  return html`<fieldset help="Layout#filters">
+    <legend>Filters</legend>
+    ${filterTable}
+    <button
+      style="grid-column: 1/4"
+      onclick=${() => {
+        filters.push({ field: "", operator: "equals", value: "" });
+        reflect();
+      }}
+    >
+      Add filter
+    </button>
+  </fieldset>`;
 }
 
 css`
@@ -209,19 +295,20 @@ css`
   div.props fieldset {
     grid-column: 1 / 3;
     display: grid;
-    grid-template-columns: auto 1fr auto;
-    grid-gap: 0.25em 1em;
-    border: 1px solid black;
-    padding: 1em;
-    padding-block-start: 0;
+    grid-template-columns: auto auto auto auto auto;
   }
 
-  div.props fieldset div.suggest {
+  div.props fieldset .field {
+    grid-column: 1 / 2;
+  }
+  div.props fieldset .operator {
     grid-column: 2 / 3;
   }
-
-  div.props fieldset button {
+  div.props fieldset .value {
     grid-column: 3 / 4;
+  }
+  div.props fieldset button {
+    grid-column: 4 / 5;
   }
 
   input[type="number"] {

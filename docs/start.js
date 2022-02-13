@@ -77,7 +77,7 @@ async function welcome() {
               .then((file) => pleaseWait(db.readDesignFromFile(file)))
               .then(() => (window.location.hash = db.designName))}
         >
-          Load
+          Import
         </button>
         <button
           onclick=${async () =>
@@ -166,7 +166,13 @@ export async function start() {
   const emptyPage = {
     type: "page",
     props: {},
-    children: [],
+    children: [
+      {
+        type: "speech",
+        props: {},
+        children: [],
+      },
+    ],
   };
   const layout = await db.read("layout", emptyPage);
   const rulesArray = await db.read("actions", []);
@@ -227,7 +233,6 @@ export async function start() {
       html`<div id="UI">${tree.template()}</div>
         ${IDE}`
     );
-    console.log("render UI");
   }
   state.observe(debounce(renderUI));
   renderUI();
@@ -257,7 +262,6 @@ const KeyHandler = {
   /** @param {KeyboardEvent} event */
   handleEvent(event) {
     if (event.key == "d") {
-      console.log("keydown");
       const target = /** @type {HTMLElement} */ (event.target);
       if (target && target.tagName != "INPUT" && target.tagName != "TEXTAREA") {
         event.preventDefault();
@@ -274,7 +278,6 @@ const KeyHandler = {
 document.addEventListener("keydown", KeyHandler);
 
 window.addEventListener("hashchange", (e) => {
-  console.log("hashchange", window.location.hash, e);
   sessionStorage.clear();
   // window.location.reload();
   start();
@@ -296,7 +299,6 @@ document.addEventListener("click", (/** @type {ClickEvent} */ event) => {
       id = div.id;
     }
   }
-  console.log("click", target.tagName, id, text.slice(0, 30));
 });
 
 start();

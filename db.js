@@ -4,32 +4,39 @@ import { fileSave } from "browser-fs-access";
 
 class DB {
   constructor() {
-    this.dbPromise = openDB("os-dpi", 3, {
-      upgrade(db) {
-        try {
-          db.deleteObjectStore("store");
+    this.dbPromise = openDB("os-dpi", 4, {
+      upgrade(db, oldVersion, newVersion) {
+        if (oldVersion < 3) {
+          for (const name of ["store", "media", "saved", "url"]) {
+            try {
+              db.deleteObjectStore(name);
+            } catch (e) {}
+          }
+        } else if (oldVersion == 3) {
           db.deleteObjectStore("images");
-          db.deleteObjectStore("saved");
-          db.deleteObjectStore("url");
-        } catch (e) {}
-        let objectStore = db.createObjectStore("store", {
-          keyPath: "id",
-          autoIncrement: true,
-        });
-        objectStore.createIndex("by-name", "name");
-        objectStore.createIndex("by-name-type", ["name", "type"]);
-        db.createObjectStore("images", {
-          keyPath: "name",
-        });
-        // keep track of the name and ETag (if any) of designs that have been saved
-        let savedStore = db.createObjectStore("saved", {
-          keyPath: "name",
-        });
-        savedStore.createIndex("by-etag", "etag");
-        // track etags for urls
-        db.createObjectStore("url", {
-          keyPath: "url",
-        });
+        }
+        if (oldVersion < 3) {
+          let objectStore = db.createObjectStore("store", {
+            keyPath: "id",
+            autoIncrement: true,
+          });
+          objectStore.createIndex("by-name", "name");
+          objectStore.createIndex("by-name-type", ["name", "type"]);
+        }
+        if (newVersion >= 4) {
+          db.createObjectStore("media");
+        }
+        if (oldVersion < 3) {
+          // keep track of the name and ETag (if any) of designs that have been saved
+          let savedStore = db.createObjectStore("saved", {
+            keyPath: "name",
+          });
+          savedStore.createIndex("by-etag", "etag");
+          // track etags for urls
+          db.createObjectStore("url", {
+            keyPath: "url",
+          });
+        }
       },
     });
     this.updateListeners = [];
@@ -260,10 +267,26 @@ class DB {
         const blob = new Blob([unzipped[fname]], {
           type: `image/${fname.slice(-3)}`,
         });
-        await db.put("images", {
-          name: fname,
-          content: blob,
+        await db.put(
+          "media",
+          {
+            name: fname,
+            content: blob,
+          },
+          [name, fname]
+        );
+      } else if (fname.endsWith(".mp3") || fname.endsWith(".wav")) {
+        const blob = new Blob([unzipped[fname]], {
+          type: `audio/${fname.slice(-3)}`,
         });
+        await db.put(
+          "media",
+          {
+            name: fname,
+            content: blob,
+          },
+          [name, fname]
+        );
       }
     }
     await db.put("saved", { name: this.designName, etag });
@@ -287,24 +310,17 @@ class DB {
       "content.json": strToU8(JSON.stringify(content)),
     };
 
-    // find all the image references in the content
-    // there should be a better way
-    const imageNames = new Set();
-    for (const row of content) {
-      if (row.symbol && row.symbol.indexOf("/") < 0) {
-        imageNames.add(row.symbol);
-      } else if (row.image && row.image.indexOf("/") < 0) {
-        imageNames.add(row.image);
-      }
-    }
+    const mediaKeys = (await db.getAllKeys("media")).filter((pair) =>
+      Object.values(pair).includes(this.designName)
+    );
 
     // add the encoded image to the zipargs
-    for (const imageName of imageNames) {
-      const record = await db.get("images", imageName);
+    for (const key of mediaKeys) {
+      const record = await db.get("media", key);
       if (record) {
         const contentBuf = await record.content.arrayBuffer();
         const contentArray = new Uint8Array(contentBuf);
-        zipargs[imageName] = contentArray;
+        zipargs[key[1]] = contentArray;
       }
     }
 
@@ -341,7 +357,7 @@ class DB {
    */
   async getImage(name) {
     const db = await this.dbPromise;
-    const record = await db.get("images", name);
+    const record = await db.get("media", [this.designName, name]);
     const img = new Image();
     if (record) {
       img.src = URL.createObjectURL(record.content);
@@ -350,38 +366,58 @@ class DB {
     return img;
   }
 
+  /** Return an audio file from the database
+   * @param {string} name
+   * @returns {Promise<HTMLAudioElement>}
+   */
+  async getAudio(name) {
+    const db = await this.dbPromise;
+    const record = await db.get("media", [this.designName, name]);
+    const audio = new Audio();
+    if (record) {
+      audio.src = URL.createObjectURL(record.content);
+    }
+    return audio;
+  }
+
   /** Return an image URL from the database
    * @param {string} name
    * @returns {Promise<string>}
    */
-  async getImageURL(name) {
+  async getMediaURL(name) {
     const db = await this.dbPromise;
-    const record = await db.get("images", name);
+    const record = await db.get("media", [this.designName, name]);
     if (record) return URL.createObjectURL(record.content);
     else return name;
   }
 
-  /** Add an image to the database
+  /** Add media to the database
    * @param {Blob} blob
    * @param {string} name
    */
-  async addImage(blob, name) {
+  async addMedia(blob, name) {
     const db = await this.dbPromise;
-    return db.put("images", {
-      name: name,
-      content: blob,
-    });
+    return await db.put(
+      "media",
+      {
+        name: name,
+        content: blob,
+      },
+      [this.designName, name]
+    );
   }
 
-  /** List image names
+  /** List media entries from a given store
    * @returns {Promise<string[]>}
    * */
-  async listImages() {
+  async listMedia() {
     const db = await this.dbPromise;
-    const keys = await db.getAllKeys("images");
+    const keys = (await db.getAllKeys("media")).filter(
+      (key) => key[0] == this.designName //only show resources from this design
+    );
     const result = [];
     for (const key of keys) {
-      result.push(key.toString());
+      result.push(key[1].toString());
     }
     return result;
   }

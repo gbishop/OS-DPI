@@ -1,6 +1,7 @@
 import { html } from "uhtml";
 import { Base, componentMap } from "./base";
 import { styleString } from "./style";
+import { Functions } from "../eval";
 import merge from "mergerino";
 import css from "ustyler";
 
@@ -197,7 +198,7 @@ class Display extends Base {
         };
       }
 
-      rules.Functions["slots"] = {
+      Functions["slots"] = {
         init,
         cancel,
         update,
