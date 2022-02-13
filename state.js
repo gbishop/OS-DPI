@@ -126,20 +126,4 @@ export class State {
     );
     return result;
   }
-  /**
-   * Normalize tags
-   *
-   * @param {string[]} tags - Tags that must be in each row
-   * @return {string[]} normalized tags as an array
-   */
-  normalizeTags(tags) {
-    /** @type {string[]} tags */
-    // normalize
-    return tags
-      .map((t) => {
-        if (t.startsWith("$")) return this.get(t) || "";
-        else return t;
-      })
-      .flat();
-  }
 }

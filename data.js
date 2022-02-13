@@ -45,7 +45,7 @@ export class Data {
   }
 
   /**
-   * Extract rows with the given tags
+   * Extract rows with the given filters
    *
    * @param {ContentFilter[]} filters - each filter must return true
    * @param {State} state
