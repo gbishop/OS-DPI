@@ -15,6 +15,7 @@ class Radio extends Base {
   static defaultProps = {
     label: "",
     stateName: "$radio",
+    filters: [],
     unselected: "lightgray",
     selected: "pink",
     scale: "1",
@@ -27,14 +28,14 @@ class Radio extends Base {
    * @returns {boolean}
    */
   valid(value) {
-    return true;
-    /*
     const { data, state } = this.context;
     return (
       !this.props.filters.length ||
-      data.hasTaggedRows([...this.props.filters, { ], state)
+      data.hasTaggedRows(
+        this.props.filters,
+        state.clone({ [this.props.stateName]: value })
+      )
     );
-    */
   }
 
   /**
