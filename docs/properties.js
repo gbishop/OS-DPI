@@ -13,12 +13,6 @@ export const PropInfo = {
     description: "A list of filters to match",
     addMessage: "Add a filter",
   },
-  match: {
-    type: "select",
-    values: { contains: "contains", sequence: "sequence" },
-    name: "Match",
-    description: "How to match the tags.",
-  },
   direction: {
     type: "select",
     values: { row: "row", column: "column" },

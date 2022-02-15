@@ -1,18 +1,31 @@
 import expressions from "./_snowpack/pkg/angular-expressions.js";
 
+/** @param {function(string, string): string} f */
+function updateString(f) {
+  /** @param {string} value */
+  return function(value) {
+    /** @param {string|undefined} old */
+    return function(old) {
+      return f(old || "", value);
+    }
+  }
+}
+/** @param {function(number, number): number} f */
+function updateNumber(f) {
+  /** @param {number} value */
+  return function(value) {
+    /** @param {number|undefined} old */
+    return function(old) {
+      return f(old || 0, value);
+    }
+  }
+}
 export const Functions = {
-  append: (/** @type {any} */ value) => (/** @type {any[]} */ old) =>
-    [...(old || []), value],
-  empty: () => () => [],
-  increment: (/** @type {number} */ value) => (/** @type {number} */ old) =>
-    old + value,
-  add_word: (/** @type {string} */ value) => (/** @type {string} */ old) =>
-    old ? old + " " + value : value,
-  add_letter: (/** @type {string} */ value) => (/** @type {string} */ old) =>
-    old ? old + value : value,
-  replace_last:
-    (/** @type {string} */ newWord) => (/** @type {string} */ old) =>
-      [...(old || "").split(" ").slice(0, -1), newWord].join(" "),
+  increment: updateNumber((old, value) => old + value),
+  add_word: updateString((old, value) => old + value + " "),
+  add_letter: updateString((old, value) => old + value),
+  replace_last: updateString((old, value) => old.replace(/\w+\s*$/, value)),
+  replace_last_letter: updateString((old, value) => old.slice(0, -1) + value),
 };
 
 /** translate an expression from Excel-like to Javascript
