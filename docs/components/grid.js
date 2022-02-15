@@ -204,6 +204,10 @@ css`
     margin-block-end: 0;
     margin-inline-start: 0;
     margin-inline-end: 0;
+    justify-content: center;
+  }
+  body:not(.designing) img[dbsrc]:not([src]) {
+    display: none;
   }
   .grid button figure figcaption {
     width: 100%;

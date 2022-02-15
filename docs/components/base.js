@@ -45,15 +45,20 @@ const allProps = {
   unselected: "",
   rows: 1,
   columns: 1,
-  tags: [],
+  filters: [],
   stateName: "",
-  match: "contains",
   name: "",
   label: "",
   choices: [],
   direction: "column",
   value: "",
   tabEdge: "bottom",
+  fontSize: "1",
+  voiceURI: "",
+  pitch: 0,
+  rate: 0,
+  volume: 0,
+  fillItems: false
 };
 
 export class Base {

@@ -9,6 +9,8 @@ in modern browsers.
 You can see a few simple and rough demos of the current capabilities by
 following these links:
 
+**13 Feb 2022: Many of these are not working. Standby**
+
 - <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/36.osdpi">Single
   words</a>
 - <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/60.osdpi">Single

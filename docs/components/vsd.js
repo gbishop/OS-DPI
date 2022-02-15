@@ -68,17 +68,15 @@ function pct(v) {
 /** @typedef {Row & vsdData} VRow */
 class VSD extends Base {
   static defaultProps = {
-    tags: [],
-    match: "contains",
+    filters: [],
     name: "vsd",
     scale: "1",
   };
 
   template() {
     const { data, state, rules } = this.context;
-    const tags = state.normalizeTags(this.props.tags);
     const items = /** @type {VRow[]} */ (
-      data.getTaggedRows(tags, this.props.match)
+      data.getRows(this.props.filters, state)
     );
     const src = items.find((item) => item.image)?.image;
     return html`<div class="vsd flex show" id=${this.id}>

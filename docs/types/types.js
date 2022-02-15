@@ -18,7 +18,6 @@
  * @property {number} columns
  * @property {ContentFilter[]} filters
  * @property {string} stateName
- * @property {string} match
  * @property {string} name
  * @property {string} label
  * @property {{value: string, text: string}[]} choices
@@ -26,11 +25,9 @@
  * @property {string} value
  * @property {string} tabEdge
  * @property {string} voiceURI
- * @property {string} language
  * @property {number} pitch
  * @property {number} rate
  * @property {number} volume
- * @property {string} gridSize
  * @property {boolean} fillItems
  */
 
