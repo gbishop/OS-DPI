@@ -53,6 +53,12 @@ const allProps = {
   direction: "column",
   value: "",
   tabEdge: "bottom",
+  fontSize: "1",
+  voiceURI: "",
+  pitch: 0,
+  rate: 0,
+  volume: 0,
+  fillItems: false
 };
 
 export class Base {
