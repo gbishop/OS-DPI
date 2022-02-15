@@ -388,7 +388,7 @@ class DB {
     const db = await this.dbPromise;
     const record = await db.get("media", [this.designName, name]);
     if (record) return URL.createObjectURL(record.content);
-    else return name;
+    else return "";
   }
 
   /** Add media to the database
