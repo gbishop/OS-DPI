@@ -193,6 +193,7 @@ css`
   .grid button div {
     display: flex;
     height: 100%;
+    pointer-events: none;
   }
   .grid button figure {
     margin: 2px;
