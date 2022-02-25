@@ -11,6 +11,7 @@ import { log, logInit } from "./log";
 import pleaseWait from "./components/wait";
 import { fileOpen } from "browser-fs-access";
 import css from "ustyler";
+import "./access";
 
 const safe = true;
 

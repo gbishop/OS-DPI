@@ -39,7 +39,6 @@ class Grid extends Base {
       content = msg;
     }
     return html`<button
-      onClick=${rules.handler(name, item, "press")}
       style=${styleString({ backgroundColor: background })}
       tabindex="-1"
     >
@@ -189,6 +188,7 @@ css`
     overflow: hidden;
     border-radius: 5px;
     background-color: inherit;
+    user-select: none;
   }
   .grid button div {
     display: flex;
