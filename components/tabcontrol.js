@@ -1,5 +1,6 @@
 import { html } from "uhtml";
 import { Base, componentMap } from "./base";
+import { Stack } from "./stack";
 import { styleString } from "./style";
 import css from "ustyler";
 
@@ -27,6 +28,7 @@ export class TabControl extends Base {
         const color = panel.props.background;
         if (index == 0 && !activeTabName) {
           activeTabName = tabName;
+          state.define(this.props.stateName, tabName);
         }
         const active = activeTabName == tabName || panels.length === 1;
         panel.active = active;
@@ -54,26 +56,25 @@ export class TabControl extends Base {
 }
 componentMap.addMap("tab control", TabControl);
 
-export class TabPanel extends Base {
+export class TabPanel extends Stack {
   active = false;
 
   static defaultProps = {
     background: "",
     name: "",
     label: "",
+    direction: "column",
+    scale: "1",
   };
-  static allowedChildren = ["stack", "grid", "display", "radio"];
-
-  template() {
-    return html`<div
-      class="tabpanel flex column"
-      style=${styleString({ backgroundColor: this.props.background })}
-      id=${this.id}
-    >
-      ${this.children.map((child) => child.template())}
-    </div>`;
-  }
-  /* for the designer */
+  static allowedChildren = [
+    "stack",
+    "grid",
+    "display",
+    "radio",
+    "tab control",
+    "vsd",
+    "button",
+  ];
 }
 componentMap.addMap("tab panel", TabPanel);
 
