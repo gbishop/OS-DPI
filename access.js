@@ -1,9 +1,25 @@
-import { fromEvent, merge } from 'rxjs';
+import { fromEvent, merge } from "rxjs";
 
-const over = fromEvent(document, 'pointerover');
-const out = fromEvent(document, 'pointerout');
-const down = fromEvent(document, 'pointerdown');
-down.subscribe(x => x.preventDefault());
-fromEvent(document, 'contextmenu').subscribe(x => x.preventDefault());
-const pointer = merge(over, out, down);
-pointer.subscribe(x => x.target instanceof HTMLButtonElement && !x.target.disabled && console.log(x.type, x.target.tagName, x.target.disabled));
+const events = [
+  "pointerover",
+  "pointerout",
+  "pointerout",
+  "pointerdown",
+  "pointerup",
+  "pointermove",
+  "touchstart",
+  "touchend",
+  "touchmove",
+  "touchcancel",
+  "contextmenu",
+];
+const streams = {};
+for (const event of events) {
+  streams[event] = fromEvent(document, event);
+}
+// streams.pointerdown.subscribe((x) => x.preventDefault());
+streams.contextmenu.subscribe((x) => x.preventDefault());
+const pointer = merge(...Object.values(streams));
+pointer.subscribe((x) =>
+  console.log(x.type, x.target.innerText, x.target.disabled)
+);
