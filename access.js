@@ -3,10 +3,8 @@ import { fromEvent, merge } from "rxjs";
 const events = [
   "pointerover",
   "pointerout",
-  "pointerout",
   "pointerdown",
   "pointerup",
-  "pointermove",
   "touchstart",
   "touchend",
   "touchmove",
@@ -20,6 +18,7 @@ for (const event of events) {
 // streams.pointerdown.subscribe((x) => x.preventDefault());
 streams.contextmenu.subscribe((x) => x.preventDefault());
 const pointer = merge(...Object.values(streams));
-pointer.subscribe((x) =>
-  console.log(x.type, x.target.innerText, x.target.disabled)
-);
+pointer.subscribe((x) => {
+  const e = /** @type {TouchEvent} */ (x);
+  console.log(e.type, e);
+});
