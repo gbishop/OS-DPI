@@ -7,6 +7,7 @@ import { Designer } from "./components/designer";
 import { Monitor } from "./components/monitor";
 import { ToolBar } from "./components/toolbar";
 import db from "./db";
+import broadcast from "./broadcast";
 import { log, logInit } from "./log";
 import pleaseWait from "./components/wait";
 import { fileOpen } from "browser-fs-access";
@@ -239,20 +240,23 @@ export async function start() {
 }
 
 /* Watch for updates happening in other tabs */
-const channel = new BroadcastChannel("os-dpi");
 /** @param {MessageEvent} event */
-channel.onmessage = (event) => {
+broadcast.onmessage((event) => {
   const message = /** @type {UpdateNotification} */ (event.data);
+  console.log("BROADCAST TEST")
   if (db.designName == message.name) {
     if (message.action == "update") {
       start();
     } else if (message.action == "rename") {
       window.location.hash = message.newName;
+    } else if (message.action == "cut/paste") {
+      console.log("Hello, World!");
     }
   }
-};
+});
+
 db.addUpdateListener((message) => {
-  channel.postMessage(message);
+  broadcast.channel.postMessage(message);
 });
 
 const KeyHandler = {
