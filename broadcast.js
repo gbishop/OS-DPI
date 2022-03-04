@@ -1,5 +1,3 @@
-import db from "./db";
-
 class Broadcast {
     /** @param {string=} name */
     constructor(name) {
@@ -8,7 +6,7 @@ class Broadcast {
 
     /**
      *  @callback broadcastCallback
-     *  @param  {Event} event 
+     *  @param  {MessageEvent} event 
      */
     /** @param {broadcastCallback} callback */
     onmessage(callback) {

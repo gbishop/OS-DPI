@@ -249,8 +249,8 @@ broadcast.onmessage((event) => {
       start();
     } else if (message.action == "rename") {
       window.location.hash = message.newName;
-    } else if (message.action == "cut/paste") {
-      console.log("Hello, World!");
+    } else if (message.action == "copy") {
+      sessionStorage.setItem("clipboard", message.newName);
     }
   }
 });

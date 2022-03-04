@@ -6,6 +6,7 @@ import { Base, toDesign } from "./base";
 import { Stack } from "./stack";
 import { propEditor } from "./propEditor";
 import db from "../db";
+import broadcast from "../broadcast";
 import css from "ustyler";
 
 import { log } from "../log";
@@ -134,6 +135,63 @@ export class Layout extends Base {
       <option selected disabled value="">Add</option>
       ${allowed.map((type) => html`<option value=${type}>${type}</option>`)}
     </select>`;
+  }
+
+  /** Move currently selected tree to the clipboard. Optionally
+   *  deletes currently selected tree to simulate a C-x.
+   *  @param {Tree} target
+   *  @param {Boolean=} isCut
+   */
+  clipTree(target, isCut) {
+    const targetDesign = JSON.stringify(toDesign(target));
+    if (isCut) this.deleteCurrent();
+    sessionStorage.setItem("clipboard", targetDesign);
+
+    broadcast.channel.postMessage({
+      name: db.designName,
+      action: "copy",
+      newName: targetDesign,
+    });
+  }
+
+  /** Make clipboard contents a child of the parent parameter.
+   * @param {Tree} target
+   */
+  pasteTree(target) {
+    const clipboardContents = JSON.parse(sessionStorage.getItem("clipboard"));
+    const assembledTree = assemble(
+      clipboardContents,
+      this.context,
+      target
+    );
+
+    console.log(target, assembledTree);
+
+    if(target.allowedChildren().includes(clipboardContents.type))
+      target.children.push(assembledTree);
+    else if(target.parent)
+      target.parent.children.push(assembledTree);
+    else
+      this.context.tree.children.push(assembledTree);
+
+    this.setSelected(assembledTree, true);
+    this.save();
+  }
+
+  /** @returns {Hole} */
+  cutButton() {
+    return html`<button onclick=${() => this.clipTree(this.selected)}>
+      Test Clip
+    </button>`;
+  }
+
+  /** @returns {Hole} */
+  pasteButton() {
+    return html`<button onclick=${() => {
+      this.pasteTree(this.selected)
+    }}>
+      Test Paste
+    </button>`;
   }
 
   /** Move a component within its parent stack
@@ -397,6 +455,7 @@ export class Layout extends Base {
     return html`<div class="controls">
       <h1>Editing ${this.selected.constructor.name} ${this.selected.name}</h1>
       ${this.addMenu()} ${this.deleteCurrent()} ${this.moveMenu()}
+      ${this.cutButton()} ${this.pasteButton()}
       <div class="props">${this.showProps()}</div>
       <button
         id="controls-return"
