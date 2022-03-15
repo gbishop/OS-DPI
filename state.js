@@ -43,9 +43,18 @@ export class State {
     for (const key in patch) {
       this.updated.add(key);
     }
-    this.values = merge(this.values, patch);
+    const oldValues = this.values;
+    this.values = merge(oldValues, patch);
+    // see which values changed.
+    const allKeys = new Set([
+      ...Object.keys(oldValues),
+      ...Object.keys(this.values),
+    ]);
+    const changed = new Set(
+      [...allKeys].filter((key) => oldValues[key] !== this.values[key])
+    );
     for (const callback of this.listeners) {
-      callback();
+      callback(changed);
     }
 
     if (this.persistKey) {

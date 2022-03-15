@@ -41,7 +41,8 @@ class Grid extends Base {
     return html`<button
       style=${styleString({ backgroundColor: background })}
       tabindex="-1"
-      draggable="false"
+      .data=${item}
+      name=${name}
     >
       ${content}
     </button>`;
