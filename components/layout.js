@@ -155,26 +155,30 @@ export class Layout extends Base {
   }
 
   /** Make clipboard contents a child of the parent parameter.
-   * @param {Tree} target
+   * @param {Tree} selected
    */
-  pasteTree(target) {
+  pasteTree(selected) {
     const clipboardContents = JSON.parse(sessionStorage.getItem("clipboard"));
+
+    let target = selected;
+
+    if(target.allowedChildren().includes(clipboardContents.type))
+      target = selected;
+    else if(target.parent)
+      target = selected.parent;
+    else
+      target = this.context.tree;
+
     const assembledTree = assemble(
       clipboardContents,
-      this.context,
+      target.context,
       target
     );
 
-    console.log(target, assembledTree);
+    target.children.push(assembledTree);
+    this.closeControls();
 
-    if(target.allowedChildren().includes(clipboardContents.type))
-      target.children.push(assembledTree);
-    else if(target.parent)
-      target.parent.children.push(assembledTree);
-    else
-      this.context.tree.children.push(assembledTree);
-
-    this.setSelected(assembledTree, true);
+    this.setSelected(assembledTree, true, true);
     this.save();
   }
 
