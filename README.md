@@ -11,7 +11,7 @@ following these links:
 
 **13 Feb 2022: Many of these are not working. Standby**
 
-- <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/36.osdpi">Single
+- <a href="https://github.com/UNC-Project-Open-AAC/OS-DPI/blob/c05a0548025a84b087a4a8cee372c3e2547d893b/examples/36_v2.osdpi">Single
   words</a>
 - <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/60.osdpi">Single
   words with morphs</a>
