@@ -101,17 +101,9 @@ export class State {
    * @param {any} defaultValue - value if not already defined
    */
   define(name, defaultValue) {
-    // handle dotted names
-    const patch = {};
-    let p = patch;
-    let dots = name.split(".");
-    let i = 0;
-    for (; i < dots.length - 1; i++) {
-      p = p[dots[i]] = {};
+    if (typeof this.values[name] === "undefined") {
+      this.values[name] = defaultValue;
     }
-    p[dots[i]] = (/** @type {any} */ currentValue) =>
-      currentValue || defaultValue;
-    this.update(patch);
   }
   /** interpolate
    * @param {string} input

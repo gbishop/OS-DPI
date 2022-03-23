@@ -258,26 +258,15 @@ class DB {
     this.designName = name;
 
     for (const fname in unzipped) {
-      if (fname.endsWith("json")) {
+      const mimetype = mime(fname) || "application/octet-stream";
+      if (mimetype == "application/json") {
         const text = strFromU8(unzipped[fname]);
         const obj = JSON.parse(text);
         const type = fname.split(".")[0];
         await this.write(type, obj);
-      } else if (fname.endsWith(".png") || fname.endsWith(".jpg")) {
+      } else if (mimetype.startsWith("image") || mimetype.startsWith("audio")) {
         const blob = new Blob([unzipped[fname]], {
-          type: `image/${fname.slice(-3)}`,
-        });
-        await db.put(
-          "media",
-          {
-            name: fname,
-            content: blob,
-          },
-          [name, fname]
-        );
-      } else if (fname.endsWith(".mp3") || fname.endsWith(".wav")) {
-        const blob = new Blob([unzipped[fname]], {
-          type: `audio/${fname.slice(-3)}`,
+          type: mimetype,
         });
         await db.put(
           "media",
@@ -449,4 +438,32 @@ function readAsArrayBuffer(blob) {
     fr.onloadend = () => fr.result instanceof ArrayBuffer && resolve(fr.result);
     fr.readAsArrayBuffer(blob);
   });
+}
+
+const mimetypes = {
+  ".json": "application/json",
+  ".aac": "audio/aac",
+  ".mp3": "audio/mpeg",
+  ".mp4": "audio/mp4",
+  ".oga": "audio/ogg",
+  ".wav": "audio/wav",
+  ".weba": "audio/webm",
+  ".avif": "image/avif",
+  ".bmp": "image/bmp",
+  ".gif": "image/gif",
+  ".jpeg": "image/jpeg",
+  ".jpg": "image/jpeg",
+  ".png": "image/png",
+  ".svg": "image/svg+xml",
+  ".tif": "image/tiff",
+  ".tiff": "image/tiff",
+  ".webp": "image/webp",
+};
+/** Map filenames to mimetypes for unpacking the zip file
+ * @param {string} fname
+ */
+function mime(fname) {
+  const extension = /\.[-a-zA-Z0-9]+$/.exec(fname);
+  if (!extension) return false;
+  return mimetypes[extension] || false;
 }

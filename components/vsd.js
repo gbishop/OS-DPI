@@ -76,7 +76,7 @@ class VSD extends Base {
   template() {
     const { data, state, rules } = this.context;
     const items = /** @type {VRow[]} */ (
-      data.getRows(this.props.filters, state)
+      data.getMatchingRows(this.props.filters, state)
     );
     const src = items.find((item) => item.image)?.image;
     return html`<div class="vsd flex show" id=${this.id}>

@@ -23,11 +23,8 @@ export class ToolBar extends Base {
         <button onclick=${() => window.open("#", "_blank")}>Home</button>
         <button
           onclick=${async () => {
-            console.log(state.values);
-            console.log(state.get("designerTab"));
             const tab = state.get("designerTab").toLowerCase();
             if (["layout", "actions"].indexOf(tab) >= 0) {
-              console.log("undo", tab);
               await db.undo(tab);
               this.context.restart();
             }
