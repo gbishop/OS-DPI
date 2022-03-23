@@ -118,11 +118,11 @@ export class Access extends Base {
 
 /* Hack the css of the grid for a quick test. There could be a variety of these. */
 css`
-  .grid button {
+  button {
     touch-action: none;
     transition: box-shadow 0s;
   }
-  .grid button.cue {
+  button.cue {
     box-shadow: inset 0px 0px 10px 60px red;
     transition: box-shadow 2s ease-in;
     border-radius: 20%;
