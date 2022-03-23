@@ -220,7 +220,7 @@ export class Content extends Base {
         id="audio"
         type="file"
         multiple
-        accept=".mp3,.wav,.ogg"
+        accept="audio/*"
         onchange=${async (/** @type {InputEventWithTarget} */ event) => {
           const input = /** @type {HTMLInputElement} */ (event.currentTarget);
           if (!input || !input.files || !input.files.length) {
@@ -241,7 +241,7 @@ export class Content extends Base {
         id="images"
         type="file"
         multiple
-        accept=".png,.jpg"
+        accept="image/*"
         onchange=${async (/** @type {InputEventWithTarget} */ event) => {
           const input = /** @type {HTMLInputElement} */ (event.currentTarget);
           if (!input || !input.files || !input.files.length) {
