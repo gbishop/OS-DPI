@@ -193,7 +193,7 @@ export class Layout extends Base {
   /** @returns {Hole} */
   cutButton() {
     return html`<button onclick=${() => this.clipTree(this.selected)}>
-      Test Clip
+      Copy
     </button>`;
   }
 
@@ -204,7 +204,7 @@ export class Layout extends Base {
         this.pasteTree(this.selected);
       }}
     >
-      Test Paste
+      Paste
     </button>`;
   }
 
@@ -579,14 +579,20 @@ export class Layout extends Base {
         }
         break;
       case "c":
-        if (event.ctrlKey) this.clipTree(this.selected, false);
-        break;
+        if (event.ctrlKey) {
+          this.clipTree(this.selected, false);
+          break;
+        }
       case "v":
-        if (event.ctrlKey) this.pasteTree(this.selected);
-        break;
+        if (event.ctrlKey) {
+          this.pasteTree(this.selected);
+          break;
+        }
       case "x":
-        if (event.ctrlKey) this.clipTree(this.selected, true);
-        break;
+        if (event.ctrlKey) {
+          this.clipTree(this.selected, true);
+          break;
+        } 
       case " ":
       case "Enter":
         this.update({ editingTree: true });
