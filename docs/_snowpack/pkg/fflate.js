@@ -136,7 +136,7 @@ var slc = function (v, s, e) {
     if (e == null || e > v.length)
         e = v.length;
     // can't use .constructor in case user-supplied
-    var n = new (v instanceof u16 ? u16 : v instanceof u32 ? u32 : u8)(e - s);
+    var n = new (v.BYTES_PER_ELEMENT == 2 ? u16 : v.BYTES_PER_ELEMENT == 4 ? u32 : u8)(e - s);
     n.set(v.subarray(s, e));
     return n;
 };
@@ -758,13 +758,15 @@ function inflateSync(data, out) {
 // flatten a directory structure
 var fltn = function (d, p, t, o) {
     for (var k in d) {
-        var val = d[k], n = p + k;
+        var val = d[k], n = p + k, op = o;
+        if (Array.isArray(val))
+            op = mrg(o, val[1]), val = val[0];
         if (val instanceof u8)
-            t[n] = [val, o];
-        else if (Array.isArray(val))
-            t[n] = [val[0], mrg(o, val[1])];
-        else
-            fltn(val, n + '/', t, o);
+            t[n] = [val, op];
+        else {
+            t[n += '/'] = [new u8(0), op];
+            fltn(val, n, t, o);
+        }
     }
 };
 // text encoder

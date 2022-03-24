@@ -21,7 +21,7 @@ export const comparators = {
  */
 function match(filter, row) {
   const field = row[filter.field.slice(1)] || "";
-  let value = filter.value || '';
+  let value = filter.value || "";
   const comparator = comparators[filter.operator];
   let r = comparator(field, value);
   return r;
@@ -52,7 +52,7 @@ export class Data {
    * @param {RowCache} [cache]
    * @return {Rows} Rows that pass the filters
    */
-  getRows(filters, state, cache) {
+  getMatchingRows(filters, state, cache) {
     // all the filters must match the row
     const boundFilters = filters.map((filter) =>
       Object.assign({}, filter, {
@@ -84,17 +84,31 @@ export class Data {
    *
    * @param {ContentFilter[]} filters
    * @param {State} state
+   * @param {RowCache} [cache]
    * @return {Boolean} true if tag combination occurs
    */
-  hasTaggedRows(filters, state) {
+  hasMatchingRows(filters, state, cache) {
     const boundFilters = filters.map((filter) =>
       Object.assign({}, filter, {
         value: evalInContext(filter.value, { state }),
       })
     );
+    if (cache) {
+      const newKey = JSON.stringify(boundFilters);
+      if (cache.key == newKey && cache.loadTime == this.loadTime) {
+        cache.updated = false;
+        return cache.result;
+      }
+      cache.key = newKey;
+    }
     const result = this.allrows.some((row) =>
       boundFilters.every((filter) => match(filter, row))
     );
+    if (cache) {
+      cache.result = result;
+      cache.updated = true;
+      cache.loadTime = this.loadTime;
+    }
     return result;
   }
 }

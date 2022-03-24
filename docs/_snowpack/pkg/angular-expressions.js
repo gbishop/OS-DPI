@@ -1462,6 +1462,9 @@ function plusFn(l, r) {
 
 function isStateless($filter, filterName) {
 	var fn = $filter(filterName);
+	if (!fn) {
+		throw new Error("Filter '" + filterName + "' is not defined");
+	}
 	return !fn.$stateful;
 }
 

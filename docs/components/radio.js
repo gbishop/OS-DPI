@@ -8,6 +8,7 @@ class Option extends Base {
     name: "",
     value: "",
   };
+  cache = {};
 }
 componentMap.addMap("option", Option);
 
@@ -24,16 +25,17 @@ class Radio extends Base {
 
   /**
    * true if there exist rows with the this.filters and the value
-   * @arg {string} value
+   * @arg {Option} option
    * @returns {boolean}
    */
-  valid(value) {
+  valid(option) {
     const { data, state } = this.context;
     return (
       !this.props.filters.length ||
-      data.hasTaggedRows(
+      data.hasMatchingRows(
         this.props.filters,
-        state.clone({ [this.props.stateName]: value })
+        state.clone({ [this.props.stateName]: option.props.value }),
+        option.cache
       )
     );
   }
@@ -55,7 +57,7 @@ class Radio extends Base {
     const stateName = this.props.stateName;
     let current = state.get(stateName);
     const choices = this.children.map((child, index) => {
-      const disabled = !this.valid(child.props.value);
+      const disabled = !this.valid(/** @type {Option}*/(child));
       if (stateName && !current && !disabled && child.props.value) {
         current = child.props.value;
         state.update({ [stateName]: current });
