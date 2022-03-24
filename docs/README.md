@@ -6,8 +6,6 @@ We are building an experimental system to enable AAC researchers to construct AA
 
 You can see a few simple and rough demos of the current capabilities by following these links:
 
-**13 Feb 2022: Many of these are not working. Standby**
-
 - <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/updated/36_Core_Example_1.osdpi">Single words</a>
 - <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/updated/60_Core_Example_1.osdpi">Single words with morphs</a>
 - <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/updated/Keyboard_Predict_Example_1.osdpi">Keyboard with prediction</a>
