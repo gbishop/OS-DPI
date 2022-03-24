@@ -144,8 +144,22 @@ export class Layout extends Base {
    */
   clipTree(target, isCut) {
     const targetDesign = JSON.stringify(toDesign(target));
-    if (isCut) this.deleteCurrent();
     sessionStorage.setItem("clipboard", targetDesign);
+
+    if (isCut) {
+      this.closeControls();
+      const parent = this.selected.parent;
+      if (parent) {
+        const index = parent.children.indexOf(this.selected);
+        parent.children.splice(index, 1);
+        if (parent.children.length) {
+          this.setSelected(parent.children[Math.max(0, index - 1)]);
+        } else {
+          this.setSelected(parent);
+        }
+        this.save();
+      }
+    }
 
     broadcast.channel.postMessage({
       name: db.designName,
@@ -162,18 +176,12 @@ export class Layout extends Base {
 
     let target = selected;
 
-    if(target.allowedChildren().includes(clipboardContents.type))
+    if (target.allowedChildren().includes(clipboardContents.type))
       target = selected;
-    else if(target.parent)
-      target = selected.parent;
-    else
-      target = this.context.tree;
+    else if (target.parent) target = selected.parent;
+    else target = this.context.tree;
 
-    const assembledTree = assemble(
-      clipboardContents,
-      target.context,
-      target
-    );
+    const assembledTree = assemble(clipboardContents, target.context, target);
 
     target.children.push(assembledTree);
     this.closeControls();
@@ -191,9 +199,11 @@ export class Layout extends Base {
 
   /** @returns {Hole} */
   pasteButton() {
-    return html`<button onclick=${() => {
-      this.pasteTree(this.selected)
-    }}>
+    return html`<button
+      onclick=${() => {
+        this.pasteTree(this.selected);
+      }}
+    >
       Test Paste
     </button>`;
   }
@@ -407,23 +417,27 @@ export class Layout extends Base {
     return vc[ndx];
   }
 
+  deleteNode() {
+    this.closeControls();
+    const parent = this.selected.parent;
+    if (parent) {
+      const index = parent.children.indexOf(this.selected);
+      parent.children.splice(index, 1);
+      if (parent.children.length) {
+        this.setSelected(parent.children[Math.max(0, index - 1)]);
+      } else {
+        this.setSelected(parent);
+      }
+      this.save();
+    }
+  }
+
   /** Delete the current tree node */
   deleteCurrent() {
     return html`<button
       help="Delete component"
       onclick=${() => {
-        this.closeControls();
-        const parent = this.selected.parent;
-        if (parent) {
-          const index = parent.children.indexOf(this.selected);
-          parent.children.splice(index, 1);
-          if (parent.children.length) {
-            this.setSelected(parent.children[Math.max(0, index - 1)]);
-          } else {
-            this.setSelected(parent);
-          }
-          this.save();
-        }
+        this.deleteNode();
       }}
     >
       Delete
@@ -538,6 +552,7 @@ export class Layout extends Base {
       </li>`;
     }
   }
+
   /** @param {KeyboardEvent} event */
   treeKeyHandler(event) {
     switch (event.key) {
@@ -562,6 +577,15 @@ export class Layout extends Base {
         } else if (this.selected.parent) {
           this.setSelected(this.selected.parent);
         }
+        break;
+      case "c":
+        if (event.ctrlKey) this.clipTree(this.selected, false);
+        break;
+      case "v":
+        if (event.ctrlKey) this.pasteTree(this.selected);
+        break;
+      case "x":
+        if (event.ctrlKey) this.clipTree(this.selected, true);
         break;
       case " ":
       case "Enter":
