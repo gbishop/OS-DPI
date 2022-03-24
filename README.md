@@ -6,13 +6,13 @@ We are building an experimental system to enable AAC researchers to construct AA
 
 You can see a few simple and rough demos of the current capabilities by following these links:
 
-- <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/updated/36_Core_Example_1.osdpi">Single words</a>
-- <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/updated/60_Core_Example_1.osdpi">Single words with morphs</a>
-- <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/updated/Keyboard_Predict_Example_1.osdpi">Keyboard with prediction</a>
-- <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/updated/Photo_Audio_Example_1.osdpi">Photo audio example</a>
-- <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/updated/Text_based_Example_1.osdpi">Text-based example</a>
-- <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/updated/VSD_Example_1.osdpi">Visual Scene Display</a>
-- <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/updated/Utterance_based_Contact.osdpi">Contact-like utterance-based system</a>
+- <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/updated/grid_ex_1.osdpi">Single words</a>
+- <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/updated/grid_ex_2.osdpi">Single words with morphs</a>
+- <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/updated/keyboard_predict_ex_1.osdpi">Keyboard with prediction</a>
+- <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/updated/photo_audio_ex_1.osdpi">Photo audio example</a>
+- <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/updated/text_tabs_ex_1.osdpi">Text-based example</a>
+- <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/updated/VSD_ex_1.osdpi">Visual Scene Display</a>
+- <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/updated/utterance_Contact.osdpi">Contact-like utterance-based system</a>
 - <a href="https://unc-project-open-aac.github.io/OS-DPI/#new">Start a new design</a>
 
 **These demos are known to not work in Safari.** Please use Google Chrome or one if its variants.
