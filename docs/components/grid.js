@@ -90,7 +90,7 @@ class Grid extends Base {
     const { data, state } = this.context;
     let { rows, columns, filters, fillItems } = this.props;
     /** @type {Rows} */
-    let items = data.getRows(filters, state, this.cache);
+    let items = data.getMatchingRows(filters, state, this.cache);
     // reset the page when the key changes
     if (this.cache.updated) {
       this.page = 1;

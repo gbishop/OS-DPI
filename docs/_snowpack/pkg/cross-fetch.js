@@ -540,7 +540,7 @@ var irrelevant = (function (exports) {
 
   return exports;
 
-}({}));
+})({});
 })(__self__);
 __self__.fetch.ponyfill = true;
 // Remove "polyfill" property added by whatwg-fetch

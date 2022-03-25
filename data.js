@@ -21,7 +21,7 @@ export const comparators = {
  */
 function match(filter, row) {
   const field = row[filter.field.slice(1)] || "";
-  let value = filter.value || '';
+  let value = filter.value || "";
   const comparator = comparators[filter.operator];
   let r = comparator(field, value);
   return r;
