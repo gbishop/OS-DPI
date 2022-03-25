@@ -60,23 +60,31 @@ class DB {
   async renameDesign(newName) {
     const db = await this.dbPromise;
     newName = await this.uniqueName(newName);
-    const tx = db.transaction("store", "readwrite");
-    const index = tx.store.index("by-name");
+    const tx = db.transaction(["store", "media", "saved"], "readwrite");
+    const index = tx.objectStore("store").index("by-name");
     for await (const cursor of index.iterate(this.designName)) {
       const record = { ...cursor.value };
       record.name = newName;
       cursor.update(record);
     }
-    await tx.done;
-    const stx = db.transaction("saved", "readwrite");
-    const cursor = await stx.store.openCursor(this.designName);
+    const mst = tx.objectStore("media");
+    for await (const cursor of mst.iterate()) {
+      if (cursor && cursor.key[0] == this.designName) {
+        const record = { ...cursor.value };
+        const key = cursor.key;
+        cursor.delete();
+        key[0] = newName;
+        mst.put(record, key);
+      }
+    }
+    const cursor = await tx.objectStore("saved").openCursor(this.designName);
     if (cursor) {
       const saved = cursor.value;
       cursor.delete();
-      saved.name = newName;
-      stx.store.put(saved);
     }
-    await stx.done;
+    await tx.done;
+    this.fileHandle = null;
+    this.fileName = "";
 
     this.notify({ action: "rename", name: this.designName, newName });
     this.designName = newName;
