@@ -50,8 +50,7 @@ export const PropInfo = {
     type: "number",
     name: "Scale",
     description: "Comparative size of this element compared to its siblings.",
-    min: 0.1,
-    step: 0.1,
+    min: 0, // strictly great than 0 but setting to something tiny also makes the step tiny
   },
   fillItems: {
     type: "checkbox",
