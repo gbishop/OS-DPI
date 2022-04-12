@@ -4,6 +4,7 @@ import { assemble } from "./base";
 import { colorNamesDataList } from "./style";
 import { Base, toDesign } from "./base";
 import { Stack } from "./stack";
+import { TabControl } from "./tabcontrol";
 import { propEditor } from "./propEditor";
 import db from "../db";
 import css from "ustyler";
@@ -53,6 +54,16 @@ export class Layout extends Base {
   makeVisible(node) {
     while (node.parent) {
       node.parent.designer.expanded = true;
+      if (node.parent instanceof TabControl) {
+        const tc = node.parent;
+        if (
+          tc.props.stateName &&
+          node.props.name &&
+          node.context.state.get(tc.props.stateName) != node.props.name
+        ) {
+          node.context.state.update({ [tc.props.stateName]: node.props.name });
+        }
+      }
       node = node.parent;
     }
   }
@@ -545,7 +556,7 @@ export class Layout extends Base {
 css`
   div.layout {
     display: flex;
-    flex-direction: column;
+    flex-direction: column;Visible
     flex: 1 1 0;
     overflow: hidden;
   }
