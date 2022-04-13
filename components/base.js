@@ -218,7 +218,7 @@ export function toDesign(tree) {
 
 class Page extends Base {
   static defaultProps = {};
-  static allowedChildren = ["stack", "modal dialog", "speech", "audio"];
+  static allowedChildren = ["stack", "modal dialog", "speech", "audio", "logger"];
 
   template() {
     return html`${this.children.map((child) => child.template())}`;

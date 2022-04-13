@@ -123,6 +123,9 @@ export function propEditor(component, name, value, info, context, hook) {
     case "filters":
       return editFilters(component, name, value, info, context, hook);
 
+    case "states":
+      return editStates(component, name, value, info, context, hook);
+
     case "voiceURI":
       return html`<label for=${name}>${info.name}</label>
         <select
@@ -141,6 +144,89 @@ export function propEditor(component, name, value, info, context, hook) {
       log("tbd", name);
       return html`<p>${name}</p>`;
   }
+}
+
+function editStates(component, name, value, info, context, hook) {
+  if(!component.designer.states) {
+    component.designer.states = [...value];
+  }
+
+  const states = component.designer.states;
+  function reflect() {
+    // TODO: Validate selected states
+    const result = states.filter((state) => state != "$Logger");
+    hook(name, result);
+  }
+
+  const { tree, rules, data } = context;
+  const allStates = new Set([...tree.allStates(), ...rules.allStates()]);
+  const stateRows = states.map((state, index) => {
+
+    const stateInput = html`<select
+      class="field"
+      onChange=${(event) => {
+        states[index].state = event.target.value;
+        reflect();
+      }}
+    >
+      <option value="">Choose a state</option>
+      ${[...allStates].filter((state) => state != "$Logger").map(
+        (stateName) =>
+          html`<option
+            value=${stateName}
+            ?selected=${stateName == state.state}
+          >
+            ${stateName}
+          </option>`
+      )}
+    </select>`;
+
+    return html`<tr>
+      <td>${index + 1}</td>
+      <td>${stateInput}</td>
+      <td>
+        <button
+          title="Delete action update"
+          onclick=${() => {
+            states.splice(index, 1);
+            reflect();
+          }}
+        >
+          X
+        </button>
+      </td>
+    </tr>`;
+  });
+
+  let stateTable = html``;
+  if (states.length > 0) {
+    stateTable = html`<table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>State</th>
+          <th>X</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${stateRows}
+      </tbody>
+    </table>`;
+  }
+
+  return html`<fieldset help="Layout#states">
+    <legend>States</legend>
+    ${stateTable}
+    <button
+      style="grid-column: 1/4"
+      onclick=${() => {
+        states.push({ state: ""});
+        reflect();
+      }}
+    >
+      Add state
+    </button>
+  </fieldset>`;
 }
 
 /**
