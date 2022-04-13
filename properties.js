@@ -119,8 +119,8 @@ export const PropInfo = {
   },
   states: {
     type: "states",
-    name: "Logger States",
+    name: "States",
     step: 0.1,
-    description: "States to log."
+    description: "A list of states."
   }
 };
