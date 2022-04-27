@@ -21,6 +21,19 @@ import {
   mergeWith,
 } from "rxjs";
 
+/** Maintain data for each visible button in a WeakMap
+ * @type {WeakMap<Node, Object>}
+ */
+export const AccessMap = new WeakMap();
+
+/** Provide a ref to update the map
+ * @param {Object} data
+ * @returns {function(Node)}
+ */
+export function UpdateAccessData(data) {
+  return (node) => AccessMap.set(node, data);
+}
+
 /** debugging helper
  * @param {string} label
  * @param {Observable} obs
@@ -28,6 +41,45 @@ import {
 function show(label, obs) {
   obs.subscribe((v) => console.log(label, v));
 }
+
+// ideas for the groups data structure
+const groups = [
+  {
+    type: "group",
+    label: "controls",
+    cycle: 2,
+    children: [
+      { type: "button", label: "Home" },
+      { type: "button", label: "Close" },
+      { type: "button", label: "Speak" },
+      { type: "button", label: "Clear" },
+      { type: "button", label: "Delete" },
+      { type: "button", label: "Keyboard" },
+      { type: "button", label: "Numbers" },
+    ],
+  },
+  { type: "button", name: "hp", groupBy: "#row", label: "row #row", cycle: 3 },
+  { type: "button", name: "morph", label: "morphs", cycle: 3 },
+  {
+    type: "group",
+    label: "completions",
+    children: [{ type: "button", name: "predict", cycle: 2 }],
+  },
+  {
+    type: "group",
+    label: "letters",
+    children: [
+      {
+        type: "button",
+        name: "kb",
+        groupBy: "row",
+        label: "row #row",
+        cycle: 1,
+      },
+    ],
+  },
+  { type: "button", name: "num", cycle: 2 },
+];
 
 /** Construct some streams globally for now */
 const pointerDown$ = fromEvent(document, "pointerdown");
@@ -41,7 +93,7 @@ pointerDown$.subscribe(
   }
 );
 const pointerMove$ = fromEvent(document, "pointermove");
-const pointerEnd$ = fromEvent(document, "pointerup");
+const pointerUp$ = fromEvent(document, "pointerup");
 const pointerEnter$ = fromEvent(document, "pointerover");
 const pointerLeave$ = fromEvent(document, "pointerout");
 const pointerEnterLeave$ = pointerEnter$.pipe(
@@ -77,11 +129,15 @@ export class Access extends Base {
     super(props, context, parent);
     const { state, rules } = context;
 
-    state.observe((changed) => this.configure(changed, context));
+    // state.observe((changed) => this.configure(changed, context));
     this.configure(new Set(), context);
   }
 
   /** Configure the inputs as requested
+   *
+   * This should happen when the configuration is changed, not when the state changes. The configuration
+   * will not be part of the state; it will be saved in the db just like layout.
+   *
    * @param {Set<string>} changed - names of states that changed
    * @param {Context} context
    * @returns {void}
@@ -90,24 +146,41 @@ export class Access extends Base {
     console.log("configure", changed);
     const { state, rules } = context;
 
-    /* I'm using the transitionend event to synchronize the click with css transition.
+    if (0) {
+      // This is an example of a hover trigger
+
+      /* I'm using the transitionend event to synchronize the click with css transition.
        We could a timer and do it in js as well.
     */
-    fromEvent(document, "transitionend").subscribe((event) => {
-      if (!(event.target instanceof HTMLButtonElement)) return;
-      const data = event.target["data"] || {}; // should this be in a WeakMap?
-      const name = event.target.name;
-      if (!data || !name) return;
-      rules.applyRules(name, "press", data);
-    });
+      fromEvent(document, "transitionend").subscribe((event) => {
+        if (!(event.target instanceof HTMLButtonElement)) return;
+        const data = AccessMap.get(event.target) || {}; // should this be in a WeakMap?
+        const name = data.name;
+        if (!data || !name) return;
+        rules.applyRules(name, "press", data);
+      });
 
-    /* show a visual cue when hovering */
-    this.hovers = hoverStream(500, pointerEnterLeave$);
-    this.hovers.subscribe((event) => {
-      event.target instanceof HTMLButtonElement &&
-        event.target.classList.toggle("cue", event.type === "pointerover");
-    });
-    show("hover", this.hovers);
+      /* show a visual cue when hovering */
+      this.hovers = hoverStream(500, pointerEnterLeave$);
+      this.hovers.subscribe((event) => {
+        event.target instanceof HTMLButtonElement &&
+          event.target.classList.toggle("cue", event.type === "pointerover");
+      });
+    } else {
+      // this is a mouse-click trigger
+      pointerUp$.subscribe((event) => {
+        if (!(event.target instanceof HTMLButtonElement)) return;
+        const data = AccessMap.get(event.target) || {}; // should this be in a WeakMap?
+        const name = data.name;
+        if (!data || !name) return;
+        if ("onClick" in data) {
+          data.onClick();
+        } else {
+          rules.applyRules(name, "press", data);
+        }
+      });
+    }
+    // show("hover", this.hovers);
   }
 
   template() {

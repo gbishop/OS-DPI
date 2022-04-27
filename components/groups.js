@@ -2,217 +2,213 @@
 
 import { AccessMap } from "./access";
 
-class MemberList extends Array {
+class ANode extends Object {
+  constructor(node) {
+    super();
+    Object.assign(this, AccessMap.get(node), { node });
+  }
+}
+
+class ANodeList extends Array {
+  /** @param {...ANode} values */
+  constructor(...values) {
+    super(...values);
+  }
+}
+
+/** @typedef {Object} GroupProperties */
+
+class AGroup {
+  /**
+   * @param {ATargetList} members
+   * @param {Object} properties
+   */
+  constructor(members, properties) {
+    this.members = members;
+    this.properties = properties;
+  }
+}
+
+class AGroupList extends Array {
+  /** @param {AGroup[]} values */
+  constructor(values) {
+    super(...values);
+  }
+
   /**
    *
-   * @param {function(any): string} key
-   * @returns GroupList
+   * @param {function(any, number, Array): any} callbackfn
    */
-  groupBy(key) {
-    const result = new GroupList();
-    /** @type {Map<Object,MemberList>} */
-    const groupMap = new Map();
-    for (const member of this) {
-      const k = key(member);
-      // we got a key, check to see if we have a group
-      let group = groupMap.get(k);
-      if (!group) {
-        // no group, create one and add it to the map and the result
-        group = new MemberList(member);
-        groupMap.set(key, group);
-        result.push(group);
-      } else {
-        group.push(member);
+  map(callbackfn) {
+    return new AGroupList(super.map(callbackfn));
+  }
+}
+
+class AGroupBuilder {
+  /**
+   * @param {ABuilder[]} builders
+   * @param {Object} properties
+   */
+  constructor(builders, properties) {
+    this.builders = builders;
+    this.properties = properties;
+  }
+  /**
+   * Build a group from the output of the selectors applied to the input
+   * @param {ATarget[]} input
+   * @returns {ATarget}
+   */
+  apply(input) {
+    const members = [].concat(
+      ...this.builders.map((builder) => builder.apply(input))
+    );
+    return [new AGroup(members, this.properties)];
+  }
+}
+
+class ASelector {
+  /**
+   *
+   * @param {SelectionOperator[]} selectionOperators
+   */
+  constructor(selectionOperators) {
+    this.operators = selectionOperators;
+  }
+  /**
+   * Apply the selector to the nodes to produce an array of nodes
+   * @param {ATarget[]} input
+   * @returns {ATarget[]}
+   */
+  apply(input) {
+    return this.operators.reduce(
+      (previous, operator) => operator(previous),
+      input
+    );
+  }
+}
+
+/**
+ * @typedef {ANode|AGroup} ATarget
+ *
+ * @typedef {ANodeList|AGroupList} ATargetList
+ *
+ * @typedef {function(ATarget[]): ATarget[]} SelectionOperator
+ *
+ * @typedef {ASelector|AGroupBuilder} ABuilder
+ *
+ */
+
+class AccessGroupManager {
+  /** @type {ANode[]} */
+  annotatedNodes = [];
+  /**
+   * targets are buttons or groups
+   * @type {ATarget[]}
+   */
+  targets = []; // work out the type later
+  /**
+   * builders are the rules for constructing targets from the nodes
+   *
+   * @type {ABuilder[]}
+   */
+  builders = [];
+
+  /**
+   * Collect the nodes from the DOM and process them into targets
+   */
+  refresh() {
+    // gather the buttons from the UI
+    this.annotatedNodes = [];
+    for (const node of document.querySelectorAll("#UI button")) {
+      const accessInfo = AccessMap.get(node);
+      if (accessInfo) {
+        this.annotatedNodes.push({ ...accessInfo, node });
       }
     }
-    return result;
+    console.log("nodes", this.annotatedNodes);
+    // apply the builders to get the targets
+    this.targets = [].concat(
+      ...this.builders.map((builder) => builder.apply(this.annotatedNodes))
+    );
+    console.log("targets", this.targets);
   }
+
   /**
    *
-   * @param {function(any, any): number} compare
-   * @returns GroupList
+   * @param {ABuilder[]} builders
    */
-  orderBy(compare) {
-    return new MemberList([...this].sort(compare));
+  setBuilders(builders) {
+    this.builders = builders;
+    this.refresh();
   }
 }
-
-class GroupList extends Array {
-  /**
-   *
-   * @param {function(any, number, Array): boolean} predicate
-   * @returns GroupList
-   */
-  filter(predicate) {
-    return this.map((group) => group.filter(predicate));
-  }
-
-  /**
-   * @param {function(any): string} key
-   * @returns GroupList
-   */
-  groupBy(key) {
-    return this.map((group) => group.groupBy(key));
-  }
-
-  /**
-   * @param {function(any): string} key
-   * @returns GroupList
-   */
-  orderBy(key) {
-    return this.map((group) => group.orderBy(key));
-  }
-}
-
-/** Select elements into groups
- * @param {string} query
- * @param {SelectOperator[]} operators
- * @returns {MemberList}
+/**
+ *
+ * @param {function(ANodeList): ATargetList} simpleOperator
+ * @returns {function(ATargetList): ATargetList}
  */
-function select(query, operators) {
-  /** @type {MemberList} */
-  let result = [...document.querySelectorAll(query)];
 
-  for (const operator of operators) {
-  }
-
-  return result;
-}
-/** filter members
- * @param {MemberList} members
- * @param {function(Node): boolean} test
- * @returns {MemberList}
- */
-function filter(members, test) {
-  const result = [];
-  for (const member of members) {
-    if (member instanceof Node) {
-      if (test(member)) {
-        result.push(member);
-      }
+function makeHigherOrderOperator(simpleOperator) {
+  /** @param {ATargetList} input */
+  function hoo(input) {
+    console.log("hoo", input);
+    if (input instanceof AGroupList) {
+      const r = new AGroupList(
+        input.map((group) => new AGroup(hoo(group.members), group.properties))
+      );
+      return r;
     } else {
-      const group = { ...member };
-      group.members = filter(group.members, test);
-      if (group.members.length > 0) {
-        result.push(group);
-      }
+      const r = simpleOperator(input);
+      return r;
     }
   }
-  return result;
+  return hoo;
 }
 
-/** group members by the values return by the key function.
- * To the degree possible, leave values in the same place in the input
- * member list. Leave members without a key value where they are.
+function makeFilterOperator(predicate) {
+  return makeHigherOrderOperator((input) => input.filter(predicate));
+}
+
+function makeOrderByOperator(key) {
+  return makeHigherOrderOperator((input) => [...input].sort(key));
+}
+
+/**
  *
- * This turns out to be more complicated than necessary. We're only using this in
- * "selects" thus the input will always be homogeneous, all Nodes or all groups.
- * This simplifies things considerably.
- *
- * @param {MemberList} members
- * @param {function(Object, Node): string|number} key
- * @returns {MemberList}
+ * @param {ANode[]} input
+ * @param {function(ANode): string} key
+ * @param {function(ANode): Object} properties
+ * @returns {AGroup[]}
  */
-function groupBy(members, key) {
-  /** @type {MemberList} */
+function groupBy(input, key, properties) {
   const result = [];
-  /** @type {Map<Object,Group>} */
+  /** @type {Map<Object,AGroup>} */
   const groupMap = new Map();
-  for (const member of members) {
-    if (member instanceof Node) {
-      const accessData = AccessMap.get(member);
-      const k = key(accessData, member);
-      if (k === undefined) {
-        // no key, add it to the output
-        result.push(member);
-      } else {
-        // we got a key, check to see if we have a group
-        let group = groupMap.get(k);
-        if (!group) {
-          // no group, create one and add it to the map and the result
-          group = { name: key.toString(), members: [member] };
-          groupMap.set(key, group);
-          result.push(group);
-        } else {
-          group.members.push(member);
-        }
-      }
-    } else {
-      // the member is a group. Recursively apply to it.
-      /** @type {Group} */
-      const group = { name: member.name, members: [] };
-      group.members = groupBy(group.members, key);
+  for (const node of input) {
+    const k = key(node);
+    // we got a key, check to see if we have a group
+    let group = groupMap.get(k);
+    if (!group) {
+      // no group, create one and add it to the map and the result
+      group = new AGroup([node], properties(node));
+      groupMap.set(k, group);
       result.push(group);
+    } else {
+      group.members.push(node);
     }
   }
   return result;
 }
 
-/** select operators */
-
-/** The given field is not empty
- * @param {string} field
- * @returns {function (Node[]): Node[]}
- */
-function notEmpty(field) {
-  /** @param {Node[]} nodes */
-  return (nodes) => nodes.filter((node) => AccessMap.get(node)[field]);
+function makeGroupByOperator(key, properties) {
+  return makeHigherOrderOperator((input) => groupBy(input, key, properties));
 }
 
-/** Test for equality between the field and the value
- * @param {string} field
- * @param {string} value
- * @returns {function (Node[]): Node[]}
- */
-function equal(field, value) {
-  /** @param {Node[]} nodes */
-  return (nodes) => nodes.filter((node) => AccessMap.get(node)[field] == value);
-}
-class GroupManager {
-  rules = [
-    {
-      operator: "group",
-      name: "controls",
-      cycle: 2,
-      members: [
-        {
-          operator: "select",
-          options: [{ notEmpty: "#controls" }, { orderBy: "#controls" }],
-        },
-      ],
-    },
-    {
-      operator: "select",
-      options: [{ "#name": "hp" }, { groupBy: "#row" }, { cycle: 2 }],
-    },
-    {
-      operator: "select",
-      options: [{ "#name": "morph" }, { cycle: 2 }],
-    },
-    {
-      operator: "group",
-      name: "completions",
-      members: [
-        {
-          operator: "select",
-          options: [{ "#name": "predict" }, { cycle: 2 }],
-        },
-      ],
-    },
-    {
-      operator: "group",
-      name: "letters",
-      cycle: 2,
-      members: [
-        {
-          operator: "select",
-          options: [{ "#name": "kb" }, { groupBy: "#row" }, { cycle: 2 }],
-        },
-      ],
-    },
-    {
-      operator: "select",
-      options: [{ "#name": "num" }, { cycle: 2 }],
-    },
+export function testIt() {
+  const builders = [
+    new ASelector([makeFilterOperator((node) => node.label == "Speak")]),
   ];
+  console.log("builders", builders);
+  const agm = new AccessGroupManager();
+  agm.setBuilders(builders);
 }

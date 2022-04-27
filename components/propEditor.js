@@ -229,7 +229,7 @@ function editFilters(component, name, value, info, context, hook) {
       <td>${valueInput}</td>
       <td>
         <button
-          title="Delete action update"
+          title="Delete filter"
           onclick=${() => {
             filters.splice(index, 1);
             reflect();

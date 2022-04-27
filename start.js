@@ -12,6 +12,7 @@ import pleaseWait from "./components/wait";
 import { fileOpen } from "browser-fs-access";
 import css from "ustyler";
 import "./components/access";
+import { testIt } from "./components/groups";
 
 const safe = true;
 
@@ -31,6 +32,7 @@ function safeRender(where, what) {
   } else {
     r = render(where, what);
   }
+  testIt();
   return r;
 }
 
@@ -55,7 +57,7 @@ async function welcome() {
     document.body,
     html`
       <div id="welcome">
-        <div id="head">
+        <div id="head)">
           <img class="icon" src="./icon.png" />
           <div>
             <h1>Welcome to the Project Open AAC OS-DPI</h1>
