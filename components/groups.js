@@ -1,62 +1,79 @@
 /** A manager for access groups */
 
+import css from "ustyler";
 import { AccessMap } from "./access";
 
-class ANode extends Object {
-  constructor(node) {
-    super();
-    Object.assign(this, AccessMap.get(node), { node });
+/**
+ * AButton is the DOM button annotated with the info from the AccessMap
+ */
+class AButton {
+  /** @param {Element} button */
+  constructor(button) {
+    this.data = AccessMap.get(button);
+    this.button = button;
   }
-}
 
-class ANodeList extends Array {
-  /** @param {...ANode} values */
-  constructor(...values) {
-    super(...values);
+  cue(value = "button") {
+    this.button.setAttribute("cue", value);
   }
 }
 
 /** @typedef {Object} GroupProperties */
 
+/**
+ * AGroup is a collection of Buttons or Groups and associated properties
+ * such as the label and cue.
+ */
 class AGroup {
   /**
-   * @param {ATargetList} members
-   * @param {Object} properties
+   * @param {ATarget[]} members
+   * @param {GroupProperties} properties
    */
   constructor(members, properties) {
     this.members = members;
     this.properties = properties;
   }
+
+  cue(value = "group") {
+    // console.log("cue group", this.members);
+    for (const member of this.members) {
+      member.cue(value);
+    }
+  }
 }
 
-class AGroupList extends Array {
-  /** @param {AGroup[]} values */
-  constructor(values) {
-    super(...values);
-  }
-
+/**
+ * ASelector collects Buttons
+ */
+class ASelector {
   /**
-   *
-   * @param {function(any, number, Array): any} callbackfn
+   * Select elements from the input
+   * @param {ATarget[]} input
+   * @returns {ATarget[]}
    */
-  map(callbackfn) {
-    return new AGroupList(super.map(callbackfn));
+  apply(input) {
+    return input;
   }
 }
 
-class AGroupBuilder {
+/**
+ * AGroupSelector takes the output of one or more selectors and
+ * creates a new group.
+ */
+class AGroupSelector extends ASelector {
   /**
-   * @param {ABuilder[]} builders
+   * @param {ASelector[]} builders
    * @param {Object} properties
    */
   constructor(builders, properties) {
+    super();
     this.builders = builders;
     this.properties = properties;
   }
   /**
    * Build a group from the output of the selectors applied to the input
    * @param {ATarget[]} input
-   * @returns {ATarget}
+   * @returns {ATarget[]}
    */
   apply(input) {
     const members = [].concat(
@@ -66,16 +83,17 @@ class AGroupBuilder {
   }
 }
 
-class ASelector {
+class ASimpleSelector extends ASelector {
   /**
    *
    * @param {SelectionOperator[]} selectionOperators
    */
   constructor(selectionOperators) {
+    super();
     this.operators = selectionOperators;
   }
   /**
-   * Apply the selector to the nodes to produce an array of nodes
+   * Apply the selector to the Buttons to produce an array of nodes
    * @param {ATarget[]} input
    * @returns {ATarget[]}
    */
@@ -88,104 +106,208 @@ class ASelector {
 }
 
 /**
- * @typedef {ANode|AGroup} ATarget
- *
- * @typedef {ANodeList|AGroupList} ATargetList
+ * @typedef {AButton|AGroup} ATarget
  *
  * @typedef {function(ATarget[]): ATarget[]} SelectionOperator
  *
- * @typedef {ASelector|AGroupBuilder} ABuilder
- *
  */
 
-class AccessGroupManager {
-  /** @type {ANode[]} */
-  annotatedNodes = [];
+export class AccessGroupManager {
+  /**
+   * These are the buttons (or whatever) from the DOM plus the access data
+   * from the AccessMap
+   * @type {AButton[]} */
+  buttons = [];
   /**
    * targets are buttons or groups
-   * @type {ATarget[]}
+   * @type {AGroup}
    */
-  targets = []; // work out the type later
+  targets = new AGroup([], {});
   /**
-   * builders are the rules for constructing targets from the nodes
+   * selectors are the rules for aggregating and selecting targets nodes to make targets
    *
-   * @type {ABuilder[]}
+   * @type {ASelector[]}
    */
-  builders = [];
+  selectors = [];
+
+  /**
+   * current keeps track of the currently active node or group
+   * @type {ATarget}
+   */
+  get current() {
+    const { group, index } = this.stack[0];
+    console.log("current", group.properties, index);
+    return group.members[index];
+  }
+
+  /**
+   * stack keeps track of the nesting as we walk the tree
+   * @type {{group: AGroup, index: number}[]}
+   */
+  stack = [];
 
   /**
    * Collect the nodes from the DOM and process them into targets
    */
   refresh() {
     // gather the buttons from the UI
-    this.annotatedNodes = [];
-    for (const node of document.querySelectorAll("#UI button")) {
-      const accessInfo = AccessMap.get(node);
-      if (accessInfo) {
-        this.annotatedNodes.push({ ...accessInfo, node });
-      }
+    this.buttons = [];
+    for (const node of document.querySelectorAll("#UI button:not(:disabled)")) {
+      this.buttons.push(new AButton(node));
     }
-    console.log("nodes", this.annotatedNodes);
     // apply the builders to get the targets
-    this.targets = [].concat(
-      ...this.builders.map((builder) => builder.apply(this.annotatedNodes))
+    this.targets.members = [].concat(
+      ...this.selectors.map((builder) => builder.apply(this.buttons))
     );
     console.log("targets", this.targets);
+
+    this.start();
   }
 
   /**
    *
-   * @param {ABuilder[]} builders
+   * @param {ASelector[]} selectors
    */
-  setBuilders(builders) {
-    this.builders = builders;
-    this.refresh();
+  setSelectors(selectors) {
+    this.selectors = selectors;
+    // this.refresh();
+  }
+
+  start() {
+    this.stack = [{ group: this.targets, index: 0 }];
+    this.cue();
+  }
+
+  next() {
+    const top = this.stack[0];
+    if (top.index < top.group.members.length - 1) {
+      top.index++;
+    } else if (this.stack.length > 1) {
+      this.stack.shift();
+    } else if (this.stack.length == 1) {
+      top.index = 0;
+    } else {
+      // stack is empty ignore
+    }
+    this.cue();
+  }
+
+  /**
+   *
+   * @param {Context} context
+   */
+  activate(context) {
+    let current = this.current;
+    if (current instanceof AButton) {
+      const name = current.data.name;
+      if ("onClick" in current.data) {
+        current.data.onClick();
+      } else {
+        context.rules.applyRules(name, "press", current.data);
+      }
+    } else if (current instanceof AGroup) {
+      console.log("activate group", current, this.stack);
+      while (
+        current.members.length == 1 &&
+        current.members[0] instanceof AGroup
+      ) {
+        current = current.members[0];
+      }
+      this.stack.unshift({ group: current, index: 0 });
+      console.log("activated", this.current, this.stack);
+    }
+    this.cue();
+  }
+
+  clearCue() {
+    for (const element of document.querySelectorAll("[cue]")) {
+      element.removeAttribute("cue");
+    }
+  }
+
+  cue() {
+    this.clearCue();
+    const current = this.current;
+    if (current instanceof AButton) {
+      this.stack[0].group.cue();
+    }
+    this.current.cue();
   }
 }
 /**
+ * Construct an operator that can handle nested Groups and Nodes from
+ * an operator that only handles Nodes.
  *
- * @param {function(ANodeList): ATargetList} simpleOperator
- * @returns {function(ATargetList): ATargetList}
+ * I'm assuming that the lists are all Nodes or all Groups.
+ *
+ * @param {function(AButton[]): ATarget[]} simpleOperator
+ * @returns {function(ATarget[]): ATarget[]}
  */
 
 function makeHigherOrderOperator(simpleOperator) {
-  /** @param {ATargetList} input */
-  function hoo(input) {
-    console.log("hoo", input);
-    if (input instanceof AGroupList) {
-      const r = new AGroupList(
-        input.map((group) => new AGroup(hoo(group.members), group.properties))
-      );
+  /** @param {ATarget[]} input */
+  function higherOrderOperator(input) {
+    // if the first is a group they all are
+    if (input[0] instanceof AGroup) {
+      /** @type {AGroup[]} */
+      const r = input.map((/** @type {AGroup} */ group) => {
+        if (group instanceof AGroup)
+          return new AGroup(
+            higherOrderOperator(group.members),
+            group.properties
+          );
+        else throw new Error("Internal error, this should be a group");
+      });
       return r;
     } else {
-      const r = simpleOperator(input);
+      const r = simpleOperator(/** @type {AButton[]} */ (input));
       return r;
     }
   }
-  return hoo;
+  return higherOrderOperator;
 }
 
+/**
+ *
+ * @param {function(AButton): boolean} predicate
+ * @returns {function(ATarget[]): ATarget[]}
+ */
 function makeFilterOperator(predicate) {
   return makeHigherOrderOperator((input) => input.filter(predicate));
 }
 
+// allow the sort to handle numbers reasonably
+const comparator = new Intl.Collator(undefined, {
+  numeric: true,
+});
+
+/**
+ * Order the nodes by the given key
+ *
+ * @param {function(AButton): string} key
+ * @returns {function(ATarget[]): ATarget[]}
+ */
 function makeOrderByOperator(key) {
-  return makeHigherOrderOperator((input) => [...input].sort(key));
+  return makeHigherOrderOperator((input) =>
+    [...input].sort((a, b) => comparator.compare(key(a), key(b)))
+  );
 }
 
 /**
+ * Produce a list of Groups from a list of Nodes
  *
- * @param {ANode[]} input
- * @param {function(ANode): string} key
- * @param {function(ANode): Object} properties
+ * @param {AButton[]} input
+ * @param {function(AButton): string} key
+ * @param {function(AButton): Object} properties
  * @returns {AGroup[]}
  */
 function groupBy(input, key, properties) {
+  // console.log("groupby", input);
   const result = [];
   /** @type {Map<Object,AGroup>} */
   const groupMap = new Map();
   for (const node of input) {
-    const k = key(node);
+    const k = key(node).toString();
     // we got a key, check to see if we have a group
     let group = groupMap.get(k);
     if (!group) {
@@ -200,15 +322,90 @@ function groupBy(input, key, properties) {
   return result;
 }
 
+/**
+ *
+ * @param {function(AButton): string} key
+ * @param {function(AButton): Object} properties
+ * @returns
+ */
 function makeGroupByOperator(key, properties) {
   return makeHigherOrderOperator((input) => groupBy(input, key, properties));
 }
 
-export function testIt() {
-  const builders = [
-    new ASelector([makeFilterOperator((node) => node.label == "Speak")]),
-  ];
-  console.log("builders", builders);
-  const agm = new AccessGroupManager();
-  agm.setBuilders(builders);
+function makeCycleOperator(count) {
+  return makeHigherOrderOperator((input) => {
+    let result = [];
+    for (let i = count; i > 0; i--) {
+      result = result.concat(input);
+    }
+    return result;
+  });
 }
+
+export function createSelectors() {
+  /** @type {ASelector[]} */
+  const selectors = [
+    new AGroupSelector(
+      [
+        new ASimpleSelector([
+          makeFilterOperator((node) => node.data.controls),
+          makeOrderByOperator((node) => node.data.controls),
+          makeCycleOperator(2),
+        ]),
+      ],
+      { label: "controls" }
+    ),
+    new ASimpleSelector([
+      makeFilterOperator((node) => !node.data.controls),
+      makeGroupByOperator(
+        (node) => node.data.name,
+        (node) => ({ label: node.data.name })
+      ),
+      makeGroupByOperator(
+        (node) => node.data.row || 0,
+        (node) => ({
+          label: `row ${node.data.row}`,
+        })
+      ),
+    ]),
+  ];
+  return selectors;
+}
+
+// hack some css so I can see the groups
+css`
+  button[cue="group"] {
+    position: relative;
+  }
+  button[cue="group"]:after {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: yellow;
+    opacity: 0.3;
+    z-index: 0;
+  }
+  button[cue="button"] {
+    position: relative;
+  }
+  button[cue="button"]:after {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("./target.png");
+    background-size: contain;
+    background-position: center;
+    background-color: rgba(255, 100, 100, 0.5);
+    background-repeat: no-repeat;
+    opacity: 0.4;
+    z-index: 0;
+  }
+`;

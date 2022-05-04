@@ -2,6 +2,7 @@ import { html } from "uhtml";
 import { Base, componentMap } from "./base";
 import { styleString } from "./style";
 import css from "ustyler";
+import { UpdateAccessData } from "./access";
 
 class Button extends Base {
   static defaultProps = {
@@ -19,7 +20,9 @@ class Button extends Base {
       name=${this.props.name}
       style=${style}
       id=${this.id}
-      onClick=${rules.handler(this.props.name, {}, "press")}
+      ref=${UpdateAccessData({
+        name: this.props.name,
+      })}
     >
       ${this.props.label}
     </button>`;

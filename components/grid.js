@@ -40,9 +40,9 @@ class Grid extends Base {
       content = msg;
     }
     return html`<button
-      style=${styleString({ backgroundColor: background })}
       tabindex="-1"
       ref=${UpdateAccessData({ ...item, name: name })}
+      ?disabled=${!item.label && !item.symbol}
     >
       ${content}
     </button>`;
@@ -79,7 +79,6 @@ class Grid extends Base {
         >
           &#9754;</button
         ><button
-          style=${styleString({ backgroundColor: background })}
           .disabled=${this.page == pages}
           ref=${UpdateAccessData({
             ...info,
@@ -99,7 +98,7 @@ class Grid extends Base {
 
   template() {
     /** @type {Partial<CSSStyleDeclaration>} */
-    const style = {};
+    const style = { backgroundColor: this.props.background };
     const { data, state } = this.context;
     let { rows, columns, filters, fillItems } = this.props;
     /** @type {Rows} */

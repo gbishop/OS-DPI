@@ -21,6 +21,8 @@ import {
   mergeWith,
 } from "rxjs";
 
+import { AccessGroupManager, createSelectors } from "./groups";
+
 /** Maintain data for each visible button in a WeakMap
  * @type {WeakMap<Node, Object>}
  */
@@ -34,6 +36,8 @@ export function UpdateAccessData(data) {
   return (node) => AccessMap.set(node, data);
 }
 
+export const accessGroupManager = new AccessGroupManager();
+
 /** debugging helper
  * @param {string} label
  * @param {Observable} obs
@@ -41,45 +45,6 @@ export function UpdateAccessData(data) {
 function show(label, obs) {
   obs.subscribe((v) => console.log(label, v));
 }
-
-// ideas for the groups data structure
-const groups = [
-  {
-    type: "group",
-    label: "controls",
-    cycle: 2,
-    children: [
-      { type: "button", label: "Home" },
-      { type: "button", label: "Close" },
-      { type: "button", label: "Speak" },
-      { type: "button", label: "Clear" },
-      { type: "button", label: "Delete" },
-      { type: "button", label: "Keyboard" },
-      { type: "button", label: "Numbers" },
-    ],
-  },
-  { type: "button", name: "hp", groupBy: "#row", label: "row #row", cycle: 3 },
-  { type: "button", name: "morph", label: "morphs", cycle: 3 },
-  {
-    type: "group",
-    label: "completions",
-    children: [{ type: "button", name: "predict", cycle: 2 }],
-  },
-  {
-    type: "group",
-    label: "letters",
-    children: [
-      {
-        type: "button",
-        name: "kb",
-        groupBy: "row",
-        label: "row #row",
-        cycle: 1,
-      },
-    ],
-  },
-  { type: "button", name: "num", cycle: 2 },
-];
 
 /** Construct some streams globally for now */
 const pointerDown$ = fromEvent(document, "pointerdown");
@@ -180,6 +145,27 @@ export class Access extends Base {
         }
       });
     }
+
+    // 2-switch handler
+    fromEvent(document, "keyup")
+      .pipe(
+        filter((event) => {
+          const ke = /** @type {KeyboardEvent} */ (event);
+          return (
+            !ke.repeat && (ke.key == "ArrowRight" || ke.key == "ArrowLeft")
+          );
+        })
+      )
+      .subscribe((event) => {
+        const ke = /** @type {KeyboardEvent} */ (event);
+        if (ke.key == "ArrowRight") {
+          accessGroupManager.next();
+        } else {
+          accessGroupManager.activate(context);
+        }
+      });
+    accessGroupManager.setSelectors(createSelectors());
+
     // show("hover", this.hovers);
   }
 

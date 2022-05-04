@@ -11,8 +11,7 @@ import { log, logInit } from "./log";
 import pleaseWait from "./components/wait";
 import { fileOpen } from "browser-fs-access";
 import css from "ustyler";
-import "./components/access";
-import { testIt } from "./components/groups";
+import { accessGroupManager, AccessMap } from "./components/access";
 
 const safe = true;
 
@@ -32,7 +31,6 @@ function safeRender(where, what) {
   } else {
     r = render(where, what);
   }
-  testIt();
   return r;
 }
 
@@ -225,7 +223,17 @@ export async function start() {
     let IDE = html``;
     if (state.get("editing")) {
       IDE = html`
-        <div id="designer">${designer.template()}</div>
+        <div
+          id="designer"
+          onclick=${(event) => {
+            const access = AccessMap.get(event.target);
+            if (access && "onClick" in access) {
+              access.onClick(event);
+            }
+          }}
+        >
+          ${designer.template()}
+        </div>
         <div id="monitor">${monitor.template()}</div>
         <div id="toolbar">${toolbar.template()}</div>
       `;
@@ -236,6 +244,7 @@ export async function start() {
       html`<div id="UI">${tree.template()}</div>
         ${IDE}`
     );
+    accessGroupManager.refresh();
   }
   state.observe(debounce(renderUI));
   renderUI();

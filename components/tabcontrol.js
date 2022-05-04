@@ -3,6 +3,7 @@ import { Base, componentMap } from "./base";
 import { Stack } from "./stack";
 import { styleString } from "./style";
 import css from "ustyler";
+import { UpdateAccessData } from "./access";
 
 export class TabControl extends Base {
   static defaultProps = {
@@ -18,32 +19,40 @@ export class TabControl extends Base {
     const { state } = this.context;
     const panels = /** @type {TabPanel[]} */ (this.children);
     let activeTabName = state.get(this.props.stateName);
-    const buttons = panels
-      .filter((panel) => panel.props.label != "UNLABELED")
-      .map((panel, index) => {
-        const tabName = state.interpolate(panel.props.name); // internal name
-        const tabLabel = state.interpolate(
-          panel.props.label || panel.props.name
-        ); // display name
-        const color = panel.props.background;
-        if (index == 0 && !activeTabName) {
-          activeTabName = tabName;
-          state.define(this.props.stateName, tabName);
-        }
-        const active = activeTabName == tabName || panels.length === 1;
-        panel.active = active;
-        const buttonStyle = {
-          backgroundColor: color,
-        };
-        return html`<button
-          ?active=${active}
-          style=${styleString(buttonStyle)}
-          onClick=${() => state.update({ [this.props.stateName]: tabName })}
-          .dataset=${{ id: panel.id }}
-        >
-          ${tabLabel}
-        </button>`;
-      });
+    // collect panel info
+    panels.forEach((panel, index) => {
+      panel.tabName = state.interpolate(panel.props.name); // internal name
+      panel.tabLabel = state.interpolate(panel.props.label || panel.props.name); // display name
+      if (index == 0 && !activeTabName) {
+        activeTabName = panel.tabName;
+        state.define(this.props.stateName, panel.tabName);
+      }
+      panel.active = activeTabName == panel.tabName || panels.length === 1;
+    });
+    let buttons = [html``];
+    if (this.props.tabEdge != "none") {
+      buttons = panels
+        .filter((panel) => panel.props.label != "UNLABELED")
+        .map((panel, index) => {
+          const color = panel.props.background;
+          const buttonStyle = {
+            backgroundColor: color,
+          };
+          return html`<button
+            ?active=${panel.active}
+            style=${styleString(buttonStyle)}
+            ref=${UpdateAccessData({
+              name: this.props.name,
+              onClick: () => {
+                state.update({ [this.props.stateName]: panel.tabName });
+              },
+            })}
+            .dataset=${{ id: panel.id }}
+          >
+            ${panel.tabLabel}
+          </button>`;
+        });
+    }
     const panel = panels.find((panel) => panel.active)?.template() || html``;
     return html`<div
       class=${["tabcontrol", "flex", this.props.tabEdge].join(" ")}
@@ -58,6 +67,8 @@ componentMap.addMap("tab control", TabControl);
 
 export class TabPanel extends Stack {
   active = false;
+  tabName = "";
+  tabLabel = "";
 
   static defaultProps = {
     background: "",
