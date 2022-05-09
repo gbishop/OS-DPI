@@ -61,7 +61,11 @@ export class Layout extends Base {
           node.props.name &&
           node.context.state.get(tc.props.stateName) != node.props.name
         ) {
-          node.context.state.update({ [tc.props.stateName]: node.props.name });
+          node.context.state.update({
+            [tc.props.stateName]: node.context.state.interpolate(
+              node.props.name
+            ),
+          });
         }
       }
       node = node.parent;

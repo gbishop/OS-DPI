@@ -7,7 +7,7 @@ import { AccessMap } from "./access";
  * AButton is the DOM button annotated with the info from the AccessMap
  */
 class AButton {
-  /** @param {Element} button */
+  /** @param {HTMLElement} button */
   constructor(button) {
     this.data = AccessMap.get(button);
     this.button = button;
@@ -15,6 +15,10 @@ class AButton {
 
   cue(value = "button") {
     this.button.setAttribute("cue", value);
+  }
+
+  json() {
+    return this.button.innerText;
   }
 }
 
@@ -29,9 +33,22 @@ class AGroup {
    * @param {ATarget[]} members
    * @param {GroupProperties} properties
    */
-  constructor(members, properties) {
+  constructor(members, properties, cycles = 1) {
     this.members = members;
     this.properties = properties;
+    this.cycles = cycles;
+  }
+
+  get length() {
+    return this.members.length * this.cycles;
+  }
+
+  member(index) {
+    if (index < 0 || index >= this.length) {
+      return undefined;
+    } else {
+      return this.members[index % this.length];
+    }
   }
 
   cue(value = "group") {
@@ -39,6 +56,21 @@ class AGroup {
     for (const member of this.members) {
       member.cue(value);
     }
+  }
+
+  // for debugging
+  allNodes() {
+    return this.members
+      .map((member) =>
+        member instanceof AGroup ? member.allNodes() : member.button
+      )
+      .flat();
+  }
+
+  json() {
+    return [this.properties.label].concat(
+      this.members.map((member) => member.json())
+    );
   }
 }
 
@@ -49,7 +81,7 @@ class ASelector {
   /**
    * Select elements from the input
    * @param {ATarget[]} input
-   * @returns {ATarget[]}
+   * @returns {ATarget[]|AGroup}
    */
   apply(input) {
     return input;
@@ -73,13 +105,21 @@ class AGroupSelector extends ASelector {
   /**
    * Build a group from the output of the selectors applied to the input
    * @param {ATarget[]} input
-   * @returns {ATarget[]}
+   * @returns {AGroup}
    */
   apply(input) {
-    const members = [].concat(
-      ...this.builders.map((builder) => builder.apply(input))
-    );
-    return [new AGroup(members, this.properties)];
+    let members = [];
+    for (const builder of this.builders) {
+      const r = builder.apply(input);
+      if (r.length > 0) {
+        if (r instanceof AGroup) {
+          members.push(r);
+        } else {
+          members = members.concat(r);
+        }
+      }
+    }
+    return new AGroup(members, this.properties);
   }
 }
 
@@ -112,7 +152,7 @@ class ASimpleSelector extends ASelector {
  *
  */
 
-export class AccessGroupManager {
+export class AccessGroupManager extends AGroupSelector {
   /**
    * These are the buttons (or whatever) from the DOM plus the access data
    * from the AccessMap
@@ -126,9 +166,9 @@ export class AccessGroupManager {
   /**
    * selectors are the rules for aggregating and selecting targets nodes to make targets
    *
-   * @type {ASelector[]}
+   * @type {AGroupSelector}
    */
-  selectors = [];
+  selector = null;
 
   /**
    * current keeps track of the currently active node or group
@@ -136,8 +176,8 @@ export class AccessGroupManager {
    */
   get current() {
     const { group, index } = this.stack[0];
-    console.log("current", group.properties, index);
-    return group.members[index];
+    console.log("current", group, index);
+    return group.member(index);
   }
 
   /**
@@ -153,13 +193,14 @@ export class AccessGroupManager {
     // gather the buttons from the UI
     this.buttons = [];
     for (const node of document.querySelectorAll("#UI button:not(:disabled)")) {
-      this.buttons.push(new AButton(node));
+      if (AccessMap.has(node))
+        this.buttons.push(new AButton(/** @type {HTMLElement} */ (node)));
     }
-    // apply the builders to get the targets
-    this.targets.members = [].concat(
-      ...this.selectors.map((builder) => builder.apply(this.buttons))
-    );
-    console.log("targets", this.targets);
+
+    const targets = this.selector.apply(this.buttons);
+    console.log("newtargets", JSON.stringify(targets.json(), null, 2));
+    // console.log("oldtargets", JSON.stringify(this.targets.json(), null, 2));
+    this.targets = targets;
 
     this.start();
   }
@@ -169,7 +210,7 @@ export class AccessGroupManager {
    * @param {ASelector[]} selectors
    */
   setSelectors(selectors) {
-    this.selectors = selectors;
+    this.selector = new AGroupSelector(selectors, {});
     // this.refresh();
   }
 
@@ -180,7 +221,7 @@ export class AccessGroupManager {
 
   next() {
     const top = this.stack[0];
-    if (top.index < top.group.members.length - 1) {
+    if (top.index < top.group.length - 1) {
       top.index++;
     } else if (this.stack.length > 1) {
       this.stack.shift();
@@ -207,10 +248,7 @@ export class AccessGroupManager {
       }
     } else if (current instanceof AGroup) {
       console.log("activate group", current, this.stack);
-      while (
-        current.members.length == 1 &&
-        current.members[0] instanceof AGroup
-      ) {
+      while (current.length == 1 && current.members[0] instanceof AGroup) {
         current = current.members[0];
       }
       this.stack.unshift({ group: current, index: 0 });
@@ -348,15 +386,15 @@ export function createSelectors() {
     new AGroupSelector(
       [
         new ASimpleSelector([
-          makeFilterOperator((node) => node.data.controls),
-          makeOrderByOperator((node) => node.data.controls),
+          makeFilterOperator((node) => node.data?.controls),
+          makeOrderByOperator((node) => node.data?.controls),
           makeCycleOperator(2),
         ]),
       ],
       { label: "controls" }
     ),
     new ASimpleSelector([
-      makeFilterOperator((node) => !node.data.controls),
+      makeFilterOperator((node) => !node.data?.controls),
       makeGroupByOperator(
         (node) => node.data.name,
         (node) => ({ label: node.data.name })
@@ -376,6 +414,7 @@ export function createSelectors() {
 css`
   button[cue="group"] {
     position: relative;
+    border-color: yellow;
   }
   button[cue="group"]:after {
     content: "";

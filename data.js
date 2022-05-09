@@ -10,6 +10,7 @@ export const comparators = {
     f.localeCompare(v, undefined, { sensitivity: "base" }) === 0 ||
     f === "*" ||
     v === "*",
+  "less than": (f, v) => f.localeCompare(v, undefined, { numeric: true }) < 0,
   "starts with": (f, v) =>
     f.toUpperCase().startsWith(v.toUpperCase()) || f === "*" || v === "*",
 };
@@ -23,7 +24,7 @@ function match(filter, row) {
   const field = row[filter.field.slice(1)] || "";
   let value = filter.value || "";
   const comparator = comparators[filter.operator];
-  let r = comparator(field, value);
+  let r = comparator(field.toString(), value.toString());
   return r;
 }
 

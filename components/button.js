@@ -22,6 +22,8 @@ class Button extends Base {
       id=${this.id}
       ref=${UpdateAccessData({
         name: this.props.name,
+        label: this.props.label,
+        component: "button",
       })}
     >
       ${this.props.label}

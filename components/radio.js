@@ -2,6 +2,7 @@ import { html } from "uhtml";
 import { Base, componentMap } from "./base";
 import { styleString } from "./style";
 import css from "ustyler";
+import { UpdateAccessData } from "./access";
 
 class Option extends Base {
   static defaultProps = {
@@ -57,7 +58,7 @@ class Radio extends Base {
     const stateName = this.props.stateName;
     let current = state.get(stateName);
     const choices = this.children.map((child, index) => {
-      const disabled = !this.valid(/** @type {Option}*/(child));
+      const disabled = !this.valid(/** @type {Option}*/ (child));
       if (stateName && !current && !disabled && child.props.value) {
         current = child.props.value;
         state.update({ [stateName]: current });
@@ -70,16 +71,18 @@ class Radio extends Base {
         style=${styleString({ backgroundColor: color })}
         value=${child.props.value}
         ?disabled=${disabled}
+        ref=${UpdateAccessData({
+          component: this.constructor.name,
+          name: this.name,
+          label: child.props.name,
+          onClick: (e) => state.update({ [stateName]: child.props.value }),
+        })}
       >
         ${child.props.name}
       </button>`;
     });
 
-    return html`<div
-      class="radio flex"
-      onclick=${(/** @type {MouseEvent} */ e) => this.handleClick(e)}
-      id=${this.id}
-    >
+    return html`<div class="radio flex" id=${this.id}>
       <fieldset class="flex">
         ${(this.props.label && html`<legend>${this.props.label}</legend>`) ||
         html``}

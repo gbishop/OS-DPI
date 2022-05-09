@@ -41,7 +41,11 @@ class Grid extends Base {
     }
     return html`<button
       tabindex="-1"
-      ref=${UpdateAccessData({ ...item, name: name })}
+      ref=${UpdateAccessData({
+        ...item,
+        name,
+        component: this.constructor.name,
+      })}
       ?disabled=${!item.label && !item.symbol}
     >
       ${content}

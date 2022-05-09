@@ -12,6 +12,7 @@ export class TabControl extends Base {
     background: "",
     scale: "6",
     tabEdge: "bottom",
+    name: "tabs",
   };
   static allowedChildren = ["tab panel"];
 
@@ -25,6 +26,7 @@ export class TabControl extends Base {
       panel.tabLabel = state.interpolate(panel.props.label || panel.props.name); // display name
       if (index == 0 && !activeTabName) {
         activeTabName = panel.tabName;
+        console.log("here", this.props.stateName, panel.tabName);
         state.define(this.props.stateName, panel.tabName);
       }
       panel.active = activeTabName == panel.tabName || panels.length === 1;
@@ -42,7 +44,9 @@ export class TabControl extends Base {
             ?active=${panel.active}
             style=${styleString(buttonStyle)}
             ref=${UpdateAccessData({
-              name: this.props.name,
+              name: this.name,
+              label: panel.tabLabel,
+              component: this.constructor.name,
               onClick: () => {
                 state.update({ [this.props.stateName]: panel.tabName });
               },
