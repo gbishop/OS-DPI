@@ -9,14 +9,14 @@ export class Logger extends Base {
     stateName: "$Logger"
   };
 
-  stringifyInput(array) {
-    let output = '';
+  stringifyInput(state, array) {
+    let output = [];
     let length = array.length;
 
     for(let i = 0; i < length; i+=2)
-      output += array[i] + " \"" + (i+1 < length ? array[i+1] : "") + "\"\n";
+      output.push(state.interpolate(array[i] + (i+1 < length ? " " + array[i+1] : "")));
 
-    return output;
+    return output
   }
 
   template() {
@@ -24,7 +24,8 @@ export class Logger extends Base {
     const { state } = this.context;
 
     if(state.hasBeenUpdated(stateName)) {
-      console.log(state.interpolate(this.stringifyInput(state.get(stateName))));
+      let value = this.stringifyInput(state, state.get(stateName));
+      log({ "timestamp": Date.now(), "value": value });
     }
 
     return html``;
