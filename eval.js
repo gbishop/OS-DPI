@@ -20,12 +20,14 @@ function updateNumber(f) {
     }
   }
 }
+
 export const Functions = {
   increment: updateNumber((old, value) => old + value),
   add_word: updateString((old, value) => old + value + " "),
   add_letter: updateString((old, value) => old + value),
   replace_last: updateString((old, value) => old.replace(/\w+\s*$/, value)),
   replace_last_letter: updateString((old, value) => old.slice(0, -1) + value),
+  log: (...value) => value
 };
 
 /** translate an expression from Excel-like to Javascript

@@ -117,10 +117,4 @@ export const PropInfo = {
     step: 0.1,
     description: "Volume at which utterance will be spoken.",
   },
-  states: {
-    type: "states",
-    name: "States",
-    step: 0.1,
-    description: "A list of states."
-  }
 };
