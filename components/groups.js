@@ -4,9 +4,9 @@ import css from "ustyler";
 import { AccessMap } from "./access";
 
 /**
- * AButton is the DOM button annotated with the info from the AccessMap
+ * Button is the DOM button annotated with the info from the AccessMap
  */
-class AButton {
+class Button {
   /** @param {HTMLElement} button */
   constructor(button) {
     this.data = AccessMap.get(button);
@@ -25,12 +25,12 @@ class AButton {
 /** @typedef {Object} GroupProperties */
 
 /**
- * AGroup is a collection of Buttons or Groups and associated properties
+ * Group is a collection of Buttons or Groups and associated properties
  * such as the label and cue.
  */
-class AGroup {
+class Group {
   /**
-   * @param {ATarget[]} members
+   * @param {Target[]} members
    * @param {GroupProperties} properties
    */
   constructor(members, properties, cycles = 1) {
@@ -62,7 +62,7 @@ class AGroup {
   allNodes() {
     return this.members
       .map((member) =>
-        member instanceof AGroup ? member.allNodes() : member.button
+        member instanceof Group ? member.allNodes() : member.button
       )
       .flat();
   }
@@ -75,13 +75,13 @@ class AGroup {
 }
 
 /**
- * ASelector collects Buttons
+ * Selector collects Buttons
  */
-class ASelector {
+class Selector {
   /**
    * Select elements from the input
-   * @param {ATarget[]} input
-   * @returns {ATarget[]|AGroup}
+   * @param {Target[]} input
+   * @returns {Target[]|Group}
    */
   apply(input) {
     return input;
@@ -89,41 +89,41 @@ class ASelector {
 }
 
 /**
- * AGroupSelector takes the output of one or more selectors and
+ * GroupSelector takes the output of one or more selectors and
  * creates a new group.
  */
-class AGroupSelector extends ASelector {
+class GroupSelector extends Selector {
   /**
-   * @param {ASelector[]} builders
-   * @param {Object} properties
+   * @param {Selector[]} selectors
+   * @param {GroupProperties} properties
    */
-  constructor(builders, properties) {
+  constructor(selectors, properties) {
     super();
-    this.builders = builders;
+    this.selectors = selectors;
     this.properties = properties;
   }
   /**
    * Build a group from the output of the selectors applied to the input
-   * @param {ATarget[]} input
-   * @returns {AGroup}
+   * @param {Target[]} input
+   * @returns {Group}
    */
   apply(input) {
     let members = [];
-    for (const builder of this.builders) {
-      const r = builder.apply(input);
+    for (const selector of this.selectors) {
+      const r = selector.apply(input);
       if (r.length > 0) {
-        if (r instanceof AGroup) {
+        if (r instanceof Group) {
           members.push(r);
         } else {
           members = members.concat(r);
         }
       }
     }
-    return new AGroup(members, this.properties);
+    return new Group(members, this.properties);
   }
 }
 
-class ASimpleSelector extends ASelector {
+class SimpleSelector extends Selector {
   /**
    *
    * @param {SelectionOperator[]} selectionOperators
@@ -134,8 +134,8 @@ class ASimpleSelector extends ASelector {
   }
   /**
    * Apply the selector to the Buttons to produce an array of nodes
-   * @param {ATarget[]} input
-   * @returns {ATarget[]}
+   * @param {Target[]} input
+   * @returns {Target[]}
    */
   apply(input) {
     return this.operators.reduce(
@@ -146,33 +146,33 @@ class ASimpleSelector extends ASelector {
 }
 
 /**
- * @typedef {AButton|AGroup} ATarget
+ * @typedef {Button|Group} Target
  *
- * @typedef {function(ATarget[]): ATarget[]} SelectionOperator
+ * @typedef {function(Target[]): Target[]} SelectionOperator
  *
  */
 
-export class AccessGroupManager extends AGroupSelector {
+export class AccessNavigator {
   /**
    * These are the buttons (or whatever) from the DOM plus the access data
    * from the AccessMap
-   * @type {AButton[]} */
+   * @type {Button[]} */
   buttons = [];
   /**
    * targets are buttons or groups
-   * @type {AGroup}
+   * @type {Group}
    */
-  targets = new AGroup([], {});
+  targets = new Group([], {});
   /**
    * selectors are the rules for aggregating and selecting targets nodes to make targets
    *
-   * @type {AGroupSelector}
+   * @type {GroupSelector}
    */
   selector = null;
 
   /**
    * current keeps track of the currently active node or group
-   * @type {ATarget}
+   * @type {Target}
    */
   get current() {
     const { group, index } = this.stack[0];
@@ -182,7 +182,7 @@ export class AccessGroupManager extends AGroupSelector {
 
   /**
    * stack keeps track of the nesting as we walk the tree
-   * @type {{group: AGroup, index: number}[]}
+   * @type {{group: Group, index: number}[]}
    */
   stack = [];
 
@@ -194,12 +194,10 @@ export class AccessGroupManager extends AGroupSelector {
     this.buttons = [];
     for (const node of document.querySelectorAll("#UI button:not(:disabled)")) {
       if (AccessMap.has(node))
-        this.buttons.push(new AButton(/** @type {HTMLElement} */ (node)));
+        this.buttons.push(new Button(/** @type {HTMLElement} */ (node)));
     }
 
     const targets = this.selector.apply(this.buttons);
-    console.log("newtargets", JSON.stringify(targets.json(), null, 2));
-    // console.log("oldtargets", JSON.stringify(this.targets.json(), null, 2));
     this.targets = targets;
 
     this.start();
@@ -207,10 +205,10 @@ export class AccessGroupManager extends AGroupSelector {
 
   /**
    *
-   * @param {ASelector[]} selectors
+   * @param {Selector[]} selectors
    */
   setSelectors(selectors) {
-    this.selector = new AGroupSelector(selectors, {});
+    this.selector = new GroupSelector(selectors, {});
     // this.refresh();
   }
 
@@ -239,16 +237,16 @@ export class AccessGroupManager extends AGroupSelector {
    */
   activate(context) {
     let current = this.current;
-    if (current instanceof AButton) {
+    if (current instanceof Button) {
       const name = current.data.name;
       if ("onClick" in current.data) {
         current.data.onClick();
       } else {
         context.rules.applyRules(name, "press", current.data);
       }
-    } else if (current instanceof AGroup) {
+    } else if (current instanceof Group) {
       console.log("activate group", current, this.stack);
-      while (current.length == 1 && current.members[0] instanceof AGroup) {
+      while (current.length == 1 && current.members[0] instanceof Group) {
         current = current.members[0];
       }
       this.stack.unshift({ group: current, index: 0 });
@@ -266,7 +264,7 @@ export class AccessGroupManager extends AGroupSelector {
   cue() {
     this.clearCue();
     const current = this.current;
-    if (current instanceof AButton) {
+    if (current instanceof Button) {
       this.stack[0].group.cue();
     }
     this.current.cue();
@@ -278,19 +276,19 @@ export class AccessGroupManager extends AGroupSelector {
  *
  * I'm assuming that the lists are all Nodes or all Groups.
  *
- * @param {function(AButton[]): ATarget[]} simpleOperator
- * @returns {function(ATarget[]): ATarget[]}
+ * @param {function(Button[]): Target[]} simpleOperator
+ * @returns {function(Target[]): Target[]}
  */
 
 function makeHigherOrderOperator(simpleOperator) {
-  /** @param {ATarget[]} input */
+  /** @param {Target[]} input */
   function higherOrderOperator(input) {
     // if the first is a group they all are
-    if (input[0] instanceof AGroup) {
-      /** @type {AGroup[]} */
-      const r = input.map((/** @type {AGroup} */ group) => {
-        if (group instanceof AGroup)
-          return new AGroup(
+    if (input[0] instanceof Group) {
+      /** @type {Group[]} */
+      const r = input.map((/** @type {Group} */ group) => {
+        if (group instanceof Group)
+          return new Group(
             higherOrderOperator(group.members),
             group.properties
           );
@@ -298,7 +296,7 @@ function makeHigherOrderOperator(simpleOperator) {
       });
       return r;
     } else {
-      const r = simpleOperator(/** @type {AButton[]} */ (input));
+      const r = simpleOperator(/** @type {Button[]} */ (input));
       return r;
     }
   }
@@ -307,8 +305,8 @@ function makeHigherOrderOperator(simpleOperator) {
 
 /**
  *
- * @param {function(AButton): boolean} predicate
- * @returns {function(ATarget[]): ATarget[]}
+ * @param {function(Button): boolean} predicate
+ * @returns {function(Target[]): Target[]}
  */
 function makeFilterOperator(predicate) {
   return makeHigherOrderOperator((input) => input.filter(predicate));
@@ -322,8 +320,8 @@ const comparator = new Intl.Collator(undefined, {
 /**
  * Order the nodes by the given key
  *
- * @param {function(AButton): string} key
- * @returns {function(ATarget[]): ATarget[]}
+ * @param {function(Button): string} key
+ * @returns {function(Target[]): Target[]}
  */
 function makeOrderByOperator(key) {
   return makeHigherOrderOperator((input) =>
@@ -334,15 +332,15 @@ function makeOrderByOperator(key) {
 /**
  * Produce a list of Groups from a list of Nodes
  *
- * @param {AButton[]} input
- * @param {function(AButton): string} key
- * @param {function(AButton): Object} properties
- * @returns {AGroup[]}
+ * @param {Button[]} input
+ * @param {function(Button): string} key
+ * @param {function(Button): Object} properties
+ * @returns {Group[]}
  */
 function groupBy(input, key, properties) {
   // console.log("groupby", input);
   const result = [];
-  /** @type {Map<Object,AGroup>} */
+  /** @type {Map<Object,Group>} */
   const groupMap = new Map();
   for (const node of input) {
     const k = key(node).toString();
@@ -350,7 +348,7 @@ function groupBy(input, key, properties) {
     let group = groupMap.get(k);
     if (!group) {
       // no group, create one and add it to the map and the result
-      group = new AGroup([node], properties(node));
+      group = new Group([node], properties(node));
       groupMap.set(k, group);
       result.push(group);
     } else {
@@ -362,8 +360,8 @@ function groupBy(input, key, properties) {
 
 /**
  *
- * @param {function(AButton): string} key
- * @param {function(AButton): Object} properties
+ * @param {function(Button): string} key
+ * @param {function(Button): Object} properties
  * @returns
  */
 function makeGroupByOperator(key, properties) {
@@ -381,11 +379,11 @@ function makeCycleOperator(count) {
 }
 
 export function createSelectors() {
-  /** @type {ASelector[]} */
+  /** @type {Selector[]} */
   const selectors = [
-    new AGroupSelector(
+    new GroupSelector(
       [
-        new ASimpleSelector([
+        new SimpleSelector([
           makeFilterOperator((node) => node.data?.controls),
           makeOrderByOperator((node) => node.data?.controls),
           makeCycleOperator(2),
@@ -393,7 +391,7 @@ export function createSelectors() {
       ],
       { label: "controls" }
     ),
-    new ASimpleSelector([
+    new SimpleSelector([
       makeFilterOperator((node) => !node.data?.controls),
       makeGroupByOperator(
         (node) => node.data.name,
@@ -409,6 +407,33 @@ export function createSelectors() {
   ];
   return selectors;
 }
+
+/* thinking about the stored representation */
+const storedAccess = {
+  selectors: [
+    {
+      selectors: [
+        [
+          { filter: { operator: "not empty", field: "#controls" } },
+          { orderBy: { field: "#controls" } },
+        ],
+      ],
+      properties: {
+        label: "controls",
+        cycle: 2,
+      },
+    },
+    [
+      { filter: { operator: "empty", field: "#controls" } },
+      { groupBy: "#name", properties: { label: "#name", cycle: 2 } },
+      { groupBy: "#row", properties: { label: "row #row" } },
+    ],
+  ],
+  properties: {
+    label: "top level",
+    cycle: 2,
+  },
+};
 
 // hack some css so I can see the groups
 css`

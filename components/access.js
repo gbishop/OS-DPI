@@ -21,7 +21,7 @@ import {
   mergeWith,
 } from "rxjs";
 
-import { AccessGroupManager, createSelectors } from "./groups";
+import { AccessNavigator, createSelectors } from "./groups";
 
 /** Maintain data for each visible button in a WeakMap
  * @type {WeakMap<Node, Object>}
@@ -36,7 +36,7 @@ export function UpdateAccessData(data) {
   return (node) => AccessMap.set(node, data);
 }
 
-export const accessGroupManager = new AccessGroupManager();
+export const accessNavigator = new AccessNavigator();
 
 /** debugging helper
  * @param {string} label
@@ -159,12 +159,12 @@ export class Access extends Base {
       .subscribe((event) => {
         const ke = /** @type {KeyboardEvent} */ (event);
         if (ke.key == "ArrowRight") {
-          accessGroupManager.next();
+          accessNavigator.next();
         } else {
-          accessGroupManager.activate(context);
+          accessNavigator.activate(context);
         }
       });
-    accessGroupManager.setSelectors(createSelectors());
+    accessNavigator.setSelectors(createSelectors());
 
     // show("hover", this.hovers);
   }
