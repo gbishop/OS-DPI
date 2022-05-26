@@ -15,13 +15,16 @@
     "ustyler": "^1.0.1"
   },
   "dependencies": {
+    "@json-editor/json-editor": "^2.8.0",
     "angular-expressions": "^1.1.4",
     "browser-fs-access": "^0.23.0",
+    "css.gg": "^2.0.0",
     "fflate": "^0.7.2",
     "idb": "^7.0.0",
     "mergerino": "^0.4.0",
     "rxjs": "^7.5.4",
     "sheetrock": "^1.2.0",
+    "spectre.css": "^0.5.9",
     "uhtml": "^2.7.6",
     "xlsx": "^0.17.4"
   }

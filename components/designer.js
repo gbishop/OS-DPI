@@ -3,7 +3,7 @@ import { Base } from "./base";
 import { TabControl, TabPanel } from "./tabcontrol";
 import { Layout } from "./layout";
 import { Actions } from "./actions";
-import { Access } from "./access";
+import { AccessPattern } from "./access-pattern";
 import { Content } from "./content";
 import css from "ustyler";
 
@@ -42,13 +42,13 @@ export class Designer extends Base {
 
     const accessPanel = new TabPanel(
       {
-        name: "Access",
+        name: "Access Pattern",
         background: "bluish white",
       },
       this.context,
       tabs
     );
-    accessPanel.children = [new Access({}, this.context, accessPanel)];
+    accessPanel.children = [new AccessPattern({}, this.context, accessPanel)];
 
     const contentPanel = new TabPanel(
       {

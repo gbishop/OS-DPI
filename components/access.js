@@ -23,20 +23,22 @@ import {
 
 import { AccessNavigator, createSelectors } from "./groups";
 
+import { test } from "./ui";
+
 /** Maintain data for each visible button in a WeakMap
  * @type {WeakMap<Node, Object>}
  */
-export const AccessMap = new WeakMap();
+// export const AccessMap = new WeakMap();
 
 /** Provide a ref to update the map
  * @param {Object} data
  * @returns {function(Node)}
  */
-export function UpdateAccessData(data) {
-  return (node) => AccessMap.set(node, data);
-}
+// export function UpdateAccessData(data) {
+//   return (node) => AccessMap.set(node, data);
+// }
 
-export const accessNavigator = new AccessNavigator();
+// export const accessNavigator = new AccessNavigator();
 
 /** debugging helper
  * @param {string} label
@@ -83,6 +85,40 @@ export function hoverStream(Thold, enterLeave$) {
     )
   );
 }
+
+const exampleGroup = {
+  name: "Top",
+  cycles: 2,
+  members: [
+    {
+      name: "Controls",
+      cycles: 2,
+      members: [
+        [
+          {
+            filter: "#controls",
+            comparison: "is not empty",
+          },
+          {
+            orderBy: "#controls",
+          },
+        ],
+      ],
+    },
+    [
+      {
+        filter: "#controls",
+        comparison: "is empty",
+      },
+      {
+        groupBy: "#name",
+      },
+      {
+        groupBy: "#row",
+      },
+    ],
+  ],
+};
 
 export class Access extends Base {
   /**
@@ -171,7 +207,11 @@ export class Access extends Base {
 
   template() {
     const { state, rules } = this.context;
-    return html`Access`;
+    const t = test();
+    return html`<div class="access">
+      <h1>Pattern</h1>
+      ${t}
+    </div>`;
   }
 }
 

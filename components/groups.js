@@ -126,7 +126,7 @@ class GroupSelector extends Selector {
 class SimpleSelector extends Selector {
   /**
    *
-   * @param {SelectionOperator[]} selectionOperators
+   * @param {Operator[]} selectionOperators
    */
   constructor(selectionOperators) {
     super();
@@ -139,7 +139,7 @@ class SimpleSelector extends Selector {
    */
   apply(input) {
     return this.operators.reduce(
-      (previous, operator) => operator(previous),
+      (previous, operator) => operator.apply(previous),
       input
     );
   }
@@ -147,8 +147,6 @@ class SimpleSelector extends Selector {
 
 /**
  * @typedef {Button|Group} Target
- *
- * @typedef {function(Target[]): Target[]} SelectionOperator
  *
  */
 
@@ -197,10 +195,12 @@ export class AccessNavigator {
         this.buttons.push(new Button(/** @type {HTMLElement} */ (node)));
     }
 
-    const targets = this.selector.apply(this.buttons);
-    this.targets = targets;
+    if (this.selector) {
+      const targets = this.selector.apply(this.buttons);
+      this.targets = targets;
 
-    this.start();
+      this.start();
+    }
   }
 
   /**
@@ -270,46 +270,46 @@ export class AccessNavigator {
     this.current.cue();
   }
 }
-/**
- * Construct an operator that can handle nested Groups and Nodes from
- * an operator that only handles Nodes.
- *
- * I'm assuming that the lists are all Nodes or all Groups.
- *
- * @param {function(Button[]): Target[]} simpleOperator
- * @returns {function(Target[]): Target[]}
- */
 
-function makeHigherOrderOperator(simpleOperator) {
-  /** @param {Target[]} input */
-  function higherOrderOperator(input) {
-    // if the first is a group they all are
+class Operator {
+  /**
+   * Apply the operator to an array of Buttons to produce an array of Targets
+   * @param {Button[]} input
+   * @returns {Target[]}
+   */
+  base(input) {
+    return input;
+  }
+  /**
+   *
+   * @param {Target[]} input
+   * @returns {Target[]}
+   */
+  apply(input) {
     if (input[0] instanceof Group) {
-      /** @type {Group[]} */
-      const r = input.map((/** @type {Group} */ group) => {
-        if (group instanceof Group)
-          return new Group(
-            higherOrderOperator(group.members),
-            group.properties
-          );
-        else throw new Error("Internal error, this should be a group");
-      });
-      return r;
+      return input.map(
+        (/** @type {Group} */ group) =>
+          new Group(this.apply(group.members), group.properties)
+      );
     } else {
-      const r = simpleOperator(/** @type {Button[]} */ (input));
-      return r;
+      return this.base(/** @type {Button[]} */ (input));
     }
   }
-  return higherOrderOperator;
 }
 
-/**
- *
- * @param {function(Button): boolean} predicate
- * @returns {function(Target[]): Target[]}
- */
-function makeFilterOperator(predicate) {
-  return makeHigherOrderOperator((input) => input.filter(predicate));
+class FilterOperator extends Operator {
+  constructor(predicate) {
+    super();
+    this.predicate = predicate;
+  }
+  /**
+   * Apply the operator to an array of Buttons to produce an array of Targets
+   * @param {Button[]} input
+   * @returns {Target[]}
+   */
+  base(input) {
+    return input.filter(this.predicate);
+  }
 }
 
 // allow the sort to handle numbers reasonably
@@ -317,65 +317,61 @@ const comparator = new Intl.Collator(undefined, {
   numeric: true,
 });
 
-/**
- * Order the nodes by the given key
- *
- * @param {function(Button): string} key
- * @returns {function(Target[]): Target[]}
- */
-function makeOrderByOperator(key) {
-  return makeHigherOrderOperator((input) =>
-    [...input].sort((a, b) => comparator.compare(key(a), key(b)))
-  );
-}
-
-/**
- * Produce a list of Groups from a list of Nodes
- *
- * @param {Button[]} input
- * @param {function(Button): string} key
- * @param {function(Button): Object} properties
- * @returns {Group[]}
- */
-function groupBy(input, key, properties) {
-  // console.log("groupby", input);
-  const result = [];
-  /** @type {Map<Object,Group>} */
-  const groupMap = new Map();
-  for (const node of input) {
-    const k = key(node).toString();
-    // we got a key, check to see if we have a group
-    let group = groupMap.get(k);
-    if (!group) {
-      // no group, create one and add it to the map and the result
-      group = new Group([node], properties(node));
-      groupMap.set(k, group);
-      result.push(group);
-    } else {
-      group.members.push(node);
-    }
+class OrderByOperator extends Operator {
+  /**
+   *
+   * @param {function(Target): string} key
+   */
+  constructor(key) {
+    super();
+    this.key = key;
   }
-  return result;
+  /**
+   * Apply the operator to an array of Buttons to produce an array of Targets
+   * @param {Button[]} input
+   * @returns {Target[]}
+   */
+  base(input) {
+    return [...input].sort((a, b) =>
+      comparator.compare(this.key(a), this.key(b))
+    );
+  }
 }
 
-/**
- *
- * @param {function(Button): string} key
- * @param {function(Button): Object} properties
- * @returns
- */
-function makeGroupByOperator(key, properties) {
-  return makeHigherOrderOperator((input) => groupBy(input, key, properties));
-}
-
-function makeCycleOperator(count) {
-  return makeHigherOrderOperator((input) => {
-    let result = [];
-    for (let i = count; i > 0; i--) {
-      result = result.concat(input);
+class GroupByOperator extends Operator {
+  /**
+   * @param {function(Target): string} key
+   * @param {function(Target): Object} properties
+   */
+  constructor(key, properties) {
+    super();
+    this.key = key;
+    this.properties = properties;
+  }
+  /**
+   * Apply the operator to an array of Buttons to produce an array of Targets
+   * @param {Button[]} input
+   * @returns {Target[]}
+   */
+  base(input) {
+    const result = [];
+    /** @type {Map<Object,Group>} */
+    const groupMap = new Map();
+    for (const node of input) {
+      const k = this.key(node).toString();
+      // we got a key, check to see if we have a group
+      let group = groupMap.get(k);
+      if (!group) {
+        // no group, create one and add it to the map and the result
+        group = new Group([node], this.properties(node));
+        groupMap.set(k, group);
+        result.push(group);
+      } else {
+        group.members.push(node);
+      }
     }
     return result;
-  });
+  }
 }
 
 export function createSelectors() {
@@ -384,20 +380,19 @@ export function createSelectors() {
     new GroupSelector(
       [
         new SimpleSelector([
-          makeFilterOperator((node) => node.data?.controls),
-          makeOrderByOperator((node) => node.data?.controls),
-          makeCycleOperator(2),
+          new FilterOperator((node) => node.data?.controls),
+          new OrderByOperator((node) => node.data?.controls),
         ]),
       ],
       { label: "controls" }
     ),
     new SimpleSelector([
-      makeFilterOperator((node) => !node.data?.controls),
-      makeGroupByOperator(
+      new FilterOperator((node) => !node.data?.controls),
+      new GroupByOperator(
         (node) => node.data.name,
         (node) => ({ label: node.data.name })
       ),
-      makeGroupByOperator(
+      new GroupByOperator(
         (node) => node.data.row || 0,
         (node) => ({
           label: `row ${node.data.row}`,

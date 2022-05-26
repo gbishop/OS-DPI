@@ -11,7 +11,7 @@ import { log, logInit } from "./log";
 import pleaseWait from "./components/wait";
 import { fileOpen } from "browser-fs-access";
 import css from "ustyler";
-import { accessGroupManager, AccessMap } from "./components/access";
+import { accessNavigator, AccessMap } from "./components/access";
 
 const safe = true;
 
@@ -178,6 +178,11 @@ export async function start() {
   const layout = await db.read("layout", emptyPage);
   const rulesArray = await db.read("actions", []);
   const dataArray = await db.read("content", []);
+  const pattern = await db.read("pattern", {
+    name: "Top",
+    cycles: 1,
+    members: [],
+  });
   await pageLoaded;
 
   const state = new State(`UIState`);
@@ -189,6 +194,7 @@ export async function start() {
     data,
     rules,
     state,
+    pattern,
     restart: () => {
       start();
     },
@@ -244,7 +250,7 @@ export async function start() {
       html`<div id="UI">${tree.template()}</div>
         ${IDE}`
     );
-    accessGroupManager.refresh();
+    accessNavigator.refresh();
   }
   state.observe(debounce(renderUI));
   renderUI();

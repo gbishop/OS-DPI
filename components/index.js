@@ -12,6 +12,6 @@ import "./monitor";
 import "./speech";
 import "./audio";
 import "./help";
-import "./access";
+import "./access-pattern";
 
 export { assemble };

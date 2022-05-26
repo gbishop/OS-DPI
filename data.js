@@ -13,6 +13,8 @@ export const comparators = {
   "less than": (f, v) => f.localeCompare(v, undefined, { numeric: true }) < 0,
   "starts with": (f, v) =>
     f.toUpperCase().startsWith(v.toUpperCase()) || f === "*" || v === "*",
+  empty: (f) => !f,
+  "not empty": (f) => !!f,
 };
 
 /** Test a row with a filter
