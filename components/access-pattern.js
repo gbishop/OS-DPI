@@ -19,7 +19,6 @@ export function UpdateAccessData(data) {
   return (node) => AccessMap.set(node, data);
 }
 
-export const accessNavigator = new AccessNavigator();
 // alternating styles for nested elements
 const Backgrounds = ["#f6f6ff", "#fff6f6", "#f6fff6"].map(
   (color) => `background: ${color}`
@@ -949,3 +948,5 @@ css`
     background-color: rgba(255, 255, 255, 0.1);
   }
 `;
+
+export const accessNavigator = new AccessNavigator();

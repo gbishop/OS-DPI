@@ -2,7 +2,7 @@ import { html } from "uhtml";
 import { Base, componentMap } from "./base";
 import { styleString } from "./style";
 import css from "ustyler";
-import { UpdateAccessData } from "./access";
+import { UpdateAccessData } from "./access-pattern";
 
 class Button extends Base {
   static defaultProps = {

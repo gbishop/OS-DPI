@@ -2,7 +2,7 @@ import { html } from "uhtml";
 import { Base, componentMap } from "./base";
 import { styleString } from "./style";
 import { formatSlottedString } from "./helpers";
-import { UpdateAccessData } from "./access";
+import { UpdateAccessData } from "./access-pattern";
 import css from "ustyler";
 import "./img-db";
 

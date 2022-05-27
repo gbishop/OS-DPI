@@ -1,7 +1,7 @@
 /** A manager for access groups */
 
 import css from "ustyler";
-import { AccessMap } from "./access";
+import { AccessMap } from "./access-pattern";
 
 /**
  * Button is the DOM button annotated with the info from the AccessMap
