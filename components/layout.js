@@ -6,6 +6,7 @@ import { Base, toDesign } from "./base";
 import { Stack } from "./stack";
 import { propEditor } from "./propEditor";
 import db from "../db";
+import broadcast from "../broadcast";
 import css from "ustyler";
 
 import { log } from "../log";
@@ -134,6 +135,77 @@ export class Layout extends Base {
       <option selected disabled value="">Add</option>
       ${allowed.map((type) => html`<option value=${type}>${type}</option>`)}
     </select>`;
+  }
+
+  /** Move currently selected tree to the clipboard. Optionally
+   *  deletes currently selected tree to simulate a C-x.
+   *  @param {Tree} target
+   *  @param {Boolean=} isCut
+   */
+  clipTree(target, isCut) {
+    const targetDesign = JSON.stringify(toDesign(target));
+    sessionStorage.setItem("clipboard", targetDesign);
+
+    if (isCut) {
+      this.closeControls();
+      const parent = this.selected.parent;
+      if (parent) {
+        const index = parent.children.indexOf(this.selected);
+        parent.children.splice(index, 1);
+        if (parent.children.length) {
+          this.setSelected(parent.children[Math.max(0, index - 1)]);
+        } else {
+          this.setSelected(parent);
+        }
+        this.save();
+      }
+    }
+
+    broadcast.channel.postMessage({
+      name: db.designName,
+      action: "copy",
+      newName: targetDesign,
+    });
+  }
+
+  /** Make clipboard contents a child of the parent parameter.
+   * @param {Tree} selected
+   */
+  pasteTree(selected) {
+    const clipboardContents = JSON.parse(sessionStorage.getItem("clipboard"));
+
+    let target = selected;
+
+    if (target.allowedChildren().includes(clipboardContents.type))
+      target = selected;
+    else if (target.parent) target = selected.parent;
+    else target = this.context.tree;
+
+    const assembledTree = assemble(clipboardContents, target.context, target);
+
+    target.children.push(assembledTree);
+    this.closeControls();
+
+    this.setSelected(assembledTree, true, true);
+    this.save();
+  }
+
+  /** @returns {Hole} */
+  cutButton() {
+    return html`<button onclick=${() => this.clipTree(this.selected)}>
+      Copy
+    </button>`;
+  }
+
+  /** @returns {Hole} */
+  pasteButton() {
+    return html`<button
+      onclick=${() => {
+        this.pasteTree(this.selected);
+      }}
+    >
+      Paste
+    </button>`;
   }
 
   /** Move a component within its parent stack
@@ -345,23 +417,27 @@ export class Layout extends Base {
     return vc[ndx];
   }
 
+  deleteNode() {
+    this.closeControls();
+    const parent = this.selected.parent;
+    if (parent) {
+      const index = parent.children.indexOf(this.selected);
+      parent.children.splice(index, 1);
+      if (parent.children.length) {
+        this.setSelected(parent.children[Math.max(0, index - 1)]);
+      } else {
+        this.setSelected(parent);
+      }
+      this.save();
+    }
+  }
+
   /** Delete the current tree node */
   deleteCurrent() {
     return html`<button
       help="Delete component"
       onclick=${() => {
-        this.closeControls();
-        const parent = this.selected.parent;
-        if (parent) {
-          const index = parent.children.indexOf(this.selected);
-          parent.children.splice(index, 1);
-          if (parent.children.length) {
-            this.setSelected(parent.children[Math.max(0, index - 1)]);
-          } else {
-            this.setSelected(parent);
-          }
-          this.save();
-        }
+        this.deleteNode();
       }}
     >
       Delete
@@ -397,6 +473,7 @@ export class Layout extends Base {
     return html`<div class="controls">
       <h1>Editing ${this.selected.constructor.name} ${this.selected.name}</h1>
       ${this.addMenu()} ${this.deleteCurrent()} ${this.moveMenu()}
+      ${this.cutButton()} ${this.pasteButton()}
       <div class="props">${this.showProps()}</div>
       <button
         id="controls-return"
@@ -475,6 +552,7 @@ export class Layout extends Base {
       </li>`;
     }
   }
+
   /** @param {KeyboardEvent} event */
   treeKeyHandler(event) {
     switch (event.key) {
@@ -500,6 +578,21 @@ export class Layout extends Base {
           this.setSelected(this.selected.parent);
         }
         break;
+      case "c":
+        if (event.ctrlKey) {
+          this.clipTree(this.selected, false);
+          break;
+        }
+      case "v":
+        if (event.ctrlKey) {
+          this.pasteTree(this.selected);
+          break;
+        }
+      case "x":
+        if (event.ctrlKey) {
+          this.clipTree(this.selected, true);
+          break;
+        } 
       case " ":
       case "Enter":
         this.update({ editingTree: true });
