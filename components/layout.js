@@ -8,6 +8,7 @@ import { TabControl } from "./tabcontrol";
 import { propEditor } from "./propEditor";
 import db from "../db";
 import css from "ustyler";
+import { Globals } from "../start";
 
 import { log } from "../log";
 
@@ -24,7 +25,7 @@ export class Layout extends Base {
   };
 
   init() {
-    const { state, tree } = this.context;
+    const { state, tree } = Globals;
     this.setSelected(this.getNode(state.get("path")), state.get("editingTree"));
     document.querySelector("div#UI")?.addEventListener("click", (event) => {
       const target = /** @type {HTMLElement} */ (event.target);
@@ -59,12 +60,10 @@ export class Layout extends Base {
         if (
           tc.props.stateName &&
           node.props.name &&
-          node.context.state.get(tc.props.stateName) != node.props.name
+          Globals.state.get(tc.props.stateName) != node.props.name
         ) {
-          node.context.state.update({
-            [tc.props.stateName]: node.context.state.interpolate(
-              node.props.name
-            ),
+          Globals.state.update({
+            [tc.props.stateName]: Globals.state.interpolate(node.props.name),
           });
         }
       }
@@ -77,7 +76,7 @@ export class Layout extends Base {
   setSelected(selection, editingTree = false, highlight = true) {
     this.selected = selection;
     this.makeVisible(this.selected);
-    const state = this.context.state;
+    const state = Globals.state;
     state.update({ path: this.getPath(this.selected), editingTree });
     document.querySelector("#UI .highlight")?.classList.remove("highlight");
     const uinode = document.getElementById(this.selected.id);
@@ -98,9 +97,9 @@ export class Layout extends Base {
     try {
       result = path.reduce((pv, index) => {
         return pv.children[index];
-      }, this.context.tree);
+      }, Globals.tree);
     } catch (error) {}
-    if (!result) result = this.context.tree;
+    if (!result) result = Globals.tree;
     return result;
   }
 
@@ -120,11 +119,7 @@ export class Layout extends Base {
    * @param {string} type
    */
   addChild(type) {
-    const child = assemble(
-      { type, props: {}, children: [] },
-      this.selected.context,
-      this.selected
-    );
+    const child = assemble({ type, props: {}, children: [] }, this.selected);
     this.selected.children.push(child);
     this.setSelected(child, true);
     this.save();
@@ -209,7 +204,6 @@ export class Layout extends Base {
         if (parent instanceof Stack) {
           const newStack = assemble(
             { type: "stack", props: {}, children: [] },
-            selected.context,
             parent
           );
           parent.children.splice(index, 1, newStack);
@@ -249,7 +243,6 @@ export class Layout extends Base {
         ) {
           const stack = assemble(
             { type: "stack", props: {}, children: [] },
-            selected.context,
             grandparent
           );
           stack.children = parent.children.splice(index);
@@ -346,7 +339,7 @@ export class Layout extends Base {
    * @returns {Tree}
    * */
   nextVisibleChild() {
-    const vc = this.visibleChidren(this.context.tree);
+    const vc = this.visibleChidren(Globals.tree);
     const ndx = Math.min(vc.indexOf(this.selected) + 1, vc.length - 1);
     return vc[ndx];
   }
@@ -355,7 +348,7 @@ export class Layout extends Base {
    * @returns {Tree}
    * */
   previousVisibleChild() {
-    const vc = this.visibleChidren(this.context.tree);
+    const vc = this.visibleChidren(Globals.tree);
     const ndx = Math.max(0, vc.indexOf(this.selected) - 1);
     return vc[ndx];
   }
@@ -393,7 +386,6 @@ export class Layout extends Base {
           name,
           this.selected.props[name],
           info,
-          this.context,
           (name, value) => {
             this.selected.props[name] = value;
             this.save();
@@ -525,14 +517,14 @@ export class Layout extends Base {
   }
 
   template() {
-    const state = this.context.state;
+    const state = Globals.state;
     const editingTree = state.get("editingTree");
     /** @param {KeyboardEvent} event */
     const keyHandler = (event) => this.treeKeyHandler(event);
     return html`<div class="layout" help="Layout tab">
       <div class="tree">
         <ul role="tree" onKeyDown=${keyHandler}>
-          ${this.showTree(this.context.tree, this.selected)}
+          ${this.showTree(Globals.tree, this.selected)}
         </ul>
       </div>
       ${editingTree && this.selected ? this.controls() : html``}
@@ -544,14 +536,14 @@ export class Layout extends Base {
    * @param {Object} [patch]
    */
   update(patch) {
-    this.context.state.update(patch);
+    Globals.state.update(patch);
   }
 
   /** save the layout to the db
    */
   save() {
     this.update();
-    const { tree } = this.context;
+    const { tree } = Globals;
     const layout = toDesign(tree);
     db.write("layout", layout);
   }

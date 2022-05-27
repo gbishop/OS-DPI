@@ -8,6 +8,17 @@
  */
 
 /**
+ * Selectors let us build groups of buttons
+ *
+ * @typedef {Object} Selector
+ * @property {string} operatorName
+ * @property {OperatorArg[]} args
+ *
+ * @typedef {Object} OperatorArg
+ * @property {string} type
+ */
+
+/**
  * @typedef {Object} Props
  * @property {string} scale
  * @property {string} background
@@ -39,15 +50,6 @@
 
 /**
  * @typedef {import("../state").State} State
- */
-
-/**
- * @typedef {Object} Context
- * @property {import("../state").State} state
- * @property {import("../rules").Rules} rules
- * @property {import("../data").Data} data
- * @property {Tree} tree
- * @property {function} restart
  */
 
 /**

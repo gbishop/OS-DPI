@@ -53,16 +53,6 @@
  */
 
 /**
- * @typedef {Object} Context
- * @property {import("../state").State} state
- * @property {import("../rules").Rules} rules
- * @property {import("../data").Data} data
- * @property {Object} pattern
- * @property {Tree} tree
- * @property {function} restart
- */
-
-/**
  * @typedef {Object} Design
  * @property {string} type
  * @property {SomeProps} props

@@ -440,4 +440,4 @@ const render = (where, what) => {
 const html = tag('html');
 const svg = tag('svg');
 
-export { html, render };
+export { html, render, svg };

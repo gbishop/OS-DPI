@@ -2,10 +2,11 @@ import { Base } from "./base";
 import css from "ustyler";
 import db from "../db";
 import { html } from "uhtml";
+import { Globals } from "../start";
 
 export class ToolBar extends Base {
   template() {
-    const { state } = this.context;
+    const { state } = Globals;
     return html`
       <div class="bar">
         <label for="designName">Name: </label>
@@ -26,7 +27,7 @@ export class ToolBar extends Base {
             const tab = state.get("designerTab").toLowerCase();
             if (["layout", "actions"].indexOf(tab) >= 0) {
               await db.undo(tab);
-              this.context.restart();
+              Globals.restart();
             }
           }}
         >

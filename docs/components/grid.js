@@ -2,8 +2,10 @@ import { html } from "../_snowpack/pkg/uhtml.js";
 import { Base, componentMap } from "./base.js";
 import { styleString } from "./style.js";
 import { formatSlottedString } from "./helpers.js";
+import { UpdateAccessData } from "./access-pattern.js";
 import css from "../_snowpack/pkg/ustyler.js";
 import "./img-db.js";
+import { Globals } from "../start.js";
 
 class Grid extends Base {
   static defaultProps = {
@@ -24,7 +26,7 @@ class Grid extends Base {
 
   /** @param {Row} item */
   gridCell(item) {
-    const { rules } = this.context;
+    const { rules } = Globals;
     const { background, name } = this.props;
     let content;
     let msg = formatSlottedString(item.label || "");
@@ -39,9 +41,13 @@ class Grid extends Base {
       content = msg;
     }
     return html`<button
-      onClick=${rules.handler(name, item, "press")}
-      style=${styleString({ backgroundColor: background })}
       tabindex="-1"
+      ref=${UpdateAccessData({
+        ...item,
+        name,
+        component: this.constructor.name,
+      })}
+      ?disabled=${!item.label && !item.symbol}
     >
       ${content}
     </button>`;
@@ -51,31 +57,42 @@ class Grid extends Base {
     return html`<button tabindex="-1" disabled></button>`;
   }
 
-  /** @param {Number} pages */
-  pageSelector(pages) {
-    const { state } = this.context;
-    const { background } = this.props;
+  /**
+   * Allow selecting pages in the grid
+   * @param {Number} pages
+   * @param {Row} info
+   */
+  pageSelector(pages, info) {
+    const { state } = Globals;
+    const { background, name } = this.props;
 
     return html`<div class="page-control">
       <div class="text">Page ${this.page} of ${pages}</div>
       <div class="back-next">
         <button
-          onClick=${() => {
-            this.page = ((((this.page - 2) % pages) + pages) % pages) + 1;
-            state.update(); // trigger redraw
-          }}
           style=${styleString({ backgroundColor: background })}
           .disabled=${this.page == 1}
+          ref=${UpdateAccessData({
+            ...info,
+            name,
+            onClick: () => {
+              this.page = ((((this.page - 2) % pages) + pages) % pages) + 1;
+              state.update(); // trigger redraw
+            },
+          })}
           tabindex="-1"
         >
           &#9754;</button
         ><button
-          onClick=${() => {
-            this.page = (this.page % pages) + 1;
-            state.update(); // trigger redraw
-          }}
-          style=${styleString({ backgroundColor: background })}
           .disabled=${this.page == pages}
+          ref=${UpdateAccessData({
+            ...info,
+            name,
+            onClick: () => {
+              this.page = (this.page % pages) + 1;
+              state.update(); // trigger redraw
+            },
+          })}
           tabindex="-1"
         >
           &#9755;
@@ -86,8 +103,8 @@ class Grid extends Base {
 
   template() {
     /** @type {Partial<CSSStyleDeclaration>} */
-    const style = {};
-    const { data, state } = this.context;
+    const style = { backgroundColor: this.props.background };
+    const { data, state } = Globals;
     let { rows, columns, filters, fillItems } = this.props;
     /** @type {Rows} */
     let items = data.getMatchingRows(filters, state, this.cache);
@@ -128,7 +145,7 @@ class Grid extends Base {
         for (let column = 1; column <= columns; column++) {
           if (maxPage > 1 && row == rows && column == columns) {
             // draw the page selector in the last cell
-            result.push(this.pageSelector(maxPage));
+            result.push(this.pageSelector(maxPage, { row, column }));
           } else {
             const key = itemKey(row, column);
             if (itemMap.has(key)) {
@@ -149,7 +166,10 @@ class Grid extends Base {
       // get the items on this page
       items = items.slice((this.page - 1) * perPage, this.page * perPage);
       // render them into the result
-      for (const item of items) {
+      for (let i = 0; i < items.length; i++) {
+        const row = Math.floor(i / columns) + 1;
+        const column = (i % columns) + 1;
+        const item = { ...items[i], row, column };
         result.push(this.gridCell(item));
       }
       // fill any spaces that remain
@@ -158,7 +178,7 @@ class Grid extends Base {
       }
       // draw the page selector if needed
       if (maxPage > 1) {
-        result.push(this.pageSelector(maxPage));
+        result.push(this.pageSelector(maxPage, { row: rows, column: columns }));
       }
     }
 
@@ -189,10 +209,12 @@ css`
     overflow: hidden;
     border-radius: 5px;
     background-color: inherit;
+    user-select: none;
   }
   .grid button div {
     display: flex;
     height: 100%;
+    pointer-events: none;
   }
   .grid button figure {
     margin: 2px;

@@ -12,5 +12,6 @@ import "./monitor.js";
 import "./speech.js";
 import "./audio.js";
 import "./help.js";
+import "./access-pattern.js";
 
 export { assemble };

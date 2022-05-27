@@ -30,7 +30,7 @@ class Radio extends Base {
    * @returns {boolean}
    */
   valid(option) {
-    const { data, state } = this.context;
+    const { data, state } = Globals;
     return (
       !this.props.filters.length ||
       data.hasMatchingRows(
@@ -49,12 +49,12 @@ class Radio extends Base {
     if (target instanceof HTMLButtonElement) {
       const value = target.value;
       const name = this.props.stateName;
-      this.context.state.update({ [name]: value });
+      Globals.state.update({ [name]: value });
     }
   }
 
   template() {
-    const { state } = this.context;
+    const { state } = Globals;
     const stateName = this.props.stateName;
     let current = state.get(stateName);
     const choices = this.children.map((child, index) => {

@@ -142,6 +142,20 @@ css`
   }
 `;
 
+export const Globals = {
+  /** @type {State} */
+  state: null,
+  /** @type {Data} */
+  data: null,
+  /** @type {Rules} */
+  rules: null,
+  /** @type {Tree} */
+  tree: null,
+  /** @type {import('./components/access-pattern').PatternGroup} */
+  pattern: null,
+  restart: start,
+};
+
 /** Load page and data then go
  */
 export async function start() {
@@ -185,23 +199,11 @@ export async function start() {
   });
   await pageLoaded;
 
-  const state = new State(`UIState`);
-  const rules = new Rules(rulesArray, state);
-  const data = new Data(dataArray);
-  /** @type {Context} */
-  // @ts-ignore
-  const context = {
-    data,
-    rules,
-    state,
-    pattern,
-    restart: () => {
-      start();
-    },
-  };
-  // @ts-ignore
-  const tree = assemble(layout, context);
-  context.tree = tree;
+  Globals.tree = assemble(layout);
+  Globals.state = new State(`UIState`);
+  Globals.rules = new Rules(rulesArray);
+  Globals.data = new Data(dataArray);
+  Globals.pattern = pattern;
 
   /** @param {() => void} f */
   function debounce(f) {
@@ -212,22 +214,19 @@ export async function start() {
     };
   }
 
-  /* Configure the keyhandler */
-  KeyHandler.state = state;
-
   /* Designer */
-  state.define("editing", layout === emptyPage);
-  const designer = new Designer({}, context, null);
+  Globals.state.define("editing", layout === emptyPage);
+  const designer = new Designer({}, null);
 
   /* ToolBar */
-  const toolbar = new ToolBar({}, context, null);
+  const toolbar = new ToolBar({}, null);
 
   /* Monitor */
-  const monitor = new Monitor({}, context, null);
+  const monitor = new Monitor({}, null);
 
   function renderUI() {
     let IDE = html``;
-    if (state.get("editing")) {
+    if (Globals.state.get("editing")) {
       IDE = html`
         <div
           id="designer"
@@ -244,15 +243,15 @@ export async function start() {
         <div id="toolbar">${toolbar.template()}</div>
       `;
     }
-    document.body.classList.toggle("designing", state.get("editing"));
+    document.body.classList.toggle("designing", Globals.state.get("editing"));
     safeRender(
       document.body,
-      html`<div id="UI">${tree.template()}</div>
+      html`<div id="UI">${Globals.tree.template()}</div>
         ${IDE}`
     );
     accessNavigator.refresh();
   }
-  state.observe(debounce(renderUI));
+  Globals.state.observe(debounce(renderUI));
   renderUI();
 }
 
@@ -274,9 +273,6 @@ db.addUpdateListener((message) => {
 });
 
 const KeyHandler = {
-  /** @type {State} */
-  state: null,
-
   /** @param {KeyboardEvent} event */
   handleEvent(event) {
     if (event.key == "d") {
@@ -284,9 +280,9 @@ const KeyHandler = {
       if (target && target.tagName != "INPUT" && target.tagName != "TEXTAREA") {
         event.preventDefault();
         event.stopPropagation();
-        if (this.state) {
+        if (Globals.state) {
           document.body.classList.toggle("designing");
-          this.state.update({ editing: !this.state.get("editing") });
+          Globals.state.update({ editing: !Globals.state.get("editing") });
         }
       }
     }

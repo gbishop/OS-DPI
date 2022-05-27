@@ -2,9 +2,10 @@ import { html } from "uhtml";
 import css from "ustyler";
 import { Base } from "./base";
 import * as icons from "./icons";
-import { validateExpression } from "../eval";
+import { evalInContext, validateExpression } from "../eval";
 import { comparators } from "../data";
 import db from "../db";
+import { Globals } from "../start";
 
 /** Maintain data for each visible button in a WeakMap
  * @type {WeakMap<Node, Object>}
@@ -55,10 +56,9 @@ const Backgrounds = ["#f6f6ff", "#fff6f6", "#f6fff6"].map(
 
 /**
  * @param {function(): void} refresh
- * @param {Context} context
  * @returns
  */
-function ObjectEditorInputs(refresh, context) {
+function ObjectEditorInputs(refresh) {
   return {
     /**
      * Create a select input
@@ -103,7 +103,7 @@ function ObjectEditorInputs(refresh, context) {
      * @returns {Hole}
      */
     field({ container, name, label, hidden = false }) {
-      const choices = [...context.data.allFields, "#name"].sort();
+      const choices = [...Globals.data.allFields, "#name"].sort();
       return this.select({
         container,
         name,
@@ -318,22 +318,21 @@ function ArrayEditorButtons(refresh) {
 export class AccessPattern extends Base {
   /**
    * @param {SomeProps} props
-   * @param {Context} context
    * @param {Base|Null} parent
    */
-  constructor(props, context, parent) {
-    super(props, context, parent);
-    const { state } = context;
+  constructor(props, parent) {
+    super(props, parent);
+    const { state, pattern } = Globals;
     function update() {
       state.update();
-      db.write("pattern", context.pattern);
+      db.write("pattern", pattern);
     }
     this.buttons = ArrayEditorButtons(update);
-    this.inputs = ObjectEditorInputs(update, context);
+    this.inputs = ObjectEditorInputs(update);
   }
 
   template() {
-    const { state, pattern } = this.context;
+    const { state, pattern } = Globals;
     return html`<div class="access-pattern">
       <h1>Access Pattern</h1>
       ${this.renderGroup(pattern)}
@@ -707,7 +706,7 @@ export class AccessNavigator {
    * @param {PatternGroup} pattern
    */
   setSelectors(pattern) {
-    this.selector = new GroupSelector(selectors, {});
+    this.selector = new GroupSelector(pattern);
     // this.refresh();
   }
 
@@ -730,18 +729,14 @@ export class AccessNavigator {
     this.cue();
   }
 
-  /**
-   *
-   * @param {Context} context
-   */
-  activate(context) {
+  activate() {
     let current = this.current;
     if (current instanceof Button) {
       const name = current.data.name;
       if ("onClick" in current.data) {
         current.data.onClick();
       } else {
-        context.rules.applyRules(name, "press", current.data);
+        Globals.rules.applyRules(name, "press", current.data);
       }
     } else if (current instanceof Group) {
       console.log("activate group", current, this.stack);
@@ -830,11 +825,11 @@ const comparator = new Intl.Collator(undefined, {
 class OrderByOperator extends Operator {
   /**
    *
-   * @param {function(Target): string} key
+   * @param {PatternOrderBy} key
    */
   constructor(key) {
     super();
-    this.key = key;
+    this.key = (button) => button[key.orderBy.slice(1)];
   }
   /**
    * Apply the operator to an array of Buttons to produce an array of Targets
@@ -850,13 +845,12 @@ class OrderByOperator extends Operator {
 
 class GroupByOperator extends Operator {
   /**
-   * @param {function(Target): string} key
-   * @param {function(Target): Object} properties
+   * @param {PatternGroupBy} pat
    */
-  constructor(key, properties) {
+  constructor(pat) {
     super();
-    this.key = key;
-    this.properties = properties;
+    this.key = (button) => button[pat.groupBy.slice(1)];
+    this.properties = { name: pat.name, cycles: pat.cycles, cue: pat.cue };
   }
   /**
    * Apply the operator to an array of Buttons to produce an array of Targets
@@ -873,7 +867,7 @@ class GroupByOperator extends Operator {
       let group = groupMap.get(k);
       if (!group) {
         // no group, create one and add it to the map and the result
-        group = new Group([node], this.properties(node));
+        group = new Group([node], this.properties);
         groupMap.set(k, group);
         result.push(group);
       } else {

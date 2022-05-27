@@ -2,6 +2,7 @@ import { log } from "../log.js";
 import { strip } from "./display.js";
 import { Base, componentMap } from "./base.js";
 import { html } from "../_snowpack/pkg/uhtml.js";
+import { Globals } from "../start.js";
 
 class Speech extends Base {
   static defaultProps = {
@@ -13,7 +14,7 @@ class Speech extends Base {
   };
 
   async speak() {
-    const { state } = this.context;
+    const { state } = Globals;
     const { stateName, voiceURI, pitch, rate, volume } = this.props;
     const message = strip(state.get(stateName));
     const voices = await getVoices();
@@ -34,7 +35,7 @@ class Speech extends Base {
 
   template() {
     const { stateName } = this.props;
-    const { state } = this.context;
+    const { state } = Globals;
     if (state.hasBeenUpdated(stateName)) {
       this.speak();
     }

@@ -4,6 +4,7 @@ import { Stack } from "./stack";
 import { styleString } from "./style";
 import css from "ustyler";
 import { UpdateAccessData } from "./access-pattern";
+import { Globals } from "../start";
 
 export class TabControl extends Base {
   static defaultProps = {
@@ -17,7 +18,7 @@ export class TabControl extends Base {
   static allowedChildren = ["tab panel"];
 
   template() {
-    const { state } = this.context;
+    const { state } = Globals;
     const panels = /** @type {TabPanel[]} */ (this.children);
     let activeTabName = state.get(this.props.stateName);
     // collect panel info

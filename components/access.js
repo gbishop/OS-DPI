@@ -20,10 +20,8 @@ import {
   fromEvent,
   mergeWith,
 } from "rxjs";
-
-import { AccessNavigator, createSelectors } from "./groups";
-
-import { test } from "./ui";
+import { Globals } from "../start";
+import { AccessMap, accessNavigator } from "./access-pattern";
 
 /** Maintain data for each visible button in a WeakMap
  * @type {WeakMap<Node, Object>}
@@ -123,15 +121,14 @@ const exampleGroup = {
 export class Access extends Base {
   /**
    * @param {SomeProps} props
-   * @param {Context} context
    * @param {Base|Null} parent
    */
-  constructor(props, context, parent) {
-    super(props, context, parent);
-    const { state, rules } = context;
+  constructor(props, parent) {
+    super(props, parent);
+    const { state, rules } = Globals;
 
     // state.observe((changed) => this.configure(changed, context));
-    this.configure(new Set(), context);
+    this.configure(new Set());
   }
 
   /** Configure the inputs as requested
@@ -140,12 +137,11 @@ export class Access extends Base {
    * will not be part of the state; it will be saved in the db just like layout.
    *
    * @param {Set<string>} changed - names of states that changed
-   * @param {Context} context
    * @returns {void}
    */
-  configure(changed, context) {
+  configure(changed) {
     console.log("configure", changed);
-    const { state, rules } = context;
+    const { state, rules } = Globals;
 
     if (0) {
       // This is an example of a hover trigger
@@ -197,20 +193,17 @@ export class Access extends Base {
         if (ke.key == "ArrowRight") {
           accessNavigator.next();
         } else {
-          accessNavigator.activate(context);
+          accessNavigator.activate();
         }
       });
-    accessNavigator.setSelectors(createSelectors());
 
     // show("hover", this.hovers);
   }
 
   template() {
-    const { state, rules } = this.context;
-    const t = test();
+    const { state, rules } = Globals;
     return html`<div class="access">
       <h1>Pattern</h1>
-      ${t}
     </div>`;
   }
 }

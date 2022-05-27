@@ -5,6 +5,7 @@ import { formatSlottedString } from "./helpers";
 import { UpdateAccessData } from "./access-pattern";
 import css from "ustyler";
 import "./img-db";
+import { Globals } from "../start";
 
 class Grid extends Base {
   static defaultProps = {
@@ -25,7 +26,7 @@ class Grid extends Base {
 
   /** @param {Row} item */
   gridCell(item) {
-    const { rules } = this.context;
+    const { rules } = Globals;
     const { background, name } = this.props;
     let content;
     let msg = formatSlottedString(item.label || "");
@@ -62,7 +63,7 @@ class Grid extends Base {
    * @param {Row} info
    */
   pageSelector(pages, info) {
-    const { state } = this.context;
+    const { state } = Globals;
     const { background, name } = this.props;
 
     return html`<div class="page-control">
@@ -103,7 +104,7 @@ class Grid extends Base {
   template() {
     /** @type {Partial<CSSStyleDeclaration>} */
     const style = { backgroundColor: this.props.background };
-    const { data, state } = this.context;
+    const { data, state } = Globals;
     let { rows, columns, filters, fillItems } = this.props;
     /** @type {Rows} */
     let items = data.getMatchingRows(filters, state, this.cache);

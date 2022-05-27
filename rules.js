@@ -3,8 +3,8 @@
  */
 
 import { log } from "./log";
-import { State } from "./state";
 import { evalInContext, Functions } from "./eval";
+import { Globals } from "./start";
 
 /**
  * functions for updating states
@@ -13,11 +13,9 @@ import { evalInContext, Functions } from "./eval";
 export class Rules {
   /**
    * @param {Rule[]} rules
-   * @param {State} state
    */
-  constructor(rules, state) {
+  constructor(rules) {
     this.rules = rules;
-    this.state = state;
     this.last = {
       /** @type {Rule|Null} */
       rule: null,
@@ -64,7 +62,7 @@ export class Rules {
     this.last = { origin, event, data, rule: null };
     // first for the event then for any that got queued.
     while (true) {
-      const context = { ...Functions, state: this.state, data };
+      const context = { ...Functions, state: Globals.state, data };
       for (const rule of this.rules) {
         if (
           (origin != rule.origin && rule.origin != "*") ||
@@ -83,7 +81,7 @@ export class Rules {
               evalInContext(value, context),
             ])
           );
-          this.state.update(patch);
+          Globals.state.update(patch);
           break;
         }
       }

@@ -1,10 +1,11 @@
 import { html } from "uhtml";
 import { Base } from "./base";
 import css from "ustyler";
+import { Globals } from "../start";
 
 export class Monitor extends Base {
   template() {
-    const { state, rules } = this.context;
+    const { state, rules } = Globals;
     const s = html`<table class="state">
       <thead>
         <tr>

@@ -4,20 +4,20 @@ import { TabControl, TabPanel } from "./tabcontrol";
 import { Layout } from "./layout";
 import { Actions } from "./actions";
 import { AccessPattern } from "./access-pattern";
+import { Access } from "./access";
 import { Content } from "./content";
 import css from "ustyler";
+import { Globals } from "../start";
 
 export class Designer extends Base {
   /**
    * @param {SomeProps} props
-   * @param {Context} context
    * @param {Base|Null} parent
    */
-  constructor(props, context, parent) {
-    super(props, context, parent);
+  constructor(props, parent) {
+    super(props, parent);
     const tabs = new TabControl(
       { scale: "10", tabEdge: "top", stateName: "designerTab" },
-      this.context,
       this
     );
     const layoutPanel = new TabPanel(
@@ -25,42 +25,47 @@ export class Designer extends Base {
         name: "Layout",
         background: "pinkish white",
       },
-      this.context,
       tabs
     );
-    layoutPanel.children = [new Layout({}, this.context, layoutPanel)];
+    layoutPanel.children = [new Layout({}, layoutPanel)];
 
     const actionPanel = new TabPanel(
       {
         name: "Actions",
         background: "greenish white",
       },
-      this.context,
       tabs
     );
-    actionPanel.children = [new Actions({}, this.context, actionPanel)];
+    actionPanel.children = [new Actions({}, actionPanel)];
 
-    const accessPanel = new TabPanel(
+    const patternPanel = new TabPanel(
       {
         name: "Access Pattern",
         background: "bluish white",
       },
-      this.context,
       tabs
     );
-    accessPanel.children = [new AccessPattern({}, this.context, accessPanel)];
+    patternPanel.children = [new AccessPattern({}, patternPanel)];
+
+    const accessPanel = new TabPanel(
+      {
+        name: "Access",
+        background: "bluish white",
+      },
+      tabs
+    );
+    accessPanel.children = [new Access({}, accessPanel)];
 
     const contentPanel = new TabPanel(
       {
         name: "Content",
         background: "yellowish white",
       },
-      this.context,
       tabs
     );
-    contentPanel.children = [new Content({}, this.context, contentPanel)];
+    contentPanel.children = [new Content({}, contentPanel)];
 
-    tabs.children = [layoutPanel, actionPanel, accessPanel, contentPanel];
+    tabs.children = [layoutPanel, actionPanel, patternPanel, contentPanel];
     /** @type {Base[]} */
     this.children = [tabs];
   }

@@ -10,7 +10,7 @@ class Audio extends Base {
   };
 
   async playAudio() {
-    const { state } = this.context;
+    const { state } = Globals;
     const { stateName } = this.props;
     const fileName = strip(state.get(stateName) || "");
     log("play audio");
@@ -19,7 +19,7 @@ class Audio extends Base {
 
   template() {
     const { stateName } = this.props;
-    const { state } = this.context;
+    const { state } = Globals;
     if (state.hasBeenUpdated(stateName)) {
       this.playAudio();
     }

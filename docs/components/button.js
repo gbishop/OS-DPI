@@ -2,6 +2,7 @@ import { html } from "../_snowpack/pkg/uhtml.js";
 import { Base, componentMap } from "./base.js";
 import { styleString } from "./style.js";
 import css from "../_snowpack/pkg/ustyler.js";
+import { UpdateAccessData } from "./access-pattern.js";
 
 class Button extends Base {
   static defaultProps = {
@@ -13,13 +14,17 @@ class Button extends Base {
 
   template() {
     const style = styleString({ backgroundColor: this.props.background });
-    const { rules } = this.context;
+    const { rules } = Globals;
     return html`<button
       class="button"
       name=${this.props.name}
       style=${style}
       id=${this.id}
-      onClick=${rules.handler(this.props.name, {}, "press")}
+      ref=${UpdateAccessData({
+        name: this.props.name,
+        label: this.props.label,
+        component: "button",
+      })}
     >
       ${this.props.label}
     </button>`;

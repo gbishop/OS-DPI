@@ -9,7 +9,7 @@ export class ModalDialog extends Base {
   static allowedChildren = ["stack"];
 
   template() {
-    const state = this.context.state;
+    const state = Globals.state;
     const open = !!state.get(this.props.stateName);
     if (open) {
       return html`<div
