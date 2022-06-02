@@ -117,4 +117,13 @@ export const PropInfo = {
     step: 0.1,
     description: "Volume at which utterance will be spoken.",
   },
+  onClick: {
+    type: "checkbox",
+    name: "Mouse clicks"
+  },
+  onKeyPress: {
+    type: "checkbox",
+    name: "Key presses"
+
+  }
 };
