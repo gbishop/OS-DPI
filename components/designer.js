@@ -3,6 +3,7 @@ import { Base } from "./base";
 import { TabControl, TabPanel } from "./tabcontrol";
 import { Layout } from "./layout";
 import { Actions } from "./actions";
+import { Logging } from "./logging";
 import { Content } from "./content";
 import css from "ustyler";
 
@@ -39,6 +40,16 @@ export class Designer extends Base {
     );
     actionPanel.children = [new Actions({}, this.context, actionPanel)];
 
+    const loggingPanel = new TabPanel(
+      {
+        name: "Logging",
+        background: "lavender",
+      },
+      this.context,
+      tabs
+    );
+    loggingPanel.children = [new Logging({}, this.context, loggingPanel)];
+
     const accessPanel = new TabPanel(
       {
         name: "Access",
@@ -58,7 +69,7 @@ export class Designer extends Base {
     );
     contentPanel.children = [new Content({}, this.context, contentPanel)];
 
-    tabs.children = [layoutPanel, actionPanel, accessPanel, contentPanel];
+    tabs.children = [layoutPanel, actionPanel, loggingPanel, accessPanel, contentPanel];
     /** @type {Base[]} */
     this.children = [tabs];
   }

@@ -12,5 +12,6 @@ import "./monitor";
 import "./speech";
 import "./audio";
 import "./help";
+import "./logger";
 
 export { assemble };
