@@ -5,7 +5,7 @@ import { formatSlottedString } from "./helpers";
 import { UpdateAccessData } from "./access-pattern";
 import css from "ustyler";
 import "./img-db";
-import { Globals } from "../start";
+import Globals from "../globals";
 
 class Grid extends Base {
   static defaultProps = {

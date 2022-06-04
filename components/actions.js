@@ -5,7 +5,7 @@ import { textInput } from "./input";
 import { validateExpression } from "../eval";
 import db from "../db";
 import css from "ustyler";
-import { Globals } from "../start";
+import Globals from "../globals";
 
 export class Actions extends Base {
   /**

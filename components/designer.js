@@ -7,7 +7,7 @@ import { AccessPattern } from "./access-pattern";
 import { Access } from "./access";
 import { Content } from "./content";
 import css from "ustyler";
-import { Globals } from "../start";
+import Globals from "../globals";
 
 export class Designer extends Base {
   /**

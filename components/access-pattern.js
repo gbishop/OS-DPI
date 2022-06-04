@@ -5,7 +5,8 @@ import * as icons from "./icons";
 import { evalInContext, validateExpression } from "../eval";
 import { comparators } from "../data";
 import db from "../db";
-import { Globals } from "../start";
+import Globals from "../globals";
+import { PatternManager } from "./access-pattern2";
 
 /** Maintain data for each visible button in a WeakMap
  * @type {WeakMap<Node, Object>}
@@ -168,22 +169,25 @@ function ObjectEditorInputs(refresh) {
      * @returns {Hole}
      */
     expression({ container, name, label, hidden = false, title = "" }) {
-      return html`<input
-        type="text"
-        id=${name}
-        name=${name}
-        .value=${container[name]}
-        title=${title}
-        onchange=${(/** @type {InputEventWithTarget} */ event) => {
-          const input = event.target;
-          const value = input.value.trim();
-          const msg = validateExpression(value) ? "" : "Invalid value";
-          container[name] = value;
-          input.setCustomValidity(msg);
-          input.reportValidity();
-          refresh();
-        }}
-      />`;
+      return html`<label ?hiddenLabel=${hidden}>
+        <span>${label}</span>
+        <input
+          type="text"
+          id=${name}
+          name=${name}
+          .value=${container[name]}
+          title=${title}
+          onchange=${(/** @type {InputEventWithTarget} */ event) => {
+            const input = event.target;
+            const value = input.value.trim();
+            const msg = validateExpression(value) ? "" : "Invalid expression";
+            container[name] = value;
+            input.setCustomValidity(msg);
+            input.reportValidity();
+            refresh();
+          }}
+          placeholder="Enter an expression"
+      /></label>`;
     },
     /**
      * Create a number input
@@ -329,13 +333,15 @@ export class AccessPattern extends Base {
     }
     this.buttons = ArrayEditorButtons(update);
     this.inputs = ObjectEditorInputs(update);
+
+    this.pm = Globals.pattern;
   }
 
   template() {
     const { state, pattern } = Globals;
     return html`<div class="access-pattern">
       <h1>Access Pattern</h1>
-      ${this.renderGroup(pattern)}
+      ${this.pm.template()}
     </div>`;
   }
 
@@ -405,7 +411,7 @@ export class AccessPattern extends Base {
       </ul>
       ${this.buttons.add({
         container: selector,
-        initial: { filter: "", comparison: "", value: "" },
+        initial: { filter: "" },
         label: "+Filter",
       })}
       ${this.buttons.add({
@@ -424,27 +430,11 @@ export class AccessPattern extends Base {
 
   renderOperator(op, index, list) {
     if ("filter" in op) {
-      const value =
-        op.comparison.indexOf("empty") < 0
-          ? this.inputs.expression({
-              container: op,
-              name: "value",
-              label: "Value",
-              hidden: true,
-            })
-          : html``;
-      return html`${this.inputs.field({
+      return this.inputs.expression({
         container: op,
         name: "filter",
         label: "Filter",
-      })}
-      ${this.inputs.comparison({
-        container: op,
-        name: "comparison",
-        label: "Comparison",
-        hidden: true,
-      })}
-      ${value}`;
+      });
     } else if ("orderBy" in op) {
       return this.inputs.field({
         container: op,
@@ -877,70 +867,5 @@ class GroupByOperator extends Operator {
     return result;
   }
 }
-
-css`
-  .access-pattern .movement {
-    margin-top: 0.5em;
-  }
-  .access-pattern .movement button {
-  }
-  .access-pattern button svg {
-    object-fit: contain;
-    width: 1em;
-    height: 1em;
-    vertical-align: middle;
-    margin: -4px;
-  }
-  .access-pattern button {
-    background-color: rgba(0, 0, 0, 0.05);
-    border-radius: 0.5em;
-    border: outset;
-  }
-  .access-pattern fieldset {
-    margin-bottom: 0.5em;
-  }
-  .access-pattern ol {
-    padding-inline-start: 10px;
-  }
-  .access-pattern ul {
-    padding-inline-start: 10px;
-  }
-  .access-pattern label[hiddenlabel] span {
-    clip: rect(0 0 0 0);
-    clip-path: inset(50%);
-    height: 1px;
-    overflow: hidden;
-    position: absolute;
-    white-space: nowrap;
-    width: 1px;
-  }
-  .access-pattern label {
-    display: inline-block;
-  }
-  .access-pattern .operators li div {
-  }
-  .access-pattern .operators li div details {
-    display: inline-block;
-    vertical-align: middle;
-  }
-  .access-pattern .operators li div details[open] {
-    display: block;
-  }
-  .access-pattern .operators li div details summary {
-    list-style: none;
-    cursor: pointer;
-    width: 1em;
-    height: 1em;
-    border: outset;
-    vertical-align: middle;
-    display: inline;
-  }
-  .access-pattern input {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-  .access-pattern select {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-`;
 
 export const accessNavigator = new AccessNavigator();

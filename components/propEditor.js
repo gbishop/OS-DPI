@@ -5,7 +5,7 @@ import { log } from "../log";
 import { comparators } from "../data";
 import { validateExpression } from "../eval";
 import css from "ustyler";
-import { Globals } from "../start";
+import Globals from "../globals";
 
 /**
  * @param {Tree} component

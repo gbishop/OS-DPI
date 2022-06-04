@@ -1,7 +1,7 @@
 import { html } from "uhtml";
 import { Base } from "./base";
 import css from "ustyler";
-import { Globals } from "../start";
+import Globals from "../globals";
 
 export class Monitor extends Base {
   template() {

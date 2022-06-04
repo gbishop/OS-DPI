@@ -8,7 +8,7 @@ import { TabControl } from "./tabcontrol";
 import { propEditor } from "./propEditor";
 import db from "../db";
 import css from "ustyler";
-import { Globals } from "../start";
+import Globals from "../globals";
 
 import { log } from "../log";
 

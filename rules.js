@@ -4,7 +4,7 @@
 
 import { log } from "./log";
 import { evalInContext, Functions } from "./eval";
-import { Globals } from "./start";
+import Globals from "./globals";
 
 /**
  * functions for updating states

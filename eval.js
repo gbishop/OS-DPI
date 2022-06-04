@@ -1,24 +1,25 @@
 import expressions from "angular-expressions";
+import Globals from "./globals";
 
 /** @param {function(string, string): string} f */
 function updateString(f) {
   /** @param {string} value */
-  return function(value) {
+  return function (value) {
     /** @param {string|undefined} old */
-    return function(old) {
+    return function (old) {
       return f(old || "", value);
-    }
-  }
+    };
+  };
 }
 /** @param {function(number, number): number} f */
 function updateNumber(f) {
   /** @param {number} value */
-  return function(value) {
+  return function (value) {
     /** @param {number|undefined} old */
-    return function(old) {
+    return function (old) {
       return f(old || 0, value);
-    }
-  }
+    };
+  };
 }
 export const Functions = {
   increment: updateNumber((old, value) => old + value),
@@ -75,6 +76,13 @@ function access(state, data) {
     }
     return "";
   };
+}
+
+export function compileExpression(expression) {
+  const te = translate(expression);
+  const exp = expressions.compile(te);
+  return (context) =>
+    exp({ ...Functions, access: access(Globals.state, context) });
 }
 
 /**

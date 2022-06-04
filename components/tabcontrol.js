@@ -4,7 +4,7 @@ import { Stack } from "./stack";
 import { styleString } from "./style";
 import css from "ustyler";
 import { UpdateAccessData } from "./access-pattern";
-import { Globals } from "../start";
+import Globals from "../globals";
 
 export class TabControl extends Base {
   static defaultProps = {

@@ -2,7 +2,7 @@ import { Base } from "./base";
 import css from "ustyler";
 import db from "../db";
 import { html } from "uhtml";
-import { Globals } from "../start";
+import Globals from "../globals";
 
 export class ToolBar extends Base {
   template() {

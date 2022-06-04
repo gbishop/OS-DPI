@@ -20,7 +20,7 @@ import {
   fromEvent,
   mergeWith,
 } from "rxjs";
-import { Globals } from "../start";
+import Globals from "../globals";
 import { AccessMap, accessNavigator } from "./access-pattern";
 
 /** Maintain data for each visible button in a WeakMap

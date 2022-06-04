@@ -12,6 +12,8 @@ import pleaseWait from "./components/wait";
 import { fileOpen } from "browser-fs-access";
 import css from "ustyler";
 import { accessNavigator, AccessMap } from "./components/access-pattern";
+import Globals from "./globals";
+import { TreeBase } from "./components/treebase";
 
 const safe = true;
 
@@ -142,25 +144,9 @@ css`
   }
 `;
 
-export const Globals = {
-  /** @type {State} */
-  state: null,
-  /** @type {Data} */
-  data: null,
-  /** @type {Rules} */
-  rules: null,
-  /** @type {Tree} */
-  tree: null,
-  /** @type {import('./components/access-pattern').PatternGroup} */
-  pattern: null,
-  restart: start,
-};
-
 /** Load page and data then go
  */
 export async function start() {
-  KeyHandler.state = null;
-
   if (window.location.search && !window.location.hash.slice(1)) {
     const params = new URLSearchParams(window.location.search);
     if (params.get("fetch")) {
@@ -193,9 +179,12 @@ export async function start() {
   const rulesArray = await db.read("actions", []);
   const dataArray = await db.read("content", []);
   const pattern = await db.read("pattern", {
-    name: "Top",
-    cycles: 1,
-    members: [],
+    className: "PatternManager",
+    props: {
+      Cycles: 2,
+      Cue: "default",
+    },
+    children: [],
   });
   await pageLoaded;
 
@@ -203,7 +192,8 @@ export async function start() {
   Globals.state = new State(`UIState`);
   Globals.rules = new Rules(rulesArray);
   Globals.data = new Data(dataArray);
-  Globals.pattern = pattern;
+  Globals.pattern = TreeBase.fromObject(pattern);
+  Globals.restart = start;
 
   /** @param {() => void} f */
   function debounce(f) {
@@ -272,28 +262,25 @@ db.addUpdateListener((message) => {
   channel.postMessage(message);
 });
 
-const KeyHandler = {
-  /** @param {KeyboardEvent} event */
-  handleEvent(event) {
-    if (event.key == "d") {
-      const target = /** @type {HTMLElement} */ (event.target);
-      if (target && target.tagName != "INPUT" && target.tagName != "TEXTAREA") {
-        event.preventDefault();
-        event.stopPropagation();
-        if (Globals.state) {
-          document.body.classList.toggle("designing");
-          Globals.state.update({ editing: !Globals.state.get("editing") });
-        }
+// open and close the ide with the d key
+/** @param {KeyboardEvent} event */
+document.addEventListener("keydown", (event) => {
+  if (event.key == "d") {
+    const target = /** @type {HTMLElement} */ (event.target);
+    if (target && target.tagName != "INPUT" && target.tagName != "TEXTAREA") {
+      event.preventDefault();
+      event.stopPropagation();
+      if (Globals.state) {
+        document.body.classList.toggle("designing");
+        Globals.state.update({ editing: !Globals.state.get("editing") });
       }
     }
-  },
-};
+  }
+});
 
-document.addEventListener("keydown", KeyHandler);
-
+// watch for changes to the hash such as using the browser back button
 window.addEventListener("hashchange", (e) => {
   sessionStorage.clear();
-  // window.location.reload();
   start();
 });
 

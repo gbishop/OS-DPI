@@ -4,7 +4,7 @@ import { styleString } from "./style";
 import { Functions } from "../eval";
 import merge from "mergerino";
 import css from "ustyler";
-import { Globals } from "../start";
+import Globals from "../globals";
 
 /** Slot descriptor
  * @typedef {Object} Slot

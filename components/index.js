@@ -13,5 +13,6 @@ import "./speech";
 import "./audio";
 import "./help";
 import "./access-pattern";
+import "./computed-variables";
 
 export { assemble };

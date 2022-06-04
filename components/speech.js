@@ -2,7 +2,7 @@ import { log } from "../log";
 import { strip } from "./display";
 import { Base, componentMap } from "./base";
 import { html } from "uhtml";
-import { Globals } from "../start";
+import Globals from "../globals";
 
 class Speech extends Base {
   static defaultProps = {
