@@ -21,7 +21,7 @@ import {
   mergeWith,
 } from "rxjs";
 import Globals from "../globals";
-import { AccessMap, accessNavigator } from "./access-pattern";
+import { AccessMap } from "./access-pattern";
 
 /** Maintain data for each visible button in a WeakMap
  * @type {WeakMap<Node, Object>}
@@ -191,9 +191,9 @@ export class Access extends Base {
       .subscribe((event) => {
         const ke = /** @type {KeyboardEvent} */ (event);
         if (ke.key == "ArrowRight") {
-          accessNavigator.next();
+          Globals.pattern.next();
         } else {
-          accessNavigator.activate();
+          Globals.pattern.activate();
         }
       });
 
@@ -202,8 +202,9 @@ export class Access extends Base {
 
   template() {
     const { state, rules } = Globals;
-    return html`<div class="access">
+    return html`<div class="access-pattern">
       <h1>Pattern</h1>
+      ${Globals.pattern.template()}
     </div>`;
   }
 }

@@ -1,12 +1,13 @@
+/* thinking about better ways to write this */
+
+import db from "../db";
 import { html } from "uhtml";
 import css from "ustyler";
-import { Base } from "./base";
-import * as icons from "./icons";
-import { evalInContext, validateExpression } from "../eval";
-import { comparators } from "../data";
-import db from "../db";
 import Globals from "../globals";
-import { PatternManager } from "./access-pattern2";
+import * as icons from "./icons";
+import { Select, String, Integer, Expression, Field } from "./props";
+import { TreeBase } from "./treebase";
+import { Base } from "./base";
 
 /** Maintain data for each visible button in a WeakMap
  * @type {WeakMap<Node, Object>}
@@ -21,457 +22,9 @@ export function UpdateAccessData(data) {
   return (node) => AccessMap.set(node, data);
 }
 
-// alternating styles for nested elements
-const Backgrounds = ["#f6f6ff", "#fff6f6", "#f6fff6"].map(
-  (color) => `background: ${color}`
-);
-
 /**
- * Types for the pattern stored representation
- * @typedef {Object} PatternFilter
- * @property {string} filter - the field to filter on
- * @property {string} comparison
- * @property {string} [value]
- *
- * @typedef {Object} PatternOrderBy
- * @property {string} orderBy - the field to sort by
- *
- * @typedef {Object} PatternGroupBy
- * @property {string} groupBy - the field to group by
- * @property {number} cycles - the number of cycles for each group
- * @property {string} name - the name of each group
- * @property {string} cue - the cue for each group
- *
- * @typedef {PatternFilter|PatternOrderBy|PatternGroupBy} PatternOperator
- *
- * @typedef {PatternOperator[]} PatternSelector
- *
- * @typedef {Object} PatternGroup
- * @property {string} name
- * @property {number} cycles
- * @property {string} cue
- * @property {PatternMember[]} members
- *
- * @typedef {PatternSelector|PatternGroup} PatternMember
+ * @typedef {Button | Group} Target
  */
-
-/**
- * @param {function(): void} refresh
- * @returns
- */
-function ObjectEditorInputs(refresh) {
-  return {
-    /**
-     * Create a select input
-     * @param {Object} options
-     * @param {Object} options.container
-     * @param {string} options.name
-     * @param {string} options.label
-     * @param {string[]} options.choices
-     * @param {string} [options.title]
-     * @param {boolean} [options.hidden]
-     * @returns {Hole}
-     */
-    select({ container, name, label, choices, title = "", hidden = false }) {
-      return html`<label ?hiddenLabel=${hidden}>
-        <span>${label}</span>
-        <select
-          title=${title}
-          onchange=${(e) => {
-            container[name] = e.target.value;
-            refresh();
-          }}
-        >
-          ${choices.map(
-            (option) =>
-              html`<option
-                value=${option}
-                ?selected=${container[name] == option}
-              >
-                ${option}
-              </option>`
-          )}
-        </select></label
-      >`;
-    },
-    /**
-     * Create a select input for content fields
-     * @param {Object} options
-     * @param {Object} options.container
-     * @param {string} options.name
-     * @param {string} options.label
-     * @param {boolean} [options.hidden]
-     * @returns {Hole}
-     */
-    field({ container, name, label, hidden = false }) {
-      const choices = [...Globals.data.allFields, "#name"].sort();
-      return this.select({
-        container,
-        name,
-        label,
-        choices,
-        hidden,
-        title: "Choose a field",
-      });
-    },
-    /**
-     * Create a select input for comparison operators
-     * @param {Object} options
-     * @param {Object} options.container
-     * @param {string} options.name
-     * @param {string} options.label
-     * @param {boolean} [options.hidden]
-     * @returns {Hole}
-     */
-    comparison({ container, name, label, hidden = false }) {
-      const choices = Object.keys(comparators);
-      return this.select({
-        container,
-        name,
-        label,
-        choices,
-        hidden,
-        title: "Choose a comparison",
-      });
-    },
-    /**
-     * Create a string input
-     * @param {Object} options
-     * @param {Object} options.container
-     * @param {string} options.name
-     * @param {string} options.label
-     * @param {string} [options.title]
-     * @param {boolean} [options.hidden]
-     * @returns {Hole}
-     */
-    string({ container, name, label, hidden = false, title = "" }) {
-      return html`<label ?hiddenLabel=${hidden}>
-        <span>${label}</span>
-        <input
-          type="text"
-          .value=${container[name] || ""}
-          onchange=${(e) => {
-            container[name] = e.target.value;
-            refresh();
-          }}
-          title=${title}
-        />
-      </label>`;
-    },
-    /**
-     * Create an expression input
-     * @param {Object} options
-     * @param {Object} options.container
-     * @param {string} options.name
-     * @param {string} options.label
-     * @param {string} [options.title]
-     * @param {boolean} [options.hidden]
-     * @returns {Hole}
-     */
-    expression({ container, name, label, hidden = false, title = "" }) {
-      return html`<label ?hiddenLabel=${hidden}>
-        <span>${label}</span>
-        <input
-          type="text"
-          id=${name}
-          name=${name}
-          .value=${container[name]}
-          title=${title}
-          onchange=${(/** @type {InputEventWithTarget} */ event) => {
-            const input = event.target;
-            const value = input.value.trim();
-            const msg = validateExpression(value) ? "" : "Invalid expression";
-            container[name] = value;
-            input.setCustomValidity(msg);
-            input.reportValidity();
-            refresh();
-          }}
-          placeholder="Enter an expression"
-      /></label>`;
-    },
-    /**
-     * Create a number input
-     * @param {Object} options
-     * @param {Object} options.container
-     * @param {string} options.name
-     * @param {string} options.label
-     * @param {number} [options.min]
-     * @param {number} [options.max]
-     * @param {number} [options.step]
-     * @param {string} [options.title]
-     * @param {boolean} [options.hidden]
-     * @returns {Hole}
-     */
-    number({
-      container,
-      name,
-      label,
-      hidden = false,
-      min = 0,
-      max = undefined,
-      step = 1,
-      title = "",
-    }) {
-      return html`<label ?hiddenLabel=${hidden}>
-        <span>${label}</span>
-        <input
-          type="number"
-          min=${min}
-          max=${max}
-          step=${step}
-          title=${title}
-          .value=${container[name] || ""}
-          onchange=${(e) => {
-            container[name] = e.target.valueAsNumber;
-            refresh();
-          }}
-        />
-      </label>`;
-    },
-  };
-}
-
-function ArrayEditorButtons(refresh) {
-  return {
-    /**
-     *
-     * @param {Object} options
-     * @param {Array} options.container
-     * @param {number} options.index
-     * @param {string} [options.title]
-     * @returns {Hole}
-     */
-    up({ container, index, title = "Move up" }) {
-      return html`<button
-        title=${title}
-        ?disabled=${index == 0}
-        onClick=${() => {
-          const item = container[index];
-          container[index] = container[index - 1];
-          container[index - 1] = item;
-          refresh();
-        }}
-      >
-        ${icons.UpArrow}
-      </button>`;
-    },
-    /**
-     *
-     * @param {Object} options
-     * @param {Array} options.container
-     * @param {number} options.index
-     * @param {string} [options.title]
-     * @returns {Hole}
-     */
-    down({ container, index, title = "Move down" }) {
-      return html`<button
-        title=${title}
-        ?disabled=${index >= container.length - 1}
-        onClick=${() => {
-          const item = container[index];
-          container[index] = container[index + 1];
-          container[index + 1] = item;
-          refresh();
-        }}
-      >
-        ${icons.DownArrow}
-      </button>`;
-    },
-    /**
-     *
-     * @param {Object} options
-     * @param {Array} options.container
-     * @param {number} options.index
-     * @param {string} [options.title]
-     * @returns {Hole}
-     */
-    delete({ container, index, title = "Delete" }) {
-      return html`<button
-        title=${title}
-        onClick=${() => {
-          container.splice(index, 1);
-          refresh();
-        }}
-      >
-        ${icons.Trash}
-      </button>`;
-    },
-    /**
-     *
-     * @param {Object} options
-     * @param {Array} options.container
-     * @param {Object} options.initial
-     * @param {string} options.label
-     * @param {string} [options.title]
-     * @returns {Hole}
-     */
-    add({ container, initial, label, title = "" }) {
-      return html`<button
-        title=${title}
-        onClick=${() => {
-          container.push(initial);
-          refresh();
-        }}
-      >
-        ${label}
-      </button>`;
-    },
-  };
-}
-
-export class AccessPattern extends Base {
-  /**
-   * @param {SomeProps} props
-   * @param {Base|Null} parent
-   */
-  constructor(props, parent) {
-    super(props, parent);
-    const { state, pattern } = Globals;
-    function update() {
-      state.update();
-      db.write("pattern", pattern);
-    }
-    this.buttons = ArrayEditorButtons(update);
-    this.inputs = ObjectEditorInputs(update);
-
-    this.pm = Globals.pattern;
-  }
-
-  template() {
-    const { state, pattern } = Globals;
-    return html`<div class="access-pattern">
-      <h1>Access Pattern</h1>
-      ${this.pm.template()}
-    </div>`;
-  }
-
-  renderGroup(group, index = 0, parent = null, background = 0) {
-    return html`<fieldset style="${Backgrounds[background]}">
-      ${parent
-        ? html`<legend>Group: ${group.name}</legend>
-            ${this.inputs.string({
-              container: group,
-              name: "name",
-              label: "Name",
-            })}`
-        : html``}
-      ${this.inputs.number({
-        container: group,
-        name: "cycles",
-        label: "Cycles",
-        min: 1,
-      })}
-      ${this.inputs.select({
-        container: group,
-        name: "cue",
-        label: "Cue",
-        choices: ["default"],
-      })}
-      <ol class="groupmembers">
-        ${group.members.map((member, index, memberContainer) => {
-          const nextColor = (background + (index % 2) + 1) % 3;
-          if ("name" in member) {
-            return html`<li>
-              ${this.renderGroup(member, index, memberContainer, nextColor)}
-            </li>`;
-          } else {
-            return html`<li>
-              ${this.renderSelector(member, index, memberContainer, nextColor)}
-            </li>`;
-          }
-        })}
-      </ol>
-      ${this.buttons.add({
-        container: group.members,
-        initial: [],
-        label: "+Selector",
-      })}
-      ${this.buttons.add({
-        container: group.members,
-        initial: { name: "", cycles: 1, members: [], cue: "default" },
-        label: "+Group",
-      })}
-      ${this.renderMovementButtons(group, index, parent)}
-    </fieldset> `;
-  }
-
-  renderSelector(selector, index, parent, background) {
-    return html`<fieldset class="selector" style=${Backgrounds[background]}>
-      <legend>Selector</legend>
-      <ul class="operators">
-        ${selector.map(
-          (operator, index, member) =>
-            html` <li>
-              <div>
-                ${this.renderOperator(operator, index, member)}
-                ${this.buttons.delete({ container: selector, index })}
-              </div>
-            </li>`
-        )}
-      </ul>
-      ${this.buttons.add({
-        container: selector,
-        initial: { filter: "" },
-        label: "+Filter",
-      })}
-      ${this.buttons.add({
-        container: selector,
-        initial: { orderBy: "" },
-        label: "+Order By",
-      })}
-      ${this.buttons.add({
-        container: selector,
-        initial: { groupBy: "", name: "", cue: "" },
-        label: "+Group By",
-      })}
-      ${this.renderMovementButtons(selector, index, parent)}
-    </fieldset>`;
-  }
-
-  renderOperator(op, index, list) {
-    if ("filter" in op) {
-      return this.inputs.expression({
-        container: op,
-        name: "filter",
-        label: "Filter",
-      });
-    } else if ("orderBy" in op) {
-      return this.inputs.field({
-        container: op,
-        name: "orderBy",
-        label: "Order by",
-      });
-    } else if ("groupBy" in op) {
-      return html`${this.inputs.field({
-          container: op,
-          name: "groupBy",
-          label: "Group by",
-        })}
-        ${this.inputs.string({ container: op, name: "name", label: "Name" })}
-        <details>
-          <summary title="Details">${icons.Details}</summary>
-          ${this.inputs.string({ container: op, name: "cue", label: "Cue" })}
-          ${this.inputs.number({
-            container: op,
-            name: "cycles",
-            label: "Cycles",
-          })}
-        </details> `;
-    }
-  }
-
-  renderMovementButtons(item, index, container) {
-    if (container) {
-      return html`<div class="movement">
-        ${this.buttons.up({ container, index })}
-        ${this.buttons.down({ container, index })}
-        ${this.buttons.delete({ container, index })}
-      </div>`;
-    } else {
-      return html``;
-    }
-  }
-}
 
 /**
  * Button is the DOM button annotated with the info from the AccessMap
@@ -486,13 +39,7 @@ class Button {
   cue(value = "button") {
     this.button.setAttribute("cue", value);
   }
-
-  json() {
-    return this.button.innerText;
-  }
 }
-
-/** @typedef {Object} GroupProperties */
 
 /**
  * Group is a collection of Buttons or Groups and associated properties
@@ -501,18 +48,20 @@ class Button {
 class Group {
   /**
    * @param {Target[]} members
-   * @param {GroupProperties} properties
+   * @param {Object} props
    */
-  constructor(members, properties, cycles = 1) {
+  constructor(members, props) {
     this.members = members;
-    this.properties = properties;
-    this.cycles = cycles;
+    this.props = props;
   }
 
   get length() {
-    return this.members.length * this.cycles;
+    return this.members.length * this.props.Cycles.value;
   }
 
+  /**
+    @param {Number} index
+  */
   member(index) {
     if (index < 0 || index >= this.length) {
       return undefined;
@@ -527,70 +76,64 @@ class Group {
       member.cue(value);
     }
   }
-
-  // for debugging
-  allNodes() {
-    return this.members
-      .map((member) =>
-        member instanceof Group ? member.allNodes() : member.button
-      )
-      .flat();
-  }
-
-  json() {
-    return [this.properties.label].concat(
-      this.members.map((member) => member.json())
-    );
-  }
 }
 
-/**
- * Selector collects Buttons
- */
-class Selector {
+class PatternBase extends TreeBase {
+  /** @type {PatternBase[]} */
+  children = [];
+
   /**
-   * Select elements from the input
    * @param {Target[]} input
-   * @returns {Target[]|Group}
+   * @returns {Target[]}
    */
   apply(input) {
     return input;
   }
 }
 
-/**
- * GroupSelector takes the output of one or more selectors and
- * creates a new group.
- */
-class GroupSelector extends Selector {
+export class PatternManager extends PatternBase {
+  /** @type {Group} */
+  targets;
   /**
-   * @param {PatternGroup} pattern
+   * stack keeps track of the nesting as we walk the tree
+   * @type {{group: Group, index: number}[]}
    */
-  constructor(pattern) {
-    super();
-    const selectors = pattern.members.map((member) => {
-      if ("name" in member) {
-        return new GroupSelector(member);
-      } else {
-        return new SimpleSelector(member);
-      }
-    });
-    this.selectors = selectors;
-    this.properties = {
-      cycles: pattern.cycles,
-      cue: pattern.cue,
-      label: pattern.name,
-    };
+  stack = [];
+
+  props = {
+    Cycles: new Integer(2, { min: 1 }),
+    Cue: new Select(Object.keys(Globals.cues)),
+  };
+
+  template() {
+    const { Cycles, Cue } = this.Props;
+    return html`
+      <div
+        class=${this.className}
+        onChange=${() => this.update()}
+        level=${this.level}
+      >
+        ${Cycles.input()} ${Cue.input()} ${this.orderedChildren()}
+        ${this.addChildButton("+Selector", PatternSelector)}
+        ${this.addChildButton("+Group", PatternGroup)}
+      </div>
+    `;
   }
+
+  update() {
+    db.write("pattern", this.toObject());
+    Globals.state.update();
+  }
+
   /**
-   * Build a group from the output of the selectors applied to the input
+   *
    * @param {Target[]} input
-   * @returns {Group}
+   * @returns {Target[]}
    */
   apply(input) {
     let members = [];
-    for (const selector of this.selectors) {
-      const r = selector.apply(input);
+    for (const child of this.children) {
+      const r = child.apply(input);
       if (r.length > 0) {
         if (r instanceof Group) {
           members.push(r);
@@ -599,62 +142,40 @@ class GroupSelector extends Selector {
         }
       }
     }
-    return new Group(members, this.properties);
+    if (members.length > 0) return [new Group(members, this.props)];
+    else return [];
   }
-}
 
-class SimpleSelector extends Selector {
   /**
-   *
-   * @param {PatternOperator[]} selectionOperators
+   * Collect the nodes from the DOM and process them into targets
    */
-  constructor(selectionOperators) {
-    super();
-    this.operators = selectionOperators.map((operator) => {
-      if ("filter" in operator) {
-        return new FilterOperator(operator);
-      } else if ("orderBy" in operator) {
-        return new OrderByOperator(operator);
-      } else if ("groupBy" in operator) {
-        return new GroupByOperator(operator);
+  refresh() {
+    // gather the buttons from the UI
+    const buttons = [];
+    for (const node of document.querySelectorAll("#UI button:not(:disabled)")) {
+      if (AccessMap.has(node))
+        buttons.push(new Button(/** @type {HTMLElement} */ (node)));
+    }
+
+    let members = [];
+    for (const child of this.children) {
+      const r = child.apply(buttons);
+      if (r.length > 0) {
+        if (r instanceof Group) {
+          members.push(r);
+        } else {
+          members = members.concat(r);
+        }
       }
-    });
+    }
+    this.targets = new Group(members, this.props);
+    this.start();
   }
-  /**
-   * Apply the selector to the Buttons to produce an array of nodes
-   * @param {Target[]} input
-   * @returns {Target[]}
-   */
-  apply(input) {
-    return this.operators.reduce(
-      (previous, operator) => operator.apply(previous),
-      input
-    );
+
+  start() {
+    this.stack = [{ group: this.targets, index: 0 }];
+    this.cue();
   }
-}
-
-/**
- * @typedef {Button|Group} Target
- *
- */
-
-export class AccessNavigator {
-  /**
-   * These are the buttons (or whatever) from the DOM plus the access data
-   * from the AccessMap
-   * @type {Button[]} */
-  buttons = [];
-  /**
-   * targets are buttons or groups
-   * @type {Group}
-   */
-  targets = new Group([], {});
-  /**
-   * selectors are the rules for aggregating and selecting targets nodes to make targets
-   *
-   * @type {GroupSelector}
-   */
-  selector = null;
 
   /**
    * current keeps track of the currently active node or group
@@ -662,47 +183,7 @@ export class AccessNavigator {
    */
   get current() {
     const { group, index } = this.stack[0];
-    console.log("current", group, index);
     return group.member(index);
-  }
-
-  /**
-   * stack keeps track of the nesting as we walk the tree
-   * @type {{group: Group, index: number}[]}
-   */
-  stack = [];
-
-  /**
-   * Collect the nodes from the DOM and process them into targets
-   */
-  refresh() {
-    // gather the buttons from the UI
-    this.buttons = [];
-    for (const node of document.querySelectorAll("#UI button:not(:disabled)")) {
-      if (AccessMap.has(node))
-        this.buttons.push(new Button(/** @type {HTMLElement} */ (node)));
-    }
-
-    if (this.selector) {
-      const targets = this.selector.apply(this.buttons);
-      this.targets = targets;
-
-      this.start();
-    }
-  }
-
-  /**
-   *
-   * @param {PatternGroup} pattern
-   */
-  setSelectors(pattern) {
-    this.selector = new GroupSelector(pattern);
-    // this.refresh();
-  }
-
-  start() {
-    this.stack = [{ group: this.targets, index: 0 }];
-    this.cue();
   }
 
   next() {
@@ -748,124 +229,321 @@ export class AccessNavigator {
   cue() {
     this.clearCue();
     const current = this.current;
+    if (!current) return;
+    /*
     if (current instanceof Button) {
       this.stack[0].group.cue();
     }
+    */
     this.current.cue();
   }
 }
+PatternBase.register(PatternManager);
 
-class Operator {
+class PatternGroup extends PatternBase {
+  props = {
+    Name: new String(""),
+    Cycles: new Integer(2, { min: 1 }),
+    Cue: new Select(Object.keys(Globals.cues)),
+  };
+  template() {
+    const { Name, Cycles, Cue } = this.Props;
+    return html`<fieldset class=${this.className} level=${this.level}>
+      <legend>Group: ${Name.value}</legend>
+      ${Name.input()} ${Cycles.input()} ${Cue.input()} ${this.orderedChildren()}
+      ${this.addChildButton("+Selector", PatternSelector)}
+      ${this.addChildButton("+Group", PatternGroup)}
+      ${this.movementButtons("Group")}
+    </fieldset>`;
+  }
+
   /**
-   * Apply the operator to an array of Buttons to produce an array of Targets
-   * @param {Button[]} input
+   * Build a group from the output of the selectors applied to the input
+   * @param {Target[]} input
+   */
+  apply(input) {
+    let members = [];
+    for (const child of this.children) {
+      const r = child.apply(input);
+      if (r.length > 0) {
+        if (r instanceof Group) {
+          members.push(r);
+        } else {
+          members = members.concat(r);
+        }
+      }
+    }
+    if (members.length > 0) return [new Group(members, this.props)];
+    else return [];
+  }
+}
+PatternBase.register(PatternGroup);
+
+class PatternSelector extends PatternBase {
+  template() {
+    return html`<fieldset class=${this.className} level=${this.level}>
+      <legend>Selector</legend>
+      ${this.unorderedChildren()} ${this.addChildButton("+Filter", Filter)}
+      ${this.addChildButton("+Order by", OrderBy)}
+      ${this.addChildButton("+Group by", GroupBy)}
+      ${this.movementButtons("selector")}
+    </fieldset>`;
+  }
+
+  /**
+   * Select buttons from the input
+   * @param {Target[]} input
    * @returns {Target[]}
    */
-  base(input) {
-    return input;
+  apply(input) {
+    return this.children.reduce(
+      (previous, operator) => operator.apply(previous),
+      input
+    );
+  }
+}
+PatternBase.register(PatternSelector);
+
+class Filter extends PatternBase {
+  props = {
+    Filter: new Expression(),
+  };
+  template() {
+    const { Filter } = this.Props;
+    return html`<div class=${this.className} level=${this.level}>
+      ${Filter.input()}${this.deleteButton({ title: "Delete this filter" })}
+    </div>`;
   }
   /**
-   *
+   * Select buttons from the input
    * @param {Target[]} input
    * @returns {Target[]}
    */
   apply(input) {
     if (input[0] instanceof Group) {
-      return input.map(
-        (/** @type {Group} */ group) =>
-          new Group(this.apply(group.members), group.properties)
-      );
+      return input
+        .map(
+          (/** @type {Group} */ group) =>
+            new Group(this.apply(group.members), group.props)
+        )
+        .filter((target) => target.length > 0);
     } else {
-      return this.base(/** @type {Button[]} */ (input));
+      return input.filter((/** @type {Button} */ button) =>
+        this.props.Filter.eval(button.data)
+      );
     }
   }
 }
-
-class FilterOperator extends Operator {
-  /**
-   *
-   * @param {PatternFilter} filter
-   */
-  constructor(filter) {
-    super();
-    this.predicate = (button) => {
-      const field = button[filter.filter] || "";
-      const comparator = comparators[filter.comparison];
-      let v = undefined;
-      if (filter.comparison.indexOf("empty") < 0) {
-        v = evalInContext(filter.value);
-      }
-    };
-  }
-  /**
-   * Apply the operator to an array of Buttons to produce an array of Targets
-   * @param {Button[]} input
-   * @returns {Target[]}
-   */
-  base(input) {
-    return input.filter(this.predicate);
-  }
-}
+PatternBase.register(Filter);
 
 // allow the sort to handle numbers reasonably
 const comparator = new Intl.Collator(undefined, {
   numeric: true,
 });
 
-class OrderByOperator extends Operator {
-  /**
-   *
-   * @param {PatternOrderBy} key
-   */
-  constructor(key) {
-    super();
-    this.key = (button) => button[key.orderBy.slice(1)];
+class OrderBy extends PatternBase {
+  props = {
+    OrderBy: new Field(),
+  };
+  template() {
+    const { OrderBy } = this.Props;
+    return html`<div class=${this.className} level=${this.level}>
+      ${OrderBy.input()}${this.deleteButton({ title: "Delete this order by" })}
+    </div>`;
   }
   /**
-   * Apply the operator to an array of Buttons to produce an array of Targets
-   * @param {Button[]} input
+   * Select buttons from the input
+   * @param {Target[]} input
    * @returns {Target[]}
    */
-  base(input) {
-    return [...input].sort((a, b) =>
-      comparator.compare(this.key(a), this.key(b))
-    );
-  }
-}
-
-class GroupByOperator extends Operator {
-  /**
-   * @param {PatternGroupBy} pat
-   */
-  constructor(pat) {
-    super();
-    this.key = (button) => button[pat.groupBy.slice(1)];
-    this.properties = { name: pat.name, cycles: pat.cycles, cue: pat.cue };
-  }
-  /**
-   * Apply the operator to an array of Buttons to produce an array of Targets
-   * @param {Button[]} input
-   * @returns {Target[]}
-   */
-  base(input) {
-    const result = [];
-    /** @type {Map<Object,Group>} */
-    const groupMap = new Map();
-    for (const node of input) {
-      const k = this.key(node).toString();
-      // we got a key, check to see if we have a group
-      let group = groupMap.get(k);
-      if (!group) {
-        // no group, create one and add it to the map and the result
-        group = new Group([node], this.properties);
-        groupMap.set(k, group);
-        result.push(group);
-      } else {
-        group.members.push(node);
-      }
+  apply(input) {
+    if (input[0] instanceof Group) {
+      return input
+        .map(
+          (/** @type {Group} */ group) =>
+            new Group(this.apply(group.members), group.props)
+        )
+        .filter((target) => target.length > 0);
+    } else {
+      const key = this.props.OrderBy.value.slice(1);
+      return [.../** @type {Button[]} */ (input)].sort((a, b) =>
+        comparator.compare(a.data[key], b.data[key])
+      );
     }
-    return result;
+  }
+}
+PatternBase.register(OrderBy);
+
+class GroupBy extends PatternBase {
+  props = {
+    GroupBy: new Field(),
+    Name: new String(""),
+    Cue: new Select(Object.keys(Globals.cues)),
+    Cycles: new Integer(2),
+  };
+  template() {
+    const { GroupBy, Name, Cue, Cycles } = this.Props;
+    return html`<div class=${this.className} level=${this.level}>
+      ${GroupBy.input()} ${Name.input()}
+      ${this.deleteButton({ title: "Delete this Group By" })}
+      <details>
+        <summary title="Details">${icons.Details}</summary>
+        ${Cue.input()} ${Cycles.input()}
+      </details>
+    </div>`;
+  }
+  /**
+   * Select buttons from the input
+   * @param {Target[]} input
+   * @returns {Target[]}
+   */
+  apply(input) {
+    if (input[0] instanceof Group) {
+      return input
+        .map(
+          (/** @type {Group} */ group) =>
+            new Group(this.apply(group.members), group.props)
+        )
+        .filter((target) => target.length > 0);
+    } else {
+      const { GroupBy, props } = this.props;
+      const key = GroupBy.value.slice(1);
+      const result = [];
+      const groupMap = new Map();
+      for (const button of /** @type {Button[]} */ (input)) {
+        let k = button.data[key];
+        if (!k) continue;
+        k = k.toString();
+        // we got a key, check to see if we have a group
+        let group = groupMap.get(k);
+        if (!group) {
+          // no group, create one and add it to the map and the result
+          group = new Group([button], props);
+          groupMap.set(k, group);
+          result.push(group);
+        } else {
+          group.members.push(button);
+        }
+      }
+      return result;
+    }
+  }
+}
+PatternBase.register(GroupBy);
+
+export class AccessPattern extends Base {
+  template() {
+    return html`<div class="access-pattern treebase">
+      ${Globals.pattern.template()}
+    </div>`;
   }
 }
 
-export const accessNavigator = new AccessNavigator();
+css`
+  div.access-pattern {
+    padding-left: 12px;
+    padding-top: 12px;
+  }
+  .access-pattern .GroupBy details {
+    display: inline-block;
+    vertical-align: middle;
+  }
+  .access-pattern .GroupBy details[open] {
+    display: inline-block;
+    border: ridge;
+    padding: 0.5em;
+  }
+  .access-pattern .GroupBy details summary {
+    list-style: none;
+    cursor: pointer;
+    width: 1em;
+    height: 1em;
+    border: outset;
+    vertical-align: middle;
+  }
+  .access-pattern .GroupBy details[open] summary {
+    margin-left: calc(100% - 1em);
+    margin-bottom: 0.2em;
+    margin-top: -0.2em;
+  }
+
+  button[cue="group"] {
+    position: relative;
+    border-color: yellow;
+  }
+  button[cue="group"]:after {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: yellow;
+    opacity: 0.3;
+    z-index: 0;
+  }
+  button[cue="button"] {
+    position: relative;
+  }
+  button[cue="button"]:after {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("./target.png");
+    background-size: contain;
+    background-position: center;
+    background-color: rgba(255, 100, 100, 0.5);
+    background-repeat: no-repeat;
+    opacity: 0.4;
+    z-index: 0;
+  }
+`;
+
+/*
+  .PatternManager {
+    --color0: #f6f6ff;
+    --color1: #fff6f6;
+    --color2: #f6fff6;
+  }
+  .PatternManager li:nth-child(odd) {
+    background-color: var(--color1);
+  }
+  .PatternManager li:nth-child(even) {
+    background-color: var(--color2);
+  }
+  .PatternManager li:nth-child(odd) li:nth-child(odd) {
+    background-color: var(--color0);
+  }
+  .PatternManager li:nth-child(odd) li:nth-child(even) {
+    background-color: var(--color2);
+  }
+  .PatternManager li:nth-child(even) li:nth-child(odd) {
+    background-color: var(--color0);
+  }
+  .PatternManager li:nth-child(even) li:nth-child(even) {
+    background-color: var(--color1);
+  }
+  .PatternManager *[level="0"] > li:nth-child(odd) {
+    background-color: var(--color1);
+  }
+  .PatternManager *[level="0"] > li:nth-child(even) {
+    background-color: var(--color2);
+  }
+  .PatternManager *[level="1"] > li:nth-child(odd) {
+    background-color: var(--color2);
+  }
+  .PatternManager *[level="1"] > li:nth-child(even) {
+    background-color: var(--color0);
+  }
+  .PatternManager *[level="2"] > li:nth-child(odd) {
+    background-color: var(--color0);
+  }
+  .PatternManager *[level="2"] > li:nth-child(even) {
+    background-color: var(--color1);
+  }
+*/

@@ -11,7 +11,7 @@ import { log, logInit } from "./log";
 import pleaseWait from "./components/wait";
 import { fileOpen } from "browser-fs-access";
 import css from "ustyler";
-import { accessNavigator, AccessMap } from "./components/access-pattern";
+import { AccessMap } from "./components/access-pattern";
 import Globals from "./globals";
 import { TreeBase } from "./components/treebase";
 
@@ -186,6 +186,13 @@ export async function start() {
     },
     children: [],
   });
+  const method = await db.read("method", {
+    className: "MethodChooser",
+    props: {
+      currentIndex: -1,
+    },
+    children: [],
+  });
   await pageLoaded;
 
   Globals.tree = assemble(layout);
@@ -193,6 +200,7 @@ export async function start() {
   Globals.rules = new Rules(rulesArray);
   Globals.data = new Data(dataArray);
   Globals.pattern = TreeBase.fromObject(pattern);
+  Globals.method = TreeBase.fromObject(method);
   Globals.restart = start;
 
   /** @param {() => void} f */
@@ -239,7 +247,7 @@ export async function start() {
       html`<div id="UI">${Globals.tree.template()}</div>
         ${IDE}`
     );
-    accessNavigator.refresh();
+    Globals.pattern.refresh();
   }
   Globals.state.observe(debounce(renderUI));
   renderUI();

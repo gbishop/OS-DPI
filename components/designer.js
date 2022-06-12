@@ -4,10 +4,10 @@ import { TabControl, TabPanel } from "./tabcontrol";
 import { Layout } from "./layout";
 import { Actions } from "./actions";
 import { AccessPattern } from "./access-pattern";
-import { Access } from "./access";
+import { AccessMethod } from "./access-method";
+import { AccessCues } from "./access-cues";
 import { Content } from "./content";
 import css from "ustyler";
-import Globals from "../globals";
 
 export class Designer extends Base {
   /**
@@ -20,7 +20,17 @@ export class Designer extends Base {
       { scale: "10", tabEdge: "top", stateName: "designerTab" },
       this
     );
-    const layoutPanel = new TabPanel(
+
+    const contentPanel = new TabPanel(
+      {
+        name: "Content",
+        background: "yellowish white",
+      },
+      tabs
+    );
+    contentPanel.children = [new Content({}, contentPanel)];
+
+     const layoutPanel = new TabPanel(
       {
         name: "Layout",
         background: "pinkish white",
@@ -38,7 +48,16 @@ export class Designer extends Base {
     );
     actionPanel.children = [new Actions({}, actionPanel)];
 
-    const patternPanel = new TabPanel(
+    const methodPanel = new TabPanel(
+      {
+        name: "Access Method",
+        background: "cyanish white",
+      },
+      tabs
+    );
+    methodPanel.children = [new AccessMethod({}, methodPanel)];
+
+     const patternPanel = new TabPanel(
       {
         name: "Access Pattern",
         background: "bluish white",
@@ -47,25 +66,23 @@ export class Designer extends Base {
     );
     patternPanel.children = [new AccessPattern({}, patternPanel)];
 
-    const accessPanel = new TabPanel(
+   const cuePanel = new TabPanel(
       {
-        name: "Access",
-        background: "bluish white",
+        name: "Access Cues",
+        background: "magentaish white",
       },
       tabs
     );
-    accessPanel.children = [new Access({}, accessPanel)];
+    cuePanel.children = [new AccessCues({}, cuePanel)];
 
-    const contentPanel = new TabPanel(
-      {
-        name: "Content",
-        background: "yellowish white",
-      },
-      tabs
-    );
-    contentPanel.children = [new Content({}, contentPanel)];
-
-    tabs.children = [layoutPanel, actionPanel, patternPanel, contentPanel];
+   tabs.children = [
+      contentPanel,
+      layoutPanel,
+      actionPanel,
+      methodPanel,
+      patternPanel,
+      cuePanel,
+    ];
     /** @type {Base[]} */
     this.children = [tabs];
   }

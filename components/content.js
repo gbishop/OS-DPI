@@ -6,6 +6,7 @@ import { fileOpen } from "browser-fs-access";
 import XLSX from "xlsx";
 import css from "ustyler";
 import pleaseWait from "./wait";
+import Globals from "../globals";
 
 /** @param {Blob} blob */
 async function readSheetFromBlob(blob) {

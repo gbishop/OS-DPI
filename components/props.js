@@ -1,18 +1,28 @@
 /* Thinking about better properties */
 
 import { html } from "uhtml";
+import css from "ustyler";
 import { validateExpression, compileExpression } from "../eval";
 import Globals from "../globals";
 
+/**
+ * @typedef {Object} PropOptions
+ * @property {boolean} [hiddenLabel]
+ * @property {string} [placeholder]
+ * @property {string} [title]
+ */
+
 export class Prop {
   label = "My Label";
-  hidden = false;
-  placeholder = "";
-  title = "";
   value;
-  given = "";
-  choices = {};
-  container = null;
+
+  /** @type {PropOptions} */
+  options = {};
+
+  /** @param {PropOptions} options */
+  constructor(options = {}) {
+    this.options = options;
+  }
   eval(context) {
     return this.value;
   }
@@ -25,18 +35,22 @@ export class Prop {
 }
 
 export class Select extends Prop {
-  constructor(choices = [""], options = {}) {
-    super();
-    Object.assign(this, options);
+  /**
+  @param {string[]} choices
+  @param {Object} options
+  */
+  constructor(choices = [], options = {}) {
+    super(options);
     this.choices = choices;
-    this.value = this.choices[0];
+    this.value = choices[0];
   }
 
   input() {
-    return html`<label ?hiddenLabel=${this.hidden}>
+    console.log("choices", this.choices, this.value, this.options);
+    return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
       <span>${this.label}</span>
       <select
-        title=${this.title}
+        title=${this.options.title}
         onchange=${(e) => {
           this.value = e.target.value;
         }}
@@ -67,7 +81,7 @@ export class String extends Prop {
   }
 
   input() {
-    return html`<label ?hiddenLabel=${this.hidden}>
+    return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
       <span>${this.label}</span>
       <input
         type="text"
@@ -75,7 +89,8 @@ export class String extends Prop {
         onchange=${(e) => {
           this.value = e.target.value;
         }}
-        title=${this.title}
+        title=${this.options.title}
+        placeholder=${this.options.placeholder}
       />
     </label>`;
   }
@@ -83,13 +98,12 @@ export class String extends Prop {
 
 export class Integer extends Prop {
   constructor(value = 0, options = {}) {
-    super();
-    Object.assign(this, options);
+    super(options);
     this.value = value;
   }
 
   input() {
-    return html`<label ?hiddenLabel=${this.hidden}>
+    return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
       <span>${this.label}</span>
       <input
         type="number"
@@ -97,7 +111,8 @@ export class Integer extends Prop {
         onchange=${(e) => {
           this.value = e.target.valueAsNumber;
         }}
-        title=${this.title}
+        title=${this.options.title}
+        placeholder=${this.options.placeholder}
       />
     </label>`;
   }
@@ -106,13 +121,12 @@ export class Integer extends Prop {
 export class Expression extends Prop {
   compiled = null;
   constructor(value = "", options = {}) {
-    super();
-    Object.assign(this, options);
+    super(options);
     this.value = value;
   }
 
   input() {
-    return html`<label ?hiddenLabel=${this.hidden}>
+    return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
       <span>${this.label}</span>
       <input
         type="text"
@@ -121,17 +135,35 @@ export class Expression extends Prop {
           this.value = e.target.value;
           this.compiled = compileExpression(this.value);
         }}
-        title=${this.title}
+        title=${this.options.title}
+        placeholder=${this.options.placeholder}
       />
     </label>`;
   }
 
+  /** @param {string} value */
   set(value) {
     this.value = value;
     this.compiled = compileExpression(this.value);
   }
 
+  /** @param {Object} context */
   eval(context) {
-    return this.compiled(context);
+    if (this.compiled) {
+      const r = this.compiled(context);
+      return r;
+    }
   }
 }
+
+css`
+  label[hiddenLabel] span {
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+  }
+`;
