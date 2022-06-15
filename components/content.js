@@ -3,7 +3,7 @@ import { Base } from "./base";
 import db from "../db";
 import { Data } from "../data";
 import { fileOpen } from "browser-fs-access";
-import XLSX from "xlsx";
+import * as XLSX from "xlsx";
 import css from "ustyler";
 import pleaseWait from "./wait";
 import Globals from "../globals";

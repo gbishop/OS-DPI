@@ -27,7 +27,6 @@ export class TabControl extends Base {
       panel.tabLabel = state.interpolate(panel.props.label || panel.props.name); // display name
       if (index == 0 && !activeTabName) {
         activeTabName = panel.tabName;
-        console.log("here", this.props.stateName, panel.tabName);
         state.define(this.props.stateName, panel.tabName);
       }
       panel.active = activeTabName == panel.tabName || panels.length === 1;
