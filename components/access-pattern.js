@@ -8,38 +8,39 @@ import * as icons from "./icons";
 import { Select, String, Integer, Expression, Field } from "./props";
 import { TreeBase } from "./treebase";
 import { Base } from "./base";
+import { extender } from "proxy-pants";
+
+const AccessProto = {
+  access: {},
+  node: null,
+  cue(value = "button") {
+    this.setAttribute("cue", value);
+  },
+};
 
 /** Maintain data for each visible button in a WeakMap
- * @type {WeakMap<Node, Object>}
  */
-export const AccessMap = new WeakMap();
+export const ButtonWrap = extender(AccessProto);
 
 /** Provide a ref to update the map
  * @param {Object} data
  * @returns {function(Node)}
  */
 export function UpdateAccessData(data) {
-  return (node) => AccessMap.set(node, data);
+  return (node) => {
+    const button = ButtonWrap(node);
+    button.access = data;
+    button.node = node;
+  };
 }
+
+/**
+ * @typedef {typeof AccessProto & Node} Button
+ */
 
 /**
  * @typedef {Button | Group} Target
  */
-
-/**
- * Button is the DOM button annotated with the info from the AccessMap
- */
-class Button {
-  /** @param {HTMLElement} button */
-  constructor(button) {
-    this.data = AccessMap.get(button);
-    this.button = button;
-  }
-
-  cue(value = "button") {
-    this.button.setAttribute("cue", value);
-  }
-}
 
 /**
  * Group is a collection of Buttons or Groups and associated properties
@@ -51,6 +52,7 @@ class Group {
    * @param {Object} props
    */
   constructor(members, props) {
+    /** @type {Target[]} */
     this.members = members;
     this.props = props;
   }
@@ -153,8 +155,7 @@ export class PatternManager extends PatternBase {
     // gather the buttons from the UI
     const buttons = [];
     for (const node of document.querySelectorAll("#UI button:not(:disabled)")) {
-      if (AccessMap.has(node))
-        buttons.push(new Button(/** @type {HTMLElement} */ (node)));
+      buttons.push(ButtonWrap(node));
     }
 
     let members = [];
@@ -202,20 +203,20 @@ export class PatternManager extends PatternBase {
 
   activate() {
     let current = this.current;
-    if (current instanceof Button) {
-      const name = current.data.name;
-      if ("onClick" in current.data) {
-        current.data.onClick();
-      } else {
-        Globals.rules.applyRules(name, "press", current.data);
-      }
-    } else if (current instanceof Group) {
+    if (current instanceof Group) {
       console.log("activate group", current, this.stack);
       while (current.length == 1 && current.members[0] instanceof Group) {
         current = current.members[0];
       }
       this.stack.unshift({ group: current, index: 0 });
       console.log("activated", this.current, this.stack);
+    } else {
+      const name = current.access.componentName;
+      if ("onClick" in current.access) {
+        current.access.onClick();
+      } else {
+        Globals.rules.applyRules(name, "press", current.access);
+      }
     }
     this.cue();
   }
@@ -329,7 +330,7 @@ class Filter extends PatternBase {
         .filter((target) => target.length > 0);
     } else {
       return input.filter((/** @type {Button} */ button) =>
-        this.props.Filter.eval(button.data)
+        this.props.Filter.eval(button.access)
       );
     }
   }
@@ -367,7 +368,7 @@ class OrderBy extends PatternBase {
     } else {
       const key = this.props.OrderBy.value.slice(1);
       return [.../** @type {Button[]} */ (input)].sort((a, b) =>
-        comparator.compare(a.data[key], b.data[key])
+        comparator.compare(a.access[key], b.access[key])
       );
     }
   }
@@ -411,7 +412,7 @@ class GroupBy extends PatternBase {
       const result = [];
       const groupMap = new Map();
       for (const button of /** @type {Button[]} */ (input)) {
-        let k = button.data[key];
+        let k = button.access[key];
         if (!k) continue;
         k = k.toString();
         // we got a key, check to see if we have a group

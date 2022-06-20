@@ -11,7 +11,7 @@ import { log, logInit } from "./log";
 import pleaseWait from "./components/wait";
 import { fileOpen } from "browser-fs-access";
 import css from "ustyler";
-import { AccessMap } from "./components/access-pattern";
+import { ButtonWrap } from "./components/access-pattern";
 import Globals from "./globals";
 import { TreeBase } from "./components/treebase";
 
@@ -228,10 +228,10 @@ export async function start() {
       IDE = html`
         <div
           id="designer"
-          onclick=${(event) => {
-            const access = AccessMap.get(event.target);
-            if (access && "onClick" in access) {
-              access.onClick(event);
+          onclick=${(/** @type {InputEventWithTarget} */ event) => {
+            const button = ButtonWrap(event.target);
+            if (button.access && "onClick" in button.access) {
+              button.access.onClick(event);
             }
           }}
         >
@@ -287,27 +287,28 @@ document.addEventListener("keydown", (event) => {
 });
 
 // watch for changes to the hash such as using the browser back button
-window.addEventListener("hashchange", (e) => {
+window.addEventListener("hashchange", () => {
   sessionStorage.clear();
   start();
 });
 
 /** @typedef {PointerEvent & { target: HTMLElement }} ClickEvent */
-document.addEventListener("click", (/** @type {ClickEvent} */ event) => {
-  const target = event.target;
-  let text = "";
-  for (let n = target; n.parentElement && !text; n = n.parentElement) {
-    text = n.textContent || "";
-  }
-  let id = "none";
-  if (target instanceof HTMLButtonElement && target.dataset.id) {
-    id = target.dataset.id;
-  } else {
-    const div = target.closest('div[id^="osdpi"]');
-    if (div) {
-      id = div.id;
-    }
-  }
-});
+// I think this code mapped clicks back to the tree but no longer...
+// document.addEventListener("click", (/** @type {ClickEvent} */ event) => {
+//   const target = event.target;
+//   let text = "";
+//   for (let n = target; n.parentElement && !text; n = n.parentElement) {
+//     text = n.textContent || "";
+//   }
+//   let id = "none";
+//   if (target instanceof HTMLButtonElement && target.dataset.id) {
+//     id = target.dataset.id;
+//   } else {
+//     const div = target.closest('div[id^="osdpi"]');
+//     if (div) {
+//       id = div.id;
+//     }
+//   }
+// });
 
 start();
