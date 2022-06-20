@@ -79,7 +79,6 @@ class DB {
     }
     const cursor = await tx.objectStore("saved").openCursor(this.designName);
     if (cursor) {
-      const saved = cursor.value;
       cursor.delete();
     }
     await tx.done;

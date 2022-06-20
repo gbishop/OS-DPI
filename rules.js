@@ -2,7 +2,6 @@
  * implement actions
  */
 
-import { log } from "./log";
 import { evalInContext, Functions } from "./eval";
 import Globals from "./globals";
 

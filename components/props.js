@@ -46,7 +46,7 @@ export class Select extends Prop {
   }
 
   input() {
-    console.log("choices", this.choices, this.value, this.options);
+    // console.log("choices", this.choices, this.value, this.options);
     return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
       <span>${this.label}</span>
       <select
