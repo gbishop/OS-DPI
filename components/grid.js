@@ -44,8 +44,8 @@ class Grid extends Base {
       tabindex="-1"
       ref=${UpdateAccessData({
         ...item,
-        name,
-        component: this.constructor.name,
+        ComponentName: name,
+        ComponentType: this.constructor.name,
       })}
       ?disabled=${!item.label && !item.symbol}
     >

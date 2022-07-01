@@ -49,8 +49,8 @@ export class TreeBase {
     const constructor = this.classMap.get(obj.className);
     if (!constructor) return null;
     const result = new constructor();
-    for (const name in obj.props) {
-      if (name in result.props) {
+    for (const name in result.props) {
+      if (name in obj.props) {
         result.props[name].set(obj.props[name]);
       }
     }
@@ -63,11 +63,15 @@ export class TreeBase {
     return result;
   }
 
-  get Props() {
-    for (const name in this.props) {
-      this.props[name].label = name;
+  /** Create labels for controls from their camelCase names */
+  init() {
+    for (const [name, value] of Object.entries(this.props)) {
+      value.label =
+        value.label ||
+        name
+          .replace(/(?!^)([A-Z])/g, " $1")
+          .replace(/^./, (s) => s.toUpperCase());
     }
-    return this.props;
   }
 
   update() {
@@ -83,16 +87,13 @@ export class TreeBase {
    * @property {string} [title]
    * @property {function():void} [onClick]
    */
-  /**
-   *
-   * @param {TreeBase} child
-   */
+  /** @param {TreeBase} child */
   addChild(child) {
     child.parent = this;
     this.children.push(child);
+    child.init();
   }
   /**
-   *
    * @param {string} label
    * @param {typeof TreeBase} constructor
    * @param {Options} options
@@ -116,7 +117,6 @@ export class TreeBase {
   }
 
   /**
-   *
    * @param {Options} options
    * @returns
    */
@@ -138,7 +138,6 @@ export class TreeBase {
   }
 
   /**
-   *
    * @param {Options} options
    * @returns
    */
@@ -160,7 +159,6 @@ export class TreeBase {
   }
 
   /**
-   *
    * @param {Options} options
    * @returns
    */

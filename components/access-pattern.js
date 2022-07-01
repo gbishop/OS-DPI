@@ -18,11 +18,12 @@ const AccessProto = {
   },
 };
 
-/** Maintain data for each visible button in a WeakMap
- */
+/** Maintain data for each visible button in a WeakMap */
 export const ButtonWrap = extender(AccessProto);
 
-/** Provide a ref to update the map
+/**
+ * Provide a ref to update the map
+ *
  * @param {Object} data
  * @returns {function(Node)}
  */
@@ -34,17 +35,13 @@ export function UpdateAccessData(data) {
   };
 }
 
-/**
- * @typedef {typeof AccessProto & Node} Button
- */
+/** @typedef {typeof AccessProto & Node} Button */
+
+/** @typedef {Button | Group} Target */
 
 /**
- * @typedef {Button | Group} Target
- */
-
-/**
- * Group is a collection of Buttons or Groups and associated properties
- * such as the label and cue.
+ * Group is a collection of Buttons or Groups and associated properties such as
+ * the label and cue.
  */
 class Group {
   /**
@@ -61,14 +58,12 @@ class Group {
     return this.members.length * this.props.Cycles.value;
   }
 
-  /**
-    @param {Number} index
-  */
+  /** @param {Number} index */
   member(index) {
     if (index < 0 || index >= this.length) {
       return undefined;
     } else {
-      return this.members[index % this.length];
+      return this.members[index % this.members.length];
     }
   }
 
@@ -97,8 +92,9 @@ export class PatternManager extends PatternBase {
   /** @type {Group} */
   targets;
   /**
-   * stack keeps track of the nesting as we walk the tree
-   * @type {{group: Group, index: number}[]}
+   * Stack keeps track of the nesting as we walk the tree
+   *
+   * @type {{ group: Group; index: number }[]}
    */
   stack = [];
 
@@ -108,7 +104,7 @@ export class PatternManager extends PatternBase {
   };
 
   template() {
-    const { Cycles, Cue } = this.Props;
+    const { Cycles, Cue } = this.props;
     return html`
       <div
         class=${this.className}
@@ -128,7 +124,6 @@ export class PatternManager extends PatternBase {
   }
 
   /**
-   *
    * @param {Target[]} input
    * @returns {Target[]}
    */
@@ -148,15 +143,14 @@ export class PatternManager extends PatternBase {
     else return [];
   }
 
-  /**
-   * Collect the nodes from the DOM and process them into targets
-   */
+  /** Collect the nodes from the DOM and process them into targets */
   refresh() {
     // gather the buttons from the UI
     const buttons = [];
     for (const node of document.querySelectorAll("#UI button:not(:disabled)")) {
       buttons.push(ButtonWrap(node));
     }
+    console.log(buttons[0].access);
 
     let members = [];
     for (const child of this.children) {
@@ -179,7 +173,8 @@ export class PatternManager extends PatternBase {
   }
 
   /**
-   * current keeps track of the currently active node or group
+   * Current keeps track of the currently active node or group
+   *
    * @type {Target}
    */
   get current() {
@@ -197,6 +192,7 @@ export class PatternManager extends PatternBase {
       top.index = 0;
     } else {
       // stack is empty ignore
+      console.log("empty stack?");
     }
     this.cue();
   }
@@ -211,10 +207,13 @@ export class PatternManager extends PatternBase {
       this.stack.unshift({ group: current, index: 0 });
       console.log("activated", this.current, this.stack);
     } else {
-      const name = current.access.componentName;
+      const name = current.access.ComponentName;
+      console.log("activate button", current);
       if ("onClick" in current.access) {
+        console.log("calling onClick");
         current.access.onClick();
       } else {
+        console.log("applyRules", name, current.access);
         Globals.rules.applyRules(name, "press", current.access);
       }
     }
@@ -248,7 +247,7 @@ class PatternGroup extends PatternBase {
     Cue: new Select(Object.keys(Globals.cues)),
   };
   template() {
-    const { Name, Cycles, Cue } = this.Props;
+    const { Name, Cycles, Cue } = this.props;
     return html`<fieldset class=${this.className} level=${this.level}>
       <legend>Group: ${Name.value}</legend>
       ${Name.input()} ${Cycles.input()} ${Cue.input()} ${this.orderedChildren()}
@@ -260,6 +259,7 @@ class PatternGroup extends PatternBase {
 
   /**
    * Build a group from the output of the selectors applied to the input
+   *
    * @param {Target[]} input
    */
   apply(input) {
@@ -293,6 +293,7 @@ class PatternSelector extends PatternBase {
 
   /**
    * Select buttons from the input
+   *
    * @param {Target[]} input
    * @returns {Target[]}
    */
@@ -310,13 +311,14 @@ class Filter extends PatternBase {
     Filter: new Expression(),
   };
   template() {
-    const { Filter } = this.Props;
+    const { Filter } = this.props;
     return html`<div class=${this.className} level=${this.level}>
       ${Filter.input()}${this.deleteButton({ title: "Delete this filter" })}
     </div>`;
   }
   /**
    * Select buttons from the input
+   *
    * @param {Target[]} input
    * @returns {Target[]}
    */
@@ -347,13 +349,14 @@ class OrderBy extends PatternBase {
     OrderBy: new Field(),
   };
   template() {
-    const { OrderBy } = this.Props;
+    const { OrderBy } = this.props;
     return html`<div class=${this.className} level=${this.level}>
       ${OrderBy.input()}${this.deleteButton({ title: "Delete this order by" })}
     </div>`;
   }
   /**
    * Select buttons from the input
+   *
    * @param {Target[]} input
    * @returns {Target[]}
    */
@@ -383,7 +386,7 @@ class GroupBy extends PatternBase {
     Cycles: new Integer(2),
   };
   template() {
-    const { GroupBy, Name, Cue, Cycles } = this.Props;
+    const { GroupBy, Name, Cue, Cycles } = this.props;
     return html`<div class=${this.className} level=${this.level}>
       ${GroupBy.input()} ${Name.input()}
       ${this.deleteButton({ title: "Delete this Group By" })}
@@ -395,6 +398,7 @@ class GroupBy extends PatternBase {
   }
   /**
    * Select buttons from the input
+   *
    * @param {Target[]} input
    * @returns {Target[]}
    */
@@ -407,7 +411,7 @@ class GroupBy extends PatternBase {
         )
         .filter((target) => target.length > 0);
     } else {
-      const { GroupBy, props } = this.props;
+      const { GroupBy, ...props } = this.props;
       const key = GroupBy.value.slice(1);
       const result = [];
       const groupMap = new Map();

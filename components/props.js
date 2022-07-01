@@ -10,11 +10,18 @@ import Globals from "../globals";
  * @property {boolean} [hiddenLabel]
  * @property {string} [placeholder]
  * @property {string} [title]
+ * @property {string} [label]
+ * @property {boolean} [multiple]
  */
 
 export class Prop {
-  label = "My Label";
+  label = "";
+  /** @type {string} */
   value;
+
+  get valueAsNumber() {
+    return parseFloat(this.value);
+  }
 
   /** @type {PropOptions} */
   options = {};
@@ -22,13 +29,18 @@ export class Prop {
   /** @param {PropOptions} options */
   constructor(options = {}) {
     this.options = options;
+    if ("label" in options) {
+      this.label = options.label;
+    }
   }
-  eval(context) {
+  /** @param {Object} _ - The context */
+  eval(_) {
     return this.value;
   }
   input() {
     return html``;
   }
+  /** @param {any} value */
   set(value) {
     this.value = value;
   }
@@ -36,13 +48,20 @@ export class Prop {
 
 export class Select extends Prop {
   /**
-  @param {string[]} choices
-  @param {Object} options
-  */
+   * @param {string[] | Map<string, string>} choices
+   * @param {PropOptions} options
+   */
   constructor(choices = [], options = {}) {
     super(options);
+    if (Array.isArray(choices)) {
+      choices = new Map(choices.map((choice) => [choice, choice]));
+    }
+    /** @type {Map<string, string>} */
     this.choices = choices;
-    this.value = choices[0];
+    const [firstValue] = this.choices.values();
+    this.value = firstValue;
+    /** @type {string[]} */
+    this.values = [firstValue];
   }
 
   input() {
@@ -51,18 +70,34 @@ export class Select extends Prop {
       <span>${this.label}</span>
       <select
         title=${this.options.title}
-        onchange=${(e) => {
-          this.value = e.target.value;
+        ?multiple=${this.options.multiple}
+        onchange=${({ target }) => {
+          this.values = [...target.selectedOptions].map(
+            (option) => option.value
+          );
+          this.value = this.values[0];
         }}
       >
-        ${this.choices.map(
-          (option) =>
-            html`<option value=${option} ?selected=${this.value == option}>
-              ${option}
+        ${[...this.choices.entries()].map(
+          ([key, value]) =>
+            html`<option
+              value=${key}
+              ?selected=${this.values.indexOf(key) >= 0}
+            >
+              ${value}
             </option>`
         )}
       </select></label
     >`;
+  }
+
+  /** @param {any} value */
+  set(value) {
+    if (!Array.isArray(value)) {
+      value = [value];
+    }
+    this.values = value.filter((v) => this.choices.has(v));
+    this.value = this.values[0];
   }
 }
 
@@ -74,9 +109,10 @@ export class Field extends Select {
 }
 
 export class String extends Prop {
+  value = "";
+
   constructor(value = "", options = {}) {
-    super();
-    Object.assign(this, options);
+    super(options);
     this.value = value;
   }
 
@@ -86,8 +122,8 @@ export class String extends Prop {
       <input
         type="text"
         .value=${this.value}
-        onchange=${(e) => {
-          this.value = e.target.value;
+        onchange=${({ target }) => {
+          this.value = target.value;
         }}
         title=${this.options.title}
         placeholder=${this.options.placeholder}
@@ -99,7 +135,7 @@ export class String extends Prop {
 export class Integer extends Prop {
   constructor(value = 0, options = {}) {
     super(options);
-    this.value = value;
+    this.value = value.toString();
   }
 
   input() {
@@ -108,13 +144,44 @@ export class Integer extends Prop {
       <input
         type="number"
         .value=${this.value}
-        onchange=${(e) => {
-          this.value = e.target.valueAsNumber;
+        onchange=${({ target }) => {
+          this.value = target.value;
         }}
         title=${this.options.title}
         placeholder=${this.options.placeholder}
       />
     </label>`;
+  }
+}
+
+export class Float extends Prop {
+  constructor(value = 0, options = {}) {
+    super(options);
+    this.value = value.toString();
+  }
+
+  input() {
+    return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
+      <span>${this.label}</span>
+      <input
+        type="number"
+        .value=${this.value}
+        onchange=${({ target }) => {
+          this.value = target.value;
+        }}
+        title=${this.options.title}
+        placeholder=${this.options.placeholder}
+        step="any"
+      />
+    </label>`;
+  }
+}
+
+export class UID extends Prop {
+  constructor() {
+    super({});
+    this.value =
+      "id" + Date.now().toString(36) + Math.random().toString(36).slice(2);
   }
 }
 
@@ -131,9 +198,10 @@ export class Expression extends Prop {
       <input
         type="text"
         .value=${this.value}
-        onchange=${(e) => {
-          this.value = e.target.value;
+        onchange=${({ target }) => {
+          this.value = target.value;
           this.compiled = compileExpression(this.value);
+          console.log("compiled", this.compiled);
         }}
         title=${this.options.title}
         placeholder=${this.options.placeholder}
