@@ -19,7 +19,8 @@ class Grid extends Base {
   };
   page = 1;
   pageBoundaries = { 0: 0 }; //track starting indices of pages
-  /** @type {Object}
+  /**
+   * @type {Object}
    * @property {string} key
    */
   cache = {};
@@ -59,6 +60,7 @@ class Grid extends Base {
 
   /**
    * Allow selecting pages in the grid
+   *
    * @param {Number} pages
    * @param {Row} info
    */
@@ -120,7 +122,8 @@ class Grid extends Base {
       let maxRow = 0,
         maxColumn = 0;
       const itemMap = new Map();
-      /** @param {number} row
+      /**
+       * @param {number} row
        * @param {number} column
        */
       const itemKey = (row, column) => row * 1000 + column;

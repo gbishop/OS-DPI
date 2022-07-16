@@ -86,7 +86,6 @@ function access(state, data) {
 /** @param {string} expression */
 export function compileExpression(expression) {
   const te = translate(expression);
-  console.log("te", te);
   const exp = expressions.compile(te);
   /** @param {Object} context */
   return (context) =>

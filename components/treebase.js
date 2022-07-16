@@ -11,6 +11,8 @@ export class TreeBase {
   /** @type {TreeBase} */
   parent = null;
 
+  initialized = false;
+
   static classMap = new Map();
   /** @param {typeof TreeBase} cls */
   static register(cls) {
@@ -60,7 +62,15 @@ export class TreeBase {
         result.addChild(this.fromObject(child));
       }
     }
+    result.init_once();
     return result;
+  }
+
+  init_once() {
+    if (!this.initialized) {
+      this.init();
+      this.inititialized = true;
+    }
   }
 
   /** Create labels for controls from their camelCase names */
@@ -91,8 +101,9 @@ export class TreeBase {
   addChild(child) {
     child.parent = this;
     this.children.push(child);
-    child.init();
+    child.init_once();
   }
+
   /**
    * @param {string} label
    * @param {typeof TreeBase} constructor

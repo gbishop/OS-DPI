@@ -4,24 +4,27 @@ import { TreeBase } from "./treebase";
 import { Select, Expression, String, Integer, Float, UID } from "./props";
 import Globals from "../globals";
 import db from "../db";
+import { extender } from "proxy-pants";
 import {
   debounceTime,
   delayWhen,
+  distinctUntilKeyChanged,
   filter,
   from,
+  fromEvent,
+  groupBy,
   interval,
   map,
+  mergeMap,
+  mergeWith,
   Observable,
   share,
-  distinctUntilKeyChanged,
-  groupBy,
-  mergeMap,
-  fromEvent,
-  mergeWith,
+  skipWhile,
   Subject,
   takeUntil,
   tap,
 } from "rxjs";
+import { ButtonWrap } from "./access-pattern";
 
 export class AccessMethod extends Base {
   template() {
@@ -45,7 +48,6 @@ export class MethodChooser extends TreeBase {
     const r = this.children.find(
       (child) => child.props.Key.value == currentMethodKey.value
     );
-    console.log("currentMethod", r);
     return r;
   }
 
@@ -104,6 +106,12 @@ export class MethodChooser extends TreeBase {
 }
 TreeBase.register(MethodChooser);
 
+const KeyProto = {
+  access: {},
+};
+
+const KeyWrap = extender(KeyProto);
+
 class Method extends TreeBase {
   props = {
     Name: new String("New method"),
@@ -113,6 +121,8 @@ class Method extends TreeBase {
 
   /** @type {(Handler | Timer)[]} */
   children = [];
+
+  stop$ = new Subject();
 
   get timers() {
     return /** @type {Timer[]} */ (
@@ -150,15 +160,15 @@ class Method extends TreeBase {
     </fieldset>`;
   }
 
-  init() {
-    super.init();
+  /** Configure the rxjs pipelines to implement this method */
+  configure() {
+    console.log("configure");
 
-    console.log("init");
-
-    this.stop$ = new Subject();
+    // shutdown any previous pipeline
+    this.stop$.next();
 
     // construct debounced key event stream
-    const debounceInterval = this.props.Debounce.valueAsNumber;
+    const debounceInterval = this.props.Debounce.valueAsNumber * 1000;
     const keyDown$ = /** @type Observable<KeyboardEvent> */ (
       fromEvent(document, "keydown")
     );
@@ -173,37 +183,167 @@ class Method extends TreeBase {
       return !designer || !designer.contains(target);
     }
 
-    /** @type Observable<KeyboardEvent> */
+    // build the debounced key event stream
     this.key$ = /** @type Observable<KeyboardEvent> */ (
+      // start with the key down stream
       keyDown$.pipe(
+        // merge with the key up stream
         mergeWith(keyUp$),
+        // remove any repeats
         filter((e) => !e.repeat && notDesigner(e)),
+        // group by the key
         groupBy((e) => e.key),
-        mergeMap((group$) => group$.pipe(debounceTime(debounceInterval)))
+        // process each group and merge the results
+        mergeMap((group$) =>
+          group$.pipe(
+            // debounce flurries of events
+            debounceTime(debounceInterval),
+            // wait for a key down
+            skipWhile((e) => e.type != "keydown"),
+            // only output when the type changes
+            distinctUntilKeyChanged("type")
+          )
+        )
       )
     );
 
-    this.configure();
-  }
+    // construct pointer streams
+    /**
+     * Get the types correct
+     *
+     * @param {Node} where
+     * @param {string} event
+     * @returns {Observable<PointerEvent>}
+     */
+    function fromPointerEvent(where, event) {
+      return /** @type {Observable<PointerEvent>} */ (fromEvent(where, event));
+    }
+    const pointerDown$ = fromPointerEvent(document, "pointerdown");
 
-  /** Configure the rxjs pipelines to implement this method */
-  configure() {
-    console.log("configure");
+    // disable pointer capture
+    pointerDown$.pipe(takeUntil(this.stop$)).subscribe(
+      /** @param {PointerEvent} x */
+      (x) =>
+        x.target instanceof Element &&
+        x.target.hasPointerCapture(x.pointerId) &&
+        x.target.releasePointerCapture(x.pointerId)
+    );
+    const pointerUp$ = fromPointerEvent(document, "pointerup");
 
-    // shutdown any previous pipeline
-    this.stop$.next();
+    const pointerMove$ = fromPointerEvent(document, "pointermove");
+
+    const pointerOver$ = fromPointerEvent(document, "pointerover");
+    const pointerOut$ = fromPointerEvent(document, "pointerout");
+
+    /**
+     * Create a debounced pointer stream
+     *
+     * We use groupBy to create a stream for each target and then debounce the
+     * streams independently before merging them back together. The final
+     * distinctUntilKeyChanged prevents producing multiple events when the
+     * pointer leaves and re-enters in a short time.
+     *
+     * @param {Observable<PointerEvent>} in$
+     * @param {Observable<PointerEvent>} out$
+     * @param {Number} interval
+     */
+    function debouncedPointer(in$, out$, interval) {
+      return in$.pipe(
+        mergeWith(out$),
+        filter(
+          (e) =>
+            e.target instanceof HTMLButtonElement &&
+            !e.target.disabled &&
+            e.target.closest("div#UI") !== null
+        ),
+        groupBy((e) => e.target),
+        mergeMap(($group) =>
+          $group.pipe(debounceTime(interval), distinctUntilKeyChanged("type"))
+        )
+      );
+    }
+    const pointerOverOut$ = debouncedPointer(
+      pointerOver$,
+      pointerOut$,
+      debounceInterval
+    );
+    const pointerDownUp$ = debouncedPointer(
+      pointerDown$,
+      pointerUp$,
+      debounceInterval
+    );
+
+    // disable the context menu event for touch devices
+    fromEvent(document, "contextmenu")
+      .pipe(
+        filter(
+          (e) =>
+            e.target instanceof HTMLButtonElement &&
+            e.target.closest("div#UI") !== null
+        ),
+        takeUntil(this.stop$)
+      )
+      .subscribe((e) => e.preventDefault());
+
+    /**
+     * Creates a stream of conditioned hover events
+     *
+     * @param {number} Thold - Pointer must remain in/out this long
+     * @param {Observable<Partial<PointerEvent>>} enterLeave$ - Merged stream of
+     *   enter and leave events
+     *
+     *   We use groupBy to create a stream for each target and then debounce the
+     *   streams independently before merging them back together. The final
+     *   distinctUntilKeyChanged prevents producing multiple enter events when
+     *   the pointer leaves and re-enters in a short time.
+     */
+    function hoverStream(Thold, enterLeave$) {
+      return enterLeave$.pipe(
+        groupBy((e) => e.target),
+        mergeMap(($group) =>
+          $group.pipe(debounceTime(Thold), distinctUntilKeyChanged("type"))
+        )
+      );
+    }
 
     for (const handler of this.handlers) {
       const signal = handler.props.Signal.value;
+      let stream$;
       if (signal == "keyup" || signal == "keydown") {
-        let stream$ = this.key$.pipe(filter((e) => e.type == signal));
-        for (const key of handler.keys) {
-          const k = key.props.Key.value;
-          stream$ = stream$.pipe(filter((e) => e.key == k));
+        const keys = handler.keys.map((key) => key.props.Key.value);
+        stream$ = this.key$.pipe(
+          filter(
+            (e) =>
+              e.type == signal && (keys.length == 0 || keys.indexOf(e.key) >= 0)
+          ),
+          map((e) => {
+            // add context info to event for use in the response
+            const kw = KeyWrap(e);
+            kw.access = { key: e.key };
+	    return kw;
+          })
+        );
+        for (const condition of handler.conditions) {
+          stream$ = stream$.pipe(
+            filter((e) => condition.props.Condition.eval(e))
+          );
         }
         stream$
           .pipe(takeUntil(this.stop$))
-          .subscribe((/** @type {KeyboardEvent} */ e) => handler.respond(e));
+          .subscribe((e) => handler.respond(e));
+      } else if (signal == "pointerover" || signal == "pointerout") {
+        stream$ = pointerOverOut$.pipe(
+          filter((e) => e.type == signal),
+          map((e) => ButtonWrap(e.target))
+        );
+        for (const condition of handler.conditions) {
+          stream$ = stream$.pipe(
+            filter((e) => condition.props.Condition.eval(e))
+          );
+        }
+        stream$
+          .pipe(takeUntil(this.stop$))
+          .subscribe((e) => handler.respond(e));
       }
     }
   }
@@ -229,7 +369,16 @@ class Timer extends TreeBase {
 }
 TreeBase.register(Timer);
 
-const allSignals = ["keyup", "keydown"];
+const allSignals = new Map([
+  ["keyup", "Key up"],
+  ["keydown", "Key down"],
+  ["pointerdown", "Pointer down"],
+  ["pointermove", "Pointer move"],
+  ["pointerup", "Pointer up"],
+  ["pointerover", "Pointer enter"],
+  ["pointerout", "Pointer leave"],
+  ["transitionend", "Transition end"],
+]);
 
 const allKeys = new Map([
   [" ", "Space"],
@@ -269,7 +418,8 @@ class Handler extends TreeBase {
     const { conditions, responses, keys } = this;
     const { Signal } = this.props;
     let keyBlock = html``;
-    if (Signal.value.startsWith("key")) {
+    console.log({ Signal });
+    if (Signal.value && Signal.value.startsWith("key")) {
       keyBlock = html`<fieldset class="Keys">
         <legend>
           Keys ${this.addChildButton("+", HandlerKey, { title: "Add a key" })}
@@ -306,11 +456,6 @@ class Handler extends TreeBase {
 
   respond(e) {
     console.log("respond", e);
-    for (const condition of this.conditions) {
-      const r = condition.props.Condition.eval({ key: e.key });
-      console.log("condition", r, condition);
-      if (!r) return;
-    }
     for (const response of this.responses) {
       response.respond(e);
     }
@@ -359,6 +504,8 @@ TreeBase.register(HandlerKey);
 const allResponses = {
   next: () => Globals.pattern.next(),
   activate: () => Globals.pattern.activate(),
+  emit: ({context}) => Globals.rules.applyRules("keyevent", "press", context),
+  cue: (e) => e.cue(),
 };
 
 class HandlerResponse extends TreeBase {
@@ -380,7 +527,7 @@ class HandlerResponse extends TreeBase {
     const verb = this.props.Response.value;
     const func = allResponses[verb];
     console.log({ verb, func });
-    if (func) func();
+    if (func) func(e);
   }
 }
 TreeBase.register(HandlerResponse);
