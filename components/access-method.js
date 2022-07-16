@@ -54,20 +54,25 @@ export class MethodChooser extends TreeBase {
   /** @type {Method[]} */
   children = [];
 
+  // allow tearing down handlers when changing configurations
+  stop$ = new Subject();
+
   update() {
     db.write("method", this.toObject());
-    if (this.currentMethod) {
-      this.currentMethod.configure();
-    }
+    this.configure();
     Globals.state.update();
   }
 
   init() {
     console.log("method chooser init");
+    this.configure();
     super.init();
+  }
+
+  configure() {
     if (this.currentMethod) {
       console.log("calling configure");
-      this.currentMethod.configure();
+      this.currentMethod.configure(this.stop$);
     }
   }
 
@@ -116,13 +121,10 @@ class Method extends TreeBase {
   props = {
     Name: new String("New method"),
     Key: new UID(),
-    Debounce: new Float(0.5),
   };
 
   /** @type {(Handler | Timer)[]} */
   children = [];
-
-  stop$ = new Subject();
 
   get timers() {
     return /** @type {Timer[]} */ (
@@ -145,10 +147,7 @@ class Method extends TreeBase {
         <legend>
           Timers ${this.addChildButton("+", Timer, { title: "Add a timer" })}
         </legend>
-        <ul>
-          <li>${this.props.Debounce.input()}</li>
-          ${this.listChildren(this.timers)}
-        </ul>
+        ${this.unorderedChildren(this.timers)}
       </fieldset>
       <fieldset>
         <legend>
@@ -161,12 +160,137 @@ class Method extends TreeBase {
   }
 
   /** Configure the rxjs pipelines to implement this method */
-  configure() {
+  /** @param {Subject} stop$ */
+  configure(stop$) {
     console.log("configure");
 
     // shutdown any previous pipeline
-    this.stop$.next();
+    stop$.next();
 
+    for (const handler of this.handlers) {
+      handler.configure(stop$);
+    }
+  }
+}
+TreeBase.register(Method);
+
+class Timer extends TreeBase {
+  props = {
+    Interval: new Float(0.5, { hiddenLabel: true }),
+    Name: new String("timer", { hiddenLabel: true }),
+    Key: new UID(),
+  };
+
+  template() {
+    return html`${this.props.Name.input()} ${this.props.Interval.input()}
+    ${this.deleteButton()}`;
+  }
+}
+TreeBase.register(Timer);
+
+const allSignals = new Map([
+  ["keyup", "Key up"],
+  ["keydown", "Key down"],
+  ["pointerdown", "Pointer down"],
+  ["pointermove", "Pointer move"],
+  ["pointerup", "Pointer up"],
+  ["pointerover", "Pointer enter"],
+  ["pointerout", "Pointer leave"],
+  ["transitionend", "Transition end"],
+]);
+
+const allKeys = new Map([
+  [" ", "Space"],
+  ["Enter", "Enter"],
+  ["ArrowLeft", "Left Arrow"],
+  ["ArrowRight", "Right Arrow"],
+  ["ArrowUp", "Up Arrow"],
+  ["ArrowDown", "Down Arrow"],
+]);
+
+class Handler extends TreeBase {
+  props = {
+    Signal: new Select(allSignals),
+    Debounce: new Float(0.5),
+  };
+  /** @type {(HandlerCondition | HandlerKey | HandlerResponse)[]} */
+  children = [];
+
+  get conditions() {
+    return /** @type {HandlerCondition[]} */ (
+      this.children.filter((child) => child instanceof HandlerCondition)
+    );
+  }
+
+  get keys() {
+    return /** @type {HandlerKey[]} */ (
+      this.children.filter((child) => child instanceof HandlerKey)
+    );
+  }
+
+  get responses() {
+    return /** @type {HandlerResponse[]} */ (
+      this.children.filter((child) => child instanceof HandlerResponse)
+    );
+  }
+
+  template() {
+    const { conditions, responses, keys } = this;
+    const { Signal, Debounce } = this.props;
+    let keyBlock = html``;
+    console.log({ Signal });
+    if (Signal.value && Signal.value.startsWith("key")) {
+      keyBlock = html`<fieldset class="Keys">
+        <legend>
+          Keys ${this.addChildButton("+", HandlerKey, { title: "Add a key" })}
+        </legend>
+        ${this.unorderedChildren(keys)}
+      </fieldset>`;
+    }
+    return html`
+      <fieldset class="Handler">
+        <legend>Handler</legend>
+        ${Signal.input()} ${Debounce.input()}
+        ${this.deleteButton({ title: "Delete this handler" })} ${keyBlock}
+        <fieldset class="Conditions">
+          <legend>
+            Conditions
+            ${this.addChildButton("+", HandlerCondition, {
+              title: "Add a condition",
+            })}
+          </legend>
+          ${this.unorderedChildren(conditions)}
+        </fieldset>
+        <fieldset class="Responses">
+          <legend>
+            Responses
+            ${this.addChildButton("+", HandlerResponse, {
+              title: "Add a response",
+            })}
+          </legend>
+          ${this.unorderedChildren(responses)}
+        </fieldset>
+      </fieldset>
+    `;
+  }
+
+  /** @param {Subject} stop$ */
+  configure(stop$) {
+    const signal = this.props.Signal.value;
+    if (signal.startsWith("key")) {
+      this.configureKey(signal, stop$);
+    } else if (signal.startsWith("pointer")) {
+      this.configurePointer(signal, stop$);
+    } else {
+      this.configureOther(signal, stop$);
+    }
+  }
+
+  /**
+   * @param {string} signal
+   * @param {Subject} stop$
+   */
+  configureKey(signal, stop$) {
     // construct debounced key event stream
     const debounceInterval = this.props.Debounce.valueAsNumber * 1000;
     const keyDown$ = /** @type Observable<KeyboardEvent> */ (
@@ -184,7 +308,7 @@ class Method extends TreeBase {
     }
 
     // build the debounced key event stream
-    this.key$ = /** @type Observable<KeyboardEvent> */ (
+    const keyEvents$ = /** @type Observable<KeyboardEvent> */ (
       // start with the key down stream
       keyDown$.pipe(
         // merge with the key up stream
@@ -206,7 +330,32 @@ class Method extends TreeBase {
         )
       )
     );
+    let stream$;
+    const keys = this.keys.map((key) => key.props.Key.value);
+    stream$ = keyEvents$.pipe(
+      filter(
+        (e) =>
+          e.type == signal && (keys.length == 0 || keys.indexOf(e.key) >= 0)
+      ),
+      map((e) => {
+        // add context info to event for use in the response
+        const kw = KeyWrap(e);
+        kw.access = { key: e.key };
+        return kw;
+      })
+    );
+    for (const condition of this.conditions) {
+      stream$ = stream$.pipe(filter((e) => condition.props.Condition.eval(e)));
+    }
+    stream$.pipe(takeUntil(stop$)).subscribe((e) => this.respond(e));
+  }
 
+  /**
+   * @param {string} signal
+   * @param {Subject} stop$
+   */
+  configurePointer(signal, stop$) {
+    const debounceInterval = this.props.Debounce.valueAsNumber * 1000;
     // construct pointer streams
     /**
      * Get the types correct
@@ -221,7 +370,7 @@ class Method extends TreeBase {
     const pointerDown$ = fromPointerEvent(document, "pointerdown");
 
     // disable pointer capture
-    pointerDown$.pipe(takeUntil(this.stop$)).subscribe(
+    pointerDown$.pipe(takeUntil(stop$)).subscribe(
       /** @param {PointerEvent} x */
       (x) =>
         x.target instanceof Element &&
@@ -281,178 +430,25 @@ class Method extends TreeBase {
             e.target instanceof HTMLButtonElement &&
             e.target.closest("div#UI") !== null
         ),
-        takeUntil(this.stop$)
+        takeUntil(stop$)
       )
       .subscribe((e) => e.preventDefault());
 
-    /**
-     * Creates a stream of conditioned hover events
-     *
-     * @param {number} Thold - Pointer must remain in/out this long
-     * @param {Observable<Partial<PointerEvent>>} enterLeave$ - Merged stream of
-     *   enter and leave events
-     *
-     *   We use groupBy to create a stream for each target and then debounce the
-     *   streams independently before merging them back together. The final
-     *   distinctUntilKeyChanged prevents producing multiple enter events when
-     *   the pointer leaves and re-enters in a short time.
-     */
-    function hoverStream(Thold, enterLeave$) {
-      return enterLeave$.pipe(
-        groupBy((e) => e.target),
-        mergeMap(($group) =>
-          $group.pipe(debounceTime(Thold), distinctUntilKeyChanged("type"))
-        )
-      );
-    }
-
-    for (const handler of this.handlers) {
-      const signal = handler.props.Signal.value;
-      let stream$;
-      if (signal == "keyup" || signal == "keydown") {
-        const keys = handler.keys.map((key) => key.props.Key.value);
-        stream$ = this.key$.pipe(
-          filter(
-            (e) =>
-              e.type == signal && (keys.length == 0 || keys.indexOf(e.key) >= 0)
-          ),
-          map((e) => {
-            // add context info to event for use in the response
-            const kw = KeyWrap(e);
-            kw.access = { key: e.key };
-	    return kw;
-          })
-        );
-        for (const condition of handler.conditions) {
-          stream$ = stream$.pipe(
-            filter((e) => condition.props.Condition.eval(e))
-          );
-        }
-        stream$
-          .pipe(takeUntil(this.stop$))
-          .subscribe((e) => handler.respond(e));
-      } else if (signal == "pointerover" || signal == "pointerout") {
-        stream$ = pointerOverOut$.pipe(
-          filter((e) => e.type == signal),
-          map((e) => ButtonWrap(e.target))
-        );
-        for (const condition of handler.conditions) {
-          stream$ = stream$.pipe(
-            filter((e) => condition.props.Condition.eval(e))
-          );
-        }
-        stream$
-          .pipe(takeUntil(this.stop$))
-          .subscribe((e) => handler.respond(e));
-      }
-    }
-  }
-
-  update() {
-    super.update();
-    this.configure();
-  }
-}
-TreeBase.register(Method);
-
-class Timer extends TreeBase {
-  props = {
-    Interval: new Float(0.5, { hiddenLabel: true }),
-    Name: new String("timer", { hiddenLabel: true }),
-    Key: new UID(),
-  };
-
-  template() {
-    return html`${this.props.Name.input()} ${this.props.Interval.input()}
-    ${this.deleteButton()}`;
-  }
-}
-TreeBase.register(Timer);
-
-const allSignals = new Map([
-  ["keyup", "Key up"],
-  ["keydown", "Key down"],
-  ["pointerdown", "Pointer down"],
-  ["pointermove", "Pointer move"],
-  ["pointerup", "Pointer up"],
-  ["pointerover", "Pointer enter"],
-  ["pointerout", "Pointer leave"],
-  ["transitionend", "Transition end"],
-]);
-
-const allKeys = new Map([
-  [" ", "Space"],
-  ["Enter", "Enter"],
-  ["ArrowLeft", "Left Arrow"],
-  ["ArrowRight", "Right Arrow"],
-  ["ArrowUp", "Up Arrow"],
-  ["ArrowDown", "Down Arrow"],
-]);
-
-class Handler extends TreeBase {
-  props = {
-    Signal: new Select(allSignals),
-  };
-  /** @type {(HandlerCondition | HandlerKey | HandlerResponse)[]} */
-  children = [];
-
-  get conditions() {
-    return /** @type {HandlerCondition[]} */ (
-      this.children.filter((child) => child instanceof HandlerCondition)
+    let stream$ = pointerOverOut$.pipe(
+      filter((e) => e.type == signal),
+      map((e) => ButtonWrap(e.target))
     );
-  }
-
-  get keys() {
-    return /** @type {HandlerKey[]} */ (
-      this.children.filter((child) => child instanceof HandlerKey)
-    );
-  }
-
-  get responses() {
-    return /** @type {HandlerResponse[]} */ (
-      this.children.filter((child) => child instanceof HandlerResponse)
-    );
-  }
-
-  template() {
-    const { conditions, responses, keys } = this;
-    const { Signal } = this.props;
-    let keyBlock = html``;
-    console.log({ Signal });
-    if (Signal.value && Signal.value.startsWith("key")) {
-      keyBlock = html`<fieldset class="Keys">
-        <legend>
-          Keys ${this.addChildButton("+", HandlerKey, { title: "Add a key" })}
-        </legend>
-        ${this.unorderedChildren(keys)}
-      </fieldset>`;
+    for (const condition of this.conditions) {
+      stream$ = stream$.pipe(filter((e) => condition.props.Condition.eval(e)));
     }
-    return html`
-      <fieldset class="Handler">
-        <legend>Handler</legend>
-        ${Signal.input()} ${this.deleteButton({ title: "Delete this handler" })}
-        ${keyBlock}
-        <fieldset class="Conditions">
-          <legend>
-            Conditions
-            ${this.addChildButton("+", HandlerCondition, {
-              title: "Add a condition",
-            })}
-          </legend>
-          ${this.unorderedChildren(conditions)}
-        </fieldset>
-        <fieldset class="Responses">
-          <legend>
-            Responses
-            ${this.addChildButton("+", HandlerResponse, {
-              title: "Add a response",
-            })}
-          </legend>
-          ${this.unorderedChildren(responses)}
-        </fieldset>
-      </fieldset>
-    `;
+    stream$.pipe(takeUntil(stop$)).subscribe((e) => this.respond(e));
   }
+
+  /**
+   * @param {string} signal
+   * @param {Subject} stop$
+   */
+  configureOther(signal, stop$) {}
 
   respond(e) {
     console.log("respond", e);
@@ -504,7 +500,7 @@ TreeBase.register(HandlerKey);
 const allResponses = {
   next: () => Globals.pattern.next(),
   activate: () => Globals.pattern.activate(),
-  emit: ({context}) => Globals.rules.applyRules("keyevent", "press", context),
+  emit: ({ context }) => Globals.rules.applyRules("keyevent", "press", context),
   cue: (e) => e.cue(),
 };
 
