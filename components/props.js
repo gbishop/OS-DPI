@@ -177,6 +177,27 @@ export class Float extends Prop {
   }
 }
 
+export class Boolean extends Prop {
+  constructor(value = false, options = {}) {
+    super(options);
+    this.value = value.toString();
+  }
+
+  input() {
+    return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
+      <span>${this.label}</span>
+      <input
+        type="checkbox"
+        ?checked=${this.value == "true"}
+        onchange=${({ target }) => {
+          this.value = target.checked ? "true" : "false";
+        }}
+        title=${this.options.title}
+      />
+    </label>`;
+  }
+}
+
 export class UID extends Prop {
   constructor() {
     super({});

@@ -16,6 +16,8 @@ const AccessProto = {
   cue(value = "button") {
     this.setAttribute("cue", value);
   },
+  /** @type {Group[]} */
+  groups: [],
 };
 
 /** Maintain data for each visible button in a WeakMap */
@@ -72,6 +74,28 @@ class Group {
     for (const member of this.members) {
       member.cue(value);
     }
+  }
+
+  /**
+   * Find the index of the member in a bredth-first search
+   *
+   * @param {Target} target
+   */
+  indexOf(target) {
+    // first see if it is at this level
+    const i = this.members.indexOf(target);
+    if (i >= 0) return i;
+
+    // find the sub-group that contains it
+    for (let i = 0; i < this.members.length; i++) {
+      const member = this.members[i];
+      if (member instanceof Group && member.indexOf(target) >= 0) {
+        return i;
+      }
+    }
+
+    // not found
+    return -1;
   }
 }
 
@@ -150,7 +174,6 @@ export class PatternManager extends PatternBase {
     for (const node of document.querySelectorAll("#UI button:not(:disabled)")) {
       buttons.push(ButtonWrap(node));
     }
-    console.log(buttons[0].access);
 
     let members = [];
     for (const child of this.children) {
@@ -180,6 +203,15 @@ export class PatternManager extends PatternBase {
   get current() {
     const { group, index } = this.stack[0];
     return group.member(index);
+  }
+
+  /** @param {EventTarget} target */
+  setCurrent(target) {
+    const top = this.stack[0];
+    if (target instanceof Node) {
+      const button = ButtonWrap(target);
+      top.index = top.group.indexOf(button);
+    }
   }
 
   next() {

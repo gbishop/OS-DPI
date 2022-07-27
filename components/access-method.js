@@ -1,10 +1,21 @@
+console.log("access-method.js");
+
 import { html } from "uhtml";
+import css from "ustyler";
 import { Base } from "./base";
 import { TreeBase } from "./treebase";
-import { Select, Expression, String, Integer, Float, UID } from "./props";
+import {
+  Select,
+  Expression,
+  String,
+  Integer,
+  Float,
+  UID,
+  Boolean,
+} from "./props";
 import Globals from "../globals";
 import db from "../db";
-import { extender } from "proxy-pants";
+import { extender, own } from "proxy-pants";
 import {
   debounceTime,
   delayWhen,
@@ -25,6 +36,7 @@ import {
   tap,
 } from "rxjs";
 import { ButtonWrap } from "./access-pattern";
+import { HandlerResponse } from "./access-method-responses";
 
 export class AccessMethod extends Base {
   template() {
@@ -35,22 +47,6 @@ export class AccessMethod extends Base {
 }
 
 export class MethodChooser extends TreeBase {
-  props = {
-    currentMethodKey: new String(),
-  };
-
-  /** @type {Method} */
-  get currentMethod() {
-    const { currentMethodKey } = this.props;
-    if (!currentMethodKey.value && this.children.length > 0) {
-      currentMethodKey.set(this.children[0].props.Key.value);
-    }
-    const r = this.children.find(
-      (child) => child.props.Key.value == currentMethodKey.value
-    );
-    return r;
-  }
-
   /** @type {Method[]} */
   children = [];
 
@@ -70,58 +66,38 @@ export class MethodChooser extends TreeBase {
   }
 
   configure() {
-    if (this.currentMethod) {
+    this.stop$.next();
+    for (const method of this.children) {
       console.log("calling configure");
-      this.currentMethod.configure(this.stop$);
+      method.configure(this.stop$);
     }
   }
 
   template() {
-    const { currentMethodKey } = this.props;
-
     return html`<div class="MethodChooser" onChange=${() => this.update()}>
-      <label
-        >Access Method
-        <select
-          onChange=${(/** @type {{ target: { value: string } }} */ e) => {
-            currentMethodKey.set(e.target.value);
-          }}
-        >
-          ${this.children.map(
-            (child) =>
-              html`<option
-                value=${child.props.Key.value}
-                ?selected=${currentMethodKey.value == child.props.Key.value}
-              >
-                ${child.props.Name.value}
-              </option>`
-          )}
-        </select></label
-      >
-      ${this.addChildButton("+Method", Method, {
+      ${this.addChildButton("Add Method", Method, {
         title: "Create a new access method",
-        onClick: () =>
-          currentMethodKey.set(
-            this.children[this.children.length - 1].props.Key.value
-          ),
       })}
-      ${this.currentMethod ? this.currentMethod.template() : html``}
+      ${this.children.map((child) => child.template())}
     </div> `;
   }
 }
 TreeBase.register(MethodChooser);
 
-const KeyProto = {
+const EventWrapProto = {
   access: {},
 };
 
-const KeyWrap = extender(KeyProto);
+const EventWrap = extender(EventWrapProto);
 
 class Method extends TreeBase {
   props = {
     Name: new String("New method"),
     Key: new UID(),
+    Active: new Boolean(false),
   };
+
+  open = false;
 
   /** @type {(Handler | Timer)[]} */
   children = [];
@@ -139,36 +115,43 @@ class Method extends TreeBase {
   }
 
   template() {
-    const { Name } = this.props;
-    return html`<fieldset class="Method">
-      <legend>${Name.value}</legend>
-      ${Name.input()}
-      <fieldset>
-        <legend>
-          Timers ${this.addChildButton("+", Timer, { title: "Add a timer" })}
-        </legend>
-        ${this.unorderedChildren(this.timers)}
-      </fieldset>
-      <fieldset>
-        <legend>
-          Handlers
-          ${this.addChildButton("+", Handler, { title: "Add a handler" })}
-        </legend>
-        ${this.orderedChildren(this.handlers)}
-      </fieldset>
-    </fieldset>`;
+    const { Name, Active } = this.props;
+    return html`<details
+      class="Method"
+      ?open=${this.open}
+      ontoggle=${({ target }) => (this.open = target.open)}
+    >
+      <summary>
+        ${Name.value} ${Active.value == "true" ? html`&check;` : html``}
+      </summary>
+      <div class="Method">
+        ${Name.input()} ${Active.input()}
+        <fieldset>
+          <legend>
+            Timers ${this.addChildButton("+", Timer, { title: "Add a timer" })}
+          </legend>
+          ${this.unorderedChildren(this.timers)}
+        </fieldset>
+        <fieldset>
+          <legend>
+            Handlers
+            ${this.addChildButton("+", Handler, { title: "Add a handler" })}
+          </legend>
+          ${this.orderedChildren(this.handlers)}
+        </fieldset>
+      </div>
+    </details>`;
   }
 
   /** Configure the rxjs pipelines to implement this method */
   /** @param {Subject} stop$ */
   configure(stop$) {
-    console.log("configure");
+    if (this.props.Active.value == "true") {
+      console.log("configure");
 
-    // shutdown any previous pipeline
-    stop$.next();
-
-    for (const handler of this.handlers) {
-      handler.configure(stop$);
+      for (const handler of this.handlers) {
+        handler.configure(stop$);
+      }
     }
   }
 }
@@ -238,7 +221,6 @@ class Handler extends TreeBase {
     const { conditions, responses, keys } = this;
     const { Signal, Debounce } = this.props;
     let keyBlock = html``;
-    console.log({ Signal });
     if (Signal.value && Signal.value.startsWith("key")) {
       keyBlock = html`<fieldset class="Keys">
         <legend>
@@ -339,13 +321,22 @@ class Handler extends TreeBase {
       ),
       map((e) => {
         // add context info to event for use in the response
-        const kw = KeyWrap(e);
-        kw.access = { key: e.key };
+        const kw = EventWrap(e);
+        kw.access = {
+          key: e.key,
+          altKey: e.altKey,
+          ctrlKey: e.ctrlKey,
+          metaKey: e.metaKey,
+          shiftKey: e.shiftKey,
+          eventType: e.type,
+        };
         return kw;
       })
     );
     for (const condition of this.conditions) {
-      stream$ = stream$.pipe(filter((e) => condition.props.Condition.eval(e)));
+      stream$ = stream$.pipe(
+        filter((e) => condition.props.Condition.eval(e.access))
+      );
     }
     stream$.pipe(takeUntil(stop$)).subscribe((e) => this.respond(e));
   }
@@ -436,10 +427,17 @@ class Handler extends TreeBase {
 
     let stream$ = pointerOverOut$.pipe(
       filter((e) => e.type == signal),
-      map((e) => ButtonWrap(e.target))
+      map((e) => {
+        const ew = EventWrap(e);
+        ew.access = ButtonWrap(e.target).access;
+        ew.access.eventType = e.type;
+        return ew;
+      })
     );
     for (const condition of this.conditions) {
-      stream$ = stream$.pipe(filter((e) => condition.props.Condition.eval(e)));
+      stream$ = stream$.pipe(
+        filter((e) => condition.props.Condition.eval(e.access))
+      );
     }
     stream$.pipe(takeUntil(stop$)).subscribe((e) => this.respond(e));
   }
@@ -450,10 +448,10 @@ class Handler extends TreeBase {
    */
   configureOther(signal, stop$) {}
 
-  respond(e) {
-    console.log("respond", e);
+  /** @param {Event & { access: Object }} event */
+  respond(event) {
     for (const response of this.responses) {
-      response.respond(e);
+      response.respond(event);
     }
   }
 }
@@ -497,33 +495,8 @@ class HandlerKey extends TreeBase {
 }
 TreeBase.register(HandlerKey);
 
-const allResponses = {
-  next: () => Globals.pattern.next(),
-  activate: () => Globals.pattern.activate(),
-  emit: ({ context }) => Globals.rules.applyRules("keyevent", "press", context),
-  cue: (e) => e.cue(),
-};
-
-class HandlerResponse extends TreeBase {
-  props = {
-    Response: new Select(Object.keys(allResponses), { hiddenLabel: true }),
-  };
-
-  template() {
-    const { Response } = this.props;
-    return html`
-      <div class="Response">
-        ${Response.input()}
-        ${this.deleteButton({ title: "Delete this response" })}
-      </div>
-    `;
+css`
+  details.Method > *:not(summary) {
+    margin-left: 2em;
   }
-
-  respond(e) {
-    const verb = this.props.Response.value;
-    const func = allResponses[verb];
-    console.log({ verb, func });
-    if (func) func(e);
-  }
-}
-TreeBase.register(HandlerResponse);
+`;
