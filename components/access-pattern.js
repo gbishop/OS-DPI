@@ -176,15 +176,19 @@ export class PatternManager extends PatternBase {
     }
 
     let members = [];
-    for (const child of this.children) {
-      const r = child.apply(buttons);
-      if (r.length > 0) {
-        if (r instanceof Group) {
-          members.push(r);
-        } else {
-          members = members.concat(r);
+    if (this.children.length) {
+      for (const child of this.children) {
+        const r = child.apply(buttons);
+        if (r.length > 0) {
+          if (r instanceof Group) {
+            members.push(r);
+          } else {
+            members = members.concat(r);
+          }
         }
       }
+    } else {
+      members = buttons;
     }
     this.targets = new Group(members, this.props);
     this.start();

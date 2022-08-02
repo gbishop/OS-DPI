@@ -47,7 +47,7 @@ export class TreeBase {
   }
 
   /** @param {Object} obj */
-  static fromObject(obj) {
+  static fromObject(obj, recursive = false) {
     const constructor = this.classMap.get(obj.className);
     if (!constructor) return null;
     const result = new constructor();
@@ -57,19 +57,19 @@ export class TreeBase {
       }
     }
     for (const child of obj.children) {
-      const c = this.fromObject(child);
+      const c = this.fromObject(child, true);
       if (c) {
-        result.addChild(this.fromObject(child));
+        result.addChild(c);
       }
     }
-    result.init_once();
+    if (!recursive) result.init_once();
     return result;
   }
 
   init_once() {
     if (!this.initialized) {
       this.init();
-      this.inititialized = true;
+      this.initialized = true;
     }
   }
 
@@ -209,6 +209,23 @@ export class TreeBase {
     return html`<ul level=${this.level}>
       ${this.listChildren(children)}
     </ul>`;
+  }
+
+  /**
+   * Return the nearest parent of the given type
+   * @template T
+   * @param {new() => T} type
+   * @returns {T}
+   * */
+  nearest(type) {
+    let p = this.parent;
+    while (p) {
+      if (p instanceof type) {
+        return p;
+      }
+      p = p.parent;
+    }
+    return null;
   }
 }
 

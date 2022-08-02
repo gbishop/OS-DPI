@@ -1,5 +1,3 @@
-console.log("access-method.js");
-
 import { html } from "uhtml";
 import css from "ustyler";
 import { Base } from "./base";
@@ -60,7 +58,6 @@ export class MethodChooser extends TreeBase {
   }
 
   init() {
-    console.log("method chooser init");
     this.configure();
     super.init();
   }
@@ -68,7 +65,6 @@ export class MethodChooser extends TreeBase {
   configure() {
     this.stop$.next();
     for (const method of this.children) {
-      console.log("calling configure");
       method.configure(this.stop$);
     }
   }
@@ -90,7 +86,7 @@ const EventWrapProto = {
 
 const EventWrap = extender(EventWrapProto);
 
-class Method extends TreeBase {
+export class Method extends TreeBase {
   props = {
     Name: new String("New method"),
     Key: new UID(),
@@ -126,6 +122,7 @@ class Method extends TreeBase {
       </summary>
       <div class="Method">
         ${Name.input()} ${Active.input()}
+        ${this.deleteButton({ title: "Delete this method" })}
         <fieldset>
           <legend>
             Timers ${this.addChildButton("+", Timer, { title: "Add a timer" })}
@@ -147,10 +144,8 @@ class Method extends TreeBase {
   /** @param {Subject} stop$ */
   configure(stop$) {
     if (this.props.Active.value == "true") {
-      console.log("configure");
-
-      for (const handler of this.handlers) {
-        handler.configure(stop$);
+      for (const child of this.children) {
+        child.configure(stop$);
       }
     }
   }
@@ -168,6 +163,8 @@ class Timer extends TreeBase {
     return html`${this.props.Name.input()} ${this.props.Interval.input()}
     ${this.deleteButton()}`;
   }
+
+  configure() {}
 }
 TreeBase.register(Timer);
 
@@ -180,6 +177,7 @@ const allSignals = new Map([
   ["pointerover", "Pointer enter"],
   ["pointerout", "Pointer leave"],
   ["transitionend", "Transition end"],
+  ["timer", "Timer complete"],
 ]);
 
 const allKeys = new Map([
@@ -259,10 +257,13 @@ class Handler extends TreeBase {
   /** @param {Subject} stop$ */
   configure(stop$) {
     const signal = this.props.Signal.value;
+
     if (signal.startsWith("key")) {
       this.configureKey(signal, stop$);
     } else if (signal.startsWith("pointer")) {
       this.configurePointer(signal, stop$);
+    } else if (signal.startsWith("timer")) {
+      this.configureTimer(signal, stop$);
     } else {
       this.configureOther(signal, stop$);
     }
@@ -320,7 +321,7 @@ class Handler extends TreeBase {
           e.type == signal && (keys.length == 0 || keys.indexOf(e.key) >= 0)
       ),
       map((e) => {
-        // add context info to event for use in the response
+        // add context info to event for use in the conditions and response
         const kw = EventWrap(e);
         kw.access = {
           key: e.key,
@@ -441,6 +442,12 @@ class Handler extends TreeBase {
     }
     stream$.pipe(takeUntil(stop$)).subscribe((e) => this.respond(e));
   }
+
+  /**
+   * @param {string} signal
+   * @param {Subject} stop$
+   */
+  configureTimer(signal, stop$) {}
 
   /**
    * @param {string} signal

@@ -46,6 +46,20 @@ export class Prop {
   }
 }
 
+/** @param {string[] | Map<string,string>} arrayOrMap
+ * @returns Map<string, string>
+ */
+function toMap(arrayOrMap) {
+  if (Array.isArray(arrayOrMap)) {
+    const r = new Map();
+    for (const item of arrayOrMap) {
+      r.set(item, item);
+    }
+    return r;
+  }
+  return arrayOrMap;
+}
+
 export class Select extends Prop {
   /**
    * @param {string[] | Map<string, string>} choices
@@ -53,37 +67,25 @@ export class Select extends Prop {
    */
   constructor(choices = [], options = {}) {
     super(options);
-    if (Array.isArray(choices)) {
-      choices = new Map(choices.map((choice) => [choice, choice]));
-    }
     /** @type {Map<string, string>} */
-    this.choices = choices;
-    const [firstValue] = this.choices.values();
-    this.value = firstValue;
-    /** @type {string[]} */
-    this.values = [firstValue];
+    this.choices = toMap(choices);
   }
 
-  input() {
-    // console.log("choices", this.choices, this.value, this.options);
+  input(choices = null) {
+    if (!choices) {
+      choices = this.choices;
+    }
     return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
       <span>${this.label}</span>
       <select
         title=${this.options.title}
-        ?multiple=${this.options.multiple}
         onchange=${({ target }) => {
-          this.values = [...target.selectedOptions].map(
-            (option) => option.value
-          );
-          this.value = this.values[0];
+          this.value = target.value;
         }}
       >
-        ${[...this.choices.entries()].map(
+        ${[...choices.entries()].map(
           ([key, value]) =>
-            html`<option
-              value=${key}
-              ?selected=${this.values.indexOf(key) >= 0}
-            >
+            html`<option value=${key} ?selected=${this.value == key}>
               ${value}
             </option>`
         )}
