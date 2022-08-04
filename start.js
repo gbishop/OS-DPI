@@ -202,6 +202,7 @@ export async function start() {
   Globals.pattern = TreeBase.fromObject(pattern);
   Globals.method = TreeBase.fromObject(method);
   Globals.restart = start;
+  console.log(TreeBase.classMap.keys());
 
   /** @param {() => void} f */
   function debounce(f) {

@@ -69,6 +69,8 @@ export class Select extends Prop {
     super(options);
     /** @type {Map<string, string>} */
     this.choices = toMap(choices);
+    const [firstKey] = this.choices.keys();
+    this.value = firstKey;
   }
 
   input(choices = null) {
@@ -95,11 +97,8 @@ export class Select extends Prop {
 
   /** @param {any} value */
   set(value) {
-    if (!Array.isArray(value)) {
-      value = [value];
-    }
-    this.values = value.filter((v) => this.choices.has(v));
-    this.value = this.values[0];
+    console.log("set value", this.label, value);
+    this.value = value;
   }
 }
 

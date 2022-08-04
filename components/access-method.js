@@ -132,7 +132,15 @@ export class Method extends TreeBase {
         <fieldset>
           <legend>
             Handlers
-            ${this.addChildButton("+", Handler, { title: "Add a handler" })}
+            ${this.addChildButton("+Key", KeyHandler, {
+              title: "Add a key handler",
+            })}
+            ${this.addChildButton("+Pointer", PointerHandler, {
+              title: "Add a pointer handler",
+            })}
+            ${this.addChildButton("+Timer", TimerHandler, {
+              title: "Add a timer handler",
+            })}
           </legend>
           ${this.orderedChildren(this.handlers)}
         </fieldset>
@@ -168,18 +176,6 @@ class Timer extends TreeBase {
 }
 TreeBase.register(Timer);
 
-const allSignals = new Map([
-  ["keyup", "Key up"],
-  ["keydown", "Key down"],
-  ["pointerdown", "Pointer down"],
-  ["pointermove", "Pointer move"],
-  ["pointerup", "Pointer up"],
-  ["pointerover", "Pointer enter"],
-  ["pointerout", "Pointer leave"],
-  ["transitionend", "Transition end"],
-  ["timer", "Timer complete"],
-]);
-
 const allKeys = new Map([
   [" ", "Space"],
   ["Enter", "Enter"],
@@ -190,11 +186,7 @@ const allKeys = new Map([
 ]);
 
 class Handler extends TreeBase {
-  props = {
-    Signal: new Select(allSignals),
-    Debounce: new Float(0.5),
-  };
-  /** @type {(HandlerCondition | HandlerKey | HandlerResponse)[]} */
+  /** @type {(HandlerCondition | HandlerKeyCondition | HandlerResponse)[]} */
   children = [];
 
   get conditions() {
@@ -204,8 +196,8 @@ class Handler extends TreeBase {
   }
 
   get keys() {
-    return /** @type {HandlerKey[]} */ (
-      this.children.filter((child) => child instanceof HandlerKey)
+    return /** @type {HandlerKeyCondition[]} */ (
+      this.children.filter((child) => child instanceof HandlerKeyCondition)
     );
   }
 
@@ -215,23 +207,40 @@ class Handler extends TreeBase {
     );
   }
 
+  /** @param {Event & { access: Object }} event */
+  respond(event) {
+    for (const response of this.responses) {
+      response.respond(event);
+    }
+  }
+}
+const keySignals = new Map([
+  ["keyup", "Key up"],
+  ["keydown", "Key down"],
+]);
+class KeyHandler extends Handler {
+  props = {
+    Signal: new Select(keySignals),
+    Debounce: new Float(0.1),
+  };
+
   template() {
     const { conditions, responses, keys } = this;
     const { Signal, Debounce } = this.props;
-    let keyBlock = html``;
-    if (Signal.value && Signal.value.startsWith("key")) {
-      keyBlock = html`<fieldset class="Keys">
-        <legend>
-          Keys ${this.addChildButton("+", HandlerKey, { title: "Add a key" })}
-        </legend>
-        ${this.unorderedChildren(keys)}
-      </fieldset>`;
-    }
     return html`
       <fieldset class="Handler">
-        <legend>Handler</legend>
+        <legend>Key Handler</legend>
         ${Signal.input()} ${Debounce.input()}
-        ${this.deleteButton({ title: "Delete this handler" })} ${keyBlock}
+        ${this.deleteButton({ title: "Delete this handler" })}
+        <fieldset class="Keys">
+          <legend>
+            Keys
+            ${this.addChildButton("+", HandlerKeyCondition, {
+              title: "Add a key",
+            })}
+          </legend>
+          ${this.unorderedChildren(keys)}
+        </fieldset>
         <fieldset class="Conditions">
           <legend>
             Conditions
@@ -256,24 +265,6 @@ class Handler extends TreeBase {
 
   /** @param {Subject} stop$ */
   configure(stop$) {
-    const signal = this.props.Signal.value;
-
-    if (signal.startsWith("key")) {
-      this.configureKey(signal, stop$);
-    } else if (signal.startsWith("pointer")) {
-      this.configurePointer(signal, stop$);
-    } else if (signal.startsWith("timer")) {
-      this.configureTimer(signal, stop$);
-    } else {
-      this.configureOther(signal, stop$);
-    }
-  }
-
-  /**
-   * @param {string} signal
-   * @param {Subject} stop$
-   */
-  configureKey(signal, stop$) {
     // construct debounced key event stream
     const debounceInterval = this.props.Debounce.valueAsNumber * 1000;
     const keyDown$ = /** @type Observable<KeyboardEvent> */ (
@@ -315,10 +306,12 @@ class Handler extends TreeBase {
     );
     let stream$;
     const keys = this.keys.map((key) => key.props.Key.value);
+    console.log({ keys: keys });
     stream$ = keyEvents$.pipe(
       filter(
         (e) =>
-          e.type == signal && (keys.length == 0 || keys.indexOf(e.key) >= 0)
+          e.type == this.props.Signal.value &&
+          (keys.length == 0 || keys.indexOf(e.key) >= 0)
       ),
       map((e) => {
         // add context info to event for use in the conditions and response
@@ -332,7 +325,8 @@ class Handler extends TreeBase {
           eventType: e.type,
         };
         return kw;
-      })
+      }),
+      tap((e) => console.log(e))
     );
     for (const condition of this.conditions) {
       stream$ = stream$.pipe(
@@ -341,12 +335,55 @@ class Handler extends TreeBase {
     }
     stream$.pipe(takeUntil(stop$)).subscribe((e) => this.respond(e));
   }
+}
+TreeBase.register(KeyHandler);
 
-  /**
-   * @param {string} signal
-   * @param {Subject} stop$
-   */
-  configurePointer(signal, stop$) {
+const pointerSignals = new Map([
+  ["pointerdown", "Pointer down"],
+  ["pointermove", "Pointer move"],
+  ["pointerup", "Pointer up"],
+  ["pointerover", "Pointer enter"],
+  ["pointerout", "Pointer leave"],
+]);
+
+class PointerHandler extends Handler {
+  props = {
+    Signal: new Select(pointerSignals),
+    Debounce: new Float(0.1),
+  };
+
+  template() {
+    const { conditions, responses } = this;
+    const { Signal, Debounce } = this.props;
+    return html`
+      <fieldset class="Handler">
+        <legend>Pointer Handler</legend>
+        ${Signal.input()} ${Debounce.input()}
+        ${this.deleteButton({ title: "Delete this handler" })}
+        <fieldset class="Conditions">
+          <legend>
+            Conditions
+            ${this.addChildButton("+", HandlerCondition, {
+              title: "Add a condition",
+            })}
+          </legend>
+          ${this.unorderedChildren(conditions)}
+        </fieldset>
+        <fieldset class="Responses">
+          <legend>
+            Responses
+            ${this.addChildButton("+", HandlerResponse, {
+              title: "Add a response",
+            })}
+          </legend>
+          ${this.unorderedChildren(responses)}
+        </fieldset>
+      </fieldset>
+    `;
+  }
+
+  /** @param {Subject} stop$ */
+  configure(stop$) {
     const debounceInterval = this.props.Debounce.valueAsNumber * 1000;
     // construct pointer streams
     /**
@@ -427,7 +464,7 @@ class Handler extends TreeBase {
       .subscribe((e) => e.preventDefault());
 
     let stream$ = pointerOverOut$.pipe(
-      filter((e) => e.type == signal),
+      filter((e) => e.type == this.props.Signal.value),
       map((e) => {
         const ew = EventWrap(e);
         ew.access = ButtonWrap(e.target).access;
@@ -442,27 +479,52 @@ class Handler extends TreeBase {
     }
     stream$.pipe(takeUntil(stop$)).subscribe((e) => this.respond(e));
   }
-
-  /**
-   * @param {string} signal
-   * @param {Subject} stop$
-   */
-  configureTimer(signal, stop$) {}
-
-  /**
-   * @param {string} signal
-   * @param {Subject} stop$
-   */
-  configureOther(signal, stop$) {}
-
-  /** @param {Event & { access: Object }} event */
-  respond(event) {
-    for (const response of this.responses) {
-      response.respond(event);
-    }
-  }
 }
-TreeBase.register(Handler);
+TreeBase.register(PointerHandler);
+
+const timerSignals = new Map([
+  ["transitionend", "Transition end"],
+  ["timer", "Timer complete"],
+]);
+
+class TimerHandler extends Handler {
+  props = {
+    Signal: new Select(timerSignals),
+  };
+
+  template() {
+    const { conditions, responses } = this;
+    const { Signal } = this.props;
+    return html`
+      <fieldset class="Handler">
+        <legend>Timer Handler</legend>
+        ${Signal.input()} ${this.deleteButton({ title: "Delete this handler" })}
+        <fieldset class="Conditions">
+          <legend>
+            Conditions
+            ${this.addChildButton("+", HandlerCondition, {
+              title: "Add a condition",
+            })}
+          </legend>
+          ${this.unorderedChildren(conditions)}
+        </fieldset>
+        <fieldset class="Responses">
+          <legend>
+            Responses
+            ${this.addChildButton("+", HandlerResponse, {
+              title: "Add a response",
+            })}
+          </legend>
+          ${this.unorderedChildren(responses)}
+        </fieldset>
+      </fieldset>
+    `;
+  }
+
+  /** @param {Subject} stop$ */
+  configure(stop$) {}
+}
+TreeBase.register(TimerHandler);
 
 class HandlerCondition extends TreeBase {
   props = {
@@ -486,7 +548,7 @@ class HandlerCondition extends TreeBase {
 }
 TreeBase.register(HandlerCondition);
 
-class HandlerKey extends TreeBase {
+class HandlerKeyCondition extends TreeBase {
   props = {
     Key: new Select(allKeys, { hiddenLabel: true }),
   };
@@ -500,7 +562,7 @@ class HandlerKey extends TreeBase {
     `;
   }
 }
-TreeBase.register(HandlerKey);
+TreeBase.register(HandlerKeyCondition);
 
 css`
   details.Method > *:not(summary) {

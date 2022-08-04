@@ -170,19 +170,28 @@ export class TreeBase {
   }
 
   /**
+*  * Remove this child from their parent
+*  */
+  remove() {
+    const peers = this.parent.children;
+    const index = peers.indexOf(this);
+    peers.splice(index, 1);
+    this.parent = null;
+  }
+
+  /**
    * @param {Options} options
    * @returns
    */
   deleteButton(options = {}) {
-    const peers = this.parent.children;
-    const index = peers.indexOf(this);
     return html`<button
       class="treebase"
       title=${options.title}
       onClick=${() => {
-        peers.splice(index, 1);
+        const parent = this.parent;
+        this.remove();
         if (options.onClick) options.onClick();
-        this.update();
+        parent.update();
       }}
     >
       ${icons.Trash}
@@ -217,15 +226,35 @@ export class TreeBase {
    * @param {new() => T} type
    * @returns {T}
    * */
-  nearest(type) {
+  nearestParent(type) {
     let p = this.parent;
+    console.log("nearestParent", { type, p });
     while (p) {
       if (p instanceof type) {
         return p;
       }
       p = p.parent;
+      console.log({ p });
     }
+    console.log("return null");
     return null;
+  }
+
+  /**
+   * Filter children by their type
+   * @template T
+   * @param {new() => T} type
+   * @returns {T[]}
+   */
+  filterChildren(type) {
+    /** @type {T[]} */
+    const result = [];
+    for (const child of this.children) {
+      if (child instanceof type) {
+        result.push(child);
+      }
+    }
+    return result;
   }
 }
 

@@ -80,9 +80,12 @@ class ResponderStartTimer extends Responder {
   };
 
   template() {
-    const timers = new Map(this.nearest(Method).timers.map(
-      (timer) => [timer.props.Key.value, timer.props.Name.value]
-    ));
+    const timers = new Map(
+      this.nearestParent(Method).timers.map((timer) => [
+        timer.props.Key.value,
+        timer.props.Name.value,
+      ])
+    );
     return html`${this.props.TimerName.input(timers)}`;
   }
 }
@@ -131,7 +134,7 @@ export class HandlerResponse extends TreeBase {
   init() {
     super.init();
     if (!this.children.length) {
-      this.children = [new Responder()];
+      this.addChild(new Responder());
     }
   }
 
@@ -139,8 +142,8 @@ export class HandlerResponse extends TreeBase {
   updateResponder(name) {
     if (!name) name = "none";
     const constructor = allResponders.find((c) => c.name == name);
-    this.children[0] = new constructor();
-    console.log("name", this.children[0].constructor.name);
+    this.children[0].remove();
+    this.addChild(new constructor());
   }
 
   /** @param {Event & { access: Object }} event */
