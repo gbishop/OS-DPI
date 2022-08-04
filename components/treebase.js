@@ -170,8 +170,8 @@ export class TreeBase {
   }
 
   /**
-*  * Remove this child from their parent
-*  */
+   *  * Remove this child from their parent
+   *  */
   remove() {
     const peers = this.parent.children;
     const index = peers.indexOf(this);
