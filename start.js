@@ -11,7 +11,7 @@ import { log, logInit } from "./log";
 import pleaseWait from "./components/wait";
 import { fileOpen } from "browser-fs-access";
 import css from "ustyler";
-import { ButtonWrap } from "./components/access-pattern";
+import { ButtonWrap } from "./components/access";
 import Globals from "./globals";
 import { TreeBase } from "./components/treebase";
 

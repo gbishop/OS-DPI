@@ -7,9 +7,9 @@ const Globals = {
   rules: null,
   /** @type {Tree} */
   tree: null,
-  /** @type {import('./components/access-pattern').PatternManager} */
+  /** @type {import('./components/access/pattern').PatternManager} */
   pattern: null,
-  /** @type {import('./components/access-method').MethodChooser} */
+  /** @type {import('./components/access/method').MethodChooser} */
   method: null,
   cues: { default: "background-color: yellow" },
   restart: null,

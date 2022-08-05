@@ -3,7 +3,7 @@ import { Base, componentMap } from "./base";
 import { Stack } from "./stack";
 import { styleString } from "./style";
 import css from "ustyler";
-import { UpdateAccessData } from "./access-pattern";
+import { UpdateAccessData } from "./access";
 import Globals from "../globals";
 
 export class TabControl extends Base {

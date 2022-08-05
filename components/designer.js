@@ -3,9 +3,7 @@ import { Base } from "./base";
 import { TabControl, TabPanel } from "./tabcontrol";
 import { Layout } from "./layout";
 import { Actions } from "./actions";
-import { AccessPattern } from "./access-pattern";
-import { AccessMethod } from "./access-method";
-import { AccessCues } from "./access-cues";
+import { Access } from "./access";
 import { Content } from "./content";
 import css from "ustyler";
 
@@ -30,7 +28,7 @@ export class Designer extends Base {
     );
     contentPanel.children = [new Content({}, contentPanel)];
 
-     const layoutPanel = new TabPanel(
+    const layoutPanel = new TabPanel(
       {
         name: "Layout",
         background: "pinkish white",
@@ -48,41 +46,16 @@ export class Designer extends Base {
     );
     actionPanel.children = [new Actions({}, actionPanel)];
 
-    const methodPanel = new TabPanel(
+    const accessPanel = new TabPanel(
       {
-        name: "Access Method",
-        background: "cyanish white",
+        name: "Access",
+        background: "yellowish white",
       },
       tabs
     );
-    methodPanel.children = [new AccessMethod({}, methodPanel)];
+    accessPanel.children = [new Access({}, accessPanel)];
 
-     const patternPanel = new TabPanel(
-      {
-        name: "Access Pattern",
-        background: "bluish white",
-      },
-      tabs
-    );
-    patternPanel.children = [new AccessPattern({}, patternPanel)];
-
-   const cuePanel = new TabPanel(
-      {
-        name: "Access Cues",
-        background: "magentaish white",
-      },
-      tabs
-    );
-    cuePanel.children = [new AccessCues({}, cuePanel)];
-
-   tabs.children = [
-      contentPanel,
-      layoutPanel,
-      actionPanel,
-      methodPanel,
-      patternPanel,
-      cuePanel,
-    ];
+    tabs.children = [contentPanel, layoutPanel, actionPanel, accessPanel];
     /** @type {Base[]} */
     this.children = [tabs];
   }

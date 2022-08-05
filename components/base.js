@@ -76,6 +76,9 @@ export class Base {
   /** @type {string[]} */
   static allowedChildren = [];
 
+  /** @type {Base[]} */
+  children = [];
+
   /**
    * @param {SomeProps} props
    * @param {Base|Null} parent

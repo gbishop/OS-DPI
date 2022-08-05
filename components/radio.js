@@ -2,7 +2,7 @@ import { html } from "uhtml";
 import { Base, componentMap } from "./base";
 import { styleString } from "./style";
 import css from "ustyler";
-import { UpdateAccessData } from "./access-pattern";
+import { UpdateAccessData } from "./access";
 
 class Option extends Base {
   static defaultProps = {
