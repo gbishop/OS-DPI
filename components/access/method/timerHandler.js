@@ -3,9 +3,7 @@ import { Handler, HandlerCondition } from "./handler";
 import { HandlerResponse } from "./responses";
 import { Select } from "../../props";
 import { html } from "uhtml";
-import {
-  Subject,
-} from "rxjs";
+import { Subject } from "rxjs";
 
 const timerSignals = new Map([
   ["transitionend", "Transition end"],

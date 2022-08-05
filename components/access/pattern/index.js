@@ -1,5 +1,3 @@
-/* thinking about better ways to write this */
-
 import db from "../../../db";
 import { html } from "uhtml";
 import css from "ustyler";

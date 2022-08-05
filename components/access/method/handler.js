@@ -2,9 +2,7 @@ import { html } from "uhtml";
 import { TreeBase } from "../../treebase";
 import { HandlerResponse } from "./responses";
 import { Select, Expression } from "../../props";
-import {
-  Subject,
-} from "rxjs";
+import { Subject } from "rxjs";
 
 /** Handler is a base class for all event handlers */
 export class Handler extends TreeBase {
