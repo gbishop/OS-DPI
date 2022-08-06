@@ -69,16 +69,40 @@ export class Method extends TreeBase {
   /** @type {(Handler | Timer)[]} */
   children = [];
 
-  get timers() {
-    return /** @type {Timer[]} */ (
-      this.children.filter((child) => child instanceof Timer)
+  /** Return an array of the timers for this Method */
+  // get timers() {
+  //   return this.filterChildren(Timer);
+  // }
+
+  /** Return a Map from Timer Key to its Name */
+  get timerNameMap() {
+    return new Map(
+      this.filterChildren(Timer).map((timer) => [
+        timer.props.Key.value,
+        timer.props.Name.value,
+      ])
     );
   }
 
-  get handlers() {
-    return /** @type {Handler[]} */ (
-      this.children.filter((child) => child instanceof Handler)
+  /** Return a Map from Timer Key to the Timer */
+  get timers() {
+    return new Map(
+      this.filterChildren(Timer).map((child) => [child.props.Key.value, child])
     );
+  }
+
+  /** Return a Timer given its key
+   *     @param {string} key
+   *  */
+  timer(key) {
+    return this.filterChildren(Timer).find(
+      (timer) => timer.props.Key.value == key
+    );
+  }
+
+  /** Return an array of the Handlers */
+  get handlers() {
+    return this.filterChildren(Handler);
   }
 
   template() {
@@ -98,7 +122,7 @@ export class Method extends TreeBase {
           <legend>
             Timers ${this.addChildButton("+", Timer, { title: "Add a timer" })}
           </legend>
-          ${this.unorderedChildren(this.timers)}
+          ${this.unorderedChildren([...this.timers.values()])}
         </fieldset>
         <fieldset>
           <legend>

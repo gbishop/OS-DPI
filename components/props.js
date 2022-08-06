@@ -72,6 +72,7 @@ export class Select extends Prop {
     this.value = "";
   }
 
+  /** @param {Map<string,string>} choices */
   input(choices = null) {
     if (!choices) {
       choices = this.choices;
@@ -79,12 +80,16 @@ export class Select extends Prop {
     return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
       <span>${this.label}</span>
       <select
+        required
         title=${this.options.title}
         onchange=${({ target }) => {
           this.value = target.value;
         }}
       >
-        ${[["", "Choose one"], ...choices.entries()].map(
+        <option value="" disabled ?selected=${!choices.has(this.value)}>
+          ${this.options.placeholder || "Choose one..."}
+        </option>
+        ${[...choices.entries()].map(
           ([key, value]) =>
             html`<option value=${key} ?selected=${this.value == key}>
               ${value}
@@ -253,5 +258,15 @@ css`
     position: absolute;
     white-space: nowrap;
     width: 1px;
+  }
+  select:required:invalid {
+    color: gray;
+    border-color: red;
+  }
+  option[value=""][disabled] {
+    display: none;
+  }
+  option {
+    color: black;
   }
 `;

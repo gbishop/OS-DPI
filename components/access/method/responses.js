@@ -76,23 +76,20 @@ class ResponderStartTimer extends Responder {
   static title = "start timer";
 
   props = {
-    TimerName: new Select([], { hiddenLabel: true }), // filled in later from the timers
+    TimerName: new Select([], {
+      placeholder: "Choose a timer",
+      hiddenLabel: true,
+    }),
   };
 
   template() {
-    const timers = new Map(
-      this.nearestParent(Method).timers.map((timer) => [
-        timer.props.Key.value,
-        timer.props.Name.value,
-      ])
-    );
-    return html`${this.props.TimerName.input(timers)}`;
+    const timerNames = this.nearestParent(Method).timerNameMap;
+    return html`${this.props.TimerName.input(timerNames)}`;
   }
 
   respond({ access }) {
-    const timer = this.nearestParent(Method).timers.find(
-      (timer) => timer.props.Key.value == this.props.TimerName.value
-    );
+    const timer = this.nearestParent(Method).timer(this.props.TimerName.value);
+    if (!timer) return;
     timer.start(access);
   }
 }
