@@ -166,7 +166,7 @@ export class PatternManager extends PatternBase {
   }
 
   start() {
-    this.stack = [{ group: this.targets, index: 0 }];
+    this.stack = [{ group: this.targets, index: -1 }];
     this.cue();
   }
 
@@ -206,6 +206,7 @@ export class PatternManager extends PatternBase {
 
   activate() {
     let current = this.current;
+    if (!current) return;
     if (current instanceof Group) {
       console.log("activate group", current, this.stack);
       while (current.length == 1 && current.members[0] instanceof Group) {

@@ -228,15 +228,12 @@ export class TreeBase {
    * */
   nearestParent(type) {
     let p = this.parent;
-    console.log("nearestParent", { type, p });
     while (p) {
       if (p instanceof type) {
         return p;
       }
       p = p.parent;
-      console.log({ p });
     }
-    console.log("return null");
     return null;
   }
 

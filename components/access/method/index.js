@@ -5,11 +5,12 @@ import { TreeBase } from "../../treebase";
 import { String, Float, UID, Boolean } from "../../props";
 import Globals from "../../../globals";
 import db from "../../../db";
-import { Subject } from "rxjs";
+import { Subject, Observable } from "rxjs";
 import { Handler } from "./handler";
 import { KeyHandler } from "./keyHandler";
 import { PointerHandler } from "./pointerHandler";
 import { TimerHandler } from "./timerHandler";
+import { EventWrap } from "../index";
 
 export class AccessMethod extends Base {
   template() {
@@ -27,6 +28,7 @@ export class MethodChooser extends TreeBase {
   stop$ = new Subject();
 
   update() {
+    console.log("update method", this);
     db.write("method", this.toObject());
     this.configure();
     Globals.state.update();
@@ -121,7 +123,7 @@ export class Method extends TreeBase {
   /** @param {Subject} stop$ */
   configure(stop$) {
     if (this.props.Active.value == "true") {
-      for (const child of this.children) {
+      for (const child of this.handlers) {
         child.configure(stop$);
       }
     }
@@ -136,12 +138,25 @@ class Timer extends TreeBase {
     Key: new UID(),
   };
 
+  /** @type {Subject<WrappedEvent>} */
+  subject$ = new Subject();
+
   template() {
     return html`${this.props.Name.input()} ${this.props.Interval.input()}
     ${this.deleteButton()}`;
   }
 
-  configure() {}
+  /** @param {Object} access */
+  start(access) {
+    const event = EventWrap(new Event("timer"));
+    event.access = access;
+    this.subject$.next(event);
+  }
+
+  cancel() {
+    const event = EventWrap(new Event("cancel"));
+    this.subject$.next(event);
+  }
 }
 TreeBase.register(Timer);
 

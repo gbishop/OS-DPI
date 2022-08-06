@@ -120,3 +120,5 @@
  */
 
 /** @typedef {import("../components/img-db.js").imgFromDb} ImgDb */
+
+/** @typedef {Event & {access: Object}} WrappedEvent */

@@ -114,7 +114,6 @@ export class KeyHandler extends Handler {
     );
     let stream$;
     const keys = this.keys.map((key) => key.props.Key.value);
-    console.log({ keys: keys });
     stream$ = keyEvents$.pipe(
       filter(
         (e) =>
@@ -133,8 +132,7 @@ export class KeyHandler extends Handler {
           eventType: e.type,
         };
         return kw;
-      }),
-      tap((e) => console.log(e))
+      })
     );
     for (const condition of this.conditions) {
       stream$ = stream$.pipe(

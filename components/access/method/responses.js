@@ -88,6 +88,13 @@ class ResponderStartTimer extends Responder {
     );
     return html`${this.props.TimerName.input(timers)}`;
   }
+
+  respond({ access }) {
+    const timer = this.nearestParent(Method).timers.find(
+      (timer) => timer.props.Key.value == this.props.TimerName.value
+    );
+    timer.start(access);
+  }
 }
 TreeBase.register(ResponderStartTimer);
 
@@ -146,9 +153,8 @@ export class HandlerResponse extends TreeBase {
     this.addChild(new constructor());
   }
 
-  /** @param {Event & { access: Object }} event */
+  /** @param {WrappedEvent} event */
   respond(event) {
-    console.log(this.constructor.name, this.children.length);
     this.children[0].respond(event);
   }
 }

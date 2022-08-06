@@ -69,8 +69,7 @@ export class Select extends Prop {
     super(options);
     /** @type {Map<string, string>} */
     this.choices = toMap(choices);
-    const [firstKey] = this.choices.keys();
-    this.value = firstKey;
+    this.value = "";
   }
 
   input(choices = null) {
@@ -85,7 +84,7 @@ export class Select extends Prop {
           this.value = target.value;
         }}
       >
-        ${[...choices.entries()].map(
+        ${[["", "Choose one"], ...choices.entries()].map(
           ([key, value]) =>
             html`<option value=${key} ?selected=${this.value == key}>
               ${value}
@@ -97,7 +96,6 @@ export class Select extends Prop {
 
   /** @param {any} value */
   set(value) {
-    console.log("set value", this.label, value);
     this.value = value;
   }
 }
