@@ -7,13 +7,14 @@ import { Designer } from "./components/designer";
 import { Monitor } from "./components/monitor";
 import { ToolBar } from "./components/toolbar";
 import db from "./db";
-import { log, logInit } from "./log";
 import pleaseWait from "./components/wait";
 import { fileOpen } from "browser-fs-access";
 import css from "ustyler";
 import { ButtonWrap } from "./components/access";
 import Globals from "./globals";
 import { TreeBase } from "./components/treebase";
+import { PatternManager } from "./components/access/pattern";
+import { MethodChooser } from "./components/access/method";
 
 const safe = true;
 
@@ -159,7 +160,6 @@ export async function start() {
     }
   }
   const name = window.location.hash.slice(1);
-  logInit(name);
   if (!name) {
     return welcome();
   }
@@ -178,29 +178,14 @@ export async function start() {
   const layout = await db.read("layout", emptyPage);
   const rulesArray = await db.read("actions", []);
   const dataArray = await db.read("content", []);
-  const pattern = await db.read("pattern", {
-    className: "PatternManager",
-    props: {
-      Cycles: 2,
-      Cue: "default",
-    },
-    children: [],
-  });
-  const method = await db.read("method", {
-    className: "MethodChooser",
-    props: {
-      currentIndex: -1,
-    },
-    children: [],
-  });
   await pageLoaded;
 
   Globals.tree = assemble(layout);
   Globals.state = new State(`UIState`);
   Globals.rules = new Rules(rulesArray);
   Globals.data = new Data(dataArray);
-  Globals.pattern = TreeBase.fromObject(pattern);
-  Globals.method = TreeBase.fromObject(method);
+  Globals.pattern = await PatternManager.load();
+  Globals.method = await MethodChooser.load();
   Globals.restart = start;
 
   /** @param {() => void} f */

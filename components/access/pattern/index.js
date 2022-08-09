@@ -98,14 +98,36 @@ export class PatternManager extends PatternBase {
     Cue: new Select(Object.keys(Globals.cues)),
   };
 
+  static loadFallback = {
+    className: "PatternManager",
+    props: {
+      Cycles: 2,
+      Cue: "default",
+    },
+    children: [],
+  };
+
+  /**
+* Load the PatternManager from the db
+  @returns {Promise<PatternManager>}
+*/
+  static async load() {
+    const fallback = {
+      className: "PatternManager",
+      props: {
+        Cycles: 2,
+        Cue: "default",
+      },
+      children: [],
+    };
+    const pattern = await db.read("pattern", fallback);
+    return /** @type {PatternManager} */ (PatternManager.fromObject(pattern));
+  }
+
   template() {
     const { Cycles, Cue } = this.props;
     return html`
-      <div
-        class=${this.className}
-        onChange=${() => this.update()}
-        level=${this.level}
-      >
+      <div class=${this.className}>
         ${Cycles.input()} ${Cue.input()} ${this.orderedChildren()}
         ${this.addChildButton("+Selector", PatternSelector)}
         ${this.addChildButton("+Group", PatternGroup)}
@@ -113,7 +135,7 @@ export class PatternManager extends PatternBase {
     `;
   }
 
-  update() {
+  onUpdate() {
     db.write("pattern", this.toObject());
     Globals.state.update();
   }
@@ -256,7 +278,7 @@ class PatternGroup extends PatternBase {
   };
   template() {
     const { Name, Cycles, Cue } = this.props;
-    return html`<fieldset class=${this.className} level=${this.level}>
+    return html`<fieldset class=${this.className}>
       <legend>Group: ${Name.value}</legend>
       ${Name.input()} ${Cycles.input()} ${Cue.input()} ${this.orderedChildren()}
       ${this.addChildButton("+Selector", PatternSelector)}
@@ -290,7 +312,7 @@ PatternBase.register(PatternGroup);
 
 class PatternSelector extends PatternBase {
   template() {
-    return html`<fieldset class=${this.className} level=${this.level}>
+    return html`<fieldset class=${this.className}>
       <legend>Selector</legend>
       ${this.unorderedChildren()} ${this.addChildButton("+Filter", Filter)}
       ${this.addChildButton("+Order by", OrderBy)}
@@ -320,7 +342,7 @@ class Filter extends PatternBase {
   };
   template() {
     const { Filter } = this.props;
-    return html`<div class=${this.className} level=${this.level}>
+    return html`<div class=${this.className}>
       ${Filter.input()}${this.deleteButton({ title: "Delete this filter" })}
     </div>`;
   }
@@ -358,7 +380,7 @@ class OrderBy extends PatternBase {
   };
   template() {
     const { OrderBy } = this.props;
-    return html`<div class=${this.className} level=${this.level}>
+    return html`<div class=${this.className}>
       ${OrderBy.input()}${this.deleteButton({ title: "Delete this order by" })}
     </div>`;
   }
@@ -395,7 +417,7 @@ class GroupBy extends PatternBase {
   };
   template() {
     const { GroupBy, Name, Cue, Cycles } = this.props;
-    return html`<div class=${this.className} level=${this.level}>
+    return html`<div class=${this.className}>
       ${GroupBy.input()} ${Name.input()}
       ${this.deleteButton({ title: "Delete this Group By" })}
       <details>

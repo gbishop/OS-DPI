@@ -48,6 +48,8 @@
 
 /** @typedef {import('../components/base').Base} Tree */
 
+/** @typedef {import('../components/treebase').TreeBase} TreeBase */
+
 /**
  * @typedef {import("../state").State} State
  */

@@ -26,6 +26,9 @@ export class Prop {
   /** @type {PropOptions} */
   options = {};
 
+  /** @type {TreeBase} */
+  container = null;
+
   /** @param {PropOptions} options */
   constructor(options = {}) {
     this.options = options;
@@ -44,6 +47,10 @@ export class Prop {
   set(value) {
     this.value = value;
   }
+
+  update() {
+    this.container.update();
+  }
 }
 
 /** @param {string[] | Map<string,string>} arrayOrMap
@@ -51,11 +58,7 @@ export class Prop {
  */
 function toMap(arrayOrMap) {
   if (Array.isArray(arrayOrMap)) {
-    const r = new Map();
-    for (const item of arrayOrMap) {
-      r.set(item, item);
-    }
-    return r;
+    return new Map(arrayOrMap.map((item) => [item, item]));
   }
   return arrayOrMap;
 }
@@ -84,6 +87,8 @@ export class Select extends Prop {
         title=${this.options.title}
         onchange=${({ target }) => {
           this.value = target.value;
+          console.log("select", this, this.value, target.value);
+          this.update();
         }}
       >
         <option value="" disabled ?selected=${!choices.has(this.value)}>
@@ -128,6 +133,7 @@ export class String extends Prop {
         .value=${this.value}
         onchange=${({ target }) => {
           this.value = target.value;
+          this.update();
         }}
         title=${this.options.title}
         placeholder=${this.options.placeholder}
@@ -150,6 +156,7 @@ export class Integer extends Prop {
         .value=${this.value}
         onchange=${({ target }) => {
           this.value = target.value;
+          this.update();
         }}
         title=${this.options.title}
         placeholder=${this.options.placeholder}
@@ -172,6 +179,7 @@ export class Float extends Prop {
         .value=${this.value}
         onchange=${({ target }) => {
           this.value = target.value;
+          this.update();
         }}
         title=${this.options.title}
         placeholder=${this.options.placeholder}
@@ -195,6 +203,7 @@ export class Boolean extends Prop {
         ?checked=${this.value == "true"}
         onchange=${({ target }) => {
           this.value = target.checked ? "true" : "false";
+          this.update();
         }}
         title=${this.options.title}
       />
@@ -227,6 +236,7 @@ export class Expression extends Prop {
           this.value = target.value;
           this.compiled = compileExpression(this.value);
           console.log("compiled", this.compiled);
+          this.update();
         }}
         title=${this.options.title}
         placeholder=${this.options.placeholder}

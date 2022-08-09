@@ -1,15 +1,7 @@
 import { html } from "uhtml";
 import { TreeBase } from "../../treebase";
 import Globals from "../../../globals";
-import {
-  Select,
-  Expression,
-  String,
-  Integer,
-  Float,
-  UID,
-  Boolean,
-} from "../../props";
+import { Select } from "../../props";
 import { Method } from "./index";
 
 class Responder extends TreeBase {
@@ -83,7 +75,7 @@ class ResponderStartTimer extends Responder {
   };
 
   template() {
-    const timerNames = this.nearestParent(Method).timerNameMap;
+    const timerNames = this.nearestParent(Method).timerNames;
     return html`${this.props.TimerName.input(timerNames)}`;
   }
 
@@ -106,39 +98,34 @@ const allResponders = [
 ];
 
 export class HandlerResponse extends TreeBase {
+  props = {
+    Response: new Select(new Map(allResponders.map((c) => [c.name, c.title]))),
+  };
+
   /** @type {Responder[]} */
   children = [];
 
   template() {
+    /* This is a hack to allow switching the children from the parent, I need a better solution */
+    if (!this.children.length) {
+      console.log("add the none child");
+      TreeBase.create(Responder, this);
+    }
     const current = this.children[0];
     return html`
       <div class="Response">
-        <label hiddenLabel>
-          <span>Response</span>
-          <select
-            onchange=${({ target }) => this.updateResponder(target.value)}
-          >
-            ${allResponders.map(
-              (constructor) =>
-                html`<option
-                  ?selected=${constructor.name === current.constructor.name}
-                  value=${constructor.name}
-                >
-                  ${constructor.title}
-                </option>`
-            )}
-          </select>
-        </label>
-        ${current.template()}
+        ${this.props.Response.input()} ${current.template()}
         ${this.deleteButton({ title: "Delete this response" })}
       </div>
     `;
   }
 
-  init() {
-    super.init();
-    if (!this.children.length) {
-      this.addChild(new Responder());
+  /** @param {TreeBase} start */
+  onUpdate(start) {
+    console.log("onUpdate", this.props.Response);
+    if (start === this) {
+      // event originated here
+      this.updateResponder(this.props.Response.value);
     }
   }
 
@@ -146,13 +133,15 @@ export class HandlerResponse extends TreeBase {
   updateResponder(name) {
     if (!name) name = "none";
     const constructor = allResponders.find((c) => c.name == name);
-    this.children[0].remove();
-    this.addChild(new constructor());
+    if (this.children[0] instanceof constructor) return;
+    this.children = [];
+    TreeBase.create(constructor, this);
+    console.log("updated", this);
   }
 
   /** @param {WrappedEvent} event */
   respond(event) {
-    this.children[0].respond(event);
+    this.children.length && this.children[0].respond(event);
   }
 }
 TreeBase.register(HandlerResponse);

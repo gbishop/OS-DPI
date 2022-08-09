@@ -2,6 +2,7 @@ import { html } from "uhtml";
 import { Prop } from "./props";
 import * as icons from "./icons";
 import css from "ustyler";
+import db from "../db";
 
 export class TreeBase {
   /** @type Object<string, Prop> */
@@ -11,8 +12,7 @@ export class TreeBase {
   /** @type {TreeBase} */
   parent = null;
 
-  initialized = false;
-
+  /** A mapping from the class name to the class */
   static classMap = new Map();
   /** @param {typeof TreeBase} cls */
   static register(cls) {
@@ -23,16 +23,10 @@ export class TreeBase {
     return this.constructor.name;
   }
 
-  get level() {
-    let i = 0,
-      t = this.parent;
-    while (t) {
-      i += 1;
-      t = t.parent;
-    }
-    return i % 3;
-  }
-
+  /**
+   * Prepare a TreeBase tree for external storage by converting to simple objects and arrays
+   * @returns {Object}
+   * */
   toObject() {
     const props = {};
     for (const name in this.props) {
@@ -46,48 +40,92 @@ export class TreeBase {
     };
   }
 
-  /** @param {Object} obj */
-  static fromObject(obj, recursive = false) {
-    const constructor = this.classMap.get(obj.className);
-    if (!constructor) return null;
+  /**
+   *   Create a TreeBase object
+   *   @template {TreeBase} TB
+   *   @param {new()=>TB} constructor
+   *   @param {TreeBase} parent
+   *   @param {Object<string,Prop>} props
+   *   @returns {TB}
+   *   */
+  static create(constructor, parent = null, props = {}) {
     const result = new constructor();
-    for (const name in result.props) {
-      if (name in obj.props) {
-        result.props[name].set(obj.props[name]);
+
+    // initialize the props
+    for (const [name, prop] of Object.entries(result.props)) {
+      if (name in props) {
+        prop.set(props[name]);
       }
+      // create a label if it has none
+      prop.label =
+        prop.label ||
+        name // convert from camelCase to Camel Case
+          .replace(/(?!^)([A-Z])/g, " $1")
+          .replace(/^./, (s) => s.toUpperCase());
+      // give each prop a link to the TreeBase that contains it.
+      prop.container = result;
     }
-    for (const child of obj.children) {
-      const c = this.fromObject(child, true);
-      if (c) {
-        result.addChild(c);
-      }
+
+    // link it to its parent
+    if (parent) {
+      result.parent = parent;
+      parent.children.push(result);
     }
-    if (!recursive) result.init_once();
+
     return result;
   }
 
-  init_once() {
-    if (!this.initialized) {
-      this.init();
-      this.initialized = true;
+  /**
+   * Instantiate a TreeBase tree from its external representation
+   * @param {Object} obj
+   * @param {TreeBase} parent
+   * @returns {TreeBase} - should be {this} but that isn't supported for some reason
+   * */
+  static fromObject(obj, parent = null) {
+    // Get the constructor from the class map
+    const constructor = this.classMap.get(obj.className);
+    if (!constructor) return null;
+
+    // Create the object and link it to its parent
+    const result = this.create(constructor, parent, obj.props);
+
+    // Link in the children
+    for (const childObj of obj.children) {
+      TreeBase.fromObject(childObj, result);
     }
+
+    // Validate the type is what was expected
+    if (result instanceof this) return result;
+
+    // Die if not
+    console.error("expected", this);
+    console.error("got", result);
+    throw new Error(`fromObject failed`);
   }
 
-  /** Create labels for controls from their camelCase names */
-  init() {
-    for (const [name, value] of Object.entries(this.props)) {
-      value.label =
-        value.label ||
-        name
-          .replace(/(?!^)([A-Z])/g, " $1")
-          .replace(/^./, (s) => s.toUpperCase());
-    }
-  }
-
+  /**
+   * Signal nodes above that something has been updated
+   */
   update() {
-    if (this.parent) this.parent.update();
+    /** @type {TreeBase} */
+    let start = this;
+    let p = start;
+    while (p) {
+      p.onUpdate(start);
+      p = p.parent;
+    }
   }
 
+  /**
+   * Called something below is updated
+   * @param {TreeBase} _start
+   */
+  onUpdate(_start) {}
+
+  /**
+   * Render this node and return the resulting Hole
+   * @returns {Hole}
+   */
   template() {
     return html``;
   }
@@ -97,12 +135,6 @@ export class TreeBase {
    * @property {string} [title]
    * @property {function():void} [onClick]
    */
-  /** @param {TreeBase} child */
-  addChild(child) {
-    child.parent = this;
-    this.children.push(child);
-    child.init_once();
-  }
 
   /**
    * @param {string} label
@@ -114,7 +146,7 @@ export class TreeBase {
     return html`<button
       title=${options.title}
       onClick=${() => {
-        this.addChild(new constructor());
+        TreeBase.create(constructor, this);
         if (options.onClick) options.onClick();
         this.update();
       }}
@@ -123,6 +155,12 @@ export class TreeBase {
     </button>`;
   }
 
+  /**
+   * Swap two children
+   * @param {TreeBase[]} A
+   * @param {number} i
+   * @param {number} j
+   */
   swap(A, i, j) {
     [A[i], A[j]] = [A[j], A[i]];
   }
@@ -180,8 +218,9 @@ export class TreeBase {
   }
 
   /**
+   * Create a button to delete the current item
    * @param {Options} options
-   * @returns
+   * @returns {Hole}
    */
   deleteButton(options = {}) {
     return html`<button
@@ -198,6 +237,9 @@ export class TreeBase {
     </button>`;
   }
 
+  /**
+   * Create movement buttons
+   */
   movementButtons(name = "") {
     return html`<div class="movement">
       ${this.moveUpButton({ title: `Move this ${name} up` })}
@@ -206,16 +248,27 @@ export class TreeBase {
     </div>`;
   }
 
+  /**
+   * Create HTML LI nodes from the children
+   */
   listChildren(children = this.children) {
     return children.map((child) => html`<li>${child.template()}</li>`);
   }
+
+  /**
+   * Create an HTML ordered list from the children
+   */
   orderedChildren(children = this.children) {
-    return html`<ol level=${this.level}>
+    return html`<ol>
       ${this.listChildren(children)}
     </ol>`;
   }
+
+  /**
+   * Create an HTML unordered list from the children
+   * */
   unorderedChildren(children = this.children) {
-    return html`<ul level=${this.level}>
+    return html`<ul>
       ${this.listChildren(children)}
     </ul>`;
   }

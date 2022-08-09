@@ -20,7 +20,7 @@ export class TimerHandler extends Handler {
   template() {
     const { conditions, responses } = this;
     const { Signal } = this.props;
-    const timerNames = this.nearestParent(Method).timerNameMap;
+    const timerNames = this.nearestParent(Method).timerNames;
     return html`
       <fieldset class="Handler">
         <legend>Timer Handler</legend>

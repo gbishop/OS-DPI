@@ -5,7 +5,7 @@ import { TreeBase } from "../../treebase";
 import { String, Float, UID, Boolean } from "../../props";
 import Globals from "../../../globals";
 import db from "../../../db";
-import { Subject, Observable } from "rxjs";
+import { Subject } from "rxjs";
 import { Handler } from "./handler";
 import { KeyHandler } from "./keyHandler";
 import { PointerHandler } from "./pointerHandler";
@@ -27,27 +27,41 @@ export class MethodChooser extends TreeBase {
   // allow tearing down handlers when changing configurations
   stop$ = new Subject();
 
-  update() {
+  onUpdate() {
     console.log("update method", this);
     db.write("method", this.toObject());
     this.configure();
     Globals.state.update();
   }
 
-  init() {
-    this.configure();
-    super.init();
-  }
-
   configure() {
+    // tear down the old configuration if any
     this.stop$.next();
     for (const method of this.children) {
       method.configure(this.stop$);
     }
   }
 
+  /**
+* Load the MethodChooser from the db
+  @returns {Promise<MethodChooser>}
+*/
+  static async load() {
+    const fallback = {
+      className: "MethodChooser",
+      props: {
+        currentIndex: -1,
+      },
+      children: [],
+    };
+    const method = await db.read("method", fallback);
+    const result = /** @type {MethodChooser} */ (this.fromObject(method));
+    result.configure();
+    return result;
+  }
+
   template() {
-    return html`<div class="MethodChooser" onChange=${() => this.update()}>
+    return html`<div class="MethodChooser">
       ${this.addChildButton("Add Method", Method, {
         title: "Create a new access method",
       })}
@@ -69,25 +83,20 @@ export class Method extends TreeBase {
   /** @type {(Handler | Timer)[]} */
   children = [];
 
-  /** Return an array of the timers for this Method */
-  // get timers() {
-  //   return this.filterChildren(Timer);
-  // }
+  /** Return a Map from Timer Key to the Timer */
+  get timers() {
+    return new Map(
+      this.filterChildren(Timer).map((child) => [child.props.Key.value, child])
+    );
+  }
 
   /** Return a Map from Timer Key to its Name */
-  get timerNameMap() {
+  get timerNames() {
     return new Map(
       this.filterChildren(Timer).map((timer) => [
         timer.props.Key.value,
         timer.props.Name.value,
       ])
-    );
-  }
-
-  /** Return a Map from Timer Key to the Timer */
-  get timers() {
-    return new Map(
-      this.filterChildren(Timer).map((child) => [child.props.Key.value, child])
     );
   }
 
