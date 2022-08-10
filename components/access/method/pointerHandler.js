@@ -28,14 +28,11 @@ const pointerSignals = new Map([
 ]);
 
 export class PointerHandler extends Handler {
-  props = {
-    Signal: new Select(pointerSignals),
-    Debounce: new Float(0.1),
-  };
+  Signal = new Select(pointerSignals);
+  Debounce = new Float(0.1);
 
   template() {
-    const { conditions, responses } = this;
-    const { Signal, Debounce } = this.props;
+    const { conditions, responses, Signal, Debounce } = this;
     return html`
       <fieldset class="Handler">
         <legend>Pointer Handler</legend>
@@ -65,7 +62,7 @@ export class PointerHandler extends Handler {
 
   /** @param {Subject} stop$ */
   configure(stop$) {
-    const debounceInterval = this.props.Debounce.valueAsNumber * 1000;
+    const debounceInterval = this.Debounce.valueAsNumber * 1000;
     // construct pointer streams
     /**
      * Get the types correct
@@ -145,7 +142,7 @@ export class PointerHandler extends Handler {
       .subscribe((e) => e.preventDefault());
 
     let stream$ = pointerOverOut$.pipe(
-      filter((e) => e.type == this.props.Signal.value),
+      filter((e) => e.type == this.Signal.value),
       map((e) => {
         const ew = EventWrap(e);
         ew.access = ButtonWrap(e.target).access;
@@ -154,9 +151,7 @@ export class PointerHandler extends Handler {
       })
     );
     for (const condition of this.conditions) {
-      stream$ = stream$.pipe(
-        filter((e) => condition.props.Condition.eval(e.access))
-      );
+      stream$ = stream$.pipe(filter((e) => condition.Condition.eval(e.access)));
     }
     stream$.pipe(takeUntil(stop$)).subscribe((e) => this.respond(e));
   }

@@ -2,11 +2,8 @@ import { html } from "uhtml";
 import { Prop } from "./props";
 import * as icons from "./icons";
 import css from "ustyler";
-import db from "../db";
 
 export class TreeBase {
-  /** @type Object<string, Prop> */
-  props = {};
   /** @type {TreeBase[]} */
   children = [];
   /** @type {TreeBase} */
@@ -26,14 +23,30 @@ export class TreeBase {
   }
 
   /**
+   * Extract the class fields that are Props
+   * @returns {Object<string, Prop>}
+   */
+  get props() {
+    return Object.fromEntries(
+      Object.entries(this).filter(([_, prop]) => prop instanceof Prop)
+    );
+  }
+
+  /**
+   * Extract the values of the fields that are Props
+   * @returns {Object<string, string>}
+   */
+  get propsAsObject() {
+    return Object.fromEntries(
+      Object.entries(this.props).map(([name, prop]) => [name, prop.value])
+    );
+  }
+  /**
    * Prepare a TreeBase tree for external storage by converting to simple objects and arrays
    * @returns {Object}
    * */
   toObject() {
-    const props = {};
-    for (const name in this.props) {
-      props[name] = this.props[name].value;
-    }
+    const props = this.propsAsObject;
     const children = this.children.map((child) => child.toObject());
     return {
       className: this.className,
@@ -60,7 +73,7 @@ export class TreeBase {
     // initialize the props
     for (const [name, prop] of Object.entries(result.props)) {
       if (name in props) {
-        prop.set(props.name);
+        prop.set(props[name]);
       }
       // create a label if it has none
       prop.label =
@@ -323,9 +336,7 @@ export class TreeBaseSwitchable extends TreeBase {
   replace(className) {
     if (this.className == className) return;
     // extract the values of the old props
-    const props = Object.fromEntries(
-      Object.entries(this["props"]).map(([name, prop]) => [name, prop.value])
-    );
+    const props = this.propsAsObject;
     const replacement = TreeBase.create(className, null, props);
     const index = this.parent.children.indexOf(this);
     this.parent.children[index] = replacement;

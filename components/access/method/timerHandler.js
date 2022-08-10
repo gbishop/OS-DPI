@@ -12,19 +12,16 @@ const timerSignals = new Map([
 ]);
 
 export class TimerHandler extends Handler {
-  props = {
-    Signal: new Select(timerSignals),
-    TimerName: new Select([], { hiddenLabel: true }),
-  };
+  Signal = new Select(timerSignals);
+  TimerName = new Select([], { hiddenLabel: true });
 
   template() {
-    const { conditions, responses } = this;
-    const { Signal } = this.props;
+    const { conditions, responses, Signal } = this;
     const timerNames = this.nearestParent(Method).timerNames;
     return html`
       <fieldset class="Handler">
         <legend>Timer Handler</legend>
-        ${Signal.input()} ${this.props.TimerName.input(timerNames)}
+        ${Signal.input()} ${this.TimerName.input(timerNames)}
         ${this.deleteButton({ title: "Delete this handler" })}
         <fieldset class="Conditions">
           <legend>
@@ -50,9 +47,9 @@ export class TimerHandler extends Handler {
 
   /** @param {Subject} stop$ */
   configure(stop$) {
-    const timer = this.nearestParent(Method).timer(this.props.TimerName.value);
+    const timer = this.nearestParent(Method).timer(this.TimerName.value);
     if (!timer) return;
-    const delayTime = 1000 * timer.props.Interval.valueAsNumber;
+    const delayTime = 1000 * timer.Interval.valueAsNumber;
     timer.subject$
       .pipe(
         switchMap((event) =>

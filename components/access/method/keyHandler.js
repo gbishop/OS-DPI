@@ -27,14 +27,12 @@ const keySignals = new Map([
 ]);
 
 export class KeyHandler extends Handler {
-  props = {
-    Signal: new Select(keySignals),
-    Debounce: new Float(0.1),
-  };
+  Signal = new Select(keySignals);
+  Debounce = new Float(0.1);
 
   template() {
     const { conditions, responses, keys } = this;
-    const { Signal, Debounce } = this.props;
+    const { Signal, Debounce } = this;
     return html`
       <fieldset class="Handler">
         <legend>Key Handler</legend>
@@ -74,7 +72,7 @@ export class KeyHandler extends Handler {
   /** @param {Subject} stop$ */
   configure(stop$) {
     // construct debounced key event stream
-    const debounceInterval = this.props.Debounce.valueAsNumber * 1000;
+    const debounceInterval = this.Debounce.valueAsNumber * 1000;
     const keyDown$ = /** @type Observable<KeyboardEvent> */ (
       fromEvent(document, "keydown")
     );
@@ -113,11 +111,11 @@ export class KeyHandler extends Handler {
       )
     );
     let stream$;
-    const keys = this.keys.map((key) => key.props.Key.value);
+    const keys = this.keys.map((key) => key.Key.value);
     stream$ = keyEvents$.pipe(
       filter(
         (e) =>
-          e.type == this.props.Signal.value &&
+          e.type == this.Signal.value &&
           (keys.length == 0 || keys.indexOf(e.key) >= 0)
       ),
       map((e) => {
@@ -135,9 +133,7 @@ export class KeyHandler extends Handler {
       })
     );
     for (const condition of this.conditions) {
-      stream$ = stream$.pipe(
-        filter((e) => condition.props.Condition.eval(e.access))
-      );
+      stream$ = stream$.pipe(filter((e) => condition.Condition.eval(e.access)));
     }
     stream$.pipe(takeUntil(stop$)).subscribe((e) => this.respond(e));
   }

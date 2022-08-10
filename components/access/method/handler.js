@@ -39,12 +39,10 @@ export class Handler extends TreeBase {
 }
 
 export class HandlerCondition extends TreeBase {
-  props = {
-    Condition: new Expression("", { hiddenLabel: true }),
-  };
+  Condition = new Expression("", { hiddenLabel: true });
 
   template() {
-    const { Condition } = this.props;
+    const { Condition } = this;
     return html`
       <div class="Condition">
         ${Condition.input()}
@@ -55,7 +53,7 @@ export class HandlerCondition extends TreeBase {
 
   /** @param {Object} context */
   eval(context) {
-    return this.props.Condition.eval(context);
+    return this.Condition.eval(context);
   }
 }
 TreeBase.register(HandlerCondition);
@@ -70,12 +68,10 @@ const allKeys = new Map([
 ]);
 
 export class HandlerKeyCondition extends TreeBase {
-  props = {
-    Key: new Select(allKeys, { hiddenLabel: true }),
-  };
+  Key = new Select(allKeys, { hiddenLabel: true });
 
   template() {
-    const { Key } = this.props;
+    const { Key } = this;
     return html`
       <div class="Key">
         ${Key.input()} ${this.deleteButton({ title: "Delete this key" })}

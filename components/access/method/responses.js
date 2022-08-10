@@ -67,20 +67,18 @@ TreeBase.register(ResponderEmit);
 class ResponderStartTimer extends Responder {
   static title = "start timer";
 
-  props = {
-    TimerName: new Select([], {
-      placeholder: "Choose a timer",
-      hiddenLabel: true,
-    }),
-  };
+  TimerName = new Select([], {
+    placeholder: "Choose a timer",
+    hiddenLabel: true,
+  });
 
   template() {
     const timerNames = this.nearestParent(Method).timerNames;
-    return html`${this.props.TimerName.input(timerNames)}`;
+    return html`${this.TimerName.input(timerNames)}`;
   }
 
   respond({ access }) {
-    const timer = this.nearestParent(Method).timer(this.props.TimerName.value);
+    const timer = this.nearestParent(Method).timer(this.TimerName.value);
     if (!timer) return;
     timer.start(access);
   }
@@ -98,9 +96,7 @@ const allResponders = [
 ];
 
 export class HandlerResponse extends TreeBase {
-  props = {
-    Response: new Select(new Map(allResponders.map((c) => [c.name, c.title]))),
-  };
+  Response = new Select(new Map(allResponders.map((c) => [c.name, c.title])));
 
   /** @type {Responder[]} */
   children = [];
@@ -114,7 +110,7 @@ export class HandlerResponse extends TreeBase {
     const current = this.children[0];
     return html`
       <div class="Response">
-        ${this.props.Response.input()} ${current.template()}
+        ${this.Response.input()} ${current.template()}
         ${this.deleteButton({ title: "Delete this response" })}
       </div>
     `;
@@ -122,10 +118,10 @@ export class HandlerResponse extends TreeBase {
 
   /** @param {TreeBase} start */
   onUpdate(start) {
-    console.log("onUpdate", this.props.Response);
+    console.log("onUpdate", this.Response);
     if (start === this) {
       // event originated here
-      this.updateResponder(this.props.Response.value);
+      this.updateResponder(this.Response.value);
     }
   }
 

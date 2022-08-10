@@ -21,11 +21,9 @@ class CueList extends TreeBase {
 }
 
 class CueChooser extends TreeBase {
-  props = {
-    Name: new String("a cue"),
-    Key: new UID(),
-    Type: new Select(CueMap),
-  };
+  Name = new String("a cue");
+  Key = new UID();
+  Type = new Select(CueMap);
 
   /** @type {Cue[]} */
   children = [];

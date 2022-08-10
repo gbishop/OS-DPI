@@ -24,11 +24,11 @@ export class Group {
   constructor(members, props) {
     /** @type {Target[]} */
     this.members = members;
-    this.props = props;
+    this.groupProps = props;
   }
 
   get length() {
-    return this.members.length * this.props.Cycles.value;
+    return this.members.length * this.groupProps.Cycles.value;
   }
 
   /** @param {Number} index */
@@ -98,10 +98,9 @@ export class PatternManager extends PatternBase {
    */
   cued = false;
 
-  props = {
-    Cycles: new Integer(2, { min: 1 }),
-    Cue: new Select(Object.keys(Globals.cues)),
-  };
+  // props
+  Cycles = new Integer(2, { min: 1 });
+  Cue = new Select(Object.keys(Globals.cues));
 
   /**
 * Load the PatternManager from the db
@@ -121,7 +120,7 @@ export class PatternManager extends PatternBase {
   }
 
   template() {
-    const { Cycles, Cue } = this.props;
+    const { Cycles, Cue } = this;
     return html`
       <div class=${this.className}>
         ${Cycles.input()} ${Cue.input()} ${this.orderedChildren()}
@@ -264,13 +263,13 @@ export class PatternManager extends PatternBase {
 PatternBase.register(PatternManager);
 
 class PatternGroup extends PatternBase {
-  props = {
-    Name: new String(""),
-    Cycles: new Integer(2, { min: 1 }),
-    Cue: new Select(Object.keys(Globals.cues)),
-  };
+  // props
+  Name = new String("");
+  Cycles = new Integer(2, { min: 1 });
+  Cue = new Select(Object.keys(Globals.cues));
+
   template() {
-    const { Name, Cycles, Cue } = this.props;
+    const { Name, Cycles, Cue } = this;
     return html`<fieldset class=${this.className}>
       <legend>Group: ${Name.value}</legend>
       ${Name.input()} ${Cycles.input()} ${Cue.input()} ${this.orderedChildren()}
@@ -330,11 +329,9 @@ class PatternSelector extends PatternBase {
 PatternBase.register(PatternSelector);
 
 class Filter extends PatternBase {
-  props = {
-    Filter: new Expression(),
-  };
+  Filter = new Expression();
   template() {
-    const { Filter } = this.props;
+    const { Filter } = this;
     return html`<div class=${this.className}>
       ${Filter.input()}${this.deleteButton({ title: "Delete this filter" })}
     </div>`;
@@ -350,12 +347,12 @@ class Filter extends PatternBase {
       return input
         .map(
           (/** @type {Group} */ group) =>
-            new Group(this.apply(group.members), group.props)
+            new Group(this.apply(group.members), group.groupProps)
         )
         .filter((target) => target.length > 0);
     } else {
       return input.filter((/** @type {Button} */ button) =>
-        this.props.Filter.eval(button.access)
+        this.Filter.eval(button.access)
       );
     }
   }
@@ -368,11 +365,9 @@ const comparator = new Intl.Collator(undefined, {
 });
 
 class OrderBy extends PatternBase {
-  props = {
-    OrderBy: new Field(),
-  };
+  OrderBy = new Field();
   template() {
-    const { OrderBy } = this.props;
+    const { OrderBy } = this;
     return html`<div class=${this.className}>
       ${OrderBy.input()}${this.deleteButton({ title: "Delete this order by" })}
     </div>`;
@@ -388,11 +383,11 @@ class OrderBy extends PatternBase {
       return input
         .map(
           (/** @type {Group} */ group) =>
-            new Group(this.apply(group.members), group.props)
+            new Group(this.apply(group.members), group.groupProps)
         )
         .filter((target) => target.length > 0);
     } else {
-      const key = this.props.OrderBy.value.slice(1);
+      const key = this.OrderBy.value.slice(1);
       return [.../** @type {Button[]} */ (input)].sort((a, b) =>
         comparator.compare(a.access[key], b.access[key])
       );
@@ -402,14 +397,12 @@ class OrderBy extends PatternBase {
 PatternBase.register(OrderBy);
 
 class GroupBy extends PatternBase {
-  props = {
-    GroupBy: new Field(),
-    Name: new String(""),
-    Cue: new Select(Object.keys(Globals.cues)),
-    Cycles: new Integer(2),
-  };
+  GroupBy = new Field();
+  Name = new String("");
+  Cue = new Select(Object.keys(Globals.cues));
+  Cycles = new Integer(2);
   template() {
-    const { GroupBy, Name, Cue, Cycles } = this.props;
+    const { GroupBy, Name, Cue, Cycles } = this;
     return html`<div class=${this.className}>
       ${GroupBy.input()} ${Name.input()}
       ${this.deleteButton({ title: "Delete this Group By" })}
@@ -430,7 +423,7 @@ class GroupBy extends PatternBase {
       return input
         .map(
           (/** @type {Group} */ group) =>
-            new Group(this.apply(group.members), group.props)
+            new Group(this.apply(group.members), group.groupProps)
         )
         .filter((target) => target.length > 0);
     } else {

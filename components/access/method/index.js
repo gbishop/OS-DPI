@@ -72,11 +72,9 @@ export class MethodChooser extends TreeBase {
 TreeBase.register(MethodChooser);
 
 export class Method extends TreeBase {
-  props = {
-    Name: new String("New method"),
-    Key: new UID(),
-    Active: new Boolean(false),
-  };
+  Name = new String("New method");
+  Key = new UID();
+  Active = new Boolean(false);
 
   open = false;
 
@@ -88,7 +86,7 @@ export class Method extends TreeBase {
    * */
   get timers() {
     return new Map(
-      this.filterChildren(Timer).map((child) => [child.props.Key.value, child])
+      this.filterChildren(Timer).map((child) => [child.Key.value, child])
     );
   }
 
@@ -96,8 +94,8 @@ export class Method extends TreeBase {
   get timerNames() {
     return new Map(
       this.filterChildren(Timer).map((timer) => [
-        timer.props.Key.value,
-        timer.props.Name.value,
+        timer.Key.value,
+        timer.Name.value,
       ])
     );
   }
@@ -106,9 +104,7 @@ export class Method extends TreeBase {
    *     @param {string} key
    *  */
   timer(key) {
-    return this.filterChildren(Timer).find(
-      (timer) => timer.props.Key.value == key
-    );
+    return this.filterChildren(Timer).find((timer) => timer.Key.value == key);
   }
 
   /** Cancel all active Timers
@@ -125,7 +121,7 @@ export class Method extends TreeBase {
   }
 
   template() {
-    const { Name, Active } = this.props;
+    const { Name, Active } = this;
     return html`<details
       class="Method"
       ?open=${this.open}
@@ -165,7 +161,7 @@ export class Method extends TreeBase {
   /** Configure the rxjs pipelines to implement this method */
   /** @param {Subject} stop$ */
   configure(stop$) {
-    if (this.props.Active.value == "true") {
+    if (this.Active.value == "true") {
       for (const child of this.handlers) {
         child.configure(stop$);
       }
@@ -175,17 +171,15 @@ export class Method extends TreeBase {
 TreeBase.register(Method);
 
 class Timer extends TreeBase {
-  props = {
-    Interval: new Float(0.5, { hiddenLabel: true }),
-    Name: new String("timer", { hiddenLabel: true }),
-    Key: new UID(),
-  };
+  Interval = new Float(0.5, { hiddenLabel: true });
+  Name = new String("timer", { hiddenLabel: true });
+  Key = new UID();
 
   /** @type {Subject<WrappedEvent>} */
   subject$ = new Subject();
 
   template() {
-    return html`${this.props.Name.input()} ${this.props.Interval.input()}
+    return html`${this.Name.input()} ${this.Interval.input()}
     ${this.deleteButton()}`;
   }
 
