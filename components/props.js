@@ -112,6 +112,7 @@ export class Select extends Prop {
 }
 
 export class Field extends Select {
+  /** @param {PropOptions} options */
   constructor(options = {}) {
     const choices = [...Globals.data.allFields, "#componentName"].sort();
     super(choices, options);
@@ -122,7 +123,7 @@ export class TypeSelect extends Select {
   /** @type {TreeBaseSwitchable} */
   container = null;
 
-  onUpdate() {
+  update() {
     this.container.replace(this.value);
   }
 }

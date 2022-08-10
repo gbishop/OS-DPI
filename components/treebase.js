@@ -9,8 +9,6 @@ export class TreeBase {
   /** @type {TreeBase} */
   parent = null;
 
-  title = "";
-
   /** A mapping from the class name to the class */
   static classMap = new Map();
   /** @param {typeof TreeBase} cls */
@@ -334,6 +332,7 @@ export class TreeBaseSwitchable extends TreeBase {
   /** Replace this node with one of a compatible type
    * @param {string} className */
   replace(className) {
+    console.log("replacing", this.className, className);
     if (this.className == className) return;
     // extract the values of the old props
     const props = this.propsAsObject;

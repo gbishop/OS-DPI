@@ -1,11 +1,23 @@
 import { html } from "uhtml";
-import { TreeBase } from "../../treebase";
+import { TreeBase, TreeBaseSwitchable } from "../../treebase";
 import Globals from "../../../globals";
-import { Select } from "../../props";
+import { Select, TypeSelect } from "../../props";
 import { Method } from "./index";
 
-class Responder extends TreeBase {
+const ResponderTypeMap = new Map([
+  ["Responder", "none"],
+  ["ResponderNext", "next"],
+  ["ResponderActivate", "activate"],
+  ["ResponderCue", "cue"],
+  ["ResponderClearCue", "clear cue"],
+  ["ResponderEmit", "emit"],
+  ["ResponderStartTimer", "start timer"],
+]);
+
+export class HandlerResponse extends TreeBaseSwitchable {
   static title = "none";
+
+  Response = new TypeSelect(ResponderTypeMap, { hiddenLabel: true });
 
   /** @param {Event & { access: Object }} event */
   respond(event) {
@@ -13,11 +25,20 @@ class Responder extends TreeBase {
   }
 
   template() {
+    return html`
+      <div class="Response">
+        ${this.Response.input()} ${this.subTemplate()}
+        ${this.deleteButton({ title: "Delete this response" })}
+      </div>
+    `;
+  }
+
+  subTemplate() {
     return html``;
   }
 }
 
-class ResponderNext extends Responder {
+class ResponderNext extends HandlerResponse {
   static title = "next";
 
   respond() {
@@ -26,7 +47,7 @@ class ResponderNext extends Responder {
 }
 TreeBase.register(ResponderNext);
 
-class ResponderActivate extends Responder {
+class ResponderActivate extends HandlerResponse {
   static title = "activate";
 
   respond() {
@@ -35,7 +56,7 @@ class ResponderActivate extends Responder {
 }
 TreeBase.register(ResponderActivate);
 
-class ResponderCue extends Responder {
+class ResponderCue extends HandlerResponse {
   static title = "cue";
 
   /** @param {Event & { access: Object }} event */
@@ -46,7 +67,7 @@ class ResponderCue extends Responder {
 }
 TreeBase.register(ResponderCue);
 
-class ResponderClearCue extends Responder {
+class ResponderClearCue extends HandlerResponse {
   static title = "clear cue";
 
   respond() {
@@ -55,7 +76,7 @@ class ResponderClearCue extends Responder {
 }
 TreeBase.register(ResponderClearCue);
 
-class ResponderEmit extends Responder {
+class ResponderEmit extends HandlerResponse {
   static title = "emit";
 
   respond({ access }) {
@@ -64,7 +85,7 @@ class ResponderEmit extends Responder {
 }
 TreeBase.register(ResponderEmit);
 
-class ResponderStartTimer extends Responder {
+class ResponderStartTimer extends HandlerResponse {
   static title = "start timer";
 
   TimerName = new Select([], {
@@ -72,7 +93,7 @@ class ResponderStartTimer extends Responder {
     hiddenLabel: true,
   });
 
-  template() {
+  subTemplate() {
     const timerNames = this.nearestParent(Method).timerNames;
     return html`${this.TimerName.input(timerNames)}`;
   }
@@ -84,60 +105,3 @@ class ResponderStartTimer extends Responder {
   }
 }
 TreeBase.register(ResponderStartTimer);
-
-const allResponders = [
-  Responder,
-  ResponderNext,
-  ResponderActivate,
-  ResponderEmit,
-  ResponderCue,
-  ResponderClearCue,
-  ResponderStartTimer,
-];
-
-export class HandlerResponse extends TreeBase {
-  Response = new Select(new Map(allResponders.map((c) => [c.name, c.title])));
-
-  /** @type {Responder[]} */
-  children = [];
-
-  template() {
-    /* This is a hack to allow switching the children from the parent, I need a better solution */
-    if (!this.children.length) {
-      console.log("add the none child");
-      TreeBase.create(Responder, this);
-    }
-    const current = this.children[0];
-    return html`
-      <div class="Response">
-        ${this.Response.input()} ${current.template()}
-        ${this.deleteButton({ title: "Delete this response" })}
-      </div>
-    `;
-  }
-
-  /** @param {TreeBase} start */
-  onUpdate(start) {
-    console.log("onUpdate", this.Response);
-    if (start === this) {
-      // event originated here
-      this.updateResponder(this.Response.value);
-    }
-  }
-
-  /** @param {string} name */
-  updateResponder(name) {
-    if (!name) name = "none";
-    const constructor = allResponders.find((c) => c.name == name);
-    if (this.children[0] instanceof constructor) return;
-    this.children = [];
-    TreeBase.create(constructor, this);
-    console.log("updated", this);
-  }
-
-  /** @param {WrappedEvent} event */
-  respond(event) {
-    this.children.length && this.children[0].respond(event);
-  }
-}
-TreeBase.register(HandlerResponse);
