@@ -93,18 +93,14 @@ export class PatternManager extends PatternBase {
    */
   stack = [];
 
+  /**
+* @type {Boolean} - cue is active when true
+*/
+  cued = false;
+
   props = {
     Cycles: new Integer(2, { min: 1 }),
     Cue: new Select(Object.keys(Globals.cues)),
-  };
-
-  static loadFallback = {
-    className: "PatternManager",
-    props: {
-      Cycles: 2,
-      Cue: "default",
-    },
-    children: [],
   };
 
   /**
@@ -251,6 +247,7 @@ export class PatternManager extends PatternBase {
   }
 
   clearCue() {
+    this.cued = false;
     for (const element of document.querySelectorAll("[cue]")) {
       element.removeAttribute("cue");
     }
@@ -260,11 +257,7 @@ export class PatternManager extends PatternBase {
     this.clearCue();
     const current = this.current;
     if (!current) return;
-    /*
-    if (current instanceof Button) {
-      this.stack[0].group.cue();
-    }
-    */
+    this.cued = true;
     this.current.cue();
   }
 }

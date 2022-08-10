@@ -12,6 +12,8 @@ export class TreeBase {
   /** @type {TreeBase} */
   parent = null;
 
+  title = "";
+
   /** A mapping from the class name to the class */
   static classMap = new Map();
   /** @param {typeof TreeBase} cls */
@@ -43,18 +45,22 @@ export class TreeBase {
   /**
    *   Create a TreeBase object
    *   @template {TreeBase} TB
-   *   @param {new()=>TB} constructor
+   *   @param {string|(new()=>TB)} constructorOrName
    *   @param {TreeBase} parent
-   *   @param {Object<string,Prop>} props
+   *   @param {Object<string,string>} props
    *   @returns {TB}
    *   */
-  static create(constructor, parent = null, props = {}) {
+  static create(constructorOrName, parent = null, props = {}) {
+    const constructor =
+      typeof constructorOrName == "string"
+        ? TreeBase.classMap.get(constructorOrName)
+        : constructorOrName;
     const result = new constructor();
 
     // initialize the props
     for (const [name, prop] of Object.entries(result.props)) {
       if (name in props) {
-        prop.set(props[name]);
+        prop.set(props.name);
       }
       // create a label if it has none
       prop.label =
@@ -305,6 +311,26 @@ export class TreeBase {
       }
     }
     return result;
+  }
+}
+
+/**
+ * A variant of TreeBase that allows replacing a node with one of a similar type
+ */
+export class TreeBaseSwitchable extends TreeBase {
+  /** Replace this node with one of a compatible type
+   * @param {string} className */
+  replace(className) {
+    if (this.className == className) return;
+    // extract the values of the old props
+    const props = Object.fromEntries(
+      Object.entries(this["props"]).map(([name, prop]) => [name, prop.value])
+    );
+    const replacement = TreeBase.create(className, null, props);
+    const index = this.parent.children.indexOf(this);
+    this.parent.children[index] = replacement;
+    replacement.parent = this.parent;
+    this.update();
   }
 }
 

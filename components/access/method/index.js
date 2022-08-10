@@ -83,7 +83,9 @@ export class Method extends TreeBase {
   /** @type {(Handler | Timer)[]} */
   children = [];
 
-  /** Return a Map from Timer Key to the Timer */
+  /** Return a Map from Timer Key to the Timer
+   * @returns {Map<string, Timer>}
+   * */
   get timers() {
     return new Map(
       this.filterChildren(Timer).map((child) => [child.props.Key.value, child])
@@ -107,6 +109,14 @@ export class Method extends TreeBase {
     return this.filterChildren(Timer).find(
       (timer) => timer.props.Key.value == key
     );
+  }
+
+  /** Cancel all active Timers
+   */
+  cancelTimers() {
+    for (const timer of this.timers.values()) {
+      timer.cancel();
+    }
   }
 
   /** Return an array of the Handlers */

@@ -2,8 +2,9 @@
 
 import { html } from "uhtml";
 import css from "ustyler";
-import { validateExpression, compileExpression } from "../eval";
+import { compileExpression } from "../eval";
 import Globals from "../globals";
+import { TreeBase, TreeBaseSwitchable } from "./treebase";
 
 /**
  * @typedef {Object} PropOptions
@@ -114,6 +115,15 @@ export class Field extends Select {
   constructor(options = {}) {
     const choices = [...Globals.data.allFields, "#componentName"].sort();
     super(choices, options);
+  }
+}
+
+export class TypeSelect extends Select {
+  /** @type {TreeBaseSwitchable} */
+  container = null;
+
+  onUpdate() {
+    this.container.replace(this.value);
   }
 }
 

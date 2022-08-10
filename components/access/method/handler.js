@@ -3,6 +3,7 @@ import { TreeBase } from "../../treebase";
 import { HandlerResponse } from "./responses";
 import { Select, Expression } from "../../props";
 import { Subject } from "rxjs";
+import { Method } from "./index";
 import { EventWrap } from "../index";
 
 /** Handler is a base class for all event handlers */
@@ -29,6 +30,8 @@ export class Handler extends TreeBase {
 
   /** @param {WrappedEvent} event */
   respond(event) {
+    const method = this.nearestParent(Method);
+    method.cancelTimers();
     for (const response of this.responses) {
       response.respond(event);
     }
