@@ -94,8 +94,8 @@ export class PatternManager extends PatternBase {
   stack = [];
 
   /**
-* @type {Boolean} - cue is active when true
-*/
+   * @type {Boolean} - cue is active when true
+   */
   cued = false;
 
   props = {
