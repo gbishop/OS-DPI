@@ -36,7 +36,7 @@ export class KeyHandler extends Handler {
     return html`
       <fieldset class="Handler">
         <legend>Key Handler</legend>
-        ${Signal.input()} ${Debounce.input()}
+        ${this.menuButton()} ${Signal.input()} ${Debounce.input()}
         ${this.deleteButton({ title: "Delete this handler" })}
         <fieldset class="Keys">
           <legend>

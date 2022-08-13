@@ -1,4 +1,5 @@
 import { html } from "uhtml";
+import css from "ustyler";
 import { TreeBase } from "../../treebase";
 import { HandlerResponse } from "./responses";
 import { Select, Expression } from "../../props";
@@ -44,10 +45,7 @@ export class HandlerCondition extends TreeBase {
   template() {
     const { Condition } = this;
     return html`
-      <div class="Condition">
-        ${Condition.input()}
-        ${this.deleteButton({ title: "Delete this condition" })}
-      </div>
+      <div class="Condition">${this.select()} ${Condition.input()}</div>
     `;
   }
 
@@ -72,11 +70,14 @@ export class HandlerKeyCondition extends TreeBase {
 
   template() {
     const { Key } = this;
-    return html`
-      <div class="Key">
-        ${Key.input()} ${this.deleteButton({ title: "Delete this key" })}
-      </div>
-    `;
+    return html` <div class="Key">${this.select()} ${Key.input()}</div> `;
   }
 }
 TreeBase.register(HandlerKeyCondition);
+
+css`
+  ul {
+    list-style: none;
+    padding-inline-start: 0;
+  }
+`;

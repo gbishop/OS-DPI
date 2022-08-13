@@ -76,7 +76,7 @@ export class Method extends TreeBase {
   Key = new UID();
   Active = new Boolean(false);
 
-  open = false;
+  open = true;
 
   /** @type {(Handler | Timer)[]} */
   children = [];
@@ -137,6 +137,7 @@ export class Method extends TreeBase {
           <legend>
             Timers ${this.addChildButton("+", Timer, { title: "Add a timer" })}
           </legend>
+          ${this.menuButton()}
           ${this.unorderedChildren([...this.timers.values()])}
         </fieldset>
         <fieldset>
@@ -179,7 +180,7 @@ class Timer extends TreeBase {
   subject$ = new Subject();
 
   template() {
-    return html`${this.Name.input()} ${this.Interval.input()}
+    return html`${this.select()} ${this.Name.input()} ${this.Interval.input()}
     ${this.deleteButton()}`;
   }
 

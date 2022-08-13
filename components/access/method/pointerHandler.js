@@ -36,7 +36,7 @@ export class PointerHandler extends Handler {
     return html`
       <fieldset class="Handler">
         <legend>Pointer Handler</legend>
-        ${Signal.input()} ${Debounce.input()}
+        ${this.menuButton()} ${Signal.input()} ${Debounce.input()}
         ${this.deleteButton({ title: "Delete this handler" })}
         <fieldset class="Conditions">
           <legend>

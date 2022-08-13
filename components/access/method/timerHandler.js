@@ -21,7 +21,8 @@ export class TimerHandler extends Handler {
     return html`
       <fieldset class="Handler">
         <legend>Timer Handler</legend>
-        ${Signal.input()} ${this.TimerName.input(timerNames)}
+        ${this.menuButton()} ${Signal.input()}
+        ${this.TimerName.input(timerNames)}
         ${this.deleteButton({ title: "Delete this handler" })}
         <fieldset class="Conditions">
           <legend>

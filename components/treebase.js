@@ -2,6 +2,7 @@ import { html } from "uhtml";
 import { Prop } from "./props";
 import * as icons from "./icons";
 import css from "ustyler";
+import { menu } from "./menu";
 
 export class TreeBase {
   /** @type {TreeBase[]} */
@@ -162,6 +163,7 @@ export class TreeBase {
   addChildButton(label, constructor, options = {}) {
     return html`<button
       title=${options.title}
+      class="addChildButton"
       onClick=${() => {
         TreeBase.create(constructor, this);
         if (options.onClick) options.onClick();
@@ -240,6 +242,7 @@ export class TreeBase {
    * @returns {Hole}
    */
   deleteButton(options = {}) {
+    return html``;
     return html`<button
       class="treebase"
       title=${options.title}
@@ -252,6 +255,19 @@ export class TreeBase {
     >
       ${icons.Trash}
     </button>`;
+  }
+
+  menuButton() {
+    return menu("", [
+      "Delete selected",
+      "Delete this",
+      "Move selected up",
+      "Move selected down",
+    ]);
+  }
+
+  select() {
+    return html`<input type="checkbox" role="select" /> `;
   }
 
   /**
@@ -422,5 +438,16 @@ css`
 
   .treebase li ol > li:before {
     content: counters(item, ".") " ";
+  }
+
+  .menubutton {
+    float: right;
+    border: none !important;
+    background: inherit !important;
+    padding: 0;
+  }
+
+  .addChildButton {
+    border: outset !important;
   }
 `;
