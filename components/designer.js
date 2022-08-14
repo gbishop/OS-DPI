@@ -5,6 +5,7 @@ import { Layout } from "./layout";
 import { Actions } from "./actions";
 import { Access } from "./access";
 import { Content } from "./content";
+import { Menu } from "./menu";
 import css from "ustyler";
 
 export class Designer extends Base {
@@ -60,8 +61,24 @@ export class Designer extends Base {
     this.children = [tabs];
   }
 
+  fileMenu = new Menu("File", [{ label: "Export design" }, { label: "Home" }]);
+  editMenu = new Menu("Edit", [
+    { label: "Delete" },
+    { label: "Up" },
+    { label: "Down" },
+    { label: "Copy" },
+    { label: "Paste" },
+    { label: "Undo" },
+  ]);
+
   template() {
-    return html`${this.children.map((child) => child.template())} `;
+    return html`
+      <div class="toolbar">
+        <input type="text" value="My Design" />
+        ${this.fileMenu.render()} ${this.editMenu.render()}
+      </div>
+      ${this.children.map((child) => child.template())}
+    `;
   }
 }
 
@@ -99,5 +116,12 @@ css`
   body.designing #toolbar {
     grid-row-start: 1;
     grid-column-start: 1;
+  }
+
+  .toolbar {
+    border: 1px solid black;
+    border-radius: 0.5em;
+    background-color: #7bafd4;
+    padding: 0.25em;
   }
 `;

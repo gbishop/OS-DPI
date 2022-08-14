@@ -62,7 +62,7 @@ export class MethodChooser extends TreeBase {
 
   template() {
     return html`<div class="MethodChooser">
-      ${this.addChildButton("Add Method", Method, {
+      ${this.addChildButton("+ Method", Method, {
         title: "Create a new access method",
       })}
       ${this.children.map((child) => child.template())}
@@ -131,7 +131,7 @@ export class Method extends TreeBase {
         ${Name.value} ${Active.value == "true" ? html`&check;` : html``}
       </summary>
       <div class="Method">
-        ${Name.input()} ${Active.input()}
+        ${this.select()} ${Name.input()} ${Active.input()}
         ${this.deleteButton({ title: "Delete this method" })}
         <fieldset>
           <legend>

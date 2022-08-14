@@ -195,9 +195,8 @@ export function menu(label, choices) {
 }
 
 css`
-  .treebase menu-button {
+  menu-button {
     display: inline-block;
-    float: right;
   }
 
   .menu-button-actions {
@@ -205,7 +204,7 @@ css`
     padding: 0;
   }
 
-  .treebase .menu-button-actions button {
+  .menu-button-actions button {
     margin: 0;
     padding: 6px;
     display: inline-block;
@@ -226,7 +225,6 @@ css`
     border-radius: 5px;
     background-color: #eee;
     z-index: 10;
-    right: 0px;
   }
 
   .menu-button-actions [role="menuitem"],
@@ -234,7 +232,6 @@ css`
     margin: 0;
     padding: 6px;
     display: block;
-    width: 4em;
     background-color: #eee;
     color: black;
     border-radius: 5px;

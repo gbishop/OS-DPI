@@ -258,6 +258,7 @@ export class TreeBase {
   }
 
   menuButton() {
+    return html``;
     return menu("", [
       "Delete selected",
       "Delete this",

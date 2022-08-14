@@ -20,7 +20,7 @@ export class TimerHandler extends Handler {
     const timerNames = this.nearestParent(Method).timerNames;
     return html`
       <fieldset class="Handler">
-        <legend>Timer Handler</legend>
+        <legend>${this.select()} Timer Handler</legend>
         ${this.menuButton()} ${Signal.input()}
         ${this.TimerName.input(timerNames)}
         ${this.deleteButton({ title: "Delete this handler" })}

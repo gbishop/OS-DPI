@@ -35,7 +35,7 @@ export class PointerHandler extends Handler {
     const { conditions, responses, Signal, Debounce } = this;
     return html`
       <fieldset class="Handler">
-        <legend>Pointer Handler</legend>
+        <legend>${this.select()} Pointer Handler</legend>
         ${this.menuButton()} ${Signal.input()} ${Debounce.input()}
         ${this.deleteButton({ title: "Delete this handler" })}
         <fieldset class="Conditions">

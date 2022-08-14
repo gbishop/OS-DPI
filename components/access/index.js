@@ -1,4 +1,5 @@
 import { html } from "uhtml";
+import css from "ustyler";
 import { Base } from "../base";
 import { TabControl, TabPanel } from "../tabcontrol";
 import { AccessMethod } from "./method";
@@ -55,7 +56,7 @@ export class Access extends Base {
 
     const methodPanel = new TabPanel(
       {
-        name: "Access Method",
+        name: "Method",
         background: "cyanish white",
       },
       tabs
@@ -64,7 +65,7 @@ export class Access extends Base {
 
     const patternPanel = new TabPanel(
       {
-        name: "Access Pattern",
+        name: "Pattern",
         background: "bluish white",
       },
       tabs
@@ -73,7 +74,7 @@ export class Access extends Base {
 
     const cuePanel = new TabPanel(
       {
-        name: "Access Cues",
+        name: "Cues",
         background: "magentaish white",
       },
       tabs
@@ -89,3 +90,30 @@ export class Access extends Base {
     return html`${this.children.map((child) => child.template())} `;
   }
 }
+
+css`
+  .tabcontrol .tabcontrol.top {
+    flex-direction: column;
+  }
+  .tabcontrol .tabcontrol.top .panels {
+    order: 2;
+  }
+  .tabcontrol .tabcontrol.top .buttons {
+    order: 1;
+  }
+  .tabcontrol .tabcontrol.top .buttons button[active] {
+    border-bottom: 1px;
+    margin-top: 0px;
+  }
+  .tabcontrol .tabcontrol.top .buttons button {
+    border-top-left-radius: 0em;
+    border-top-right-radius: 0em;
+    margin-top: 10px;
+    margin-right: 10px;
+  }
+
+  .tabcontrol .tabcontrol .buttons {
+    display: block;
+    border-bottom: 2px solid black;
+  }
+`;

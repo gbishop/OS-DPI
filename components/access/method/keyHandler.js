@@ -35,7 +35,7 @@ export class KeyHandler extends Handler {
     const { Signal, Debounce } = this;
     return html`
       <fieldset class="Handler">
-        <legend>Key Handler</legend>
+        <legend>${this.select()} Key Handler</legend>
         ${this.menuButton()} ${Signal.input()} ${Debounce.input()}
         ${this.deleteButton({ title: "Delete this handler" })}
         <fieldset class="Keys">
