@@ -12,13 +12,14 @@ import "./style.css";
  *  Each table entry is a list of conditions that must be true and a list of actions.
  * @type { [ Conditions, Actions ][] }
  */
-// prettier-ignore - stop prettier from rearranging my table
+// stop prettier from rearranging my table
+// prettier-ignore
 const KeyHandlerTable = [
   /*  Conditions                                       Actions  */
-  [[onComponent, key("F2")], [enter]],
-  [[inComponent, key("F2")], [exit]],
-  [[inComponent, key("ArrowRight", "ArrowDown")], [nextChild]],
-  [[inComponent, key("ArrowLeft", "ArrowUp")], [previousChild]],
+  [[onComponent, key("F2")],                          [enter]],
+  [[inComponent, key("F2")],                          [exit]],
+  [[inComponent, key("ArrowRight", "ArrowDown")],     [nextChild]],
+  [[inComponent, key("ArrowLeft", "ArrowUp")],        [previousChild]],
 ];
 
 // this would be at the top of the tree, likely not on the body itself
@@ -47,8 +48,8 @@ function handleKey(event) {
 
 /**
  * TODO: What about Inputs that require Arrows (like Select)? How to handle?
-*
-* Wow! Maybe it just works? Try the Select in the example.
+ *
+ * Wow! Maybe it just works? Try the Select in the example.
  */
 
 /* Predicates */
