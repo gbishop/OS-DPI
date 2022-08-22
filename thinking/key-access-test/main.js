@@ -16,10 +16,10 @@ import "./style.css";
 // prettier-ignore
 const KeyHandlerTable = [
   /*  Conditions                                       Actions  */
-  [[onComponent, key("F2")],                          [enter]],
-  [[inComponent, key("F2")],                          [exit]],
-  [[inComponent, key("ArrowRight", "ArrowDown")],     [nextChild]],
-  [[inComponent, key("ArrowLeft", "ArrowUp")],        [previousChild]],
+  [ [onComponent, key("F2")],                          [enter] ],
+  [ [inComponent, key("F2")],                          [exit] ],
+  [ [inComponent, key("ArrowRight", "ArrowDown")],     [nextChild] ],
+  [ [inComponent, key("ArrowLeft", "ArrowUp")],        [previousChild] ],
 ];
 
 // this would be at the top of the tree, likely not on the body itself
@@ -50,6 +50,17 @@ function handleKey(event) {
  * TODO: What about Inputs that require Arrows (like Select)? How to handle?
  *
  * Wow! Maybe it just works? Try the Select in the example.
+ *
+ * Nope. Arrows don't work in text input. How to fix? In Google Sheets they use
+ * arrows for navigation. If you hit enter on a cell, then the arrows let you
+ * move in the text within the cell. Another Enter restores navigation but also
+ * moves down a cell. Escape restores navigation and undoes changes. F2 does
+ * nothing. I guess they expect you to use Tab which works fine because they
+ * don't have any hierarchy.
+*
+* This FancyTree example is interesting:
+* https://wwwendt.de/tech/fancytree/demo/#sample-multi-ext.html
+ *
  */
 
 /* Predicates */
