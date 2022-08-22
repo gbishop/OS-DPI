@@ -6,7 +6,7 @@ import "./style.css";
  * @typedef {KeyboardEvent & { target: HTMLInputElement } } InputEventWithTarget
  * @typedef { (event: InputEventWithTarget) => boolean } Condition
  * @typedef { Condition[] } Conditions
- * @typedef { (target: HTMLElement) => void } Action
+ * @typedef { (target: HTMLElement) => any } Action
  * @typedef { Action[] } Actions
  *
  *  Each table entry is a list of conditions that must be true and a list of actions.
@@ -15,15 +15,20 @@ import "./style.css";
 // stop prettier from rearranging my table
 // prettier-ignore
 const KeyHandlerTable = [
-  /*  Conditions                                       Actions  */
-  [ [onComponent, key("F2")],                          [enter] ],
-  [ [inComponent, key("F2")],                          [exit] ],
-  [ [inComponent, key("ArrowRight", "ArrowDown")],     [nextChild] ],
-  [ [inComponent, key("ArrowLeft", "ArrowUp")],        [previousChild] ],
+  /*  Conditions                                                  Actions  */
+  [ [onComponent, key("F2")],                                     [enter] ],
+  [ [key("F2")],                                                  [exit] ],
+  [ [key("ArrowRight", "ArrowLeft"), hasAttr('arrows', "1") ],    [pass] ],
+  [ [key("Enter"), hasAttr('arrows', "0")],                       [setAttr('arrows', "1")]],
+  [ [key("Enter"), hasAttr('arrows', "1")],                       [setAttr('arrows', "0")]],
+  [ [key("ArrowRight", "ArrowDown")],                             [nextChild] ],
+  [ [key("ArrowLeft", "ArrowUp")],                                [previousChild] ],
 ];
 
-// this would be at the top of the tree, likely not on the body itself
-document.body.addEventListener("keydown", handleKey);
+// add the event handler to every Component
+for (const component of document.querySelectorAll("fieldset")) {
+  component.addEventListener("keydown", handleKey);
+}
 
 /** @param {InputEventWithTarget} event */
 function handleKey(event) {
@@ -31,11 +36,10 @@ function handleKey(event) {
   for (const handler of KeyHandlerTable) {
     const [conditions, actions] = handler;
     if (!conditions.every((condition) => condition(event))) continue;
-    event.preventDefault();
-
-    for (const action of actions) {
-      action(event.target);
+    if (!actions.some((action) => action(event.target))) {
+      event.preventDefault();
     }
+
     break;
   }
 }
@@ -51,15 +55,11 @@ function handleKey(event) {
  *
  * Wow! Maybe it just works? Try the Select in the example.
  *
- * Nope. Arrows don't work in text input. How to fix? In Google Sheets they use
- * arrows for navigation. If you hit enter on a cell, then the arrows let you
- * move in the text within the cell. Another Enter restores navigation but also
- * moves down a cell. Escape restores navigation and undoes changes. F2 does
- * nothing. I guess they expect you to use Tab which works fine because they
- * don't have any hierarchy.
-*
-* This FancyTree example is interesting:
-* https://wwwendt.de/tech/fancytree/demo/#sample-multi-ext.html
+ * OK. I've hacked an attribute to allow arrow keys on controls that need
+ * them.
+ *
+ * This FancyTree example is interesting:
+ * https://wwwendt.de/tech/fancytree/demo/#sample-multi-ext.html
  *
  */
 
@@ -108,6 +108,18 @@ function key(...keys) {
       }
     }
     return false;
+  };
+}
+
+/**
+ * Test if the target has data with the given value
+ * @param {string} name
+ * @param {string} value
+ * @returns {(event: InputEventWithTarget) => boolean}
+ */
+function hasAttr(name, value) {
+  return (/** @type {InputEventWithTarget} */ event) => {
+    return event.target.getAttribute(name) == value;
   };
 }
 
@@ -180,4 +192,20 @@ function enter(target) {
 function exit(target) {
   const parent = getParent(target);
   focusFromTo(target, parent);
+}
+
+function pass() {
+  return true;
+}
+
+/**
+ * Return function to set the attribute on the target
+ * @param {string} attribute
+ * @param {string} value
+ * @returns {(target: HTMLElement) => any}
+ */
+function setAttr(attribute, value) {
+  return (/** @type {HTMLElement} */ target) => {
+    target.setAttribute(attribute, value);
+  };
 }
