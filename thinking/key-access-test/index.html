@@ -32,6 +32,14 @@
         >Do text inputs work?
         <input type="text" tabindex="-1" placeholder="enter some text" arrows="0" />
       </label>
+
+      <fieldset class="widget" tabindex="-1">
+        <legend>Nested widget</legend>
+        <input type="text" tabindex="-1" arrows="0" />
+        <button tabindex="-1">Do it</button>
+      </fieldset>
+
+      <label>One after the nested widget<input type="checkbox" tabindex="-1"/></label>
     </fieldset>
     <script type="module" src="main.js"></script>
   </body>

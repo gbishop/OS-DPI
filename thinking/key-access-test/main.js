@@ -134,13 +134,14 @@ function Log(event) {
 /** @param {HTMLElement} node */
 function getChildren(node) {
   // should exclude children of nested fieldsets
-  const children = node.querySelectorAll("[tabindex]");
-  return /** @type {HTMLElement[]} */ ([...children]);
+  const children = [...node.querySelectorAll("[tabindex]")].filter((child) => child.parentElement.closest('fieldset') === node);
+  console.log({children});
+  return /** @type {HTMLElement[]} */ (children);
 }
 
 /** @param {HTMLElement} node */
 function getParent(node) {
-  return node.closest("fieldset");
+  return node.parentElement.closest("fieldset") || document.body;
 }
 
 /** @param {HTMLElement} node
