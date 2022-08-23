@@ -1,9 +1,128 @@
-import { Base, componentMap } from "./base";
+import { Base, componentMap, toDesign } from "./base";
 import { html } from "uhtml";
 import { styleString } from "./style";
 import { log, logInit } from "../log.js"
+import db from "../db";
 
 import XLSX from "xlsx";
+
+export class Logger extends Base {
+
+  static defaultProps = {
+    stateName: "$Logger",
+    name: "Logger",
+    click: false,
+    keypress: false,
+
+    smile: '',
+    eyebrows: '',
+    mouth: '',
+    blink: ''
+  };
+
+  static instances = [];
+
+  init() {
+    window.addEventListener("click", this.onClick.bind(this));
+    window.addEventListener("keypress", this.onKeypress.bind(this));
+    Logger.instances.push(this);
+  }
+  
+  clear() {
+    this.DB.clear();
+  }
+
+  onClick(event) {
+    if(this.props['click'] && document.getElementById("UI").contains(event.target)) {
+      let {clientX, clientY} = event;
+
+      this.DB.submit({
+        "sheetName": "mouseclick", 
+        "timestamp": Date.now(), 
+        "value": {x: clientX, y: clientY}}
+      );
+    }
+  }
+
+  onKeypress(event) {
+    switch(event.key) {
+      case this.props['smile']:
+        this.DB.submit({
+          "sheetName": "gesture", 
+          "timestamp": Date.now(), 
+          "value": {"gesture": "smile"}
+       });
+        break;
+
+      case this.props['eyebrows']:
+        this.DB.submit({
+          "sheetName": "gesture", 
+          "timestamp": Date.now(), 
+          "value": {"gesture": "eyebrows"}
+       });
+        break;
+
+      case this.props['mouth']:
+        this.DB.submit({
+          "sheetName": "gesture", 
+          "timestamp": Date.now(), 
+          "value": {"gesture": "mouth"}
+       });
+        break;
+
+      case this.props['blink']:
+        this.DB.submit({
+          "sheetName": "gesture", 
+          "timestamp": Date.now(), 
+          "value": {"gesture": "blink"}
+       });
+        break;
+    }
+
+    if(this.props['keypress']) {
+      let {charCode, keyCode} = event;
+
+      this.DB.submit({
+        "sheetName": "keypress", 
+        "timestamp": Date.now(), 
+        "value": {charCode: String.fromCharCode(charCode), keyCode: keyCode}}
+      );
+    }
+  }
+
+  stringifyInput(state, array) {
+    let output = {};
+
+    for(let i = 0; i < array.length; i+=2)
+      output[array[i]] = state.interpolate(i+1 < array.length ? array[i+1] : "");
+
+    return output
+  }
+
+  template() {
+    const { stateName, name  } = this.props;
+    const { state } = this.context;
+
+    if(!this.DB || this.DB.name != name) {
+      this.DB = new LoggerDB(name);
+    }
+
+    if(state.hasBeenUpdated(stateName)) {
+      let value = this.stringifyInput(state, state.get(stateName));
+      this.DB.submit({"timestamp": Date.now(), "value": value });
+    }
+
+    return html``;
+  }
+
+  save() {
+    const { tree } = this.context;
+    const layout = toDesign(tree);
+    db.write("layout", layout);
+  }
+}
+
+componentMap.addMap("logger", Logger);
 
 class LoggerDB {
 
@@ -93,12 +212,10 @@ class LoggerDB {
         for(let event of events) {
           let row = {'sheetName': `${event['sheetName']}`,'timestamp': `${event['timestamp']}`};
 
-          if(normalize) {
-            columns.forEach(c => row[c] = (event.value[c] || ""));
-          }
-          else {
+          if(normalize)
+            columns.forEach(c => row[c] = (event.value[c] || ""))
+          else
             Object.keys(event['value']).forEach(c => row[c] = (event.value[c] || ""));
-          }
 
           rows.push(row);
         }
@@ -108,80 +225,3 @@ class LoggerDB {
     };
   }
 }
-
-export class Logger extends Base {
-
-  static defaultProps = {
-    stateName: "$Logger",
-    name: "Logger",
-    onClick: false,
-    onKeyPress: false,
-  };
-
-  static instances = [];
-
-  clearLog() {
-    this.DB.clear();
-  }
-
-  stringifyInput(state, array) {
-    let output = {};
-
-    for(let i = 0; i < array.length; i+=2)
-      output[array[i]] = state.interpolate(i+1 < array.length ? array[i+1] : "");
-
-    return output
-  }
-
-
-  onClick(event) {
-    if(!this.props['onClick'])
-      return;
-
-    let node = event.target;
-
-    while(node != null) {
-      if(node.id == "UI")
-        break;
-      node = node.parentNode;
-    }
-
-    if(node == null)
-      return;
-
-    let {clientX, clientY} = event;
-    this.DB.submit({"sheetName": "mouseclick", "timestamp": Date.now(), "value": {x: clientX, y: clientY}});
-  }
-
-  onKeyPress(event) {
-    if(!this.props['onKeyPress'])
-      return;
-
-    let {charCode, keyCode} = event;
-    this.DB.submit({"sheetName": "keypress", "timestamp": Date.now(), "value": {charCode: String.fromCharCode(charCode), keyCode: keyCode}});
-  }
-
-  init() {
-    window.addEventListener("click", this.onClick.bind(this));
-    window.addEventListener("keypress", this.onKeyPress.bind(this));
-    Logger.instances.push(this);
-  }
-
-  template() {
-    const { stateName, name, onClick, onKeyPress } = this.props;
-    const { state } = this.context;
-
-    if(!this.DB || this.DB.name != name) {
-      this.DB = new LoggerDB(name);
-    }
-
-    if(state.hasBeenUpdated(stateName)) {
-      let value = this.stringifyInput(state, state.get(stateName));
-      this.DB.submit({"timestamp": Date.now(), "value": value });
-    }
-
-    return html``;
-  }
-}
-
-componentMap.addMap("logger", Logger);

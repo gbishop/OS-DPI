@@ -12,12 +12,15 @@ export class Logging extends Base {
 
   template() {
 
+    if(!this.selected)
+      this.selected = Logger.instances[0];
+
     return html`
     <div id="logging-panel">
 
       <h1>Select Logger</h1>
-      <select onchange=${(e) => this.selected = e.target.value}>
-        ${Logger.instances.map(l => html`<option value='${Logger.instances.indexOf(l)}'>${l.name}</option>`)}
+      <select onchange=${(e) => {this.selected = Logger.instances[e.target.value || 0]; this.context.state.update()}}>
+        ${Logger.instances.map(l => html`<option value='${Logger.instances.indexOf(l)}' ?selected=${l.name === this.selected.name}>${l.name}</option>` )}
       </select>
 
       <h2>Save content as a spreadsheet</h2>
@@ -29,7 +32,7 @@ export class Logging extends Base {
             return;
 
           let type = e.target.value;
-          let logger = Logger.instances[this.selected || 0];
+          let logger = this.selected;
           let normalize = type == "csv" ? true : false;
 
           logger.DB.getRows(normalize, logger.DB.saveContent.bind(logger), type);
@@ -48,7 +51,7 @@ export class Logging extends Base {
           if(Logger.instances.length <= 0)
             return;
 
-          let logger = Logger.instances[this.selected || 0];
+          let logger = this.selected;
           logger.DB.clear();
         }
       }

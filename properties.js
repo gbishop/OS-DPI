@@ -117,13 +117,34 @@ export const PropInfo = {
     step: 0.1,
     description: "Volume at which utterance will be spoken.",
   },
-  onClick: {
+  click: {
     type: "checkbox",
-    name: "Mouse clicks"
+    name: "Mouse clicks",
+    description: "Enable/disable mouse clicks"
   },
-  onKeyPress: {
+  keypress: {
     type: "checkbox",
-    name: "Key presses"
-
+    name: "Key presses",
+    description: "Enable/disable key presses"
+  },
+  smile: {
+    type: "string",
+    name: "Smile",
+    description: "Key to use to record smiles"
+  },
+  eyebrows: {
+    type: "string",
+    name: "Raise eyebrows",
+    description: "Key to use to record raised eyebrows"
+  },
+  mouth: {
+    type: "string",
+    name: "Open mouth",
+    description: "Key to use to record opened mouths"
+  },
+  blink: {
+    type: "string",
+    name: "Blink",
+    description: "Key to use to record blinks"
   }
 };
