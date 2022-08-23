@@ -16,18 +16,23 @@ import "./style.css";
 // prettier-ignore
 const KeyHandlerTable = [
   /*  Conditions                                                  Actions  */
-  [ [onComponent, key("F2")],                                     [enter] ],
-  [ [key("F2")],                                                  [exit] ],
+  [ [onComponent, key("F2", "ArrowDown")],                        [enter] ],
+  [ [key("F2", "ArrowUp")],                                       [exit] ],
   [ [key("ArrowRight", "ArrowLeft"), hasAttr('arrows', "1") ],    [pass] ],
-  [ [key("Enter"), hasAttr('arrows', "0")],                       [setAttr('arrows', "1")]],
-  [ [key("Enter"), hasAttr('arrows', "1")],                       [setAttr('arrows', "0")]],
-  [ [key("ArrowRight", "ArrowDown")],                             [nextChild] ],
-  [ [key("ArrowLeft", "ArrowUp")],                                [previousChild] ],
+  [ [key("Enter"), hasAttr('arrows', "0")],                       [setAttr('arrows', "1"), pass]],
+  [ [key("Enter"), hasAttr('arrows', "1")],                       [setAttr('arrows', "0"), pass]],
+  [ [key("ArrowRight")],                                          [nextChild] ],
+  [ [key("ArrowLeft")],                                           [previousChild] ],
 ];
 
 // add the event handler to every Component
 for (const component of document.querySelectorAll("fieldset")) {
   component.addEventListener("keydown", handleKey);
+}
+
+// watch for change events to see if we get them from controls
+for (const component of document.querySelectorAll('input')) {
+  component.addEventListener("change", (event) => console.log("change", event.target));
 }
 
 /** @param {InputEventWithTarget} event */
@@ -36,8 +41,16 @@ function handleKey(event) {
   for (const handler of KeyHandlerTable) {
     const [conditions, actions] = handler;
     if (!conditions.every((condition) => condition(event))) continue;
-    if (!actions.some((action) => action(event.target))) {
+    let pass = false;
+    for (const action of actions) {
+      const a = action(event.target);
+      console.log({a});
+      pass ||= a;
+    }
+    if (!pass) {
+      console.log('cancel');
       event.preventDefault();
+      event.stopPropagation();
     }
 
     break;
@@ -135,7 +148,6 @@ function Log(event) {
 function getChildren(node) {
   // should exclude children of nested fieldsets
   const children = [...node.querySelectorAll("[tabindex]")].filter((child) => child.parentElement.closest('fieldset') === node);
-  console.log({children});
   return /** @type {HTMLElement[]} */ (children);
 }
 
