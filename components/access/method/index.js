@@ -180,7 +180,10 @@ class Timer extends TreeBase {
 
   template() {
     return html`${this.Name.input()} ${this.Interval.input()}
-    ${this.deleteButton()}`;
+      ${this.deleteButton()}
+      <style>
+        ${`:root { --${this.Name.value}: ${this.Interval.value}s}`}
+      </style> `;
   }
 
   /** @param {Object} access */

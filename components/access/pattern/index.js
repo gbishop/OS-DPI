@@ -501,8 +501,19 @@ css`
     width: 100%;
     height: 100%;
     background-color: yellow;
+    animation: fadein var(--dwell) 1;
     opacity: 0.3;
     z-index: 0;
+  }
+  @keyframes fadein {
+    from {
+      background-color: yellow;
+      border-color: yellow;
+    }
+    to {
+      background-color: red;
+      border-color: red;
+    }
   }
   button[cue="button"] {
     position: relative;

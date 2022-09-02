@@ -13,9 +13,9 @@ import "./style.css";
  * @type { [ Conditions, Actions ][] }
  */
 // stop prettier from rearranging my table
+/*  Conditions                                                  Actions  */
 // prettier-ignore
 const KeyHandlerTable = [
-  /*  Conditions                                                  Actions  */
   [ [onComponent, key("F2", "ArrowDown")],                        [enter] ],
   [ [key("F2", "ArrowUp")],                                       [exit] ],
   [ [key("ArrowRight", "ArrowLeft"), hasAttr('arrows', "1") ],    [pass] ],
@@ -31,8 +31,10 @@ for (const component of document.querySelectorAll("fieldset")) {
 }
 
 // watch for change events to see if we get them from controls
-for (const component of document.querySelectorAll('input')) {
-  component.addEventListener("change", (event) => console.log("change", event.target));
+for (const component of document.querySelectorAll("input")) {
+  component.addEventListener("change", (event) =>
+    console.log("change", event.target)
+  );
 }
 
 /** @param {InputEventWithTarget} event */
@@ -44,11 +46,11 @@ function handleKey(event) {
     let pass = false;
     for (const action of actions) {
       const a = action(event.target);
-      console.log({a});
+      console.log({ a });
       pass ||= a;
     }
     if (!pass) {
-      console.log('cancel');
+      console.log("cancel");
       event.preventDefault();
       event.stopPropagation();
     }
@@ -147,7 +149,9 @@ function Log(event) {
 /** @param {HTMLElement} node */
 function getChildren(node) {
   // should exclude children of nested fieldsets
-  const children = [...node.querySelectorAll("[tabindex]")].filter((child) => child.parentElement.closest('fieldset') === node);
+  const children = [...node.querySelectorAll("[tabindex]")].filter(
+    (child) => child.parentElement.closest("fieldset") === node
+  );
   return /** @type {HTMLElement[]} */ (children);
 }
 
