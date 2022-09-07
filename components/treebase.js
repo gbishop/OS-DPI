@@ -144,7 +144,7 @@ export class TreeBase {
    * @returns {Hole}
    */
   template() {
-    return html``;
+    return html`<!--empty-->`;
   }
 
   /**
@@ -164,6 +164,7 @@ export class TreeBase {
       title=${options.title}
       onClick=${() => {
         TreeBase.create(constructor, this);
+        console.log("added", this);
         if (options.onClick) options.onClick();
         this.update();
       }}

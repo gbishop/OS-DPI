@@ -20,7 +20,7 @@ export class ModalDialog extends Base {
         <div>${this.children.map((child) => child.template())}</div>
       </div>`;
     } else {
-      return html``;
+      return html`<!--empty-->`;
     }
   }
 }

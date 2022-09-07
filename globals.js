@@ -11,7 +11,8 @@ const Globals = {
   pattern: null,
   /** @type {import('./components/access/method').MethodChooser} */
   method: null,
-  cues: { default: "background-color: yellow" },
+  /** @type {import('./components/access/cues').CueList} */
+  cues: null,
   restart: null,
 };
 

@@ -23,7 +23,7 @@ class Audio extends Base {
     if (state.hasBeenUpdated(stateName)) {
       this.playAudio();
     }
-    return html``;
+    return html`<!--empty-->`;
   }
 }
 

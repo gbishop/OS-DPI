@@ -168,7 +168,7 @@ class ActionEditor extends Base {
   template() {
     const { state, rules, tree } = Globals;
 
-    if (this.ruleIndex < 0 || !this.rule) return html``;
+    if (this.ruleIndex < 0 || !this.rule) return html`<!--empty-->`;
 
     return html`<div class="editor">
       ${textInput({

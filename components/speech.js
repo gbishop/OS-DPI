@@ -39,7 +39,7 @@ class Speech extends Base {
     if (state.hasBeenUpdated(stateName)) {
       this.speak();
     }
-    return html``;
+    return html`<!--empty-->`;
   }
 }
 componentMap.addMap("speech", Speech);

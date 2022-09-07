@@ -100,7 +100,7 @@ export class PatternManager extends PatternBase {
 
   // props
   Cycles = new Integer(2, { min: 1 });
-  Cue = new Select(Object.keys(Globals.cues));
+  Cue = new Select();
 
   /**
 * Load the PatternManager from the db
@@ -123,7 +123,8 @@ export class PatternManager extends PatternBase {
     const { Cycles, Cue } = this;
     return html`
       <div class=${this.className}>
-        ${Cycles.input()} ${Cue.input()} ${this.orderedChildren()}
+        ${Cycles.input()} ${Cue.input(Globals.cues.cueMap)}
+        ${this.orderedChildren()}
         ${this.addChildButton("+Selector", PatternSelector)}
         ${this.addChildButton("+Group", PatternGroup)}
       </div>
@@ -257,7 +258,7 @@ export class PatternManager extends PatternBase {
     const current = this.current;
     if (!current) return;
     this.cued = true;
-    this.current.cue();
+    this.current.cue(this.Cue.value);
   }
 }
 PatternBase.register(PatternManager);

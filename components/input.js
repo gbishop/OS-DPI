@@ -27,7 +27,7 @@ function createDataList(choices) {
     return {
       id: null,
       render() {
-        return html``;
+        return html`<!--empty-->`;
       },
     };
   }

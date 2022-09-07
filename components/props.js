@@ -42,7 +42,7 @@ export class Prop {
     return this.value;
   }
   input() {
-    return html``;
+    return html`<!--empty-->`;
   }
   /** @param {any} value */
   set(value) {
@@ -125,7 +125,7 @@ export class TypeSelect extends Select {
 
   update() {
     /* Magic happens here! The replace method on a TreeBaseSwitchable replaces the
-     * node with a new one allow type switching in place
+     * node with a new one to allow type switching in place
      * */
     this.container.replace(this.value);
   }
@@ -270,6 +270,31 @@ export class Expression extends Prop {
       const r = this.compiled(context);
       return r;
     }
+  }
+}
+
+export class TextArea extends Prop {
+  value = "";
+
+  constructor(value = "", options = {}) {
+    super(options);
+    this.value = value;
+  }
+
+  input() {
+    return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
+      <span>${this.label}</span>
+      <textarea
+        type="text"
+        .value=${this.value}
+        onchange=${({ target }) => {
+          this.value = target.value;
+          this.update();
+        }}
+        title=${this.options.title}
+        placeholder=${this.options.placeholder}
+      ></textarea>
+    </label>`;
   }
 }
 

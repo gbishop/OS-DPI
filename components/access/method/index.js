@@ -128,7 +128,8 @@ export class Method extends TreeBase {
       ontoggle=${({ target }) => (this.open = target.open)}
     >
       <summary>
-        ${Name.value} ${Active.value == "true" ? html`&check;` : html``}
+        ${Name.value}
+        ${Active.value == "true" ? html`&check;` : html`<!--empty-->`}
       </summary>
       <div class="Method">
         ${Name.input()} ${Active.input()}

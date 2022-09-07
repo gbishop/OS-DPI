@@ -91,7 +91,7 @@ export function propEditor(component, name, value, info, hook) {
                   ${info.values[opt]}
                 </option>`
             )) ||
-          html``}
+          html`<!--empty-->`}
         </select>`;
 
     case "checkbox":
@@ -237,7 +237,7 @@ function editFilters(component, name, value, info, hook) {
       </td>
     </tr>`;
   });
-  let filterTable = html``;
+  let filterTable = html`<!--empty-->`;
   if (filters.length > 0) {
     filterTable = html`<table>
       <thead>

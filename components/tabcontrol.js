@@ -31,7 +31,7 @@ export class TabControl extends Base {
       }
       panel.active = activeTabName == panel.tabName || panels.length === 1;
     });
-    let buttons = [html``];
+    let buttons = [html`<!--empty-->`];
     if (this.props.tabEdge != "none") {
       buttons = panels
         .filter((panel) => panel.props.label != "UNLABELED")
@@ -57,7 +57,8 @@ export class TabControl extends Base {
           </button>`;
         });
     }
-    const panel = panels.find((panel) => panel.active)?.template() || html``;
+    const panel =
+      panels.find((panel) => panel.active)?.template() || html`<!--empty-->`;
     return html`<div
       class=${["tabcontrol", "flex", this.props.tabEdge].join(" ")}
       id=${this.id}
