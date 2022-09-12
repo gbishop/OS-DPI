@@ -5,6 +5,7 @@ import css from "ustyler";
 import { compileExpression } from "../eval";
 import Globals from "../globals";
 import { TreeBase, TreeBaseSwitchable } from "./treebase";
+import { validateColor, getColor } from "./style";
 
 /**
  * @typedef {Object} PropOptions
@@ -295,6 +296,38 @@ export class TextArea extends Prop {
         placeholder=${this.options.placeholder}
       ></textarea>
     </label>`;
+  }
+}
+
+export class Color extends Prop {
+  value = "#ffffff";
+
+  constructor(value = "", options = {}) {
+    super(options);
+    this.value = value;
+  }
+
+  input() {
+    return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
+      <span>${this.label}</span>
+      <div class="color-input">
+        <input
+          type="text"
+          .value=${this.value}
+          list="ColorNames"
+          onchange=${(/** @type {InputEventWithTarget} */ event) => {
+            if (validateColor(event)) {
+              this.value = event.target.value;
+              this.update();
+            }
+          }}
+          autocomplete="off"
+        />
+        <div
+          class="swatch"
+          style=${`background-color: ${getColor(this.value)}`}
+        ></div></div
+    ></label>`;
   }
 }
 
