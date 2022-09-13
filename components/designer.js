@@ -6,6 +6,7 @@ import { Actions } from "./actions";
 import { Access } from "./access";
 import { Content } from "./content";
 import css from "ustyler";
+import { Logging } from "./logging";
 
 export class Designer extends Base {
   /**
@@ -55,7 +56,16 @@ export class Designer extends Base {
     );
     accessPanel.children = [new Access({}, accessPanel)];
 
-    tabs.children = [contentPanel, layoutPanel, actionPanel, accessPanel];
+    const loggingPanel = new TabPanel(
+      {
+        name: "Logging",
+        background: "pinkish white",
+      },
+      tabs
+    );
+    loggingPanel.children = [new Logging({}, loggingPanel)];
+
+    tabs.children = [contentPanel, layoutPanel, actionPanel, accessPanel, loggingPanel];
     /** @type {Base[]} */
     this.children = [tabs];
   }

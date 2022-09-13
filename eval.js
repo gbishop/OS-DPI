@@ -27,6 +27,7 @@ export const Functions = {
   add_letter: updateString((old, value) => old + value),
   replace_last: updateString((old, value) => old.replace(/\w+\s*$/, value)),
   replace_last_letter: updateString((old, value) => old.slice(0, -1) + value),
+  log: (...args) => args,
 };
 
 /**
