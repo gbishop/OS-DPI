@@ -1,7 +1,7 @@
 /** A simple word suggestion add-on for html input controls using uhtml */
 
-import { render, html } from "uhtml";
-import css from "ustyler";
+import { render, html } from "../_snowpack/pkg/uhtml.js";
+import css from "../_snowpack/pkg/ustyler.js";
 
 /**
  * @typedef {Object} SuggestState

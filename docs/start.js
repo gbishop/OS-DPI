@@ -1,4 +1,4 @@
-import { render, html } from "uhtml";
+import { render, html } from "./_snowpack/pkg/uhtml.js";
 import { assemble } from "./components/index.js";
 import { Rules } from "./rules.js";
 import { Data } from "./data.js";
@@ -8,8 +8,8 @@ import { Monitor } from "./components/monitor.js";
 import { ToolBar } from "./components/toolbar.js";
 import db from "./db.js";
 import pleaseWait from "./components/wait.js";
-import { fileOpen } from "browser-fs-access";
-import css from "ustyler";
+import { fileOpen } from "./_snowpack/pkg/browser-fs-access.js";
+import css from "./_snowpack/pkg/ustyler.js";
 import { ButtonWrap } from "./components/access/index.js";
 import Globals from "./globals.js";
 import { PatternManager } from "./components/access/pattern/index.js";

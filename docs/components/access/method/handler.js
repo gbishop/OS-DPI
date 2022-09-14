@@ -1,8 +1,8 @@
-import { html } from "uhtml";
+import { html } from "../../../_snowpack/pkg/uhtml.js";
 import { TreeBase } from "../../treebase.js";
 import { HandlerResponse } from "./responses.js";
 import { Select, Expression } from "../../props.js";
-import { Subject } from "rxjs";
+import { Subject } from "../../../_snowpack/pkg/rxjs.js";
 import { Method } from "./index.js";
 import { EventWrap } from "../index.js";
 

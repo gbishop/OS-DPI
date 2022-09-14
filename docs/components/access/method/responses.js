@@ -1,4 +1,4 @@
-import { html } from "uhtml";
+import { html } from "../../../_snowpack/pkg/uhtml.js";
 import { TreeBase, TreeBaseSwitchable } from "../../treebase.js";
 import Globals from "../../../globals.js";
 import { Select, TypeSelect } from "../../props.js";

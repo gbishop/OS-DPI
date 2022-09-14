@@ -1,7 +1,7 @@
 /* Thinking about making the UI more uniform and easier to program */
 
-import { html, svg } from "uhtml";
-import css from "ustyler";
+import { html, svg } from "../_snowpack/pkg/uhtml.js";
+import css from "../_snowpack/pkg/ustyler.js";
 import { styleString } from "./style.js";
 // import { Trash, DownArrow, UpArrow } from "./icons";
 import * as icons from "./icons.js";

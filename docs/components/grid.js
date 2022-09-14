@@ -1,9 +1,9 @@
-import { html } from "uhtml";
+import { html } from "../_snowpack/pkg/uhtml.js";
 import { Base, componentMap } from "./base.js";
 import { styleString } from "./style.js";
 import { formatSlottedString } from "./helpers.js";
 import { UpdateAccessData } from "./access/index.js";
-import css from "ustyler";
+import css from "../_snowpack/pkg/ustyler.js";
 import "./img-db.js";
 import Globals from "../globals.js";
 

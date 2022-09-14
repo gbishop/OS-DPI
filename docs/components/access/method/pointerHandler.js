@@ -2,7 +2,7 @@ import { TreeBase } from "../../treebase.js";
 import { Handler, HandlerCondition } from "./handler.js";
 import { HandlerResponse } from "./responses.js";
 import { Select, Float } from "../../props.js";
-import { html } from "uhtml";
+import { html } from "../../../_snowpack/pkg/uhtml.js";
 import { EventWrap, ButtonWrap } from "../index.js";
 import {
   debounceTime,
@@ -17,7 +17,7 @@ import {
   Subject,
   takeUntil,
   tap,
-} from "rxjs";
+} from "../../../_snowpack/pkg/rxjs.js";
 
 const pointerSignals = new Map([
   ["pointerdown", "Pointer down"],

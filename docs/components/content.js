@@ -1,10 +1,10 @@
-import { html, render } from "uhtml";
+import { html, render } from "../_snowpack/pkg/uhtml.js";
 import { Base } from "./base.js";
 import db from "../db.js";
 import { Data } from "../data.js";
-import { fileOpen } from "browser-fs-access";
-import * as XLSX from "xlsx";
-import css from "ustyler";
+import { fileOpen } from "../_snowpack/pkg/browser-fs-access.js";
+import * as XLSX from "../_snowpack/pkg/xlsx.js";
+import css from "../_snowpack/pkg/ustyler.js";
 import pleaseWait from "./wait.js";
 import Globals from "../globals.js";
 

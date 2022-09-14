@@ -1,4 +1,4 @@
-import { svg } from "uhtml";
+import { svg } from "../_snowpack/pkg/uhtml.js";
 
 /*
 I got these from css.gg and modified the SVG to remove the width and height

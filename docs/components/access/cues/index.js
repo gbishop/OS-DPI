@@ -1,5 +1,5 @@
-import { html } from "uhtml";
-import css from "ustyler";
+import { html } from "../../../_snowpack/pkg/uhtml.js";
+import css from "../../../_snowpack/pkg/ustyler.js";
 import { Base } from "../../base.js";
 import { TreeBase, TreeBaseSwitchable } from "../../treebase.js";
 import {

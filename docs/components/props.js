@@ -1,7 +1,7 @@
 /* Thinking about better properties */
 
-import { html } from "uhtml";
-import css from "ustyler";
+import { html } from "../_snowpack/pkg/uhtml.js";
+import css from "../_snowpack/pkg/ustyler.js";
 import { compileExpression } from "../eval.js";
 import Globals from "../globals.js";
 import { TreeBase, TreeBaseSwitchable } from "./treebase.js";

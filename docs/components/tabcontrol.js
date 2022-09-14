@@ -1,8 +1,8 @@
-import { html } from "uhtml";
+import { html } from "../_snowpack/pkg/uhtml.js";
 import { Base, componentMap } from "./base.js";
 import { Stack } from "./stack.js";
 import { styleString } from "./style.js";
-import css from "ustyler";
+import css from "../_snowpack/pkg/ustyler.js";
 import { UpdateAccessData } from "./access/index.js";
 import Globals from "../globals.js";
 

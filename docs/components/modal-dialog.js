@@ -1,6 +1,6 @@
-import { html } from "uhtml";
+import { html } from "../_snowpack/pkg/uhtml.js";
 import { Base, componentMap } from "./base.js";
-import css from "ustyler";
+import css from "../_snowpack/pkg/ustyler.js";
 
 export class ModalDialog extends Base {
   static defaultProps = {

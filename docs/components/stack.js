@@ -1,5 +1,5 @@
 import { Base, componentMap } from "./base.js";
-import { html } from "uhtml";
+import { html } from "../_snowpack/pkg/uhtml.js";
 import { styleString } from "./style.js";
 
 export class Stack extends Base {

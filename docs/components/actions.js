@@ -1,10 +1,10 @@
 import { log } from "../log.js";
-import { html } from "uhtml";
+import { html } from "../_snowpack/pkg/uhtml.js";
 import { Base } from "./base.js";
 import { textInput } from "./input.js";
 import { validateExpression } from "../eval.js";
 import db from "../db.js";
-import css from "ustyler";
+import css from "../_snowpack/pkg/ustyler.js";
 import Globals from "../globals.js";
 
 export class Actions extends Base {

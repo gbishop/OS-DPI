@@ -1,6 +1,6 @@
 import db from "../../../db.js";
-import { html } from "uhtml";
-import css from "ustyler";
+import { html } from "../../../_snowpack/pkg/uhtml.js";
+import css from "../../../_snowpack/pkg/ustyler.js";
 import Globals from "../../../globals.js";
 import * as icons from "../../icons.js";
 import { Select, String, Integer, Expression, Field } from "../../props.js";

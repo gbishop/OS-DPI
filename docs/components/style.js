@@ -1,6 +1,6 @@
 import { log } from "../log.js";
-import { html, render } from "uhtml";
-import css from "ustyler";
+import { html, render } from "../_snowpack/pkg/uhtml.js";
+import css from "../_snowpack/pkg/ustyler.js";
 import { ColorNames } from "./color-names.js";
 
 /** @param {Event & { target: HTMLInputElement }} event

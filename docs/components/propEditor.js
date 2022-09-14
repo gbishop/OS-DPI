@@ -1,10 +1,10 @@
-import { html } from "uhtml";
+import { html } from "../_snowpack/pkg/uhtml.js";
 import { validateColor, getColor } from "./style.js";
 import { textInput } from "./input.js";
 import { log } from "../log.js";
 import { comparators } from "../data.js";
 import { validateExpression } from "../eval.js";
-import css from "ustyler";
+import css from "../_snowpack/pkg/ustyler.js";
 import Globals from "../globals.js";
 
 /**

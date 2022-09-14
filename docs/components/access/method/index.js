@@ -1,11 +1,11 @@
-import { html } from "uhtml";
-import css from "ustyler";
+import { html } from "../../../_snowpack/pkg/uhtml.js";
+import css from "../../../_snowpack/pkg/ustyler.js";
 import { Base } from "../../base.js";
 import { TreeBase } from "../../treebase.js";
 import { String, Float, UID, Boolean } from "../../props.js";
 import Globals from "../../../globals.js";
 import db from "../../../db.js";
-import { Subject } from "rxjs";
+import { Subject } from "../../../_snowpack/pkg/rxjs.js";
 import { Handler } from "./handler.js";
 import { KeyHandler } from "./keyHandler.js";
 import { PointerHandler } from "./pointerHandler.js";

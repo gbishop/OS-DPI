@@ -1,4 +1,4 @@
-import expressions from "angular-expressions";
+import expressions from "./_snowpack/pkg/angular-expressions.js";
 import Globals from "./globals.js";
 
 /** @param {function(string, string): string} f */

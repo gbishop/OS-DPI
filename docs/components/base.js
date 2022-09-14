@@ -1,4 +1,4 @@
-import { html } from "uhtml";
+import { html } from "../_snowpack/pkg/uhtml.js";
 
 class ComponentNameMap {
   componentFromName = new Map();

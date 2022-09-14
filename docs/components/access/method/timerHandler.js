@@ -2,8 +2,8 @@ import { TreeBase } from "../../treebase.js";
 import { Handler, HandlerCondition } from "./handler.js";
 import { HandlerResponse } from "./responses.js";
 import { Select } from "../../props.js";
-import { html } from "uhtml";
-import { Subject, switchMap, delay, takeUntil, of, EMPTY } from "rxjs";
+import { html } from "../../../_snowpack/pkg/uhtml.js";
+import { Subject, switchMap, delay, takeUntil, of, EMPTY } from "../../../_snowpack/pkg/rxjs.js";
 import { Method } from "./index.js";
 
 const timerSignals = new Map([

@@ -1,7 +1,7 @@
-import { html } from "uhtml";
+import { html } from "../_snowpack/pkg/uhtml.js";
 import { Prop } from "./props.js";
 import * as icons from "./icons.js";
-import css from "ustyler";
+import css from "../_snowpack/pkg/ustyler.js";
 
 export class TreeBase {
   /** @type {TreeBase[]} */

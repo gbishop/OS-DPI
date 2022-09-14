@@ -1,10 +1,10 @@
-import { html } from "uhtml";
+import { html } from "../../_snowpack/pkg/uhtml.js";
 import { Base } from "../base.js";
 import { TabControl, TabPanel } from "../tabcontrol.js";
 import { AccessMethod } from "./method/index.js";
 import { AccessPattern, Group } from "./pattern/index.js";
 import { AccessCues } from "./cues/index.js";
-import { extender } from "proxy-pants";
+import { extender } from "../../_snowpack/pkg/proxy-pants.js";
 
 const AccessProto = {
   access: {},
