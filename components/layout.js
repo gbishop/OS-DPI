@@ -425,6 +425,7 @@ export class Layout extends Base {
     function setCurrent(current) {
       tree.designer.current = current;
       if (tree === selected) {
+        // TODO: This steals focus from the UI on redraw.
         current.focus();
       }
     }

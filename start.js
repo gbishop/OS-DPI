@@ -143,6 +143,14 @@ css`
   #welcome #head div p {
     max-width: 40em;
   }
+  #timer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 5em;
+    padding: 0.5em;
+    z-index: 10;
+  }
 `;
 
 /** Load page and data then go
@@ -209,6 +217,7 @@ export async function start() {
   const monitor = new Monitor({}, null);
 
   function renderUI() {
+    const startTime = performance.now();
     let IDE = html`<!--empty-->`;
     if (Globals.state.get("editing")) {
       IDE = html`
@@ -231,11 +240,15 @@ export async function start() {
     safeRender(
       document.body,
       html`<div id="UI">
+          <div id="timer"></div>
           ${Globals.cues.renderCss()}${Globals.tree.template()}
         </div>
         ${IDE}`
     );
     Globals.pattern.refresh();
+    document.getElementById("timer").innerText = (
+      performance.now() - startTime
+    ).toFixed(0);
   }
   Globals.state.observe(debounce(renderUI));
   renderUI();

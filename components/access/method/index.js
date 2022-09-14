@@ -183,7 +183,7 @@ class Timer extends TreeBase {
     return html`${this.Name.input()} ${this.Interval.input()}
       ${this.deleteButton()}
       <style>
-        ${`:root { --${this.Name.value}: ${this.Interval.value}s}`}
+        ${`:root { --${this.Key.value}: ${this.Interval.value}s}`}
       </style> `;
   }
 

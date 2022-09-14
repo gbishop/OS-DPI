@@ -40,10 +40,10 @@ export class Group {
     }
   }
 
-  cue(value = "group") {
+  cue() {
     // console.log("cue group", this.members);
     for (const member of this.members) {
-      member.cue(value);
+      member.cue(this.groupProps.Cue.value);
     }
   }
 
@@ -258,7 +258,7 @@ export class PatternManager extends PatternBase {
     const current = this.current;
     if (!current) return;
     this.cued = true;
-    this.current.cue(this.Cue.value);
+    current.cue(this.Cue.value);
   }
 }
 PatternBase.register(PatternManager);
@@ -267,13 +267,14 @@ class PatternGroup extends PatternBase {
   // props
   Name = new String("");
   Cycles = new Integer(2, { min: 1 });
-  Cue = new Select(Object.keys(Globals.cues));
+  Cue = new Select();
 
   template() {
     const { Name, Cycles, Cue } = this;
     return html`<fieldset class=${this.className}>
       <legend>Group: ${Name.value}</legend>
-      ${Name.input()} ${Cycles.input()} ${Cue.input()} ${this.orderedChildren()}
+      ${Name.input()} ${Cycles.input()} ${Cue.input(Globals.cues.cueMap)}
+      ${this.orderedChildren()}
       ${this.addChildButton("+Selector", PatternSelector)}
       ${this.addChildButton("+Group", PatternGroup)}
       ${this.movementButtons("Group")}
@@ -400,17 +401,14 @@ PatternBase.register(OrderBy);
 class GroupBy extends PatternBase {
   GroupBy = new Field();
   Name = new String("");
-  Cue = new Select(Object.keys(Globals.cues));
+  Cue = new Select();
   Cycles = new Integer(2);
   template() {
     const { GroupBy, Name, Cue, Cycles } = this;
     return html`<div class=${this.className}>
       ${GroupBy.input()} ${Name.input()}
       ${this.deleteButton({ title: "Delete this Group By" })}
-      <details>
-        <summary title="Details">${icons.Details}</summary>
-        ${Cue.input()} ${Cycles.input()}
-      </details>
+      ${Cue.input(Globals.cues.cueMap)} ${Cycles.input()}
     </div>`;
   }
   /**

@@ -299,11 +299,17 @@ class DB {
     const layout = await this.read("layout");
     const actions = await this.read("actions");
     const content = await this.read("content");
+    const method = await this.read("method");
+    const pattern = await this.read("pattern");
+    const cues = await this.read("cues");
 
     const zipargs = {
       "layout.json": strToU8(JSON.stringify(layout)),
       "actions.json": strToU8(JSON.stringify(actions)),
       "content.json": strToU8(JSON.stringify(content)),
+      "method.json": strToU8(JSON.stringify(method)),
+      "pattern.json": strToU8(JSON.stringify(pattern)),
+      "cues.json": strToU8(JSON.stringify(cues)),
     };
 
     const mediaKeys = (await db.getAllKeys("media")).filter((pair) =>

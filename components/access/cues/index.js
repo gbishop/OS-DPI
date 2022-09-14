@@ -1,9 +1,20 @@
 import { html } from "uhtml";
+import css from "ustyler";
 import { Base } from "../../base";
 import { TreeBase, TreeBaseSwitchable } from "../../treebase";
-import { String, TypeSelect, UID, TextArea } from "../../props";
+import {
+  String,
+  TypeSelect,
+  UID,
+  TextArea,
+  Color,
+  Float,
+  Select,
+} from "../../props";
 import db from "../../../db";
 import Globals from "../../../globals";
+import { interpolate } from "../../helpers";
+import { getColor } from "../../style";
 
 export class AccessCues extends Base {
   template() {
@@ -13,30 +24,6 @@ export class AccessCues extends Base {
     </div>`;
   }
 }
-
-class Cue extends TreeBaseSwitchable {
-  Name = new String("a cue");
-  Key = new UID();
-  CueType = new TypeSelect(CueTypes);
-
-  template() {
-    return html`
-      <div class="Cue">
-        ${this.Name.input()} ${this.CueType.input()} ${this.subTemplate()}
-        ${this.deleteButton({ title: "Delete this cue" })}
-      </div>
-    `;
-  }
-
-  subTemplate() {
-    return html`<!--empty-->`;
-  }
-
-  renderCss() {
-    return html`<!--empty-->`;
-  }
-}
-TreeBase.register(Cue);
 
 export class CueList extends TreeBase {
   /** @type {Cue[]} */
@@ -85,11 +72,43 @@ TreeBase.register(CueList);
 const CueTypes = new Map([
   ["Cue", "none"],
   ["CueCss", "css"],
+  ["CueOverlay", "overlay"],
+  ["CueFill", "fill"],
+  ["CueCircle", "circle"],
 ]);
+
+class Cue extends TreeBaseSwitchable {
+  Name = new String("a cue");
+  Key = new UID();
+  CueType = new TypeSelect(CueTypes);
+
+  template() {
+    return html`
+      <fieldset class="Cue">
+        ${this.Name.input()} ${this.CueType.input()}
+        ${this.deleteButton({ title: "Delete this cue" })} ${this.subTemplate()}
+      </fieldset>
+    `;
+  }
+
+  subTemplate() {
+    return html`<!--empty-->`;
+  }
+
+  get css() {
+    return "";
+  }
+
+  renderCss() {
+    return html`<style>
+      ${interpolate(this.css, this.propsAsObject)}
+    </style>`;
+  }
+}
+TreeBase.register(Cue);
 
 class CueCss extends Cue {
   Code = new TextArea("", {
-    hiddenLabel: true,
     placeholder: "Enter CSS for this cue",
   });
 
@@ -97,10 +116,179 @@ class CueCss extends Cue {
     return this.Code.input();
   }
 
-  renderCss() {
-    return html`<style>
-      ${this.Code.value}
-    </style>`;
+  get css() {
+    return this.Code.value;
   }
 }
 TreeBase.register(CueCss);
+
+class CueOverlay extends Cue {
+  Color = new Color("yellow");
+  Opacity = new Float(0.3);
+
+  subTemplate() {
+    return html` ${this.Color.input()} ${this.Opacity.input()}
+      <details>
+        <summary>generated CSS</summary>
+        <pre><code>${this.css}</code></pre>
+      </details>`;
+  }
+
+  get css() {
+    return `
+      button[cue="{{Key}}"] {
+        position: relative;
+        border-color: {{Color}};
+      }
+      button[cue="{{Key}}"]:after {
+        content: "";
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: {{Color}};
+        opacity: {{Opacity}};
+        z-index: 10;
+      }
+    `;
+  }
+}
+TreeBase.register(CueOverlay);
+
+const fillDirections = new Map([
+  ["top", "up"],
+  ["bottom", "down"],
+  ["right", "left to right"],
+  ["left", "right to left"],
+]);
+class CueFill extends Cue {
+  Color = new Color("blue");
+  Opacity = new Float(0.3);
+  Direction = new Select(fillDirections);
+
+  subTemplate() {
+    return html`${this.Color.input()} ${this.Opacity.input()}
+      ${this.Direction.input()}
+      <details>
+        <summary>generated CSS</summary>
+        <pre><code>${this.css}</code></pre>
+      </details> `;
+  }
+
+  get css() {
+    return `
+      button[cue="{{Key}}"] {
+        position: relative;
+        border-color: {{Color}};
+      }
+      button[cue="{{Key}}"]:after {
+        content: "";
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+
+        background-color: {{Color}};
+        opacity: {{Opacity}};
+        z-index: 10;
+        animation-name: {{Key}};
+        animation-duration: var(--timerInterval);
+        animation-timing-function: linear;
+      }
+      @keyframes {{Key}} {
+        0% { {{Direction}}: 100%; }
+      100% { {{Direction}}: 0%; }
+      }
+    `;
+  }
+}
+TreeBase.register(CueFill);
+
+class CueCircle extends Cue {
+  Color = new Color("lightblue");
+  Opacity = new Float(0.3);
+
+  subTemplate() {
+    return html`${this.Color.input()} ${this.Opacity.input()}
+      <details>
+        <summary>generated CSS</summary>
+        <pre><code>${this.css}</code></pre>
+      </details> `;
+  }
+
+  renderCss() {
+    const props = this.propsAsObject;
+    props["Color"] = getColor(props["Color"]);
+    return html`<style>
+      ${interpolate(this.css, props)}
+    </style>`;
+  }
+
+  get css() {
+    return `
+@property --percent-{{Key}} {
+  syntax: "<percentage>";
+  initial-value: 100%;
+  inherits: false;
+}
+button[cue="{{Key}}"] {
+  position: relative;
+  border-color: {{Color}};
+}
+button[cue="{{Key}}"]:after {
+  content: "";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  -webkit-mask-image: radial-gradient(
+    transparent,
+    transparent 50%,
+    #000 51%,
+    #000 0
+  );
+  mask: radial-gradient(transparent, transparent 50%, #000 51%, #000 0);
+
+  background-image: conic-gradient(
+    from 0,
+      {{Color}},
+      {{Color}} var(--percent-{{Key}}),
+    transparent var(--percent-{{Key}})
+  );
+  opacity: {{Opacity}};
+
+  animation-name: conic-gradient-{{Key}};
+  animation-duration: var(--timerInterval);
+  animation-timing-function: linear;
+
+  z-index: 0;
+}
+
+@keyframes conic-gradient-{{Key}} {
+  0% {
+    --percent-{{Key}}: 0%;
+  }
+
+  100% {
+    --percent-{{Key}}: 100%;
+  }
+}
+    `;
+  }
+}
+TreeBase.register(CueCircle);
+
+css`
+  .Cue textarea {
+    box-sizing: border-box;
+    width: 100%;
+    height: 6em;
+  }
+`;

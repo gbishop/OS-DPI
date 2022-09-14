@@ -123,11 +123,11 @@ export class PointerHandler extends Handler {
       pointerOut$,
       debounceInterval
     );
-    // const pointerDownUp$ = debouncedPointer(
-    //   pointerDown$,
-    //   pointerUp$,
-    //   debounceInterval
-    // );
+    const pointerDownUp$ = debouncedPointer(
+      pointerDown$,
+      pointerUp$,
+      debounceInterval
+    );
 
     // disable the context menu event for touch devices
     fromEvent(document, "contextmenu")
@@ -142,6 +142,7 @@ export class PointerHandler extends Handler {
       .subscribe((e) => e.preventDefault());
 
     let stream$ = pointerOverOut$.pipe(
+      mergeWith(pointerDownUp$),
       filter((e) => e.type == this.Signal.value),
       map((e) => {
         const ew = EventWrap(e);

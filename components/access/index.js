@@ -9,7 +9,8 @@ import { extender } from "proxy-pants";
 const AccessProto = {
   access: {},
   node: null,
-  cue(value = "button") {
+  /** @param {string} value */
+  cue(value) {
     this.setAttribute("cue", value);
   },
   /** @type {Group[]} */

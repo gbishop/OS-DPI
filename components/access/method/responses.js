@@ -46,6 +46,7 @@ TreeBase.register(ResponderNext);
 
 class ResponderActivate extends HandlerResponse {
   respond() {
+    console.log("responder activate");
     Globals.pattern.activate();
   }
 }
@@ -88,6 +89,11 @@ class ResponderStartTimer extends HandlerResponse {
   respond({ access }) {
     const timer = this.nearestParent(Method).timer(this.TimerName.value);
     if (!timer) return;
+    // hand the interval to Cue CSS for animations
+    document.documentElement.style.setProperty(
+      "--timerInterval",
+      `${timer.Interval.value}s`
+    );
     timer.start(access);
   }
 }

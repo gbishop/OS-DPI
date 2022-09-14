@@ -39,7 +39,7 @@ export class Prop {
     }
   }
   /** @param {Object} _ - The context */
-  eval(_) {
+  eval(_ = {}) {
     return this.value;
   }
   input() {
@@ -283,7 +283,10 @@ export class TextArea extends Prop {
   }
 
   input() {
-    return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
+    return html`<label
+      ?hiddenLabel=${this.options.hiddenLabel}
+      style="width:100%"
+    >
       <span>${this.label}</span>
       <textarea
         type="text"
@@ -310,28 +313,21 @@ export class Color extends Prop {
   input() {
     return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
       <span>${this.label}</span>
-      <div class="color-input">
-        <input
-          type="text"
-          .value=${this.value}
-          list="ColorNames"
-          onchange=${(/** @type {InputEventWithTarget} */ event) => {
-            if (validateColor(event)) {
-              this.value = event.target.value;
-              this.update();
-            }
-          }}
-          autocomplete="off"
-        />
-        <div
-          class="swatch"
-          style=${`background-color: ${getColor(this.value)}`}
-        ></div></div
-    ></label>`;
+      <color-input
+        .value=${this.value}
+        onchange=${(/** @type {InputEventWithTarget} */ event) => {
+          this.value = event.target.value;
+          this.update();
+        }}
+      />
+    </label>`;
   }
 }
 
 css`
+  label {
+    display: inline-block;
+  }
   label[hiddenLabel] span {
     clip: rect(0 0 0 0);
     clip-path: inset(50%);
