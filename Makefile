@@ -2,7 +2,9 @@ dev:
 	npm run start
 
 push:
+	mv thinking ../thinking
 	npm run build
+	mv ../thinking thinking
 	git add docs
 	git commit -m 'build'
 	git push origin
