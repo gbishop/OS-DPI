@@ -5,21 +5,21 @@ import { textInput } from "./input";
 import { validateExpression } from "../eval";
 import db from "../db";
 import css from "ustyler";
+import Globals from "../globals";
 
 export class Actions extends Base {
   /**
    * @param {SomeProps} props
-   * @param {Context} context
    * @param {Base|Null} parent
    */
-  constructor(props, context, parent) {
-    super(props, context, parent);
+  constructor(props, parent) {
+    super(props, parent);
     /** @type {ActionEditor} */
-    this.ruleEditor = new ActionEditor({}, this.context, this);
+    this.ruleEditor = new ActionEditor({}, this);
   }
 
   template() {
-    const { state, rules } = this.context;
+    const { state, rules } = Globals;
     const ruleIndex = state.get("ruleIndex");
     return html`<div class="actions" help="Actions">
       <div class="scroll">
@@ -96,7 +96,7 @@ export class Actions extends Base {
 
   /** @param {number} index */
   openActionEditor(index) {
-    const { state, rules } = this.context;
+    const { state, rules } = Globals;
     if (isNaN(index) || index < 0 || index >= rules.rules.length) {
       this.ruleEditor.close();
     } else {
@@ -138,19 +138,18 @@ export class Actions extends Base {
 class ActionEditor extends Base {
   /**
    * @param {SomeProps} props
-   * @param {Context} context
    * @param {Base|Null} parent
    */
-  constructor(props, context, parent = null) {
-    super(props, context, parent);
+  constructor(props, parent = null) {
+    super(props, parent);
     this.ruleIndex = -1;
     // fool the checker
-    this.rule = context.rules.rules[0];
+    this.rule = Globals.rules.rules[0];
   }
 
   /** @param {number} index */
   open(index) {
-    const { rules } = this.context;
+    const { rules } = Globals;
     this.ruleIndex = index;
     this.rule = rules.rules[this.ruleIndex];
     log(this.ruleIndex, this.rule);
@@ -163,11 +162,11 @@ class ActionEditor extends Base {
 
   close() {
     this.ruleIndex = -1;
-    this.context.state.update({ ruleIndex: -1 });
+    Globals.state.update({ ruleIndex: -1 });
   }
 
   template() {
-    const { state, rules, tree } = this.context;
+    const { state, rules, tree } = Globals;
 
     if (this.ruleIndex < 0 || !this.rule) return html``;
 
@@ -177,7 +176,6 @@ class ActionEditor extends Base {
         name: "origin",
         label: "Origin",
         value: this.rule.origin,
-        context: this.context,
         help: "Actions#origin",
         validate: (value) => (value.match(/^\w+$|\*/) ? "" : "Invalid origin"),
         update: (name, value) => {
@@ -191,7 +189,6 @@ class ActionEditor extends Base {
         name: "event",
         label: "Event",
         value: this.rule.event,
-        context: this.context,
         help: "Actions#event",
         validate: (value) =>
           ["press", "init"].indexOf(value) >= 0 ? "" : "Invalid event",
@@ -257,16 +254,15 @@ class ActionEditor extends Base {
 
   editConditions() {
     const conditions = this.conditions;
-    const context = this.context;
-    const allStates = context.tree.allStates();
-    const allFields = context.data.allFields;
+    const allStates = Globals.tree.allStates();
+    const allFields = Globals.data.allFields;
     const suggestions = new Set([...allStates, ...allFields]);
 
     const reflect = () => {
       this.rule.conditions = this.conditions.filter(
         (condition) => condition.length > 0
       );
-      context.state.update();
+      Globals.state.update();
       this.save();
     };
     return html`<fieldset help="Actions#conditions">
@@ -279,7 +275,6 @@ class ActionEditor extends Base {
             name: id,
             label,
             value: string,
-            context,
             validate: (value) =>
               value.length == 0 || validateExpression(value)
                 ? ""
@@ -316,7 +311,7 @@ class ActionEditor extends Base {
   }
 
   editUpdates() {
-    const { state, rules, data, tree } = this.context;
+    const { state, rules, data, tree } = Globals;
     const updates = this.updates;
 
     const reflect = async () => {
@@ -348,7 +343,6 @@ class ActionEditor extends Base {
           name: idk,
           label: `${index + 1}`,
           value: key,
-          context: this.context,
           suggestions: allStates,
           validate: (value) => (value.match(/^\$\w+$/) ? "" : "Invalid state"),
           update: (_, value) => {
@@ -363,7 +357,6 @@ class ActionEditor extends Base {
           label: `${index} value`,
           labelHidden: true,
           value,
-          context: this.context,
           suggestions: both,
           validate: (value) =>
             value.length == 0 || validateExpression(value)
@@ -399,7 +392,7 @@ class ActionEditor extends Base {
 
   /** Save the actions */
   async save() {
-    const { rules } = this.context;
+    const { rules } = Globals;
     await db.write("actions", rules.rules);
   }
 }

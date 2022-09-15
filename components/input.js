@@ -11,7 +11,6 @@ import suggest from "./suggest";
  * @property {string} [help]
  * @property {boolean} [labelHidden]
  * @property {string|string[]} value
- * @property {Context} context
  * @property {Set<string>} [choices]
  * @property {Set<string>} [suggestions]
  * @property {(value: any, input?: HTMLInputElement) => string} [validate]

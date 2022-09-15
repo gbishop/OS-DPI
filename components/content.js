@@ -3,9 +3,10 @@ import { Base } from "./base";
 import db from "../db";
 import { Data } from "../data";
 import { fileOpen } from "browser-fs-access";
-import XLSX from "xlsx";
+import * as XLSX from "xlsx";
 import css from "ustyler";
 import pleaseWait from "./wait";
+import Globals from "../globals";
 
 /** @param {Blob} blob */
 async function readSheetFromBlob(blob) {
@@ -110,7 +111,7 @@ export class Content extends Base {
     this.sheetMessage = "";
   }
   template() {
-    const data = this.context.data;
+    const data = Globals.data;
     return html`<div class="content">
       <h1>Content</h1>
       <p>
@@ -143,8 +144,8 @@ export class Content extends Base {
               const blob = await response.blob();
               var result = await readSheetFromBlob(blob);
               await db.write("content", result);
-              this.context.data = new Data(result);
-              this.context.state.update();
+              Globals.data = new Data(result);
+              Globals.state.update();
             })()
           );
         }}
@@ -174,8 +175,8 @@ export class Content extends Base {
               const result = await pleaseWait(readSheetFromBlob(blob));
               await db.write("content", result);
               this.sheetMessage = `Loaded ${blob.name}`;
-              this.context.data = new Data(result);
-              this.context.state.update();
+              Globals.data = new Data(result);
+              Globals.state.update();
             }
           } catch (e) {
             this.sheetHandle = null;
@@ -192,8 +193,8 @@ export class Content extends Base {
           const result = await pleaseWait(readSheetFromBlob(blob));
           await db.write("content", result);
           this.sheetMessage = `Reloaded ${blob.name}`;
-          this.context.data = new Data(result);
-          this.context.state.update();
+          Globals.data = new Data(result);
+          Globals.state.update();
         }}
       >
         Reload local sheet
@@ -231,7 +232,7 @@ export class Content extends Base {
               await db.addMedia(file, file.name);
             }
           }
-          this.context.state.update();
+          Globals.state.update();
         }}
       />
 
@@ -258,7 +259,7 @@ export class Content extends Base {
               }
             }
           }
-          this.context.state.update();
+          Globals.state.update();
         }}
       />
       <h2>Currently loaded media files</h2>

@@ -58,7 +58,7 @@ const allProps = {
   pitch: 0,
   rate: 0,
   volume: 0,
-  fillItems: false
+  fillItems: false,
 };
 
 export class Base {
@@ -76,20 +76,20 @@ export class Base {
   /** @type {string[]} */
   static allowedChildren = [];
 
+  /** @type {Base[]} */
+  children = [];
+
   /**
    * @param {SomeProps} props
-   * @param {Context} context
    * @param {Base|Null} parent
    */
-  constructor(props, context, parent = null) {
+  constructor(props, parent = null) {
     /** @type {Props} */
     this.props = {
       ...allProps,
       ...this.defaultProps,
       ...props,
     };
-    /** @type {Context} */
-    this.context = context;
     /** @type {Base[]} */
     this.children = [];
     this.parent = parent;
@@ -184,19 +184,12 @@ export class Base {
 
 /**
  * @param {Design} design
- * @param {Context} context
  * @param {Base|Null} parent
  */
 
-export function assemble(design, context, parent = null) {
-  const node = new (componentMap.component(design.type))(
-    design.props,
-    context,
-    parent
-  );
-  node.children = design.children.map((child) =>
-    assemble(child, context, node)
-  );
+export function assemble(design, parent = null) {
+  const node = new (componentMap.component(design.type))(design.props, parent);
+  node.children = design.children.map((child) => assemble(child, node));
   return node;
 }
 

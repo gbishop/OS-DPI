@@ -5,16 +5,16 @@ import { log } from "../log";
 import { comparators } from "../data";
 import { validateExpression } from "../eval";
 import css from "ustyler";
+import Globals from "../globals";
 
 /**
  * @param {Tree} component
  * @param {string} name
  * @param {any} value
  * @param {PropertyInfo} info
- * @param {Context} context
  * @param {(name: string, value: any) => void} hook
  */
-export function propEditor(component, name, value, info, context, hook) {
+export function propEditor(component, name, value, info, hook) {
   function propUpdate({ target }) {
     const name = target.name;
     const value = target.value;
@@ -106,14 +106,13 @@ export function propEditor(component, name, value, info, context, hook) {
         />`;
 
     case "state":
-      const { tree, rules } = context;
+      const { tree, rules } = Globals;
       let states = new Set([...tree.allStates(), ...rules.allStates()]);
       return textInput({
         type: "text",
         name,
         label: info.name,
         value,
-        context,
         help,
         validate: (value) => (value.match(/^\$\w+$/) ? "" : "Invalid state"),
         update: hook,
@@ -121,7 +120,7 @@ export function propEditor(component, name, value, info, context, hook) {
       });
 
     case "filters":
-      return editFilters(component, name, value, info, context, hook);
+      return editFilters(component, name, value, info, hook);
 
     case "voiceURI":
       return html`<label for=${name}>${info.name}</label>
@@ -148,10 +147,9 @@ export function propEditor(component, name, value, info, context, hook) {
  * @param {string} name
  * @param {any} value
  * @param {PropertyInfo} info
- * @param {Context} context
  * @param {(name: string, value: any) => void} hook
  */
-function editFilters(component, name, value, info, context, hook) {
+function editFilters(component, name, value, info, hook) {
   if (!component.designer.filters) {
     component.designer.filters = [...value];
   }
@@ -169,7 +167,7 @@ function editFilters(component, name, value, info, context, hook) {
       filter.value.match(/\$\w+$|[^$].*/)
     );
   }
-  const { tree, rules, data } = context;
+  const { tree, rules, data } = Globals;
   const allStates = new Set([...tree.allStates(), ...rules.allStates()]);
   const allFields = new Set(data.allFields);
   const both = new Set([...allStates, ...allFields]);
@@ -213,7 +211,6 @@ function editFilters(component, name, value, info, context, hook) {
       label: "",
       labelHidden: true,
       value: filter.value,
-      context,
       suggestions: allStates,
       validate: (value) =>
         value.length == 0 || validateExpression(value) ? "" : "Invalid value",
@@ -229,7 +226,7 @@ function editFilters(component, name, value, info, context, hook) {
       <td>${valueInput}</td>
       <td>
         <button
-          title="Delete action update"
+          title="Delete filter"
           onclick=${() => {
             filters.splice(index, 1);
             reflect();
