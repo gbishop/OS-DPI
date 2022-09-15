@@ -103,7 +103,7 @@ function renderGroup(group, index = 0, parent = null, background = 0) {
     ${parent
       ? html`<legend>Group: ${group.name}</legend>
           <label>Name:</label><input type="string" .value=${group.name} />`
-      : html``}
+      : html`<!--empty-->`}
 
     <label>Cycles:</label><input type="number" min="1" .value=${group.cycles} />
     <ol class="groupmembers">
@@ -169,7 +169,7 @@ function renderMovementButtons(item, index, container) {
       <button>${icons.Trash}</button>
     </div>`;
   } else {
-    return html``;
+    return html`<!--empty-->`;
   }
 }
 

@@ -425,6 +425,7 @@ export class Layout extends Base {
     function setCurrent(current) {
       tree.designer.current = current;
       if (tree === selected) {
+        // TODO: This steals focus from the UI on redraw.
         current.focus();
       }
     }
@@ -462,7 +463,7 @@ export class Layout extends Base {
                 this.showTree(child, selected, level + 1)
               )}
             </ul>`
-          : html``}
+          : html`<!--empty-->`}
       </li>`;
     } else {
       return html`<li
@@ -527,7 +528,7 @@ export class Layout extends Base {
           ${this.showTree(Globals.tree, this.selected)}
         </ul>
       </div>
-      ${editingTree && this.selected ? this.controls() : html``}
+      ${editingTree && this.selected ? this.controls() : html`<!--empty-->`}
       ${colorNamesDataList()}
     </div>`;
   }

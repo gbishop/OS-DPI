@@ -5,7 +5,7 @@ import { Select, TypeSelect } from "../../props";
 import { Method } from "./index";
 
 const ResponderTypeMap = new Map([
-  ["Responder", "none"],
+  ["HandlerResponse", "none"],
   ["ResponderNext", "next"],
   ["ResponderActivate", "activate"],
   ["ResponderCue", "cue"],
@@ -15,8 +15,6 @@ const ResponderTypeMap = new Map([
 ]);
 
 export class HandlerResponse extends TreeBaseSwitchable {
-  static title = "none";
-
   Response = new TypeSelect(ResponderTypeMap, { hiddenLabel: true });
 
   /** @param {Event & { access: Object }} event */
@@ -34,13 +32,12 @@ export class HandlerResponse extends TreeBaseSwitchable {
   }
 
   subTemplate() {
-    return html``;
+    return html`<!--empty-->`;
   }
 }
+TreeBase.register(HandlerResponse);
 
 class ResponderNext extends HandlerResponse {
-  static title = "next";
-
   respond() {
     Globals.pattern.next();
   }
@@ -48,17 +45,14 @@ class ResponderNext extends HandlerResponse {
 TreeBase.register(ResponderNext);
 
 class ResponderActivate extends HandlerResponse {
-  static title = "activate";
-
   respond() {
+    console.log("responder activate");
     Globals.pattern.activate();
   }
 }
 TreeBase.register(ResponderActivate);
 
 class ResponderCue extends HandlerResponse {
-  static title = "cue";
-
   /** @param {Event & { access: Object }} event */
   respond(event) {
     Globals.pattern.setCurrent(event.target);
@@ -68,8 +62,6 @@ class ResponderCue extends HandlerResponse {
 TreeBase.register(ResponderCue);
 
 class ResponderClearCue extends HandlerResponse {
-  static title = "clear cue";
-
   respond() {
     Globals.pattern.clearCue();
   }
@@ -77,8 +69,6 @@ class ResponderClearCue extends HandlerResponse {
 TreeBase.register(ResponderClearCue);
 
 class ResponderEmit extends HandlerResponse {
-  static title = "emit";
-
   respond({ access }) {
     Globals.rules.applyRules(access.type, "press", access);
   }
@@ -86,8 +76,6 @@ class ResponderEmit extends HandlerResponse {
 TreeBase.register(ResponderEmit);
 
 class ResponderStartTimer extends HandlerResponse {
-  static title = "start timer";
-
   TimerName = new Select([], {
     placeholder: "Choose a timer",
     hiddenLabel: true,
@@ -101,6 +89,11 @@ class ResponderStartTimer extends HandlerResponse {
   respond({ access }) {
     const timer = this.nearestParent(Method).timer(this.TimerName.value);
     if (!timer) return;
+    // hand the interval to Cue CSS for animations
+    document.documentElement.style.setProperty(
+      "--timerInterval",
+      `${timer.Interval.value}s`
+    );
     timer.start(access);
   }
 }

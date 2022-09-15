@@ -108,7 +108,7 @@ export class Base {
    * @returns {Hole}
    */
   template() {
-    return html``;
+    return html`<!--empty-->`;
   }
 
   get index() {

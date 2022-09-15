@@ -12,9 +12,9 @@ import { fileOpen } from "browser-fs-access";
 import css from "ustyler";
 import { ButtonWrap } from "./components/access";
 import Globals from "./globals";
-import { TreeBase } from "./components/treebase";
 import { PatternManager } from "./components/access/pattern";
 import { MethodChooser } from "./components/access/method";
+import { CueList } from "./components/access/cues";
 
 const safe = true;
 
@@ -119,7 +119,7 @@ async function welcome() {
                             !currentTarget.checked && !isSaved;
                       }}
                     />`
-                : html``}
+                : html`<!--empty-->`}
             </li>
           </ul> `;
         })}
@@ -142,6 +142,14 @@ css`
   }
   #welcome #head div p {
     max-width: 40em;
+  }
+  #timer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 5em;
+    padding: 0.5em;
+    z-index: 10;
   }
 `;
 
@@ -184,6 +192,7 @@ export async function start() {
   Globals.state = new State(`UIState`);
   Globals.rules = new Rules(rulesArray);
   Globals.data = new Data(dataArray);
+  Globals.cues = await CueList.load();
   Globals.pattern = await PatternManager.load();
   Globals.method = await MethodChooser.load();
   Globals.restart = start;
@@ -208,7 +217,8 @@ export async function start() {
   const monitor = new Monitor({}, null);
 
   function renderUI() {
-    let IDE = html``;
+    const startTime = performance.now();
+    let IDE = html`<!--empty-->`;
     if (Globals.state.get("editing")) {
       IDE = html`
         <div
@@ -229,10 +239,16 @@ export async function start() {
     document.body.classList.toggle("designing", Globals.state.get("editing"));
     safeRender(
       document.body,
-      html`<div id="UI">${Globals.tree.template()}</div>
+      html`<div id="UI">
+          <div id="timer"></div>
+          ${Globals.cues.renderCss()}${Globals.tree.template()}
+        </div>
         ${IDE}`
     );
     Globals.pattern.refresh();
+    document.getElementById("timer").innerText = (
+      performance.now() - startTime
+    ).toFixed(0);
   }
   Globals.state.observe(debounce(renderUI));
   renderUI();

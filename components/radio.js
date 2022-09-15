@@ -85,7 +85,7 @@ class Radio extends Base {
     return html`<div class="radio flex" id=${this.id}>
       <fieldset class="flex">
         ${(this.props.label && html`<legend>${this.props.label}</legend>`) ||
-        html``}
+        html`<!--empty-->`}
         ${choices}
       </fieldset>
     </div>`;

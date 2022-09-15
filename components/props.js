@@ -5,6 +5,7 @@ import css from "ustyler";
 import { compileExpression } from "../eval";
 import Globals from "../globals";
 import { TreeBase, TreeBaseSwitchable } from "./treebase";
+import { validateColor, getColor } from "./style";
 
 /**
  * @typedef {Object} PropOptions
@@ -38,11 +39,11 @@ export class Prop {
     }
   }
   /** @param {Object} _ - The context */
-  eval(_) {
+  eval(_ = {}) {
     return this.value;
   }
   input() {
-    return html``;
+    return html`<!--empty-->`;
   }
   /** @param {any} value */
   set(value) {
@@ -125,7 +126,7 @@ export class TypeSelect extends Select {
 
   update() {
     /* Magic happens here! The replace method on a TreeBaseSwitchable replaces the
-     * node with a new one allow type switching in place
+     * node with a new one to allow type switching in place
      * */
     this.container.replace(this.value);
   }
@@ -273,7 +274,60 @@ export class Expression extends Prop {
   }
 }
 
+export class TextArea extends Prop {
+  value = "";
+
+  constructor(value = "", options = {}) {
+    super(options);
+    this.value = value;
+  }
+
+  input() {
+    return html`<label
+      ?hiddenLabel=${this.options.hiddenLabel}
+      style="width:100%"
+    >
+      <span>${this.label}</span>
+      <textarea
+        type="text"
+        .value=${this.value}
+        onchange=${({ target }) => {
+          this.value = target.value;
+          this.update();
+        }}
+        title=${this.options.title}
+        placeholder=${this.options.placeholder}
+      ></textarea>
+    </label>`;
+  }
+}
+
+export class Color extends Prop {
+  value = "#ffffff";
+
+  constructor(value = "", options = {}) {
+    super(options);
+    this.value = value;
+  }
+
+  input() {
+    return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
+      <span>${this.label}</span>
+      <color-input
+        .value=${this.value}
+        onchange=${(/** @type {InputEventWithTarget} */ event) => {
+          this.value = event.target.value;
+          this.update();
+        }}
+      />
+    </label>`;
+  }
+}
+
 css`
+  label {
+    display: inline-block;
+  }
   label[hiddenLabel] span {
     clip: rect(0 0 0 0);
     clip-path: inset(50%);
