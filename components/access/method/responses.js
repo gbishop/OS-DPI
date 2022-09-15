@@ -31,6 +31,11 @@ export class HandlerResponse extends TreeBaseSwitchable {
     `;
   }
 
+  get pattern() {
+    const method = this.nearestParent(Method);
+    return method.pattern;
+  }
+
   subTemplate() {
     return html`<!--empty-->`;
   }
@@ -39,7 +44,7 @@ TreeBase.register(HandlerResponse);
 
 class ResponderNext extends HandlerResponse {
   respond() {
-    Globals.pattern.next();
+    this.pattern.next();
   }
 }
 TreeBase.register(ResponderNext);
@@ -47,7 +52,7 @@ TreeBase.register(ResponderNext);
 class ResponderActivate extends HandlerResponse {
   respond() {
     console.log("responder activate");
-    Globals.pattern.activate();
+    this.pattern.activate();
   }
 }
 TreeBase.register(ResponderActivate);
@@ -55,15 +60,15 @@ TreeBase.register(ResponderActivate);
 class ResponderCue extends HandlerResponse {
   /** @param {Event & { access: Object }} event */
   respond(event) {
-    Globals.pattern.setCurrent(event.target);
-    Globals.pattern.cue();
+    this.pattern.setCurrent(event.target);
+    this.pattern.cue();
   }
 }
 TreeBase.register(ResponderCue);
 
 class ResponderClearCue extends HandlerResponse {
   respond() {
-    Globals.pattern.clearCue();
+    this.pattern.clearCue();
   }
 }
 TreeBase.register(ResponderClearCue);

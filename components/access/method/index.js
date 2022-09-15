@@ -2,7 +2,7 @@ import { html } from "uhtml";
 import css from "ustyler";
 import { Base } from "../../base";
 import { TreeBase } from "../../treebase";
-import { String, Float, UID, Boolean } from "../../props";
+import { String, Float, UID, Boolean, Select } from "../../props";
 import Globals from "../../../globals";
 import db from "../../../db";
 import { Subject } from "rxjs";
@@ -68,6 +68,12 @@ export class MethodChooser extends TreeBase {
       ${this.children.map((child) => child.template())}
     </div> `;
   }
+
+  refresh() {
+    this.children
+      .filter((child) => child.Active.value)
+      .forEach((child) => child.pattern.refresh());
+  }
 }
 TreeBase.register(MethodChooser);
 
@@ -75,11 +81,19 @@ export class Method extends TreeBase {
   Name = new String("New method");
   Key = new UID();
   Active = new Boolean(false);
+  Pattern = new Select();
 
   open = false;
 
   /** @type {(Handler | Timer)[]} */
   children = [];
+
+  /** Return the Pattern for this method
+   * @returns {import('../pattern/index.js').PatternManager}
+   */
+  get pattern() {
+    return Globals.patterns.byKey(this.Pattern.value);
+  }
 
   /** Return a Map from Timer Key to the Timer
    * @returns {Map<string, Timer>}
@@ -121,7 +135,7 @@ export class Method extends TreeBase {
   }
 
   template() {
-    const { Name, Active } = this;
+    const { Name, Active, Pattern } = this;
     return html`<details
       class="Method"
       ?open=${this.open}
@@ -133,6 +147,7 @@ export class Method extends TreeBase {
       </summary>
       <div class="Method">
         ${Name.input()} ${Active.input()}
+        ${Pattern.input(Globals.patterns.patternMap)}
         ${this.deleteButton({ title: "Delete this method" })}
         <fieldset>
           <legend>

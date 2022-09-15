@@ -12,11 +12,11 @@ import { fileOpen } from "browser-fs-access";
 import css from "ustyler";
 import { ButtonWrap } from "./components/access";
 import Globals from "./globals";
-import { PatternManager } from "./components/access/pattern";
+import { PatternList } from "./components/access/pattern";
 import { MethodChooser } from "./components/access/method";
 import { CueList } from "./components/access/cues";
 
-const safe = true;
+const safe = false;
 
 /** @param {Element} where
  * @param {Hole} what
@@ -193,7 +193,7 @@ export async function start() {
   Globals.rules = new Rules(rulesArray);
   Globals.data = new Data(dataArray);
   Globals.cues = await CueList.load();
-  Globals.pattern = await PatternManager.load();
+  Globals.patterns = await PatternList.load();
   Globals.method = await MethodChooser.load();
   Globals.restart = start;
 
@@ -245,7 +245,7 @@ export async function start() {
         </div>
         ${IDE}`
     );
-    Globals.pattern.refresh();
+    Globals.method.refresh();
     document.getElementById("timer").innerText = (
       performance.now() - startTime
     ).toFixed(0);

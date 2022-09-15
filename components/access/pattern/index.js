@@ -2,11 +2,18 @@ import db from "../../../db";
 import { html } from "uhtml";
 import css from "ustyler";
 import Globals from "../../../globals";
-import * as icons from "../../icons";
-import { Select, String, Integer, Expression, Field } from "../../props";
+import * as Props from "../../props";
 import { TreeBase } from "../../treebase";
 import { Base } from "../../base";
 import { ButtonWrap } from "../index";
+
+export class AccessPattern extends Base {
+  template() {
+    return html`<div class="access-pattern treebase">
+      ${Globals.patterns.template()}
+    </div>`;
+  }
+}
 
 /** @typedef {ReturnType<ButtonWrap<Node>>} Button */
 
@@ -83,6 +90,65 @@ class PatternBase extends TreeBase {
   }
 }
 
+export class PatternList extends TreeBase {
+  /** @type {PatternManager[]} */
+  children = [];
+
+  template() {
+    return html`<div class="PatternList">
+      ${this.addChildButton("+Pattern", PatternManager, {
+        title: "Add a Pattern",
+      })}
+      ${this.unorderedChildren()}
+    </div>`;
+  }
+
+  /** @param {string} key
+   * @returns {PatternManager}
+   */
+  byKey(key) {
+    return (
+      this.children.find((child) => child.Key.value == key) || this.children[0]
+    );
+  }
+
+  get patternMap() {
+    return new Map(
+      this.children.map((child) => [child.Key.value, child.Name.value])
+    );
+  }
+
+  /**
+* Load the PatternManager from the db
+  @returns {Promise<PatternList>}
+*/
+  static async load() {
+    const fallback = {
+      className: "PatternList",
+      props: {},
+      children: [
+        {
+          className: "PatternManager",
+          props: { Name: "Page order", Cue: "default" },
+          children: [],
+        },
+      ],
+    };
+    const pattern = await db.read("pattern", fallback);
+    try {
+      return /** @type {PatternList} */ (PatternList.fromObject(pattern));
+    } catch {
+      return /** @type {PatternList} */ (PatternList.fromObject(fallback));
+    }
+  }
+
+  onUpdate() {
+    db.write("pattern", this.toObject());
+    Globals.state.update();
+  }
+}
+TreeBase.register(PatternList);
+
 export class PatternManager extends PatternBase {
   /** @type {Group} */
   targets;
@@ -99,41 +165,21 @@ export class PatternManager extends PatternBase {
   cued = false;
 
   // props
-  Cycles = new Integer(2, { min: 1 });
-  Cue = new Select();
-
-  /**
-* Load the PatternManager from the db
-  @returns {Promise<PatternManager>}
-*/
-  static async load() {
-    const fallback = {
-      className: "PatternManager",
-      props: {
-        Cycles: 2,
-        Cue: "default",
-      },
-      children: [],
-    };
-    const pattern = await db.read("pattern", fallback);
-    return /** @type {PatternManager} */ (PatternManager.fromObject(pattern));
-  }
+  Cycles = new Props.Integer(2, { min: 1 });
+  Cue = new Props.Select();
+  Name = new Props.String("a pattern");
+  Key = new Props.UID();
 
   template() {
-    const { Cycles, Cue } = this;
+    const { Cycles, Cue, Name } = this;
     return html`
       <div class=${this.className}>
-        ${Cycles.input()} ${Cue.input(Globals.cues.cueMap)}
+        ${Name.input()} ${Cycles.input()} ${Cue.input(Globals.cues.cueMap)}
         ${this.orderedChildren()}
         ${this.addChildButton("+Selector", PatternSelector)}
         ${this.addChildButton("+Group", PatternGroup)}
       </div>
     `;
-  }
-
-  onUpdate() {
-    db.write("pattern", this.toObject());
-    Globals.state.update();
   }
 
   /**
@@ -265,9 +311,9 @@ PatternBase.register(PatternManager);
 
 class PatternGroup extends PatternBase {
   // props
-  Name = new String("");
-  Cycles = new Integer(2, { min: 1 });
-  Cue = new Select();
+  Name = new Props.String("");
+  Cycles = new Props.Integer(2, { min: 1 });
+  Cue = new Props.Select();
 
   template() {
     const { Name, Cycles, Cue } = this;
@@ -331,7 +377,7 @@ class PatternSelector extends PatternBase {
 PatternBase.register(PatternSelector);
 
 class Filter extends PatternBase {
-  Filter = new Expression();
+  Filter = new Props.Expression();
   template() {
     const { Filter } = this;
     return html`<div class=${this.className}>
@@ -367,7 +413,7 @@ const comparator = new Intl.Collator(undefined, {
 });
 
 class OrderBy extends PatternBase {
-  OrderBy = new Field();
+  OrderBy = new Props.Field();
   template() {
     const { OrderBy } = this;
     return html`<div class=${this.className}>
@@ -399,10 +445,10 @@ class OrderBy extends PatternBase {
 PatternBase.register(OrderBy);
 
 class GroupBy extends PatternBase {
-  GroupBy = new Field();
-  Name = new String("");
-  Cue = new Select();
-  Cycles = new Integer(2);
+  GroupBy = new Props.Field();
+  Name = new Props.String("");
+  Cue = new Props.Select();
+  Cycles = new Props.Integer(2);
   template() {
     const { GroupBy, Name, Cue, Cycles } = this;
     return html`<div class=${this.className}>
@@ -450,14 +496,6 @@ class GroupBy extends PatternBase {
   }
 }
 PatternBase.register(GroupBy);
-
-export class AccessPattern extends Base {
-  template() {
-    return html`<div class="access-pattern treebase">
-      ${Globals.pattern.template()}
-    </div>`;
-  }
-}
 
 css`
   div.access-pattern {

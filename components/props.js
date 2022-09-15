@@ -115,7 +115,7 @@ export class Select extends Prop {
 export class Field extends Select {
   /** @param {PropOptions} options */
   constructor(options = {}) {
-    const choices = [...Globals.data.allFields, "#componentName"].sort();
+    const choices = [...Globals.data.allFields, "#ComponentName"].sort();
     super(choices, options);
   }
 }
