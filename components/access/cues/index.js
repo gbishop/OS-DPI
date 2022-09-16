@@ -15,6 +15,7 @@ import db from "../../../db";
 import Globals from "../../../globals";
 import { interpolate } from "../../helpers";
 import { getColor } from "../../style";
+import defaultCues from "./defaultCues";
 
 export class AccessCues extends Base {
   template() {
@@ -51,12 +52,7 @@ export class CueList extends TreeBase {
    * @returns {Promise<CueList>}
    */
   static async load() {
-    const fallback = {
-      className: "CueList",
-      props: {},
-      children: [],
-    };
-    const list = await db.read("cues", fallback);
+    const list = await db.read("cues", defaultCues);
     const result = /** @type {CueList} */ (this.fromObject(list));
     return result;
   }
@@ -110,10 +106,14 @@ TreeBase.register(Cue);
 class CueCss extends Cue {
   Code = new TextArea("", {
     placeholder: "Enter CSS for this cue",
+    hiddenLabel: true,
   });
 
   subTemplate() {
-    return this.Code.input();
+    return html`<details>
+      <summary>CSS</summary>
+      ${this.Code.input()}
+    </details>`;
   }
 
   get css() {

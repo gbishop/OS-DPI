@@ -11,6 +11,7 @@ import { KeyHandler } from "./keyHandler";
 import { PointerHandler } from "./pointerHandler";
 import { TimerHandler } from "./timerHandler";
 import { EventWrap } from "../index";
+import defaultMethods from "./defaultMethods";
 
 export class AccessMethod extends Base {
   template() {
@@ -47,14 +48,7 @@ export class MethodChooser extends TreeBase {
   @returns {Promise<MethodChooser>}
 */
   static async load() {
-    const fallback = {
-      className: "MethodChooser",
-      props: {
-        currentIndex: -1,
-      },
-      children: [],
-    };
-    const method = await db.read("method", fallback);
+    const method = await db.read("method", defaultMethods);
     const result = /** @type {MethodChooser} */ (this.fromObject(method));
     result.configure();
     return result;
@@ -136,25 +130,23 @@ export class Method extends TreeBase {
 
   template() {
     const { Name, Active, Pattern } = this;
-    return html`<details
-      class="Method"
-      ?open=${this.open}
-      ontoggle=${({ target }) => (this.open = target.open)}
-    >
-      <summary>
-        ${Name.value}
-        ${Active.value == "true" ? html`&check;` : html`<!--empty-->`}
-      </summary>
-      <div class="Method">
-        ${Name.input()} ${Active.input()}
-        ${Pattern.input(Globals.patterns.patternMap)}
-        ${this.deleteButton({ title: "Delete this method" })}
-        <fieldset>
-          <legend>
-            Timers ${this.addChildButton("+", Timer, { title: "Add a timer" })}
-          </legend>
-          ${this.unorderedChildren([...this.timers.values()])}
-        </fieldset>
+    const timers = [...this.timers.values()];
+    return html`<fieldset class="Method">
+      ${Name.input()} ${Active.input()}
+      ${Pattern.input(Globals.patterns.patternMap)}
+      ${this.deleteButton({ title: "Delete this method" })}
+      <details>
+        <summary>Details</summary>
+        ${timers.length > 0
+          ? html`<fieldset>
+              <legend>
+                Timers
+                ${this.addChildButton("+", Timer, { title: "Add a timer" })}
+              </legend>
+              ${this.unorderedChildren(timers)}
+            </fieldset>`
+          : html`Timers
+            ${this.addChildButton("+", Timer, { title: "Add a timer" })}`}
         <fieldset>
           <legend>
             Handlers
@@ -170,8 +162,8 @@ export class Method extends TreeBase {
           </legend>
           ${this.orderedChildren(this.handlers)}
         </fieldset>
-      </div>
-    </details>`;
+      </details>
+    </fieldset> `;
   }
 
   /** Configure the rxjs pipelines to implement this method */

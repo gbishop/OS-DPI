@@ -6,6 +6,7 @@ import * as Props from "../../props";
 import { TreeBase } from "../../treebase";
 import { Base } from "../../base";
 import { ButtonWrap } from "../index";
+import defaultPatterns from "./defaultPatterns";
 
 export class AccessPattern extends Base {
   template() {
@@ -123,23 +124,8 @@ export class PatternList extends TreeBase {
   @returns {Promise<PatternList>}
 */
   static async load() {
-    const fallback = {
-      className: "PatternList",
-      props: {},
-      children: [
-        {
-          className: "PatternManager",
-          props: { Name: "Page order", Cue: "default" },
-          children: [],
-        },
-      ],
-    };
-    const pattern = await db.read("pattern", fallback);
-    try {
-      return /** @type {PatternList} */ (PatternList.fromObject(pattern));
-    } catch {
-      return /** @type {PatternList} */ (PatternList.fromObject(fallback));
-    }
+    const pattern = await db.read("pattern", defaultPatterns);
+    return /** @type {PatternList} */ (PatternList.fromObject(pattern));
   }
 
   onUpdate() {
@@ -173,12 +159,16 @@ export class PatternManager extends PatternBase {
   template() {
     const { Cycles, Cue, Name } = this;
     return html`
-      <div class=${this.className}>
+      <fieldset class=${this.className}>
+        <legend>${Name.value}</legend>
         ${Name.input()} ${Cycles.input()} ${Cue.input(Globals.cues.cueMap)}
-        ${this.orderedChildren()}
-        ${this.addChildButton("+Selector", PatternSelector)}
-        ${this.addChildButton("+Group", PatternGroup)}
-      </div>
+        <details>
+          <summary>Details</summary>
+          ${this.orderedChildren()}
+          ${this.addChildButton("+Selector", PatternSelector)}
+          ${this.addChildButton("+Group", PatternGroup)}
+        </details>
+      </fieldset>
     `;
   }
 
@@ -255,6 +245,7 @@ export class PatternManager extends PatternBase {
 
   next() {
     const top = this.stack[0];
+    console.log({ top });
     if (top.index < top.group.length - 1) {
       top.index++;
     } else if (this.stack.length > 1) {
@@ -269,6 +260,7 @@ export class PatternManager extends PatternBase {
   }
 
   activate() {
+    console.log("activate");
     let current = this.current;
     if (!current) return;
     if (current instanceof Group) {
@@ -490,6 +482,9 @@ class GroupBy extends PatternBase {
         } else {
           group.members.push(button);
         }
+      }
+      if (result.length === 1) {
+        return result[0].members;
       }
       return result;
     }
