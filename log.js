@@ -1,5 +1,5 @@
 const logging = {
-  local: true,
+  local: false,
   remote: false,
 };
 
@@ -10,10 +10,18 @@ export function logInit(name) {
   Name = name;
 }
 
+let time = 0;
+
 /** @param {any[]} args */
 export function log(...args) {
+  const current = performance.now();
+  let delta = current - time;
+  if (delta > 10000) {
+    delta = 0;
+    time = current;
+  }
   if (logging.local) {
-    console.log(...args);
+    console.log(delta.toFixed(3), ...args);
   }
   if (logging.remote) {
     fetch("/log", {
@@ -21,7 +29,7 @@ export function log(...args) {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify([Name, ...args]),
+      body: JSON.stringify([Name, delta, ...args]),
     });
   }
 }

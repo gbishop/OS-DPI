@@ -3,8 +3,9 @@ import { Handler, HandlerCondition } from "./handler";
 import { HandlerResponse } from "./responses";
 import { Select } from "../../props";
 import { html } from "uhtml";
-import { Subject, switchMap, delay, takeUntil, of, EMPTY } from "rxjs";
+import { Subject, switchMap, delay, takeUntil, of, EMPTY, tap } from "rxjs";
 import { Method } from "./index";
+import { log } from "../../../log";
 
 const timerSignals = new Map([
   ["transitionend", "Transition end"],
@@ -47,6 +48,7 @@ export class TimerHandler extends Handler {
 
   /** @param {Subject} stop$ */
   configure(stop$) {
+    log("configure timer");
     const timer = this.nearestParent(Method).timer(this.TimerName.value);
     if (!timer) return;
     const delayTime = 1000 * timer.Interval.valueAsNumber;

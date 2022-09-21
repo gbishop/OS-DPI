@@ -6,6 +6,7 @@ import { html } from "uhtml";
 import { EventWrap, ButtonWrap } from "../index";
 import {
   debounceTime,
+  distinctUntilChanged,
   distinctUntilKeyChanged,
   filter,
   fromEvent,
@@ -14,10 +15,12 @@ import {
   mergeMap,
   mergeWith,
   Observable,
+  pairwise,
   Subject,
   takeUntil,
   tap,
 } from "rxjs";
+import { log } from "../../../log";
 
 const pointerSignals = new Map([
   ["pointerdown", "Pointer down"],
@@ -62,6 +65,8 @@ export class PointerHandler extends Handler {
 
   /** @param {Subject} stop$ */
   configure(stop$) {
+    const signal = this.Signal.value;
+
     const debounceInterval = this.Debounce.valueAsNumber * 1000;
     // construct pointer streams
     /**
@@ -86,7 +91,7 @@ export class PointerHandler extends Handler {
     );
     const pointerUp$ = fromPointerEvent(document, "pointerup");
 
-    // const pointerMove$ = fromPointerEvent(document, "pointermove");
+    const pointerMove$ = fromPointerEvent(document, "pointermove");
 
     const pointerOver$ = fromPointerEvent(document, "pointerover");
     const pointerOut$ = fromPointerEvent(document, "pointerout");
@@ -109,7 +114,6 @@ export class PointerHandler extends Handler {
         filter(
           (e) =>
             e.target instanceof HTMLButtonElement &&
-            !e.target.disabled &&
             e.target.closest("div#UI") !== null
         ),
         groupBy((e) => e.target),
@@ -141,20 +145,52 @@ export class PointerHandler extends Handler {
       )
       .subscribe((e) => e.preventDefault());
 
-    let stream$ = pointerOverOut$.pipe(
-      mergeWith(pointerDownUp$),
-      filter((e) => e.type == this.Signal.value),
-      map((e) => {
-        const ew = EventWrap(e);
-        ew.access = ButtonWrap(e.target).access;
-        ew.access.eventType = e.type;
-        return ew;
-      })
-    );
+    /** @type {Observable<Event & { access: {} }>} */
+    let stream$ = null;
+    if (signal == "foo") {
+      stream$ = pointerOverOut$.pipe(
+        mergeWith(pointerDownUp$, pointerMove$),
+        pairwise(),
+        filter(([p, c]) => {
+          c.type != "pointermove" && log("pc", p.type, c.type);
+          return c.type == signal && p.type != signal;
+        }),
+        map(([_, c]) => c),
+        map((e) => {
+          const ew = EventWrap(e);
+          ew.access = ButtonWrap(e.target).access;
+          ew.access.eventType = e.type;
+          return ew;
+        })
+      );
+    } else {
+      stream$ = pointerOverOut$.pipe(
+        mergeWith(pointerDownUp$),
+        distinctUntilKeyChanged("type"),
+        tap((e) => signal == "pointerover" && console.log("ad", e.type)),
+        filter(
+          (e) =>
+            e.type == signal &&
+            e.target instanceof HTMLButtonElement &&
+            !e.target.disabled
+        ),
+        map((e) => {
+          const ew = EventWrap(e);
+          ew.access = ButtonWrap(e.target).access;
+          ew.access.eventType = e.type;
+          return ew;
+        })
+      );
+    }
     for (const condition of this.conditions) {
       stream$ = stream$.pipe(filter((e) => condition.Condition.eval(e.access)));
     }
-    stream$.pipe(takeUntil(stop$)).subscribe((e) => this.respond(e));
+    stream$
+      .pipe(
+        tap((event) => console.log("ph", event.type, event)),
+        takeUntil(stop$)
+      )
+      .subscribe((e) => this.respond(e));
   }
 }
 TreeBase.register(PointerHandler);

@@ -5,7 +5,7 @@ import Globals from "../../../globals";
 import * as Props from "../../props";
 import { TreeBase } from "../../treebase";
 import { Base } from "../../base";
-import { ButtonWrap } from "../index";
+import { ButtonWrap, AccessChanged } from "../index";
 import defaultPatterns from "./defaultPatterns";
 
 export class AccessPattern extends Base {
@@ -220,7 +220,10 @@ export class PatternManager extends PatternBase {
   }
 
   start() {
-    this.stack = [{ group: this.targets, index: -1 }];
+    if (AccessChanged || !this.stack.length) {
+      console.log("clear stack", AccessChanged);
+      this.stack = [{ group: this.targets, index: -1 }];
+    }
     this.cue();
   }
 
@@ -245,11 +248,12 @@ export class PatternManager extends PatternBase {
 
   next() {
     const top = this.stack[0];
-    console.log({ top });
+    console.log("next", { top });
     if (top.index < top.group.length - 1) {
       top.index++;
     } else if (this.stack.length > 1) {
       this.stack.shift();
+      console.log("stack pop");
     } else if (this.stack.length == 1) {
       top.index = 0;
     } else {
@@ -269,7 +273,7 @@ export class PatternManager extends PatternBase {
         current = current.members[0];
       }
       this.stack.unshift({ group: current, index: 0 });
-      console.log("activated", this.current, this.stack);
+      console.log("push stack", this.current, this.stack);
     } else {
       const name = current.access.ComponentName;
       console.log("activate button", current);
@@ -294,6 +298,7 @@ export class PatternManager extends PatternBase {
   cue() {
     this.clearCue();
     const current = this.current;
+    if (!current) console.trace("cue", this);
     if (!current) return;
     this.cued = true;
     current.cue(this.Cue.value);

@@ -12,6 +12,7 @@ import { PointerHandler } from "./pointerHandler";
 import { TimerHandler } from "./timerHandler";
 import { EventWrap } from "../index";
 import defaultMethods from "./defaultMethods";
+import { log } from "../../../log";
 
 export class AccessMethod extends Base {
   template() {
@@ -64,6 +65,7 @@ export class MethodChooser extends TreeBase {
   }
 
   refresh() {
+    console.log("refresh", this.children);
     this.children
       .filter((child) => child.Active.value)
       .forEach((child) => child.pattern.refresh());
@@ -86,7 +88,15 @@ export class Method extends TreeBase {
    * @returns {import('../pattern/index.js').PatternManager}
    */
   get pattern() {
-    return Globals.patterns.byKey(this.Pattern.value);
+    const r = Globals.patterns.byKey(this.Pattern.value);
+    console.log(
+      "get pattern",
+      this.Name.value,
+      this.Active.value,
+      this.Pattern.value,
+      Globals.patterns.byKey(this.Pattern.value)
+    );
+    return r;
   }
 
   /** Return a Map from Timer Key to the Timer
@@ -194,14 +204,20 @@ class Timer extends TreeBase {
       </style> `;
   }
 
-  /** @param {Object} access */
-  start(access) {
-    const event = EventWrap(new Event("timer"));
-    event.access = access;
-    this.subject$.next(event);
+  /** @param {Event & { access: {}}} event */
+  start(event) {
+    log("start timer");
+    const fakeEvent = /** @type {Event} */ ({
+      type: "timer",
+      target: event.target,
+    });
+    const tevent = EventWrap(fakeEvent);
+    tevent.access = event.access;
+    this.subject$.next(tevent);
   }
 
   cancel() {
+    log("cancel timer");
     const event = EventWrap(new Event("cancel"));
     this.subject$.next(event);
   }

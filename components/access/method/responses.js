@@ -74,8 +74,9 @@ class ResponderClearCue extends HandlerResponse {
 TreeBase.register(ResponderClearCue);
 
 class ResponderEmit extends HandlerResponse {
-  respond({ access }) {
-    Globals.rules.applyRules(access.type, "press", access);
+  /** @param {Event & { access: Object }} event */
+  respond(event) {
+    Globals.rules.applyRules(event.access.type, "press", event.access);
   }
 }
 TreeBase.register(ResponderEmit);
@@ -91,7 +92,8 @@ class ResponderStartTimer extends HandlerResponse {
     return html`${this.TimerName.input(timerNames)}`;
   }
 
-  respond({ access }) {
+  /** @param {Event & { access: Object }} event */
+  respond(event) {
     const timer = this.nearestParent(Method).timer(this.TimerName.value);
     if (!timer) return;
     // hand the interval to Cue CSS for animations
@@ -99,7 +101,7 @@ class ResponderStartTimer extends HandlerResponse {
       "--timerInterval",
       `${timer.Interval.value}s`
     );
-    timer.start(access);
+    timer.start(event);
   }
 }
 TreeBase.register(ResponderStartTimer);

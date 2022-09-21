@@ -14,6 +14,7 @@ export class State {
       const persist = window.sessionStorage.getItem(this.persistKey);
       if (persist) {
         this.values = JSON.parse(persist);
+        // console.log("restored $tabControl", this.values["$tabControl"]);
       }
     }
   }
@@ -60,6 +61,7 @@ export class State {
     if (this.persistKey) {
       const persist = JSON.stringify(this.values);
       window.sessionStorage.setItem(this.persistKey, persist);
+      // console.trace("persist $tabControl", this.values["$tabControl"]);
     }
   }
 
