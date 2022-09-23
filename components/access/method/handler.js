@@ -1,10 +1,9 @@
 import { html } from "uhtml";
 import { TreeBase } from "../../treebase";
 import { HandlerResponse } from "./responses";
-import { Select, Expression } from "../../props";
-import { Subject } from "rxjs";
+import * as Props from "../../props";
+import * as RxJs from "rxjs";
 import { Method } from "./index";
-import { EventWrap } from "../index";
 
 /** Handler is a base class for all event handlers */
 export class Handler extends TreeBase {
@@ -23,13 +22,16 @@ export class Handler extends TreeBase {
     return this.filterChildren(HandlerResponse);
   }
 
-  /** @param {Subject} _stop$ */
+  /**
+   * @param {RxJs.Subject} _stop$
+   * */
   configure(_stop$) {
     throw new TypeError("Must override configure");
   }
 
   /** @param {WrappedEvent} event */
   respond(event) {
+    // console.log("handler respond", event.type, this.responses);
     const method = this.nearestParent(Method);
     method.cancelTimers();
     for (const response of this.responses) {
@@ -39,7 +41,7 @@ export class Handler extends TreeBase {
 }
 
 export class HandlerCondition extends TreeBase {
-  Condition = new Expression("", { hiddenLabel: true });
+  Condition = new Props.Expression("", { hiddenLabel: true });
 
   template() {
     const { Condition } = this;
@@ -68,7 +70,7 @@ const allKeys = new Map([
 ]);
 
 export class HandlerKeyCondition extends TreeBase {
-  Key = new Select(allKeys, { hiddenLabel: true });
+  Key = new Props.Select(allKeys, { hiddenLabel: true });
 
   template() {
     const { Key } = this;

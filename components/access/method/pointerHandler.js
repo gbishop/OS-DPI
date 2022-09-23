@@ -1,45 +1,32 @@
 import { TreeBase } from "../../treebase";
 import { Handler, HandlerCondition } from "./handler";
 import { HandlerResponse } from "./responses";
-import { Select, Float } from "../../props";
+import * as Props from "../../props";
 import { html } from "uhtml";
 import { EventWrap, ButtonWrap } from "../index";
-import {
-  debounceTime,
-  distinctUntilChanged,
-  distinctUntilKeyChanged,
-  filter,
-  fromEvent,
-  groupBy,
-  map,
-  mergeMap,
-  mergeWith,
-  Observable,
-  pairwise,
-  Subject,
-  takeUntil,
-  tap,
-} from "rxjs";
+import * as RxJs from "rxjs";
 import { log } from "../../../log";
 
 const pointerSignals = new Map([
   ["pointerdown", "Pointer down"],
-  ["pointermove", "Pointer move"],
   ["pointerup", "Pointer up"],
   ["pointerover", "Pointer enter"],
   ["pointerout", "Pointer leave"],
 ]);
 
 export class PointerHandler extends Handler {
-  Signal = new Select(pointerSignals);
-  Debounce = new Float(0.1);
+  Signal = new Props.Select(pointerSignals);
+  Debounce = new Props.Float(0.1);
+  SkipOnRedraw = new Props.Boolean(false);
 
   template() {
     const { conditions, responses, Signal, Debounce } = this;
+    const skip =
+      this.Signal.value == "pointerover" ? this.SkipOnRedraw.input() : html``;
     return html`
       <fieldset class="Handler">
         <legend>Pointer Handler</legend>
-        ${Signal.input()} ${Debounce.input()}
+        ${Signal.input()} ${Debounce.input()} ${skip}
         ${this.deleteButton({ title: "Delete this handler" })}
         <fieldset class="Conditions">
           <legend>
@@ -63,7 +50,7 @@ export class PointerHandler extends Handler {
     `;
   }
 
-  /** @param {Subject} stop$ */
+  /** @param {RxJs.Subject} stop$ */
   configure(stop$) {
     const signal = this.Signal.value;
 
@@ -74,15 +61,17 @@ export class PointerHandler extends Handler {
      *
      * @param {Node} where
      * @param {string} event
-     * @returns {Observable<PointerEvent>}
+     * @returns {RxJs.Observable<PointerEvent>}
      */
     function fromPointerEvent(where, event) {
-      return /** @type {Observable<PointerEvent>} */ (fromEvent(where, event));
+      return /** @type {RxJs.Observable<PointerEvent>} */ (
+        RxJs.fromEvent(where, event)
+      );
     }
     const pointerDown$ = fromPointerEvent(document, "pointerdown");
 
     // disable pointer capture
-    pointerDown$.pipe(takeUntil(stop$)).subscribe(
+    pointerDown$.pipe(RxJs.takeUntil(stop$)).subscribe(
       /** @param {PointerEvent} x */
       (x) =>
         x.target instanceof Element &&
@@ -90,8 +79,6 @@ export class PointerHandler extends Handler {
         x.target.releasePointerCapture(x.pointerId)
     );
     const pointerUp$ = fromPointerEvent(document, "pointerup");
-
-    const pointerMove$ = fromPointerEvent(document, "pointermove");
 
     const pointerOver$ = fromPointerEvent(document, "pointerover");
     const pointerOut$ = fromPointerEvent(document, "pointerout");
@@ -104,21 +91,24 @@ export class PointerHandler extends Handler {
      * distinctUntilKeyChanged prevents producing multiple events when the
      * pointer leaves and re-enters in a short time.
      *
-     * @param {Observable<PointerEvent>} in$
-     * @param {Observable<PointerEvent>} out$
+     * @param {RxJs.Observable<PointerEvent>} in$
+     * @param {RxJs.Observable<PointerEvent>} out$
      * @param {Number} interval
      */
     function debouncedPointer(in$, out$, interval) {
       return in$.pipe(
-        mergeWith(out$),
-        filter(
+        RxJs.mergeWith(out$),
+        RxJs.filter(
           (e) =>
             e.target instanceof HTMLButtonElement &&
             e.target.closest("div#UI") !== null
         ),
-        groupBy((e) => e.target),
-        mergeMap(($group) =>
-          $group.pipe(debounceTime(interval), distinctUntilKeyChanged("type"))
+        RxJs.groupBy((e) => e.target),
+        RxJs.mergeMap(($group) =>
+          $group.pipe(
+            RxJs.debounceTime(interval),
+            RxJs.distinctUntilKeyChanged("type")
+          )
         )
       );
     }
@@ -134,61 +124,69 @@ export class PointerHandler extends Handler {
     );
 
     // disable the context menu event for touch devices
-    fromEvent(document, "contextmenu")
+    RxJs.fromEvent(document, "contextmenu")
       .pipe(
-        filter(
+        RxJs.filter(
           (e) =>
             e.target instanceof HTMLButtonElement &&
             e.target.closest("div#UI") !== null
         ),
-        takeUntil(stop$)
+        RxJs.takeUntil(stop$)
       )
       .subscribe((e) => e.preventDefault());
 
-    /** @type {Observable<Event & { access: {} }>} */
+    /** @type {RxJs.Observable<Event & { access: {} }>} */
     let stream$ = null;
-    if (signal == "foo") {
-      stream$ = pointerOverOut$.pipe(
-        mergeWith(pointerDownUp$, pointerMove$),
-        pairwise(),
-        filter(([p, c]) => {
-          c.type != "pointermove" && log("pc", p.type, c.type);
-          return c.type == signal && p.type != signal;
-        }),
-        map(([_, c]) => c),
-        map((e) => {
-          const ew = EventWrap(e);
-          ew.access = ButtonWrap(e.target).access;
-          ew.access.eventType = e.type;
-          return ew;
-        })
-      );
-    } else {
-      stream$ = pointerOverOut$.pipe(
-        mergeWith(pointerDownUp$),
-        distinctUntilKeyChanged("type"),
-        tap((e) => signal == "pointerover" && console.log("ad", e.type)),
-        filter(
-          (e) =>
-            e.type == signal &&
-            e.target instanceof HTMLButtonElement &&
-            !e.target.disabled
+    stream$ = pointerOverOut$.pipe(
+      RxJs.mergeWith(pointerDownUp$),
+      RxJs.filter(
+        (e) => e.target instanceof HTMLButtonElement && !e.target.disabled
+      ),
+      RxJs.map((e) => {
+        const ew = EventWrap(e);
+        ew.access = { ...ButtonWrap(e.target).access };
+        ew.access.eventType = e.type;
+        return ew;
+      })
+    );
+    /* I am killing the "pointerover" event that occurs when a button is replaced
+     * on a redraw if the user requests it. This avoids repeats when dwelling
+     * over a button causes a new "page" to be created.
+     *
+     * TODO: I bet there is a cleaner way to do this.
+     */
+    const firstEvent = ButtonWrap(new PointerEvent("first"));
+    if (signal == "pointerover" && this.SkipOnRedraw.value) {
+      stream$ = stream$.pipe(
+        // a fake event to startup pairwise
+        RxJs.startWith(firstEvent),
+        // pair the events so I can compare them
+        RxJs.pairwise(),
+        // if we get a pair of pointerover events with different targets the page must have redrawn.
+        RxJs.filter(
+          ([first, second]) =>
+            !(
+              first.type == "pointerover" &&
+              second.type == "pointerover" &&
+              first.target !== second.target
+            )
         ),
-        map((e) => {
-          const ew = EventWrap(e);
-          ew.access = ButtonWrap(e.target).access;
-          ew.access.eventType = e.type;
-          return ew;
-        })
+        // undo the pairwise
+        RxJs.map(([_first, second]) => second)
       );
     }
+    // only get the signal we want
+    stream$ = stream$.pipe(RxJs.filter((e) => e.type == signal));
+    // apply the conditions
     for (const condition of this.conditions) {
-      stream$ = stream$.pipe(filter((e) => condition.Condition.eval(e.access)));
+      stream$ = stream$.pipe(
+        RxJs.filter((e) => condition.Condition.eval(e.access))
+      );
     }
     stream$
       .pipe(
-        tap((event) => console.log("ph", event.type, event)),
-        takeUntil(stop$)
+        // tap((event) => console.log("ph", event.type, event)),
+        RxJs.takeUntil(stop$)
       )
       .subscribe((e) => this.respond(e));
   }

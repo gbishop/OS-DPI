@@ -1,20 +1,21 @@
 import { TreeBase } from "../../treebase";
 import { Handler, HandlerCondition } from "./handler";
 import { HandlerResponse } from "./responses";
-import { Select } from "../../props";
+import * as Props from "../../props";
 import { html } from "uhtml";
-import { Subject, switchMap, delay, takeUntil, of, EMPTY, tap } from "rxjs";
+import * as RxJs from "rxjs";
 import { Method } from "./index";
 import { log } from "../../../log";
 
 const timerSignals = new Map([
   ["transitionend", "Transition end"],
+  ["animationend", "Animation end"],
   ["timer", "Timer complete"],
 ]);
 
 export class TimerHandler extends Handler {
-  Signal = new Select(timerSignals);
-  TimerName = new Select([], { hiddenLabel: true });
+  Signal = new Props.Select(timerSignals);
+  TimerName = new Props.Select([], { hiddenLabel: true });
 
   template() {
     const { conditions, responses, Signal } = this;
@@ -46,7 +47,7 @@ export class TimerHandler extends Handler {
     `;
   }
 
-  /** @param {Subject} stop$ */
+  /** @param {RxJs.Subject} stop$ */
   configure(stop$) {
     log("configure timer");
     const timer = this.nearestParent(Method).timer(this.TimerName.value);
@@ -54,10 +55,12 @@ export class TimerHandler extends Handler {
     const delayTime = 1000 * timer.Interval.valueAsNumber;
     timer.subject$
       .pipe(
-        switchMap((event) =>
-          event.type == "cancel" ? EMPTY : of(event).pipe(delay(delayTime))
+        RxJs.switchMap((event) =>
+          event.type == "cancel"
+            ? RxJs.EMPTY
+            : RxJs.of(event).pipe(RxJs.delay(delayTime))
         ),
-        takeUntil(stop$)
+        RxJs.takeUntil(stop$)
       )
       .subscribe((e) => this.respond(e));
   }

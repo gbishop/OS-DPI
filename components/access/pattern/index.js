@@ -54,28 +54,6 @@ export class Group {
       member.cue(this.groupProps.Cue.value);
     }
   }
-
-  /**
-   * Find the index of the member in a bredth-first search
-   *
-   * @param {Target} target
-   */
-  indexOf(target) {
-    // first see if it is at this level
-    const i = this.members.indexOf(target);
-    if (i >= 0) return i;
-
-    // find the sub-group that contains it
-    for (let i = 0; i < this.members.length; i++) {
-      const member = this.members[i];
-      if (member instanceof Group && member.indexOf(target) >= 0) {
-        return i;
-      }
-    }
-
-    // not found
-    return -1;
-  }
 }
 
 class PatternBase extends TreeBase {
@@ -220,6 +198,7 @@ export class PatternManager extends PatternBase {
   }
 
   start() {
+    if (this.Name.value == "None") return;
     if (AccessChanged || !this.stack.length) {
       console.log("clear stack", AccessChanged);
       this.stack = [{ group: this.targets, index: -1 }];
@@ -235,15 +214,6 @@ export class PatternManager extends PatternBase {
   get current() {
     const { group, index } = this.stack[0];
     return group.member(index);
-  }
-
-  /** @param {EventTarget} target */
-  setCurrent(target) {
-    const top = this.stack[0];
-    if (target instanceof Node) {
-      const button = ButtonWrap(target);
-      top.index = top.group.indexOf(button);
-    }
   }
 
   next() {
@@ -298,7 +268,7 @@ export class PatternManager extends PatternBase {
   cue() {
     this.clearCue();
     const current = this.current;
-    if (!current) console.trace("cue", this);
+    console.log("cue current", current);
     if (!current) return;
     this.cued = true;
     current.cue(this.Cue.value);

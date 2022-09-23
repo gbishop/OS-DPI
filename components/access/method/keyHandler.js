@@ -1,24 +1,10 @@
 import { TreeBase } from "../../treebase";
 import { Handler, HandlerCondition } from "./handler";
 import { HandlerResponse } from "./responses";
-import { Select, Float } from "../../props";
+import * as Props from "../../props";
 import { html } from "uhtml";
 import { EventWrap } from "../index";
-import {
-  debounceTime,
-  distinctUntilKeyChanged,
-  filter,
-  fromEvent,
-  groupBy,
-  map,
-  mergeMap,
-  mergeWith,
-  Observable,
-  skipWhile,
-  Subject,
-  takeUntil,
-  tap,
-} from "rxjs";
+import * as RxJs from "rxjs";
 import { HandlerKeyCondition } from "./handler";
 
 const keySignals = new Map([
@@ -27,8 +13,8 @@ const keySignals = new Map([
 ]);
 
 export class KeyHandler extends Handler {
-  Signal = new Select(keySignals);
-  Debounce = new Float(0.1);
+  Signal = new Props.Select(keySignals);
+  Debounce = new Props.Float(0.1);
 
   template() {
     const { conditions, responses, keys } = this;
@@ -69,16 +55,16 @@ export class KeyHandler extends Handler {
     `;
   }
 
-  /** @param {Subject} stop$ */
+  /** @param {RxJs.Subject} stop$ */
   configure(stop$) {
     // construct debounced key event stream
     const debounceInterval = this.Debounce.valueAsNumber * 1000;
-    const keyDown$ = /** @type Observable<KeyboardEvent> */ (
-      fromEvent(document, "keydown")
+    const keyDown$ = /** @type RxJs.Observable<KeyboardEvent> */ (
+      RxJs.fromEvent(document, "keydown")
     );
 
-    const keyUp$ = /** @type Observable<KeyboardEvent> */ (
-      fromEvent(document, "keyup")
+    const keyUp$ = /** @type RxJs.Observable<KeyboardEvent> */ (
+      RxJs.fromEvent(document, "keyup")
     );
 
     // don't capture key events originating in the designer
@@ -88,24 +74,24 @@ export class KeyHandler extends Handler {
     }
 
     // build the debounced key event stream
-    const keyEvents$ = /** @type Observable<KeyboardEvent> */ (
+    const keyEvents$ = /** @type RxJs.Observable<KeyboardEvent> */ (
       // start with the key down stream
       keyDown$.pipe(
         // merge with the key up stream
-        mergeWith(keyUp$),
+        RxJs.mergeWith(keyUp$),
         // remove any repeats
-        filter((e) => !e.repeat && notDesigner(e)),
+        RxJs.filter((e) => !e.repeat && notDesigner(e)),
         // group by the key
-        groupBy((e) => e.key),
+        RxJs.groupBy((e) => e.key),
         // process each group and merge the results
-        mergeMap((group$) =>
+        RxJs.mergeMap((group$) =>
           group$.pipe(
             // debounce flurries of events
-            debounceTime(debounceInterval),
+            RxJs.debounceTime(debounceInterval),
             // wait for a key down
-            skipWhile((e) => e.type != "keydown"),
+            RxJs.skipWhile((e) => e.type != "keydown"),
             // only output when the type changes
-            distinctUntilKeyChanged("type")
+            RxJs.distinctUntilKeyChanged("type")
           )
         )
       )
@@ -113,12 +99,12 @@ export class KeyHandler extends Handler {
     let stream$;
     const keys = this.keys.map((key) => key.Key.value);
     stream$ = keyEvents$.pipe(
-      filter(
+      RxJs.filter(
         (e) =>
           e.type == this.Signal.value &&
           (keys.length == 0 || keys.indexOf(e.key) >= 0)
       ),
-      map((e) => {
+      RxJs.map((e) => {
         // add context info to event for use in the conditions and response
         const kw = EventWrap(e);
         kw.access = {
@@ -133,9 +119,11 @@ export class KeyHandler extends Handler {
       })
     );
     for (const condition of this.conditions) {
-      stream$ = stream$.pipe(filter((e) => condition.Condition.eval(e.access)));
+      stream$ = stream$.pipe(
+        RxJs.filter((e) => condition.Condition.eval(e.access))
+      );
     }
-    stream$.pipe(takeUntil(stop$)).subscribe((e) => this.respond(e));
+    stream$.pipe(RxJs.takeUntil(stop$)).subscribe((e) => this.respond(e));
   }
 }
 TreeBase.register(KeyHandler);

@@ -2,10 +2,10 @@ import { html } from "uhtml";
 import css from "ustyler";
 import { Base } from "../../base";
 import { TreeBase } from "../../treebase";
-import { String, Float, UID, Boolean, Select } from "../../props";
+import * as Props from "../../props";
 import Globals from "../../../globals";
 import db from "../../../db";
-import { Subject } from "rxjs";
+import * as RxJs from "rxjs";
 import { Handler } from "./handler";
 import { KeyHandler } from "./keyHandler";
 import { PointerHandler } from "./pointerHandler";
@@ -27,7 +27,7 @@ export class MethodChooser extends TreeBase {
   children = [];
 
   // allow tearing down handlers when changing configurations
-  stop$ = new Subject();
+  stop$ = new RxJs.Subject();
 
   onUpdate() {
     console.log("update method", this);
@@ -65,19 +65,18 @@ export class MethodChooser extends TreeBase {
   }
 
   refresh() {
-    console.log("refresh", this.children);
     this.children
       .filter((child) => child.Active.value)
-      .forEach((child) => child.pattern.refresh());
+      .forEach((child) => child.refresh());
   }
 }
 TreeBase.register(MethodChooser);
 
 export class Method extends TreeBase {
-  Name = new String("New method");
-  Key = new UID();
-  Active = new Boolean(false);
-  Pattern = new Select();
+  Name = new Props.String("New method");
+  Key = new Props.UID();
+  Active = new Props.Boolean(false);
+  Pattern = new Props.Select();
 
   open = false;
 
@@ -89,13 +88,6 @@ export class Method extends TreeBase {
    */
   get pattern() {
     const r = Globals.patterns.byKey(this.Pattern.value);
-    console.log(
-      "get pattern",
-      this.Name.value,
-      this.Active.value,
-      this.Pattern.value,
-      Globals.patterns.byKey(this.Pattern.value)
-    );
     return r;
   }
 
@@ -177,24 +169,30 @@ export class Method extends TreeBase {
   }
 
   /** Configure the rxjs pipelines to implement this method */
-  /** @param {Subject} stop$ */
+  /** @param {RxJs.Subject} stop$
+   * */
   configure(stop$) {
-    if (this.Active.value == "true") {
+    if (this.Active.value) {
       for (const child of this.handlers) {
         child.configure(stop$);
       }
     }
   }
+
+  /** Refresh the pattern and other state on redraw */
+  refresh() {
+    this.pattern.refresh();
+  }
 }
 TreeBase.register(Method);
 
 class Timer extends TreeBase {
-  Interval = new Float(0.5, { hiddenLabel: true });
-  Name = new String("timer", { hiddenLabel: true });
-  Key = new UID();
+  Interval = new Props.Float(0.5, { hiddenLabel: true });
+  Name = new Props.String("timer", { hiddenLabel: true });
+  Key = new Props.UID();
 
-  /** @type {Subject<WrappedEvent>} */
-  subject$ = new Subject();
+  /** @type {RxJs.Subject<WrappedEvent>} */
+  subject$ = new RxJs.Subject();
 
   template() {
     return html`${this.Name.input()} ${this.Interval.input()}

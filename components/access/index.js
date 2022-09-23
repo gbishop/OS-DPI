@@ -46,7 +46,7 @@ export function UpdateAccessData(data) {
     const button = ButtonWrap(node);
     const changed = UI && (!button.access || !equal(data, button.access));
     if (changed && !AccessChanged) {
-      console.log("changed", data, button.access, node);
+      // console.log("changed", data, button.access, node);
       AccessChanged = true;
     }
     button.access = data;
