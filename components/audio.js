@@ -4,6 +4,8 @@ import { Base, componentMap } from "./base";
 import { html } from "uhtml";
 import db from "../db";
 
+import Globals from "../globals";
+
 class Audio extends Base {
   static defaultProps = {
     stateName: "$Audio",
