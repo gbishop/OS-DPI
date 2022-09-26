@@ -64,7 +64,7 @@ export class Access extends Base {
 
     /** @type {TabControl} */
     const tabs = new TabControl(
-      { scale: "10", tabEdge: "top", stateName: "accessTab" },
+      { scale: "1", tabEdge: "top", stateName: "accessTab" },
       this
     );
 
