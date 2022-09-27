@@ -5,7 +5,6 @@ import { log } from "../log"
 import * as XLSX from "xlsx";
 import Globals from "../globals";
 
-
 export class Logger extends Base {
 
     static instances = [];
@@ -34,6 +33,7 @@ export class Logger extends Base {
 
     stringifyInput(arr) {
         let output = {};
+        
         for(let i = 0; i < arr.length; i+=2)
           output[arr[i]] = Globals.state.interpolate(i + 1 < arr.length ? arr[i+1] : "");
     
@@ -49,11 +49,27 @@ class DB {
 
     constructor(name="default-log") {
         this.name = name;
-        
-        let request = indexedDB.open(name, 3);
-        request.onsuccess = (e) => this.#open(e, false);
-        request.onupgradeneeded = (e) => this.#open(e, true);
-        request.onerror = (e) => log(`'${this.name}' database failed to open!`);
+    }
+
+    async DB() {
+        let request = indexedDB.open(this.name, 3);
+
+        return new Promise((resolve, reject) => {
+            request.onsuccess = (e) => {
+                this.#open(e, false);
+                resolve(this.#DB);
+            };
+
+            request.onupgradeneeded = (e) => {
+                this.#open(e, true)
+                resolve(this.#DB);
+            };
+
+            request.onerror = (e) => {
+                log(`'${this.name}' database failed to open!`)
+                reject(`'${this.name}' database failed to open!`)
+            };
+        });
     }
 
     #open(event, upgradeNeeded) {
@@ -67,8 +83,8 @@ class DB {
         log(`'${this.name}' database successfully ${upgradeNeeded ? 'created' : 'opened'}!`);
     }
 
-    clear() {
-        let request = this.#DB
+    async clear() {
+        let request = (await this.DB())
             .transaction(["event"], "readwrite")
             .objectStore("event")
             .clear();
@@ -77,8 +93,8 @@ class DB {
         request.onerror = (e) =>  log(`'${this.name}' database failed to clear!`);
     }
 
-    submit(...events) {
-        let eventStore = this.#DB
+    async submit(...events) {
+        let eventStore = (await this.DB())
             .transaction(["event"], "readwrite")
             .objectStore("event");
         
@@ -86,22 +102,20 @@ class DB {
     }
 
     async save(type='csv') {
-        let rows = await this.#fetchRows(type);
-        rows.forEach(row => row.sheetName = (row.sheetName != "undefined" ? row.sheetName : 'event'));
-
+        const rows = await this.#fetchRows(type);
+        rows.forEach(row => row.sheetName = (row.sheetName != "undefined" ? row.sheetName : 'event')); 
         const sheetNames = new Set(rows.map((row) => row.sheetName));
-        const workbook = XLSX.utils.book_new();
-
         sheetNames.add('event');
+        const workbook = XLSX.utils.book_new();
 
         for (const sheetName of sheetNames) {
             let sheetRows = rows;
 
-            if (type != "csv") {
+            if (!type.match(/csv/i)) {
                 sheetRows = rows.filter((row) => sheetName == row.sheetName);
                 sheetRows = sheetRows.map((row) => {
-                const { sheetName, ...rest } = row;
-                return rest;
+                    const { sheetName, ...rest } = row;
+                    return rest;
                 });
             }
 
@@ -113,7 +127,7 @@ class DB {
     }
 
     async #fetchRows(type='csv') {
-        let request = this.#DB.transaction(["event"], "readonly");
+        let request = (await this.DB()).transaction(["event"], "readonly");
         let query = request
             .objectStore("event")
             .index("by-timestamp");
