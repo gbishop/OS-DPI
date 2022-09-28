@@ -418,9 +418,14 @@ css`
     font-weight: bold;
   }
 
-  .actions td,
+  .actions td {
+    border: 1px solid #999;
+    padding: 0.5em;
+  }
+
   .actions th {
     border: 1px solid #999;
+    border-top: 0px;
     padding: 0.5em;
   }
 
@@ -443,6 +448,7 @@ css`
   }
   .actions thead {
     border: 2px solid black;
+    border-top: 0px;
     z-index: 15;
   }
 
@@ -453,7 +459,7 @@ css`
 
   .actions tbody:nth-child(even):after {
     content: "";
-    background-color: rgb(0, 0, 0, 0.1);
+    background-color: rgb(0, 0, 0, 0.05);
     position: absolute;
     left: 0;
     right: 0;

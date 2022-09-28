@@ -1,9 +1,4 @@
-import { html } from "uhtml";
-import { Base } from "../base";
-import { TabControl, TabPanel } from "../tabcontrol";
-import { AccessMethod } from "./method";
-import { AccessPattern, Group } from "./pattern";
-import { AccessCues } from "./cues";
+import { Group } from "./pattern";
 import { extender } from "proxy-pants";
 import equal from "fast-deep-equal";
 
@@ -52,55 +47,4 @@ export function UpdateAccessData(data) {
     button.access = data;
     button.node = node;
   };
-}
-
-export class Access extends Base {
-  /**
-   * @param {SomeProps} props
-   * @param {Base|Null} parent
-   */
-  constructor(props, parent) {
-    super(props, parent);
-
-    /** @type {TabControl} */
-    const tabs = new TabControl(
-      { scale: "1", tabEdge: "top", stateName: "accessTab" },
-      this
-    );
-
-    const methodPanel = new TabPanel(
-      {
-        name: "Access Method",
-        background: "cyanish white",
-      },
-      tabs
-    );
-    methodPanel.children = [new AccessMethod({}, methodPanel)];
-
-    const patternPanel = new TabPanel(
-      {
-        name: "Access Pattern",
-        background: "bluish white",
-      },
-      tabs
-    );
-    patternPanel.children = [new AccessPattern({}, patternPanel)];
-
-    const cuePanel = new TabPanel(
-      {
-        name: "Access Cues",
-        background: "magentaish white",
-      },
-      tabs
-    );
-    cuePanel.children = [new AccessCues({}, cuePanel)];
-
-    tabs.children = [methodPanel, patternPanel, cuePanel];
-
-    this.children = [tabs];
-  }
-
-  template() {
-    return html`${this.children.map((child) => child.template())} `;
-  }
 }
