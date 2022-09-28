@@ -116,5 +116,5 @@ export const PropInfo = {
     name: "Volume",
     step: 0.1,
     description: "Volume at which utterance will be spoken.",
-  },
+  }
 };

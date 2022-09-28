@@ -7,8 +7,8 @@ const Globals = {
   rules: null,
   /** @type {Tree} */
   tree: null,
-  /** @type {import('./components/access/pattern').PatternManager} */
-  pattern: null,
+  /** @type {import('./components/access/pattern').PatternList} */
+  patterns: null,
   /** @type {import('./components/access/method').MethodChooser} */
   method: null,
   /** @type {import('./components/access/cues').CueList} */

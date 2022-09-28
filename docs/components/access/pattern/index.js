@@ -2,11 +2,19 @@ import db from "../../../db.js";
 import { html } from "../../../_snowpack/pkg/uhtml.js";
 import css from "../../../_snowpack/pkg/ustyler.js";
 import Globals from "../../../globals.js";
-import * as icons from "../../icons.js";
-import { Select, String, Integer, Expression, Field } from "../../props.js";
+import * as Props from "../../props.js";
 import { TreeBase } from "../../treebase.js";
 import { Base } from "../../base.js";
-import { ButtonWrap } from "../index.js";
+import { ButtonWrap, AccessChanged } from "../index.js";
+import defaultPatterns from "./defaultPatterns.js";
+
+export class AccessPattern extends Base {
+  template() {
+    return html`<div class="access-pattern treebase">
+      ${Globals.patterns.template()}
+    </div>`;
+  }
+}
 
 /** @typedef {ReturnType<ButtonWrap<Node>>} Button */
 
@@ -46,28 +54,6 @@ export class Group {
       member.cue(this.groupProps.Cue.value);
     }
   }
-
-  /**
-   * Find the index of the member in a bredth-first search
-   *
-   * @param {Target} target
-   */
-  indexOf(target) {
-    // first see if it is at this level
-    const i = this.members.indexOf(target);
-    if (i >= 0) return i;
-
-    // find the sub-group that contains it
-    for (let i = 0; i < this.members.length; i++) {
-      const member = this.members[i];
-      if (member instanceof Group && member.indexOf(target) >= 0) {
-        return i;
-      }
-    }
-
-    // not found
-    return -1;
-  }
 }
 
 class PatternBase extends TreeBase {
@@ -82,6 +68,50 @@ class PatternBase extends TreeBase {
     return input;
   }
 }
+
+export class PatternList extends TreeBase {
+  /** @type {PatternManager[]} */
+  children = [];
+
+  template() {
+    return html`<div class="PatternList">
+      ${this.addChildButton("+Pattern", PatternManager, {
+        title: "Add a Pattern",
+      })}
+      ${this.unorderedChildren()}
+    </div>`;
+  }
+
+  /** @param {string} key
+   * @returns {PatternManager}
+   */
+  byKey(key) {
+    return (
+      this.children.find((child) => child.Key.value == key) || this.children[0]
+    );
+  }
+
+  get patternMap() {
+    return new Map(
+      this.children.map((child) => [child.Key.value, child.Name.value])
+    );
+  }
+
+  /**
+* Load the PatternManager from the db
+  @returns {Promise<PatternList>}
+*/
+  static async load() {
+    const pattern = await db.read("pattern", defaultPatterns);
+    return /** @type {PatternList} */ (PatternList.fromObject(pattern));
+  }
+
+  onUpdate() {
+    db.write("pattern", this.toObject());
+    Globals.state.update();
+  }
+}
+TreeBase.register(PatternList);
 
 export class PatternManager extends PatternBase {
   /** @type {Group} */
@@ -99,41 +129,25 @@ export class PatternManager extends PatternBase {
   cued = false;
 
   // props
-  Cycles = new Integer(2, { min: 1 });
-  Cue = new Select();
-
-  /**
-* Load the PatternManager from the db
-  @returns {Promise<PatternManager>}
-*/
-  static async load() {
-    const fallback = {
-      className: "PatternManager",
-      props: {
-        Cycles: 2,
-        Cue: "default",
-      },
-      children: [],
-    };
-    const pattern = await db.read("pattern", fallback);
-    return /** @type {PatternManager} */ (PatternManager.fromObject(pattern));
-  }
+  Cycles = new Props.Integer(2, { min: 1 });
+  Cue = new Props.Select();
+  Name = new Props.String("a pattern");
+  Key = new Props.UID();
 
   template() {
-    const { Cycles, Cue } = this;
+    const { Cycles, Cue, Name } = this;
     return html`
-      <div class=${this.className}>
-        ${Cycles.input()} ${Cue.input(Globals.cues.cueMap)}
-        ${this.orderedChildren()}
-        ${this.addChildButton("+Selector", PatternSelector)}
-        ${this.addChildButton("+Group", PatternGroup)}
-      </div>
+      <fieldset class=${this.className}>
+        <legend>${Name.value}</legend>
+        ${Name.input()} ${Cycles.input()} ${Cue.input(Globals.cues.cueMap)}
+        <details>
+          <summary>Details</summary>
+          ${this.orderedChildren()}
+          ${this.addChildButton("+Selector", PatternSelector)}
+          ${this.addChildButton("+Group", PatternGroup)}
+        </details>
+      </fieldset>
     `;
-  }
-
-  onUpdate() {
-    db.write("pattern", this.toObject());
-    Globals.state.update();
   }
 
   /**
@@ -184,7 +198,11 @@ export class PatternManager extends PatternBase {
   }
 
   start() {
-    this.stack = [{ group: this.targets, index: -1 }];
+    if (this.Name.value == "None") return;
+    if (AccessChanged || !this.stack.length) {
+      console.log("clear stack", AccessChanged);
+      this.stack = [{ group: this.targets, index: -1 }];
+    }
     this.cue();
   }
 
@@ -198,21 +216,14 @@ export class PatternManager extends PatternBase {
     return group.member(index);
   }
 
-  /** @param {EventTarget} target */
-  setCurrent(target) {
-    const top = this.stack[0];
-    if (target instanceof Node) {
-      const button = ButtonWrap(target);
-      top.index = top.group.indexOf(button);
-    }
-  }
-
   next() {
     const top = this.stack[0];
+    console.log("next", { top });
     if (top.index < top.group.length - 1) {
       top.index++;
     } else if (this.stack.length > 1) {
       this.stack.shift();
+      console.log("stack pop");
     } else if (this.stack.length == 1) {
       top.index = 0;
     } else {
@@ -223,6 +234,7 @@ export class PatternManager extends PatternBase {
   }
 
   activate() {
+    console.log("activate");
     let current = this.current;
     if (!current) return;
     if (current instanceof Group) {
@@ -231,7 +243,7 @@ export class PatternManager extends PatternBase {
         current = current.members[0];
       }
       this.stack.unshift({ group: current, index: 0 });
-      console.log("activated", this.current, this.stack);
+      console.log("push stack", this.current, this.stack);
     } else {
       const name = current.access.ComponentName;
       console.log("activate button", current);
@@ -256,6 +268,7 @@ export class PatternManager extends PatternBase {
   cue() {
     this.clearCue();
     const current = this.current;
+    console.log("cue current", current);
     if (!current) return;
     this.cued = true;
     current.cue(this.Cue.value);
@@ -265,9 +278,9 @@ PatternBase.register(PatternManager);
 
 class PatternGroup extends PatternBase {
   // props
-  Name = new String("");
-  Cycles = new Integer(2, { min: 1 });
-  Cue = new Select();
+  Name = new Props.String("");
+  Cycles = new Props.Integer(2, { min: 1 });
+  Cue = new Props.Select();
 
   template() {
     const { Name, Cycles, Cue } = this;
@@ -331,7 +344,7 @@ class PatternSelector extends PatternBase {
 PatternBase.register(PatternSelector);
 
 class Filter extends PatternBase {
-  Filter = new Expression();
+  Filter = new Props.Expression();
   template() {
     const { Filter } = this;
     return html`<div class=${this.className}>
@@ -367,7 +380,7 @@ const comparator = new Intl.Collator(undefined, {
 });
 
 class OrderBy extends PatternBase {
-  OrderBy = new Field();
+  OrderBy = new Props.Field();
   template() {
     const { OrderBy } = this;
     return html`<div class=${this.className}>
@@ -399,10 +412,10 @@ class OrderBy extends PatternBase {
 PatternBase.register(OrderBy);
 
 class GroupBy extends PatternBase {
-  GroupBy = new Field();
-  Name = new String("");
-  Cue = new Select();
-  Cycles = new Integer(2);
+  GroupBy = new Props.Field();
+  Name = new Props.String("");
+  Cue = new Props.Select();
+  Cycles = new Props.Integer(2);
   template() {
     const { GroupBy, Name, Cue, Cycles } = this;
     return html`<div class=${this.className}>
@@ -445,19 +458,14 @@ class GroupBy extends PatternBase {
           group.members.push(button);
         }
       }
+      if (result.length === 1) {
+        return result[0].members;
+      }
       return result;
     }
   }
 }
 PatternBase.register(GroupBy);
-
-export class AccessPattern extends Base {
-  template() {
-    return html`<div class="access-pattern treebase">
-      ${Globals.pattern.template()}
-    </div>`;
-  }
-}
 
 css`
   div.access-pattern {

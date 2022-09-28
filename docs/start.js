@@ -10,13 +10,13 @@ import db from "./db.js";
 import pleaseWait from "./components/wait.js";
 import { fileOpen } from "./_snowpack/pkg/browser-fs-access.js";
 import css from "./_snowpack/pkg/ustyler.js";
-import { ButtonWrap } from "./components/access/index.js";
+import { ButtonWrap, clearAccessChanged } from "./components/access/index.js";
 import Globals from "./globals.js";
-import { PatternManager } from "./components/access/pattern/index.js";
+import { PatternList } from "./components/access/pattern/index.js";
 import { MethodChooser } from "./components/access/method/index.js";
 import { CueList } from "./components/access/cues/index.js";
 
-const safe = true;
+const safe = false;
 
 /** @param {Element} where
  * @param {Hole} what
@@ -193,7 +193,7 @@ export async function start() {
   Globals.rules = new Rules(rulesArray);
   Globals.data = new Data(dataArray);
   Globals.cues = await CueList.load();
-  Globals.pattern = await PatternManager.load();
+  Globals.patterns = await PatternList.load();
   Globals.method = await MethodChooser.load();
   Globals.restart = start;
 
@@ -237,6 +237,8 @@ export async function start() {
       `;
     }
     document.body.classList.toggle("designing", Globals.state.get("editing"));
+    // clear the changed flag, TODO there must be a better way!
+    clearAccessChanged();
     safeRender(
       document.body,
       html`<div id="UI">
@@ -245,7 +247,9 @@ export async function start() {
         </div>
         ${IDE}`
     );
-    Globals.pattern.refresh();
+    log("rendered");
+    Globals.method.refresh();
+    log("refreshed");
     document.getElementById("timer").innerText = (
       performance.now() - startTime
     ).toFixed(0);
@@ -292,6 +296,28 @@ window.addEventListener("hashchange", () => {
   sessionStorage.clear();
   start();
 });
+
+/* Attempt to understand pointer events on page update */
+import { log } from "./log.js";
+let etype = "";
+for (const eventName of [
+  "pointerover",
+  "pointerout",
+  "pointermove",
+  "pointerdown",
+  "pointerup",
+]) {
+  document.addEventListener(eventName, (event) => {
+    if (
+      (event.type != "pointermove" || event.type != etype) &&
+      event.target instanceof HTMLElement &&
+      event.target.closest("#UI")
+    ) {
+      etype = event.type;
+      log(event.type, event);
+    }
+  });
+}
 
 /** @typedef {PointerEvent & { target: HTMLElement }} ClickEvent */
 // I think this code mapped clicks back to the tree but no longer...

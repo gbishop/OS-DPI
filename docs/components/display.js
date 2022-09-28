@@ -222,6 +222,7 @@ class Display extends Base {
  * @returns {String}
  */
 export function strip(value) {
+  if (!value) return "";
   if (typeof value === "string" || value instanceof String) {
     // strip any slot markup
     value = value.replaceAll(/\$\$(?<name>.*?)=(?<value>.*?)\$\$/g, "$2");
