@@ -18,3 +18,16 @@ export function formatSlottedString(msg, slotValues = []) {
     }
   });
 }
+
+/**
+ * Interpolate values into a string using {{name}} for values to replace
+ * @param {string} template - string to edit
+ * @param {Object<string,string>} values - values to interpolate
+ * @returns {string} - interpolated string
+ */
+export function interpolate(template, values) {
+  return template.replaceAll(
+    /{{\s*(\w+)\s*}}/g,
+    (_, name) => values[name] || ""
+  );
+}

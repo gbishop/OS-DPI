@@ -2,6 +2,7 @@ import { log } from "../log";
 import { strip } from "./display";
 import { Base, componentMap } from "./base";
 import { html } from "uhtml";
+import Globals from "../globals";
 
 class Speech extends Base {
   static defaultProps = {
@@ -13,7 +14,7 @@ class Speech extends Base {
   };
 
   async speak() {
-    const { state } = this.context;
+    const { state } = Globals;
     const { stateName, voiceURI, pitch, rate, volume } = this.props;
     const message = strip(state.get(stateName));
     const voices = await getVoices();
@@ -34,11 +35,11 @@ class Speech extends Base {
 
   template() {
     const { stateName } = this.props;
-    const { state } = this.context;
+    const { state } = Globals;
     if (state.hasBeenUpdated(stateName)) {
       this.speak();
     }
-    return html``;
+    return html`<!--empty-->`;
   }
 }
 componentMap.addMap("speech", Speech);

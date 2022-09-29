@@ -3,8 +3,9 @@
     "baseUrl": ".",
     "checkJs": true,
     "target": "ESNext",
+    "module": "ESNext",
     "strictNullChecks": false,
     "moduleResolution": "node"
   },
-  "exclude": ["node_modules", "docs"]
+  "exclude": ["node_modules", "docs", "thinking"]
 }

@@ -7,12 +7,16 @@ import { Designer } from "./components/designer";
 import { Monitor } from "./components/monitor";
 import { ToolBar } from "./components/toolbar";
 import db from "./db";
-import { log, logInit } from "./log";
 import pleaseWait from "./components/wait";
 import { fileOpen } from "browser-fs-access";
 import css from "ustyler";
+import { ButtonWrap, clearAccessChanged } from "./components/access";
+import Globals from "./globals";
+import { PatternList } from "./components/access/pattern";
+import { MethodChooser } from "./components/access/method";
+import { CueList } from "./components/access/cues";
 
-const safe = true;
+const safe = false;
 
 /** @param {Element} where
  * @param {Hole} what
@@ -54,7 +58,7 @@ async function welcome() {
     document.body,
     html`
       <div id="welcome">
-        <div id="head">
+        <div id="head)">
           <img class="icon" src="./icon.png" />
           <div>
             <h1>Welcome to the Project Open AAC OS-DPI</h1>
@@ -115,7 +119,7 @@ async function welcome() {
                             !currentTarget.checked && !isSaved;
                       }}
                     />`
-                : html``}
+                : html`<!--empty-->`}
             </li>
           </ul> `;
         })}
@@ -139,13 +143,19 @@ css`
   #welcome #head div p {
     max-width: 40em;
   }
+  #timer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 5em;
+    padding: 0.5em;
+    z-index: 10;
+  }
 `;
 
 /** Load page and data then go
  */
 export async function start() {
-  KeyHandler.state = null;
-
   if (window.location.search && !window.location.hash.slice(1)) {
     const params = new URLSearchParams(window.location.search);
     if (params.get("fetch")) {
@@ -158,7 +168,6 @@ export async function start() {
     }
   }
   const name = window.location.hash.slice(1);
-  logInit(name);
   if (!name) {
     return welcome();
   }
@@ -179,22 +188,14 @@ export async function start() {
   const dataArray = await db.read("content", []);
   await pageLoaded;
 
-  const state = new State(`UIState`);
-  const rules = new Rules(rulesArray, state);
-  const data = new Data(dataArray);
-  /** @type {Context} */
-  // @ts-ignore
-  const context = {
-    data,
-    rules,
-    state,
-    restart: () => {
-      start();
-    },
-  };
-  // @ts-ignore
-  const tree = assemble(layout, context);
-  context.tree = tree;
+  Globals.tree = assemble(layout);
+  Globals.state = new State(`UIState`);
+  Globals.rules = new Rules(rulesArray);
+  Globals.data = new Data(dataArray);
+  Globals.cues = await CueList.load();
+  Globals.patterns = await PatternList.load();
+  Globals.method = await MethodChooser.load();
+  Globals.restart = start;
 
   /** @param {() => void} f */
   function debounce(f) {
@@ -205,36 +206,55 @@ export async function start() {
     };
   }
 
-  /* Configure the keyhandler */
-  KeyHandler.state = state;
-
   /* Designer */
-  state.define("editing", layout === emptyPage);
-  const designer = new Designer({}, context, null);
+  Globals.state.define("editing", layout === emptyPage);
+  const designer = new Designer({}, null);
 
   /* ToolBar */
-  const toolbar = new ToolBar({}, context, null);
+  const toolbar = new ToolBar({}, null);
 
   /* Monitor */
-  const monitor = new Monitor({}, context, null);
+  const monitor = new Monitor({}, null);
 
   function renderUI() {
-    let IDE = html``;
-    if (state.get("editing")) {
+    const startTime = performance.now();
+    let IDE = html`<!--empty-->`;
+    if (Globals.state.get("editing")) {
       IDE = html`
-        <div id="designer">${designer.template()}</div>
+        <div
+          id="designer"
+          onclick=${(/** @type {InputEventWithTarget} */ event) => {
+            const button = ButtonWrap(event.target);
+            if (button.access && "onClick" in button.access) {
+              button.access.onClick(event);
+            }
+          }}
+        >
+          ${designer.template()}
+        </div>
         <div id="monitor">${monitor.template()}</div>
         <div id="toolbar">${toolbar.template()}</div>
       `;
     }
-    document.body.classList.toggle("designing", state.get("editing"));
+    document.body.classList.toggle("designing", Globals.state.get("editing"));
+    // clear the changed flag, TODO there must be a better way!
+    clearAccessChanged();
     safeRender(
       document.body,
-      html`<div id="UI">${tree.template()}</div>
+      html`<div id="UI">
+          <div id="timer"></div>
+          ${Globals.cues.renderCss()}${Globals.tree.template()}
+        </div>
         ${IDE}`
     );
+    log("rendered");
+    Globals.method.refresh();
+    log("refreshed");
+    document.getElementById("timer").innerText = (
+      performance.now() - startTime
+    ).toFixed(0);
   }
-  state.observe(debounce(renderUI));
+  Globals.state.observe(debounce(renderUI));
   renderUI();
 }
 
@@ -255,50 +275,67 @@ db.addUpdateListener((message) => {
   channel.postMessage(message);
 });
 
-const KeyHandler = {
-  /** @type {State} */
-  state: null,
-
-  /** @param {KeyboardEvent} event */
-  handleEvent(event) {
-    if (event.key == "d") {
-      const target = /** @type {HTMLElement} */ (event.target);
-      if (target && target.tagName != "INPUT" && target.tagName != "TEXTAREA") {
-        event.preventDefault();
-        event.stopPropagation();
-        if (this.state) {
-          document.body.classList.toggle("designing");
-          this.state.update({ editing: !this.state.get("editing") });
-        }
+// open and close the ide with the d key
+/** @param {KeyboardEvent} event */
+document.addEventListener("keydown", (event) => {
+  if (event.key == "d") {
+    const target = /** @type {HTMLElement} */ (event.target);
+    if (target && target.tagName != "INPUT" && target.tagName != "TEXTAREA") {
+      event.preventDefault();
+      event.stopPropagation();
+      if (Globals.state) {
+        document.body.classList.toggle("designing");
+        Globals.state.update({ editing: !Globals.state.get("editing") });
       }
     }
-  },
-};
+  }
+});
 
-document.addEventListener("keydown", KeyHandler);
-
-window.addEventListener("hashchange", (e) => {
+// watch for changes to the hash such as using the browser back button
+window.addEventListener("hashchange", () => {
   sessionStorage.clear();
-  // window.location.reload();
   start();
 });
 
-/** @typedef {PointerEvent & { target: HTMLElement }} ClickEvent */
-document.addEventListener("click", (/** @type {ClickEvent} */ event) => {
-  const target = event.target;
-  let text = "";
-  for (let n = target; n.parentElement && !text; n = n.parentElement) {
-    text = n.textContent || "";
-  }
-  let id = "none";
-  if (target instanceof HTMLButtonElement && target.dataset.id) {
-    id = target.dataset.id;
-  } else {
-    const div = target.closest('div[id^="osdpi"]');
-    if (div) {
-      id = div.id;
+/* Attempt to understand pointer events on page update */
+import { log } from "./log";
+let etype = "";
+for (const eventName of [
+  "pointerover",
+  "pointerout",
+  "pointermove",
+  "pointerdown",
+  "pointerup",
+]) {
+  document.addEventListener(eventName, (event) => {
+    if (
+      (event.type != "pointermove" || event.type != etype) &&
+      event.target instanceof HTMLElement &&
+      event.target.closest("#UI")
+    ) {
+      etype = event.type;
+      log(event.type, event);
     }
-  }
-});
+  });
+}
+
+/** @typedef {PointerEvent & { target: HTMLElement }} ClickEvent */
+// I think this code mapped clicks back to the tree but no longer...
+// document.addEventListener("click", (/** @type {ClickEvent} */ event) => {
+//   const target = event.target;
+//   let text = "";
+//   for (let n = target; n.parentElement && !text; n = n.parentElement) {
+//     text = n.textContent || "";
+//   }
+//   let id = "none";
+//   if (target instanceof HTMLButtonElement && target.dataset.id) {
+//     id = target.dataset.id;
+//   } else {
+//     const div = target.closest('div[id^="osdpi"]');
+//     if (div) {
+//       id = div.id;
+//     }
+//   }
+// });
 
 start();

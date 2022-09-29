@@ -1,10 +1,11 @@
 import { html } from "../_snowpack/pkg/uhtml.js";
 import { Base } from "./base.js";
 import css from "../_snowpack/pkg/ustyler.js";
+import Globals from "../globals.js";
 
 export class Monitor extends Base {
   template() {
-    const { state, rules } = this.context;
+    const { state, rules } = Globals;
     const s = html`<table class="state">
       <thead>
         <tr>

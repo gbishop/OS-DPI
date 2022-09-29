@@ -11,17 +11,27 @@
   "license": "ISC",
   "devDependencies": {
     "http2-proxy": "^5.0.53",
-    "snowpack": "^3.0.13",
+    "snowpack": "^3.8.8",
     "ustyler": "^1.0.1"
   },
   "dependencies": {
-    "angular-expressions": "^1.1.4",
-    "browser-fs-access": "^0.23.0",
-    "fflate": "^0.7.2",
-    "idb": "^7.0.0",
+    "@json-editor/json-editor": "^2.8.0",
+    "@ungap/create-content": "^0.3.1",
+    "angular-expressions": "^1.1.5",
+    "browser-fs-access": "^0.29.6",
+    "css.gg": "^2.0.0",
+    "fast-deep-equal": "^3.1.3",
+    "fflate": "^0.7.3",
+    "idb": "^7.0.2",
     "mergerino": "^0.4.0",
+    "proxy-pants": "^0.8.3",
+    "rxjs": "^7.5.6",
     "sheetrock": "^1.2.0",
-    "uhtml": "^2.7.6",
-    "xlsx": "^0.17.4"
+    "spectre.css": "^0.5.9",
+    "uhtml": "^3.0.1",
+    "umap": "^1.0.2",
+    "uparser": "^0.2.1",
+    "uwire": "^1.1.0",
+    "xlsx": "^0.18.5"
   }
 }

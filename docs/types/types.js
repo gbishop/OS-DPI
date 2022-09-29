@@ -8,6 +8,17 @@
  */
 
 /**
+ * Selectors let us build groups of buttons
+ *
+ * @typedef {Object} Selector
+ * @property {string} operatorName
+ * @property {OperatorArg[]} args
+ *
+ * @typedef {Object} OperatorArg
+ * @property {string} type
+ */
+
+/**
  * @typedef {Object} Props
  * @property {string} scale
  * @property {string} background
@@ -37,17 +48,10 @@
 
 /** @typedef {import('../components/base').Base} Tree */
 
-/**
- * @typedef {import("../state").State} State
- */
+/** @typedef {import('../components/treebase').TreeBase} TreeBase */
 
 /**
- * @typedef {Object} Context
- * @property {import("../state").State} state
- * @property {import("../rules").Rules} rules
- * @property {import("../data").Data} data
- * @property {Tree} tree
- * @property {function} restart
+ * @typedef {import("../state").State} State
  */
 
 /**
@@ -118,3 +122,5 @@
  */
 
 /** @typedef {import("../components/img-db.js").imgFromDb} ImgDb */
+
+/** @typedef {Event & {access: Object}} WrappedEvent */

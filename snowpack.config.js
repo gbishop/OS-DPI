@@ -9,7 +9,7 @@ const root = __dirname;
 
 module.exports = {
   exclude: [
-    "**/thinking/**",
+    "**/thinking/**/*",
     "**/.git/**/*",
     "**/package*",
     "**/Designs In Progress/**",

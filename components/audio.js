@@ -4,13 +4,15 @@ import { Base, componentMap } from "./base";
 import { html } from "uhtml";
 import db from "../db";
 
+import Globals from "../globals";
+
 class Audio extends Base {
   static defaultProps = {
     stateName: "$Audio",
   };
 
   async playAudio() {
-    const { state } = this.context;
+    const { state } = Globals;
     const { stateName } = this.props;
     const fileName = strip(state.get(stateName) || "");
     log("play audio");
@@ -19,11 +21,11 @@ class Audio extends Base {
 
   template() {
     const { stateName } = this.props;
-    const { state } = this.context;
+    const { state } = Globals;
     if (state.hasBeenUpdated(stateName)) {
       this.playAudio();
     }
-    return html``;
+    return html`<!--empty-->`;
   }
 }
 

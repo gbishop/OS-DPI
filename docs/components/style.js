@@ -1,5 +1,6 @@
 import { log } from "../log.js";
 import { html, render } from "../_snowpack/pkg/uhtml.js";
+import css from "../_snowpack/pkg/ustyler.js";
 import { ColorNames } from "./color-names.js";
 
 /** @param {Event & { target: HTMLInputElement }} event
@@ -132,8 +133,7 @@ class ColorInput extends HTMLElement {
   render() {
     render(
       this,
-      html`<div class="color-input">
-        <input
+      html`<input
           type="text"
           name=${this.name}
           .value=${this.value}
@@ -144,10 +144,33 @@ class ColorInput extends HTMLElement {
         <div
           class="swatch"
           style=${`background-color: ${getColor(this.value)}`}
-        ></div>
-      </div> `
+        ></div>`
     );
   }
 }
 
 customElements.define("color-input", ColorInput);
+
+css`
+  color-input {
+    margin-right: 1em;
+    align-items: center;
+  }
+
+  color-input input {
+    flex: 1 1 0;
+    margin-right: 0.2em;
+  }
+
+  color-input .swatch {
+    width: 1em;
+    height: 1em;
+    display: inline-block;
+    border: 1px solid black;
+    vertical-align: middle;
+  }
+  color-input input:invalid {
+    background-color: #fcc;
+    border-color: red;
+  }
+`;

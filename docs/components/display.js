@@ -4,6 +4,7 @@ import { styleString } from "./style.js";
 import { Functions } from "../eval.js";
 import merge from "../_snowpack/pkg/mergerino.js";
 import css from "../_snowpack/pkg/ustyler.js";
+import Globals from "../globals.js";
 
 /** Slot descriptor
  * @typedef {Object} Slot
@@ -33,7 +34,7 @@ class Display extends Base {
       backgroundColor: this.props.background,
       fontSize: this.props.fontSize + "rem",
     });
-    const { state } = this.context;
+    const { state } = Globals;
     /** @type {Hole[]} */
     let content = [];
     /** @type {String|Editor} */
@@ -73,7 +74,7 @@ class Display extends Base {
   init() {
     if (!Display.functionsInitialized) {
       Display.functionsInitialized = true;
-      let { rules } = this.context;
+      let { rules } = Globals;
 
       /** return true of the message contains slots
        * @param {String|Editor} message
@@ -221,6 +222,7 @@ class Display extends Base {
  * @returns {String}
  */
 export function strip(value) {
+  if (!value) return "";
   if (typeof value === "string" || value instanceof String) {
     // strip any slot markup
     value = value.replaceAll(/\$\$(?<name>.*?)=(?<value>.*?)\$\$/g, "$2");

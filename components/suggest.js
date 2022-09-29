@@ -89,12 +89,30 @@ function input(event) {
 function drawMenu(element) {
   const menu = element.nextElementSibling;
   if (!menu) return;
+
+  function mouseEnter(event) {
+    const li = event.target;
+
+    if(!element.suggest)
+      return;
+
+    let index = Array.from(li.parentNode.children).indexOf(li);
+    if(index != -1) {
+      element.suggest.index = index;
+      drawMenu(element);
+    }
+  }
+
+  function mouseDown(event) {
+    insertWord(element);
+  }
+
   render(
     menu,
     html`<ul>
       ${element.suggest.results.map(
         (result, i) =>
-          html`<li ?selected=${i == element.suggest.index}>${result}</li>`
+          html`<li onmouseenter=${mouseEnter} onmousedown=${mouseDown} ?selected=${i == element.suggest.index}>${result}</li>`
       )}
     </ul>`
   );

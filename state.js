@@ -14,6 +14,7 @@ export class State {
       const persist = window.sessionStorage.getItem(this.persistKey);
       if (persist) {
         this.values = JSON.parse(persist);
+        // console.log("restored $tabControl", this.values["$tabControl"]);
       }
     }
   }
@@ -43,14 +44,24 @@ export class State {
     for (const key in patch) {
       this.updated.add(key);
     }
-    this.values = merge(this.values, patch);
+    const oldValues = this.values;
+    this.values = merge(oldValues, patch);
+    // see which values changed.
+    const allKeys = new Set([
+      ...Object.keys(oldValues),
+      ...Object.keys(this.values),
+    ]);
+    const changed = new Set(
+      [...allKeys].filter((key) => oldValues[key] !== this.values[key])
+    );
     for (const callback of this.listeners) {
-      callback();
+      callback(changed);
     }
 
     if (this.persistKey) {
       const persist = JSON.stringify(this.values);
       window.sessionStorage.setItem(this.persistKey, persist);
+      // console.trace("persist $tabControl", this.values["$tabControl"]);
     }
   }
 

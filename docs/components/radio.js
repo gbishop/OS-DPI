@@ -2,6 +2,7 @@ import { html } from "../_snowpack/pkg/uhtml.js";
 import { Base, componentMap } from "./base.js";
 import { styleString } from "./style.js";
 import css from "../_snowpack/pkg/ustyler.js";
+import { UpdateAccessData } from "./access/index.js";
 
 class Option extends Base {
   static defaultProps = {
@@ -29,7 +30,7 @@ class Radio extends Base {
    * @returns {boolean}
    */
   valid(option) {
-    const { data, state } = this.context;
+    const { data, state } = Globals;
     return (
       !this.props.filters.length ||
       data.hasMatchingRows(
@@ -48,16 +49,16 @@ class Radio extends Base {
     if (target instanceof HTMLButtonElement) {
       const value = target.value;
       const name = this.props.stateName;
-      this.context.state.update({ [name]: value });
+      Globals.state.update({ [name]: value });
     }
   }
 
   template() {
-    const { state } = this.context;
+    const { state } = Globals;
     const stateName = this.props.stateName;
     let current = state.get(stateName);
     const choices = this.children.map((child, index) => {
-      const disabled = !this.valid(/** @type {Option}*/(child));
+      const disabled = !this.valid(/** @type {Option}*/ (child));
       if (stateName && !current && !disabled && child.props.value) {
         current = child.props.value;
         state.update({ [stateName]: current });
@@ -70,19 +71,21 @@ class Radio extends Base {
         style=${styleString({ backgroundColor: color })}
         value=${child.props.value}
         ?disabled=${disabled}
+        ref=${UpdateAccessData({
+          component: this.constructor.name,
+          name: this.name,
+          label: child.props.name,
+          onClick: (e) => state.update({ [stateName]: child.props.value }),
+        })}
       >
         ${child.props.name}
       </button>`;
     });
 
-    return html`<div
-      class="radio flex"
-      onclick=${(/** @type {MouseEvent} */ e) => this.handleClick(e)}
-      id=${this.id}
-    >
+    return html`<div class="radio flex" id=${this.id}>
       <fieldset class="flex">
         ${(this.props.label && html`<legend>${this.props.label}</legend>`) ||
-        html``}
+        html`<!--empty-->`}
         ${choices}
       </fieldset>
     </div>`;

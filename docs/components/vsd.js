@@ -74,7 +74,7 @@ class VSD extends Base {
   };
 
   template() {
-    const { data, state, rules } = this.context;
+    const { data, state, rules } = Globals;
     const items = /** @type {VRow[]} */ (
       data.getMatchingRows(this.props.filters, state)
     );

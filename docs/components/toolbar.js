@@ -2,10 +2,11 @@ import { Base } from "./base.js";
 import css from "../_snowpack/pkg/ustyler.js";
 import db from "../db.js";
 import { html } from "../_snowpack/pkg/uhtml.js";
+import Globals from "../globals.js";
 
 export class ToolBar extends Base {
   template() {
-    const { state } = this.context;
+    const { state } = Globals;
     return html`
       <div class="bar">
         <label for="designName">Name: </label>
@@ -26,7 +27,7 @@ export class ToolBar extends Base {
             const tab = state.get("designerTab").toLowerCase();
             if (["layout", "actions"].indexOf(tab) >= 0) {
               await db.undo(tab);
-              this.context.restart();
+              Globals.restart();
             }
           }}
         >
