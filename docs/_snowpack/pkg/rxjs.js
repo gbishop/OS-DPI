@@ -878,23 +878,29 @@ function animationFrames(timestampProvider) {
     return timestampProvider ? animationFramesFactory(timestampProvider) : DEFAULT_ANIMATION_FRAMES;
 }
 function animationFramesFactory(timestampProvider) {
-    var schedule = animationFrameProvider.schedule;
     return new Observable(function (subscriber) {
-        var subscription = new Subscription();
         var provider = timestampProvider || performanceTimestampProvider;
         var start = provider.now();
-        var run = function (timestamp) {
-            var now = provider.now();
-            subscriber.next({
-                timestamp: timestampProvider ? now : timestamp,
-                elapsed: now - start,
-            });
+        var id = 0;
+        var run = function () {
             if (!subscriber.closed) {
-                subscription.add(schedule(run));
+                id = animationFrameProvider.requestAnimationFrame(function (timestamp) {
+                    id = 0;
+                    var now = provider.now();
+                    subscriber.next({
+                        timestamp: timestampProvider ? now : timestamp,
+                        elapsed: now - start,
+                    });
+                    run();
+                });
             }
         };
-        subscription.add(schedule(run));
-        return subscription;
+        run();
+        return function () {
+            if (id) {
+                animationFrameProvider.cancelAnimationFrame(id);
+            }
+        };
     });
 }
 var DEFAULT_ANIMATION_FRAMES = animationFramesFactory();
@@ -1231,6 +1237,7 @@ var AsyncAction = (function (_super) {
         return _this;
     }
     AsyncAction.prototype.schedule = function (state, delay) {
+        var _a;
         if (delay === void 0) { delay = 0; }
         if (this.closed) {
             return this;
@@ -1243,7 +1250,7 @@ var AsyncAction = (function (_super) {
         }
         this.pending = true;
         this.delay = delay;
-        this.id = this.id || this.requestAsyncId(scheduler, this.id, delay);
+        this.id = (_a = this.id) !== null && _a !== void 0 ? _a : this.requestAsyncId(scheduler, this.id, delay);
         return this;
     };
     AsyncAction.prototype.requestAsyncId = function (scheduler, _id, delay) {
@@ -1255,7 +1262,9 @@ var AsyncAction = (function (_super) {
         if (delay != null && this.delay === delay && this.pending === false) {
             return id;
         }
-        intervalProvider.clearInterval(id);
+        if (id != null) {
+            intervalProvider.clearInterval(id);
+        }
         return undefined;
     };
     AsyncAction.prototype.execute = function (state, delay) {
@@ -1362,11 +1371,13 @@ var AsapAction = (function (_super) {
         return scheduler._scheduled || (scheduler._scheduled = immediateProvider.setImmediate(scheduler.flush.bind(scheduler, undefined)));
     };
     AsapAction.prototype.recycleAsyncId = function (scheduler, id, delay) {
+        var _a;
         if (delay === void 0) { delay = 0; }
-        if ((delay != null && delay > 0) || (delay == null && this.delay > 0)) {
+        if (delay != null ? delay > 0 : this.delay > 0) {
             return _super.prototype.recycleAsyncId.call(this, scheduler, id, delay);
         }
-        if (!scheduler.actions.some(function (action) { return action.id === id; })) {
+        var actions = scheduler.actions;
+        if (id != null && ((_a = actions[actions.length - 1]) === null || _a === void 0 ? void 0 : _a.id) !== id) {
             immediateProvider.clearImmediate(id);
             scheduler._scheduled = undefined;
         }
@@ -1396,7 +1407,6 @@ var AsyncScheduler = (function (_super) {
         var _this = _super.call(this, SchedulerAction, now) || this;
         _this.actions = [];
         _this._active = false;
-        _this._scheduled = undefined;
         return _this;
     }
     AsyncScheduler.prototype.flush = function (action) {
@@ -1476,16 +1486,15 @@ var QueueAction = (function (_super) {
         return this;
     };
     QueueAction.prototype.execute = function (state, delay) {
-        return (delay > 0 || this.closed) ?
-            _super.prototype.execute.call(this, state, delay) :
-            this._execute(state, delay);
+        return delay > 0 || this.closed ? _super.prototype.execute.call(this, state, delay) : this._execute(state, delay);
     };
     QueueAction.prototype.requestAsyncId = function (scheduler, id, delay) {
         if (delay === void 0) { delay = 0; }
         if ((delay != null && delay > 0) || (delay == null && this.delay > 0)) {
             return _super.prototype.requestAsyncId.call(this, scheduler, id, delay);
         }
-        return scheduler.flush(this);
+        scheduler.flush(this);
+        return 0;
     };
     return QueueAction;
 }(AsyncAction));
@@ -1518,11 +1527,13 @@ var AnimationFrameAction = (function (_super) {
         return scheduler._scheduled || (scheduler._scheduled = animationFrameProvider.requestAnimationFrame(function () { return scheduler.flush(undefined); }));
     };
     AnimationFrameAction.prototype.recycleAsyncId = function (scheduler, id, delay) {
+        var _a;
         if (delay === void 0) { delay = 0; }
-        if ((delay != null && delay > 0) || (delay == null && this.delay > 0)) {
+        if (delay != null ? delay > 0 : this.delay > 0) {
             return _super.prototype.recycleAsyncId.call(this, scheduler, id, delay);
         }
-        if (!scheduler.actions.some(function (action) { return action.id === id; })) {
+        var actions = scheduler.actions;
+        if (id != null && ((_a = actions[actions.length - 1]) === null || _a === void 0 ? void 0 : _a.id) !== id) {
             animationFrameProvider.cancelAnimationFrame(id);
             scheduler._scheduled = undefined;
         }
@@ -1627,7 +1638,7 @@ var VirtualAction = (function (_super) {
         var actions = scheduler.actions;
         actions.push(this);
         actions.sort(VirtualAction.sortActions);
-        return true;
+        return 1;
     };
     VirtualAction.prototype.recycleAsyncId = function (scheduler, id, delay) {
         return undefined;
