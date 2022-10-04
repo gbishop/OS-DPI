@@ -1,27 +1,11 @@
 import { html } from "uhtml";
-import { Base } from "./base";
+import { TreeBase } from "./treebase";
+import * as Props from "./props";
 import { TabControl, TabPanel } from "./tabcontrol";
-import { Layout } from "./layout";
-import { Actions } from "./actions";
-import { AccessMethod } from "./access/method";
-import { AccessPattern } from "./access/pattern";
-import { AccessCues } from "./access/cues";
-import { Content } from "./content";
 import css from "ustyler";
-import { Logging } from "./logging";
 
-export class Designer extends Base {
-  /**
-   * @param {SomeProps} props
-   * @param {Base|Null} parent
-   */
-  constructor(props, parent) {
-    super(props, parent);
-    const tabs = new TabControl(
-      { scale: "10", tabEdge: "top", stateName: "designerTab" },
-      this
-    );
-
+export class Designer extends TabControl {
+  /* TOFIX 
     const contentPanel = new TabPanel(
       {
         name: "Content",
@@ -30,16 +14,9 @@ export class Designer extends Base {
       tabs
     );
     contentPanel.children = [new Content({}, contentPanel)];
+    */
 
-    const layoutPanel = new TabPanel(
-      {
-        name: "Layout",
-        background: "#fffff8",
-      },
-      tabs
-    );
-    layoutPanel.children = [new Layout({}, layoutPanel)];
-
+  /* TOFIX
     const actionPanel = new TabPanel(
       {
         name: "Actions",
@@ -94,14 +71,16 @@ export class Designer extends Base {
       cuePanel,
       loggingPanel,
     ];
-    /** @type {Base[]} */
-    this.children = [tabs];
-  }
+    */
 
-  template() {
-    return html`${this.children.map((child) => child.template())} `;
+  settings() {
+    console.log("settings", this);
+    return html`<div class="Designer">
+      ${this.children.map((child) => child.settings())}
+    </div> `;
   }
 }
+TreeBase.register(Designer);
 
 css`
   body.designing {

@@ -1,9 +1,9 @@
 import { render, html } from "uhtml";
-import { assemble } from "./components/index";
-import { Rules } from "./rules";
 import { Data } from "./data";
 import { State } from "./state";
-import { Designer } from "./components/designer";
+import { TreeBase } from "./components/treebase";
+import "./components";
+import { Page } from "./components/page";
 import { Monitor } from "./components/monitor";
 import { ToolBar } from "./components/toolbar";
 import db from "./db";
@@ -15,6 +15,10 @@ import Globals from "./globals";
 import { PatternList } from "./components/access/pattern";
 import { MethodChooser } from "./components/access/method";
 import { CueList } from "./components/access/cues";
+import { Actions } from "./components/actions";
+import "./components/layout";
+import "./components/content";
+import "./components/logger";
 
 const safe = false;
 
@@ -172,25 +176,12 @@ export async function start() {
     return welcome();
   }
   db.setDesignName(name);
-  const emptyPage = {
-    type: "page",
-    props: {},
-    children: [
-      {
-        type: "speech",
-        props: {},
-        children: [],
-      },
-    ],
-  };
-  const layout = await db.read("layout", emptyPage);
-  const rulesArray = await db.read("actions", []);
   const dataArray = await db.read("content", []);
   await pageLoaded;
 
-  Globals.tree = assemble(layout);
+  Globals.tree = await Page.load();
   Globals.state = new State(`UIState`);
-  Globals.rules = new Rules(rulesArray);
+  Globals.actions = await Actions.load();
   Globals.data = new Data(dataArray);
   Globals.cues = await CueList.load();
   Globals.patterns = await PatternList.load();
@@ -207,8 +198,32 @@ export async function start() {
   }
 
   /* Designer */
-  Globals.state.define("editing", layout === emptyPage);
-  const designer = new Designer({}, null);
+  Globals.state.define("editing", true);
+  const designer = TreeBase.fromObject({
+    className: "TabControl",
+    props: { tabEdge: "top", stateName: "designerTab" },
+    children: [
+      {
+        className: "Layout",
+        props: { name: "Layout" },
+        children: [Globals.tree],
+      },
+      Globals.actions,
+      Globals.cues,
+      Globals.patterns,
+      Globals.method,
+      {
+        className: "Content",
+        props: {},
+        children: [],
+      },
+      {
+        className: "Logger",
+        props: {},
+        children: [],
+      },
+    ],
+  });
 
   /* ToolBar */
   const toolbar = new ToolBar({}, null);
@@ -232,8 +247,8 @@ export async function start() {
         >
           ${designer.template()}
         </div>
-        <div id="monitor">${monitor.template()}</div>
-        <div id="toolbar">${toolbar.template()}</div>
+        <div id="monitor">${monitor.uiTemplate()}</div>
+        <div id="toolbar">${toolbar.uiTemplate()}</div>
       `;
     }
     document.body.classList.toggle("designing", Globals.state.get("editing"));
@@ -318,6 +333,43 @@ for (const eventName of [
     }
   });
 }
+
+css`
+  body.designing {
+    display: grid;
+    grid-template-rows: 2.5em 50% auto;
+    grid-template-columns: 50% 50%;
+  }
+
+  body.designing div#UI {
+    font-size: 0.7vw;
+    flex: 1 1 0;
+  }
+
+  div#designer {
+    display: none;
+  }
+
+  body.designing div#designer {
+    display: block;
+    overflow-y: auto;
+    flex: 1 1 0;
+    grid-row-start: 1;
+    grid-row-end: 4;
+    grid-column-start: 2;
+  }
+  body.designing #UI {
+    position: relative;
+  }
+  body.designing #monitor {
+    grid-row-start: 3;
+    grid-column-start: 1;
+  }
+  body.designing #toolbar {
+    grid-row-start: 1;
+    grid-column-start: 1;
+  }
+`;
 
 /** @typedef {PointerEvent & { target: HTMLElement }} ClickEvent */
 // I think this code mapped clicks back to the tree but no longer...

@@ -3,9 +3,9 @@ const Globals = {
   state: null,
   /** @type {import("./data").Data} */
   data: null,
-  /** @type {import("./rules").Rules} */
-  rules: null,
-  /** @type {Tree} */
+  /** @type {import("./components/actions").Actions} */
+  actions: null,
+  /** @type {TreeBase} */
   tree: null,
   /** @type {import('./components/access/pattern').PatternList} */
   patterns: null,

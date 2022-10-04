@@ -19,7 +19,7 @@ class Audio extends Base {
     (await db.getAudio(fileName)).play();
   }
 
-  template() {
+  uiTemplate() {
     const { stateName } = this.props;
     const { state } = Globals;
     if (state.hasBeenUpdated(stateName)) {

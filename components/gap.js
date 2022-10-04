@@ -5,7 +5,7 @@ import { styleString } from "./style";
 class Gap extends Base {
   static defaultProps = { scale: "1", background: "" };
 
-  template() {
+  uiTemplate() {
     const style = styleString({
       backgroundColor: this.props.background,
     });

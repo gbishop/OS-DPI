@@ -1,6 +1,5 @@
 import { html } from "uhtml";
 import css from "ustyler";
-import { Base } from "../../base";
 import { TreeBase } from "../../treebase";
 import * as Props from "../../props";
 import Globals from "../../../globals";
@@ -11,18 +10,16 @@ import { KeyHandler } from "./keyHandler";
 import { PointerHandler } from "./pointerHandler";
 import { TimerHandler } from "./timerHandler";
 import { EventWrap } from "../index";
+// make sure the classes are registered
+import "./handler";
+import "./responses";
 import defaultMethods from "./defaultMethods";
 import { log } from "../../../log";
+import { TabPanel } from "../../tabcontrol";
 
-export class AccessMethod extends Base {
-  template() {
-    return html`<div class="access-method treebase">
-      ${Globals.method.template()}
-    </div>`;
-  }
-}
+export class MethodChooser extends TabPanel {
+  name = new Props.String("Methods");
 
-export class MethodChooser extends TreeBase {
   /** @type {Method[]} */
   children = [];
 
@@ -57,10 +54,7 @@ export class MethodChooser extends TreeBase {
 
   template() {
     return html`<div class="MethodChooser">
-      ${this.addChildButton("Add Method", Method, {
-        title: "Create a new access method",
-      })}
-      ${this.children.map((child) => child.template())}
+      ${this.children.map((child) => child.settings())}
     </div> `;
   }
 
@@ -130,13 +124,12 @@ export class Method extends TreeBase {
     return this.filterChildren(Handler);
   }
 
-  template() {
+  settings() {
     const { Name, Active, Pattern } = this;
     const timers = [...this.timers.values()];
     return html`<fieldset class="Method">
       ${Name.input()} ${Active.input()}
       ${Pattern.input(Globals.patterns.patternMap)}
-      ${this.deleteButton({ title: "Delete this method" })}
       <details>
         <summary>Details</summary>
         ${timers.length > 0
@@ -194,7 +187,7 @@ class Timer extends TreeBase {
   /** @type {RxJs.Subject<WrappedEvent>} */
   subject$ = new RxJs.Subject();
 
-  template() {
+  settings() {
     return html`${this.Name.input()} ${this.Interval.input()}
       ${this.deleteButton()}
       <style>

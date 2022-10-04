@@ -53,7 +53,7 @@ class Radio extends Base {
     }
   }
 
-  template() {
+  uiTemplate() {
     const { state } = Globals;
     const stateName = this.props.stateName;
     let current = state.get(stateName);

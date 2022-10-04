@@ -16,7 +16,7 @@ export class KeyHandler extends Handler {
   Signal = new Props.Select(keySignals);
   Debounce = new Props.Float(0.1);
 
-  template() {
+  settings() {
     const { conditions, responses, keys } = this;
     const { Signal, Debounce } = this;
     return html`

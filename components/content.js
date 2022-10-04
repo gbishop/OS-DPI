@@ -1,5 +1,7 @@
 import { html, render } from "uhtml";
-import { Base } from "./base";
+import { TreeBase } from "./treebase";
+import { TabPanel } from "./tabcontrol";
+import * as Props from "./props";
 import db from "../db";
 import { Data } from "../data";
 import { fileOpen } from "browser-fs-access";
@@ -105,7 +107,9 @@ function saveContent(name, rows, type) {
   XLSX.writeFile(workbook, `${name}.${type}`);
 }
 
-export class Content extends Base {
+export class Content extends TabPanel {
+  name = new Props.String("Content");
+
   init() {
     this.sheetHandle = null;
     this.sheetMessage = "";
@@ -283,6 +287,7 @@ export class Content extends Base {
     </div>`;
   }
 }
+TreeBase.register(Content);
 
 css`
   .content form {

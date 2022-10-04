@@ -17,7 +17,7 @@ export class TimerHandler extends Handler {
   Signal = new Props.Select(timerSignals);
   TimerName = new Props.Select([], { hiddenLabel: true });
 
-  template() {
+  settings() {
     const { conditions, responses, Signal } = this;
     const timerNames = this.nearestParent(Method).timerNames;
     return html`

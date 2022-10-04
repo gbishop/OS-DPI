@@ -19,7 +19,7 @@ export class PointerHandler extends Handler {
   Debounce = new Props.Float(0.1);
   SkipOnRedraw = new Props.Boolean(false);
 
-  template() {
+  settings() {
     const { conditions, responses, Signal, Debounce } = this;
     const skip =
       this.Signal.value == "pointerover" ? this.SkipOnRedraw.input() : html``;

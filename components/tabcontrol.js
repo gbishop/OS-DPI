@@ -1,25 +1,28 @@
 import { html } from "uhtml";
 import { Base, componentMap } from "./base";
+import { TreeBase } from "./treebase";
+import * as Props from "./props";
 import { Stack } from "./stack";
 import { styleString } from "./style";
 import css from "ustyler";
 import { UpdateAccessData } from "./access";
 import Globals from "../globals";
 
-export class TabControl extends Base {
-  static defaultProps = {
-    stateName: "$tabControl",
-    activeTab: "",
-    background: "",
-    scale: "6",
-    tabEdge: "bottom",
-    name: "tabs",
-  };
-  static allowedChildren = ["tab panel"];
+export class TabControl extends TreeBase {
+  stateName = new Props.String("$tabControl");
+  background = new Props.String("");
+  scale = new Props.Float(6);
+  tabEdge = new Props.Select(["bottom", "top", "left", "right", "none"]);
+  name = new Props.String("tabs");
+
+  allowedChildren = ["tab panel"];
+
+  /** @type {TabPanel[]} */
+  children = [];
 
   template() {
     const { state } = Globals;
-    const panels = /** @type {TabPanel[]} */ (this.children);
+    const panels = this.children;
     let activeTabName = state.get(this.props.stateName);
     // collect panel info
     panels.forEach((panel, index) => {
@@ -27,10 +30,12 @@ export class TabControl extends Base {
       panel.tabLabel = state.interpolate(panel.props.label || panel.props.name); // display name
       if (index == 0 && !activeTabName) {
         activeTabName = panel.tabName;
+        console.log({ index, activeTabName, n: this.props.stateName });
         state.define(this.props.stateName, panel.tabName);
       }
       panel.active = activeTabName == panel.tabName || panels.length === 1;
     });
+    console.log({ panels });
     let buttons = [html`<!--empty-->`];
     if (this.props.tabEdge != "none") {
       buttons = panels
@@ -68,21 +73,20 @@ export class TabControl extends Base {
     </div>`;
   }
 }
-componentMap.addMap("tab control", TabControl);
+TreeBase.register(TabControl);
 
 export class TabPanel extends Stack {
   active = false;
   tabName = "";
   tabLabel = "";
 
-  static defaultProps = {
-    background: "",
-    name: "",
-    label: "",
-    direction: "column",
-    scale: "1",
-  };
-  static allowedChildren = [
+  background = new Props.Color("");
+  name = new Props.String("");
+  label = new Props.String("");
+  direction = new Props.Select(["row", "column"]);
+  scale = new Props.Float(1);
+
+  allowedChildren = [
     "stack",
     "grid",
     "display",
@@ -92,7 +96,7 @@ export class TabPanel extends Stack {
     "button",
   ];
 }
-componentMap.addMap("tab panel", TabPanel);
+TreeBase.register(TabPanel);
 
 css`
   .tabcontrol .buttons button:focus {

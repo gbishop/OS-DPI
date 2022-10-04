@@ -2,9 +2,10 @@ import { html } from "uhtml";
 import { PropInfo } from "../properties";
 import { assemble } from "./base";
 import { colorNamesDataList } from "./style";
-import { Base, toDesign } from "./base";
+import { TreeBase } from "./treebase";
+import * as Props from "./props";
 import { Stack } from "./stack";
-import { TabControl } from "./tabcontrol";
+import { TabControl, TabPanel } from "./tabcontrol";
 import { propEditor } from "./propEditor";
 import db from "../db";
 import css from "ustyler";
@@ -19,38 +20,9 @@ function html(...args) {
 }
 */
 
-export class Layout extends Base {
-  static defaultProps = {
-    scale: "1",
-  };
-
-  init() {
-    const { state, tree } = Globals;
-    this.setSelected(this.getNode(state.get("path")), state.get("editingTree"));
-    document.querySelector("div#UI")?.addEventListener("click", (event) => {
-      const target = /** @type {HTMLElement} */ (event.target);
-      let id = null;
-      if (target instanceof HTMLButtonElement && target.dataset.id) {
-        id = target.dataset.id;
-      } else {
-        const div = target.closest('div[id^="osdpi"]');
-        if (div) {
-          id = div.id;
-        }
-      }
-      if (id) {
-        const component = this.allChildren(tree).find(
-          (child) => child.id == id
-        );
-        if (component) {
-          this.setSelected(component, false, false);
-        }
-      }
-    });
-  }
-
+export class Layout extends TabPanel {
   /** Make sure a node is visible
-   * @param {Tree} node
+   * @param {TreeBase} node
    */
   makeVisible(node) {
     while (node.parent) {
@@ -71,7 +43,7 @@ export class Layout extends Base {
     }
   }
 
-  /** @param {Tree} selection
+  /** @param {TreeBase} selection
    */
   setSelected(selection, editingTree = false, highlight = true) {
     this.selected = selection;
@@ -89,7 +61,7 @@ export class Layout extends Base {
   /** return a node given the path through the children to get to it
    * from the root.
    * @param {number[]} path
-   * @returns {Tree}
+   * @returns {TreeBase}
    */
   getNode(path) {
     if (!path) path = [];
@@ -104,7 +76,7 @@ export class Layout extends Base {
   }
 
   /** return the path from root to selection
-   * @param {Tree} selection
+   * @param {TreeBase} selection
    * @returns {number[]}
    */
   getPath(selection) {
@@ -306,8 +278,8 @@ export class Layout extends Base {
   }
 
   /** Get a list of all children
-   * @param {Tree} tree
-   * @returns {Tree[]}
+   * @param {TreeBase} tree
+   * @returns {TreeBase[]}
    * */
   allChildren(tree) {
     if (tree.children.length) {
@@ -321,8 +293,8 @@ export class Layout extends Base {
   }
 
   /** Get a list of the children that are visible
-   * @param {Tree} tree
-   * @returns {Tree[]}
+   * @param {TreeBase} tree
+   * @returns {TreeBase[]}
    * */
   visibleChidren(tree) {
     if (tree.children.length && tree.designer.expanded) {
@@ -336,7 +308,7 @@ export class Layout extends Base {
   }
 
   /** Get the next visible child
-   * @returns {Tree}
+   * @returns {TreeBase}
    * */
   nextVisibleChild() {
     const vc = this.visibleChidren(Globals.tree);
@@ -345,7 +317,7 @@ export class Layout extends Base {
   }
 
   /** Get the previous visible child
-   * @returns {Tree}
+   * @returns {TreeBase}
    * */
   previousVisibleChild() {
     const vc = this.visibleChidren(Globals.tree);
@@ -416,8 +388,8 @@ export class Layout extends Base {
   }
   /**
    * Display the designer interface
-   * @param {Tree} tree
-   * @param {Tree} selected
+   * @param {TreeBase} tree
+   * @param {TreeBase} selected
    * @returns {Hole}
    */
   showTree(tree, selected, level = 0) {
@@ -518,18 +490,11 @@ export class Layout extends Base {
   }
 
   template() {
-    const state = Globals.state;
-    const editingTree = state.get("editingTree");
-    /** @param {KeyboardEvent} event */
-    const keyHandler = (event) => this.treeKeyHandler(event);
-    return html`<div class="layout" help="Layout tab">
-      <div class="tree">
-        <ul role="tree" onKeyDown=${keyHandler}>
-          ${this.showTree(Globals.tree, this.selected)}
-        </ul>
-      </div>
-      ${editingTree && this.selected ? this.controls() : html`<!--empty-->`}
-      ${colorNamesDataList()}
+    console.log("layout", this);
+    return html`<div class="treebase layout" help="Layout tab">
+      <ol>
+        ${this.children.map((child) => html`<li>${child.settings()}</li>`)}
+      </ol>
     </div>`;
   }
 
@@ -549,6 +514,7 @@ export class Layout extends Base {
     db.write("layout", layout);
   }
 }
+TreeBase.register(Layout);
 
 css`
   div.layout {
@@ -558,41 +524,12 @@ css`
     overflow: hidden;
   }
 
-  div.tree {
-    overflow-y: auto;
-  }
-
-  .tree ul[role="tree"] {
+  .layout ol {
     list-style-type: none;
-    padding-inline-start: 5px;
-  }
-  .tree ul[role="group"] {
-    list-style-type: none;
-    margin-block-start: 0;
-    padding-inline-start: 20px;
-  }
-  .tree li[aria-expanded] span::before {
-    cursor: pointer;
-    user-select: none;
   }
 
-  .tree li[aria-expanded="false"] > span::before {
-    content: "\u25B6";
-    color: black;
+  .layout details {
     display: inline-block;
-    margin-right: 6px;
-  }
-
-  .tree li[aria-expanded="true"] > span::before {
-    content: "\u25B6";
-    color: black;
-    display: inline-block;
-    margin-right: 6px;
-    transform: rotate(90deg);
-  }
-
-  .tree li[aria-selected="true"] > span {
-    background-color: pink;
   }
 
   div.empty {

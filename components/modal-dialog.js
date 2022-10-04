@@ -10,7 +10,7 @@ export class ModalDialog extends Base {
   };
   static allowedChildren = ["stack"];
 
-  template() {
+  uiTemplate() {
     const state = Globals.state;
     const open = !!state.get(this.props.stateName);
     if (open) {
@@ -19,7 +19,7 @@ export class ModalDialog extends Base {
         id=${this.id}
         ?open=${!!state.get(this.props.stateName)}
       >
-        <div>${this.children.map((child) => child.template())}</div>
+        <div>${this.children.map((child) => child.uiTemplate())}</div>
       </div>`;
     } else {
       return html`<!--empty-->`;

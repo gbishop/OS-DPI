@@ -5,7 +5,7 @@ import { html } from "uhtml";
 import Globals from "../globals";
 
 export class ToolBar extends Base {
-  template() {
+  uiTemplate() {
     const { state } = Globals;
     return html`
       <div class="bar">

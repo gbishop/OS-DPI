@@ -1,22 +1,21 @@
-import { log } from "../log";
 import { strip } from "./display";
-import { Base, componentMap } from "./base";
+import { TreeBase } from "./treebase";
 import { html } from "uhtml";
 import Globals from "../globals";
+import * as Props from "./props";
 
-class Speech extends Base {
-  static defaultProps = {
-    stateName: "$Speak",
-    voiceURI: "",
-    pitch: 1,
-    rate: 1,
-    volume: 1,
-  };
+class Speech extends TreeBase {
+  stateName = new Props.String("$Speak");
+  voiceURI = new Props.Voice("", { label: "Voice" });
+  pitch = new Props.Float(1);
+  rate = new Props.Float(1);
+  volume = new Props.Float(1);
 
   async speak() {
     const { state } = Globals;
     const { stateName, voiceURI, pitch, rate, volume } = this.props;
     const message = strip(state.get(stateName));
+    console.log("speak", message);
     const voices = await getVoices();
     const voice =
       voiceURI && voices.find((voice) => voice.voiceURI == voiceURI);
@@ -28,7 +27,6 @@ class Speech extends Base {
     utterance.pitch = pitch;
     utterance.rate = rate;
     utterance.volume = volume;
-    log("speak", { message, voiceURI });
     speechSynthesis.cancel();
     speechSynthesis.speak(utterance);
   }
@@ -36,13 +34,22 @@ class Speech extends Base {
   template() {
     const { stateName } = this.props;
     const { state } = Globals;
+    console.log("speech template");
     if (state.hasBeenUpdated(stateName)) {
       this.speak();
     }
     return html`<!--empty-->`;
   }
+
+  // settings() {
+  //   console.log("speech settings");
+  //   return html`<div class="Speech">
+  //     ${this.stateName.input()} ${this.voiceURI.input()} ${this.pitch.input()}
+  //     ${this.rate.input()} ${this.volume.input()}
+  //   </div>`;
+  // }
 }
-componentMap.addMap("speech", Speech);
+TreeBase.register(Speech);
 
 /** @type{SpeechSynthesisVoice[]} */
 let voices = [];
@@ -67,17 +74,14 @@ function getVoices() {
 class VoiceSelect extends HTMLSelectElement {
   constructor() {
     super();
-    console.log("construct select-voice");
   }
   connectedCallback() {
-    console.log(this, "connected");
     this.addVoices();
   }
 
   async addVoices() {
     const voices = await getVoices();
     const current = this.getAttribute("value");
-    console.log("voices", voices, current);
     for (const voice of voices) {
       const item = html.node`<option value=${voice.voiceURI} ?selected=${
         voice.voiceURI == current

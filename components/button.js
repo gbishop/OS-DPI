@@ -12,7 +12,7 @@ class Button extends Base {
     scale: "1",
   };
 
-  template() {
+  uiTemplate() {
     const style = styleString({ backgroundColor: this.props.background });
     const { rules } = Globals;
     return html`<button

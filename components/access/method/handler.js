@@ -43,7 +43,7 @@ export class Handler extends TreeBase {
 export class HandlerCondition extends TreeBase {
   Condition = new Props.Expression("", { hiddenLabel: true });
 
-  template() {
+  settings() {
     const { Condition } = this;
     return html`
       <div class="Condition">
@@ -72,7 +72,7 @@ const allKeys = new Map([
 export class HandlerKeyCondition extends TreeBase {
   Key = new Props.Select(allKeys, { hiddenLabel: true });
 
-  template() {
+  settings() {
     const { Key } = this;
     return html`
       <div class="Key">

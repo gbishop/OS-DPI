@@ -106,7 +106,7 @@ export function propEditor(component, name, value, info, hook) {
         />`;
 
     case "state":
-      const { tree, rules } = Globals;
+      const { tree, actions: rules } = Globals;
       let states = new Set([...tree.allStates(), ...rules.allStates()]);
       return textInput({
         type: "text",
@@ -167,7 +167,7 @@ function editFilters(component, name, value, info, hook) {
       filter.value.match(/\$\w+$|[^$].*/)
     );
   }
-  const { tree, rules, data } = Globals;
+  const { tree, actions: rules, data } = Globals;
   const allStates = new Set([...tree.allStates(), ...rules.allStates()]);
   const allFields = new Set(data.allFields);
   const both = new Set([...allStates, ...allFields]);

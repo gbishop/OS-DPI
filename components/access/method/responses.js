@@ -25,7 +25,7 @@ export class HandlerResponse extends TreeBaseSwitchable {
     console.log("no response for", event);
   }
 
-  template() {
+  settings() {
     return html`
       <div class="Response">
         ${this.Response.input()} ${this.subTemplate()}
@@ -96,7 +96,7 @@ class ResponderActivate extends HandlerResponse {
       if ("onClick" in button.access) {
         button.access.onClick();
       } else {
-        Globals.rules.applyRules(name, "press", button.access);
+        Globals.actions.applyRules(name, "press", button.access);
       }
     }
   }
@@ -115,7 +115,7 @@ TreeBase.register(ResponderClearCue);
 class ResponderEmit extends HandlerResponse {
   /** @param {Event & { access: Object }} event */
   respond(event) {
-    Globals.rules.applyRules(event.access.type, "press", event.access);
+    Globals.actions.applyRules(event.access.type, "press", event.access);
   }
 }
 TreeBase.register(ResponderEmit);

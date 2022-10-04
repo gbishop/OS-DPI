@@ -100,6 +100,7 @@ export class State {
    * @returns boolean
    */
   hasBeenUpdated(stateName) {
+    console.log("hbu", stateName);
     const result = this.updated.has(stateName);
     if (result) {
       this.updated.delete(stateName);

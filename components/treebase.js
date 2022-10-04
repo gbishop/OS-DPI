@@ -1,13 +1,20 @@
 import { html } from "uhtml";
-import { Prop } from "./props";
+import * as Props from "./props";
 import * as icons from "./icons";
 import css from "ustyler";
+import { fromCamelCase } from "./helpers";
 
 export class TreeBase {
   /** @type {TreeBase[]} */
   children = [];
   /** @type {TreeBase} */
   parent = null;
+  /** @type {string[]} */
+  allowedChildren = [];
+
+  id = "";
+
+  designer = {};
 
   /** A mapping from the class name to the class */
   static classMap = new Map();
@@ -21,22 +28,24 @@ export class TreeBase {
   }
 
   /**
-   * Extract the class fields that are Props
-   * @returns {Object<string, Prop>}
+   * Extract the class fields that are Props and return their values as an Object
+   * @returns {Object<string, any>}
    */
   get props() {
     return Object.fromEntries(
-      Object.entries(this).filter(([_, prop]) => prop instanceof Prop)
+      Object.entries(this)
+        .filter(([_, prop]) => prop instanceof Props.Prop)
+        .map(([name, prop]) => [name, prop.value])
     );
   }
 
   /**
    * Extract the values of the fields that are Props
-   * @returns {Object<string, string>}
+   * @returns {Object<string, Props.Prop>}
    */
-  get propsAsObject() {
+  get propsAsProps() {
     return Object.fromEntries(
-      Object.entries(this.props).map(([name, prop]) => [name, prop.value])
+      Object.entries(this).filter(([_, prop]) => prop instanceof Props.Prop)
     );
   }
   /**
@@ -44,7 +53,7 @@ export class TreeBase {
    * @returns {Object}
    * */
   toObject() {
-    const props = this.propsAsObject;
+    const props = this.props;
     const children = this.children.map((child) => child.toObject());
     return {
       className: this.className,
@@ -53,12 +62,14 @@ export class TreeBase {
     };
   }
 
+  init() {}
+
   /**
    *   Create a TreeBase object
    *   @template {TreeBase} TB
    *   @param {string|(new()=>TB)} constructorOrName
    *   @param {TreeBase} parent
-   *   @param {Object<string,string>} props
+   *   @param {Object<string,string|number|boolean>} props
    *   @returns {TB}
    *   */
   static create(constructorOrName, parent = null, props = {}) {
@@ -69,7 +80,7 @@ export class TreeBase {
     const result = new constructor();
 
     // initialize the props
-    for (const [name, prop] of Object.entries(result.props)) {
+    for (const [name, prop] of Object.entries(result.propsAsProps)) {
       if (name in props) {
         prop.set(props[name]);
       }
@@ -89,6 +100,8 @@ export class TreeBase {
       parent.children.push(result);
     }
 
+    result.init();
+
     return result;
   }
 
@@ -99,16 +112,59 @@ export class TreeBase {
    * @returns {TreeBase} - should be {this} but that isn't supported for some reason
    * */
   static fromObject(obj, parent = null) {
+    // map old names to new for the transition
+    const typeToClassName = {
+      audio: "Audio",
+      stack: "Stack",
+      page: "Page",
+      grid: "Grid",
+      speech: "Speech",
+      button: "Button",
+      logger: "Logger",
+      gap: "Gap",
+      option: "Option",
+      radio: "Radio",
+      vsd: "VSD",
+      "modal dialog": "ModalDialog",
+      "tab control": "TabControl",
+      "tab panel": "TabPanel",
+      display: "Display",
+    };
     // Get the constructor from the class map
-    const constructor = this.classMap.get(obj.className);
-    if (!constructor) return null;
+    if (!obj) console.trace("fromObject", obj);
+    if ("type" in obj) {
+      const newObj = { children: [...obj.children] };
+      // convert to new representation
+      if (obj.type === "grid" && "filters" in obj.props) {
+        newObj.children = obj.props.filters.map((filter) => ({
+          className: "GridFilter",
+          props: { ...filter },
+          children: [],
+        }));
+      }
+      newObj.className = typeToClassName[obj.type];
+      const { filters, ...props } = obj.props;
+      newObj.props = props;
+      obj = newObj;
+    }
+    const className = obj.className;
+    const constructor = this.classMap.get(className);
+    if (!constructor) {
+      console.trace("className not found", className, obj);
+      return null;
+    }
 
     // Create the object and link it to its parent
     const result = this.create(constructor, parent, obj.props);
 
     // Link in the children
     for (const childObj of obj.children) {
-      TreeBase.fromObject(childObj, result);
+      if (childObj instanceof TreeBase) {
+        childObj.parent = result;
+        result.children.push(childObj);
+      } else {
+        TreeBase.fromObject(childObj, result);
+      }
     }
 
     // Validate the type is what was expected
@@ -140,7 +196,38 @@ export class TreeBase {
   onUpdate(_start) {}
 
   /**
-   * Render this node and return the resulting Hole
+   * Render the designer interface and return the resulting Hole
+   * @returns {Hole}
+   */
+  settings() {
+    return html`<details class=${this.className}>
+        <summary>${this.settingsSummary()}</summary>
+        ${this.settingsDetails()}
+      </details>
+      ${this.orderedChildren()}`;
+  }
+
+  /**
+   *  * Render the summary of a components settings
+   *  * @returns {Hole}
+   *  */
+  settingsSummary() {
+    const name = this.hasOwnProperty("name") ? this["name"].value : "";
+    return html`${fromCamelCase(this.className)} ${name}`;
+  }
+
+  /**
+   *  * Render the details of a components settings
+   *  * @returns {Hole}
+   *  */
+  settingsDetails() {
+    const props = this.propsAsProps;
+    const inputs = Object.values(props).map((prop) => prop.input());
+    return html`${inputs}`;
+  }
+
+  /**
+   * Render the user interface and return the resulting Hole
    * @returns {Hole}
    */
   template() {
@@ -270,7 +357,7 @@ export class TreeBase {
    * Create HTML LI nodes from the children
    */
   listChildren(children = this.children) {
-    return children.map((child) => html`<li>${child.template()}</li>`);
+    return children.map((child) => html`<li>${child.settings()}</li>`);
   }
 
   /**
@@ -324,6 +411,74 @@ export class TreeBase {
     }
     return result;
   }
+
+  /* Methods from Base */
+
+  get index() {
+    const siblings = this.parent?.children || [];
+    return siblings.indexOf(this);
+  }
+
+  nextSibling() {
+    const siblings = this.parent?.children || [];
+    const ndx = siblings.indexOf(this);
+    if (ndx < 0 || ndx == siblings.length - 1) {
+      return null;
+    } else {
+      return siblings[ndx + 1];
+    }
+  }
+  previousSibling() {
+    const siblings = this.parent?.children || [];
+    const ndx = siblings.indexOf(this);
+    if (ndx < 1) {
+      return null;
+    } else {
+      return siblings[ndx - 1];
+    }
+  }
+
+  get componentName() {
+    console.log(this);
+    return this.props["Name"]?.value || "";
+  }
+
+  get path() {
+    if (this.parent) {
+      const index = this.parent.children.indexOf(this);
+      return this.parent.path + `[${index}]` + this.constructor.name;
+    }
+    return this.constructor.name;
+  }
+
+  /** Return matching strings from props
+   * @param {RegExp} pattern
+   * @param {string[]} [props]
+   * @returns {Set<string>}
+   */
+  all(pattern, props) {
+    const matches = new Set();
+    for (const [name, theProp] of Object.entries(this.props)) {
+      if (!props || props.indexOf(name) >= 0) {
+        if (theProp instanceof Props.String) {
+          for (const [match] of theProp.value.matchAll(pattern)) {
+            matches.add(match);
+          }
+        }
+      }
+    }
+    for (const child of this.children) {
+      for (const match of child.all(pattern, props)) {
+        matches.add(match);
+      }
+    }
+    return matches;
+  }
+
+  /** @returns {Set<string>} */
+  allStates() {
+    return this.all(/\$\w+/g);
+  }
 }
 
 /**
@@ -336,7 +491,7 @@ export class TreeBaseSwitchable extends TreeBase {
     console.log("replacing", this.className, className);
     if (this.className == className) return;
     // extract the values of the old props
-    const props = this.propsAsObject;
+    const props = this.props;
     const replacement = TreeBase.create(className, null, props);
     const index = this.parent.children.indexOf(this);
     this.parent.children[index] = replacement;
@@ -389,33 +544,5 @@ css`
   }
   .treebase label {
     display: inline-block;
-  }
-  .treebase ol {
-    list-style-type: none;
-    counter-reset: item;
-    margin: 0;
-    padding: 0;
-  }
-
-  .treebase ol > li {
-    display: table;
-    counter-increment: item;
-    margin-bottom: 0.6em;
-    width: 100%;
-  }
-
-  .treebase ol > li:before {
-    content: counters(item, ".") ". ";
-    display: table-cell;
-    padding-right: 0.6em;
-    font-size: 80%;
-  }
-
-  .treebase li ol > li {
-    margin: 0;
-  }
-
-  .treebase li ol > li:before {
-    content: counters(item, ".") " ";
   }
 `;

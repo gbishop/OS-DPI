@@ -4,17 +4,9 @@ import css from "ustyler";
 import Globals from "../../../globals";
 import * as Props from "../../props";
 import { TreeBase } from "../../treebase";
-import { Base } from "../../base";
 import { ButtonWrap, AccessChanged } from "../index";
 import defaultPatterns from "./defaultPatterns";
-
-export class AccessPattern extends Base {
-  template() {
-    return html`<div class="access-pattern treebase">
-      ${Globals.patterns.template()}
-    </div>`;
-  }
-}
+import { TabPanel } from "../../tabcontrol";
 
 /** @typedef {ReturnType<ButtonWrap<Node>>} Button */
 
@@ -36,7 +28,7 @@ export class Group {
   }
 
   get length() {
-    return this.members.length * this.groupProps.Cycles.value;
+    return this.members.length * +this.groupProps.Cycles;
   }
 
   /** @param {Number} index */
@@ -51,7 +43,7 @@ export class Group {
   cue() {
     // console.log("cue group", this.members);
     for (const member of this.members) {
-      member.cue(this.groupProps.Cue.value);
+      member.cue(this.groupProps.Cue);
     }
   }
 }
@@ -69,17 +61,14 @@ class PatternBase extends TreeBase {
   }
 }
 
-export class PatternList extends TreeBase {
+export class PatternList extends TabPanel {
+  name = new Props.String("Patterns");
+
   /** @type {PatternManager[]} */
   children = [];
 
   template() {
-    return html`<div class="PatternList">
-      ${this.addChildButton("+Pattern", PatternManager, {
-        title: "Add a Pattern",
-      })}
-      ${this.unorderedChildren()}
-    </div>`;
+    return html`<div class="PatternList">${this.unorderedChildren()}</div>`;
   }
 
   /** @param {string} key
@@ -134,7 +123,7 @@ export class PatternManager extends PatternBase {
   Name = new Props.String("a pattern");
   Key = new Props.UID();
 
-  template() {
+  settings() {
     const { Cycles, Cue, Name } = this;
     return html`
       <fieldset class=${this.className}>
@@ -252,7 +241,7 @@ export class PatternManager extends PatternBase {
         current.access.onClick();
       } else {
         console.log("applyRules", name, current.access);
-        Globals.rules.applyRules(name, "press", current.access);
+        Globals.actions.applyRules(name, "press", current.access);
       }
     }
     this.cue();
@@ -282,7 +271,7 @@ class PatternGroup extends PatternBase {
   Cycles = new Props.Integer(2, { min: 1 });
   Cue = new Props.Select();
 
-  template() {
+  settings() {
     const { Name, Cycles, Cue } = this;
     return html`<fieldset class=${this.className}>
       <legend>Group: ${Name.value}</legend>
@@ -318,7 +307,7 @@ class PatternGroup extends PatternBase {
 PatternBase.register(PatternGroup);
 
 class PatternSelector extends PatternBase {
-  template() {
+  settings() {
     return html`<fieldset class=${this.className}>
       <legend>Selector</legend>
       ${this.unorderedChildren()} ${this.addChildButton("+Filter", Filter)}
@@ -345,7 +334,7 @@ PatternBase.register(PatternSelector);
 
 class Filter extends PatternBase {
   Filter = new Props.Expression();
-  template() {
+  settings() {
     const { Filter } = this;
     return html`<div class=${this.className}>
       ${Filter.input()}${this.deleteButton({ title: "Delete this filter" })}
@@ -381,7 +370,7 @@ const comparator = new Intl.Collator(undefined, {
 
 class OrderBy extends PatternBase {
   OrderBy = new Props.Field();
-  template() {
+  settings() {
     const { OrderBy } = this;
     return html`<div class=${this.className}>
       ${OrderBy.input()}${this.deleteButton({ title: "Delete this order by" })}
@@ -416,7 +405,7 @@ class GroupBy extends PatternBase {
   Name = new Props.String("");
   Cue = new Props.Select();
   Cycles = new Props.Integer(2);
-  template() {
+  settings() {
     const { GroupBy, Name, Cue, Cycles } = this;
     return html`<div class=${this.className}>
       ${GroupBy.input()} ${Name.input()}
@@ -440,7 +429,7 @@ class GroupBy extends PatternBase {
         .filter((target) => target.length > 0);
     } else {
       const { GroupBy, ...props } = this.props;
-      const key = GroupBy.value.slice(1);
+      const key = GroupBy.slice(1);
       const result = [];
       const groupMap = new Map();
       for (const button of /** @type {Button[]} */ (input)) {

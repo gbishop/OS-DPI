@@ -107,7 +107,7 @@ export class Base {
    * Return the content for element.
    * @returns {Hole}
    */
-  template() {
+  uiTemplate() {
     return html`<!--empty-->`;
   }
 
@@ -208,13 +208,3 @@ export function toDesign(tree) {
     children: tree.children.map(toDesign),
   };
 }
-
-class Page extends Base {
-  static defaultProps = {};
-  static allowedChildren = ["stack", "modal dialog", "speech", "audio", "logger"];
-
-  template() {
-    return html`${this.children.map((child) => child.template())}`;
-  }
-}
-componentMap.addMap("page", Page);

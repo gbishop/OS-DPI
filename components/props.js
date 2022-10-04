@@ -112,10 +112,20 @@ export class Select extends Prop {
 }
 
 export class Field extends Select {
-  /** @param {PropOptions} options */
-  constructor(options = {}) {
-    const choices = [...Globals.data.allFields, "#ComponentName"].sort();
-    super(choices, options);
+  input(choices = null) {
+    if (!choices) {
+      choices = toMap([...Globals.data.allFields, "#ComponentName"].sort());
+    }
+    return super.input(choices);
+  }
+}
+
+export class State extends Select {
+  input(choices = null) {
+    if (!choices) {
+      choices = toMap([...Globals.tree.allStates()]);
+    }
+    return super.input(choices);
   }
 }
 
@@ -336,6 +346,31 @@ export class Color extends Prop {
         }}
       />
     </label>`;
+  }
+}
+
+export class Voice extends Prop {
+  value = "";
+
+  constructor(value = "", options = {}) {
+    super(options);
+    this.value = value;
+  }
+
+  input() {
+    return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
+      <span>${this.label}</span>
+      <select
+        is="select-voice"
+        .value=${this.value}
+        onchange=${(/** @type {InputEventWithTarget} */ event) => {
+          this.value = event.target.value;
+          this.update();
+        }}
+      >
+        <option value="">Default</option>
+      </select></label
+    >`;
   }
 }
 

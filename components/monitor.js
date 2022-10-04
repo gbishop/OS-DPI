@@ -4,8 +4,8 @@ import css from "ustyler";
 import Globals from "../globals";
 
 export class Monitor extends Base {
-  template() {
-    const { state, rules } = Globals;
+  uiTemplate() {
+    const { state, actions: rules } = Globals;
     const s = html`<table class="state">
       <thead>
         <tr>
