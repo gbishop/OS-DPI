@@ -304,7 +304,7 @@ class DB {
     const cues = await this.read("cues");
 
     const zipargs = {
-      "layout.json": strToU8(JSON.stringify(layout)),
+      "layout.json": strToU8(JSON.stringify(Globals.layout)),
       "actions.json": strToU8(JSON.stringify(actions)),
       "content.json": strToU8(JSON.stringify(content)),
       "method.json": strToU8(JSON.stringify(method)),
