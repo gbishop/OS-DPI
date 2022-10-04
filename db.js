@@ -1,6 +1,7 @@
 import { openDB } from "idb/with-async-ittr";
 import { zipSync, strToU8, unzipSync, strFromU8 } from "fflate";
 import { fileSave } from "browser-fs-access";
+import Globals from "./globals";
 
 class DB {
   constructor() {
@@ -299,17 +300,14 @@ class DB {
     const layout = await this.read("layout");
     const actions = await this.read("actions");
     const content = await this.read("content");
-    const method = await this.read("method");
-    const pattern = await this.read("pattern");
-    const cues = await this.read("cues");
 
     const zipargs = {
-      "layout.json": strToU8(JSON.stringify(Globals.layout)),
+      "layout.json": strToU8(JSON.stringify(layout)),
       "actions.json": strToU8(JSON.stringify(actions)),
       "content.json": strToU8(JSON.stringify(content)),
-      "method.json": strToU8(JSON.stringify(method)),
-      "pattern.json": strToU8(JSON.stringify(pattern)),
-      "cues.json": strToU8(JSON.stringify(cues)),
+      "method.json": strToU8(JSON.stringify(Globals.method.toObject())),
+      "pattern.json": strToU8(JSON.stringify(Globals.patterns.toObject())),
+      "cues.json": strToU8(JSON.stringify(Globals.cues.toObject())),
     };
 
     const mediaKeys = (await db.getAllKeys("media")).filter((pair) =>
