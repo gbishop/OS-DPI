@@ -3,6 +3,7 @@ import { Base, componentMap } from "./base.js";
 import { styleString } from "./style.js";
 import css from "../_snowpack/pkg/ustyler.js";
 import { UpdateAccessData } from "./access/index.js";
+import Globals from "../globals.js";
 
 class Option extends Base {
   static defaultProps = {
