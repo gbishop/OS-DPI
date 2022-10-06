@@ -1,9 +1,9 @@
 import { W as WeakMapSet, M as MapSet } from './common/index-ae82c9dd.js';
 import { i as instrument } from './common/index-a29c70ec.js';
 import { d as diffable, p as persistent } from './common/index-c26122ba.js';
-import { t as text, e as event, s as setter, b as boolean, a as aria, r as ref, c as attribute } from './common/index-35c1a3ec.js';
+import { t as text, e as event, s as setter, b as boolean, a as aria, r as ref, c as attribute } from './common/index-471db612.js';
 import { u as udomdiff } from './common/index-3ee57073.js';
-import './common/index-4c872561.js';
+import './common/index-8a07eae0.js';
 
 const {isArray, prototype} = Array;
 const {indexOf} = prototype;
@@ -113,22 +113,15 @@ const handleAnything = comment => {
         // if the node is a fragment, it's appended once via its childNodes
         // There is no `else` here, meaning if the content
         // is not expected one, nothing happens, as easy as that.
-        if (oldValue !== newValue) {
-          if ('ELEMENT_NODE' in newValue) {
-            oldValue = newValue;
-            nodes = diff(
-              comment,
-              nodes,
-              newValue.nodeType === 11 ?
-                [...newValue.childNodes] :
-                [newValue]
-            );
-          }
-          else {
-            const value = newValue.valueOf();
-            if (value !== newValue)
-              anyContent(value);
-          }
+        if (oldValue !== newValue && 'ELEMENT_NODE' in newValue) {
+          oldValue = newValue;
+          nodes = diff(
+            comment,
+            nodes,
+            newValue.nodeType === 11 ?
+              [...newValue.childNodes] :
+              [newValue]
+          );
         }
         break;
       case 'function':
