@@ -3,6 +3,7 @@ import { Base, componentMap } from "./base.js";
 import { styleString } from "./style.js";
 import css from "../_snowpack/pkg/ustyler.js";
 import "./img-db.js";
+import Globals from "../globals.js";
 
 /** Allow await'ing for a short time
  * @param {number} ms */

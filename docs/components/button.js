@@ -14,7 +14,6 @@ class Button extends Base {
 
   template() {
     const style = styleString({ backgroundColor: this.props.background });
-    const { rules } = Globals;
     return html`<button
       class="button"
       name=${this.props.name}

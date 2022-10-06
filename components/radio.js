@@ -3,6 +3,7 @@ import { Base, componentMap } from "./base";
 import { styleString } from "./style";
 import css from "ustyler";
 import { UpdateAccessData } from "./access";
+import Globals from "../globals";
 
 class Option extends Base {
   static defaultProps = {

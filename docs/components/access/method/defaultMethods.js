@@ -70,7 +70,7 @@ export default {
           children: [
             {
               className: "ResponderCue",
-              props: { Response: "ResponderCue" },
+              props: { Response: "ResponderCue", Cue: "idl7qm4cs28fh2ogf4ni" },
               children: [],
             },
             {
@@ -153,7 +153,7 @@ export default {
           children: [
             {
               className: "ResponderCue",
-              props: { Response: "ResponderCue" },
+              props: { Response: "ResponderCue", Cue: "idl7qm4cs28fh2ogf4ni" },
               children: [],
             },
           ],
