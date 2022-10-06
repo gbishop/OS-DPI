@@ -3,6 +3,7 @@ import { Base, componentMap } from "./base";
 import { styleString } from "./style";
 import css from "ustyler";
 import "./img-db";
+import Globals from "../globals";
 
 /** Allow await'ing for a short time
  * @param {number} ms */

@@ -194,21 +194,17 @@ function openDB(name, version, { blocked, upgrade, blocking, terminated } = {}) 
     const openPromise = wrap(request);
     if (upgrade) {
         request.addEventListener('upgradeneeded', (event) => {
-            upgrade(wrap(request.result), event.oldVersion, event.newVersion, wrap(request.transaction), event);
+            upgrade(wrap(request.result), event.oldVersion, event.newVersion, wrap(request.transaction));
         });
     }
-    if (blocked) {
-        request.addEventListener('blocked', (event) => blocked(
-        // Casting due to https://github.com/microsoft/TypeScript-DOM-lib-generator/pull/1405
-        event.oldVersion, event.newVersion, event));
-    }
+    if (blocked)
+        request.addEventListener('blocked', () => blocked());
     openPromise
         .then((db) => {
         if (terminated)
             db.addEventListener('close', () => terminated());
-        if (blocking) {
-            db.addEventListener('versionchange', (event) => blocking(event.oldVersion, event.newVersion, event));
-        }
+        if (blocking)
+            db.addEventListener('versionchange', () => blocking());
     })
         .catch(() => { });
     return openPromise;

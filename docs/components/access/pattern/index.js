@@ -199,10 +199,11 @@ export class PatternManager extends PatternBase {
 
   start() {
     if (this.Name.value == "None") return;
-    if (AccessChanged || !this.stack.length) {
-      console.log("clear stack", AccessChanged);
-      this.stack = [{ group: this.targets, index: -1 }];
-    }
+    // if (AccessChanged || !this.stack.length) {
+    //   console.log("clear stack", AccessChanged);
+    //   this.stack = [{ group: this.targets, index: -1 }];
+    // }
+    this.stack = [{ group: this.targets, index: -1 }];
     this.cue();
   }
 
