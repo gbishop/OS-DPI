@@ -1,5 +1,4 @@
 import { html } from "uhtml";
-import { Base, componentMap } from "./base";
 import { TreeBase } from "./treebase";
 import * as Props from "./props";
 import { Stack } from "./stack";
@@ -19,6 +18,9 @@ export class TabControl extends TreeBase {
 
   /** @type {TabPanel[]} */
   children = [];
+
+  /** @type {TabPanel} */
+  currentPanel = null;
 
   template() {
     const { state } = Globals;
@@ -54,6 +56,7 @@ export class TabControl extends TreeBase {
               component: this.constructor.name,
               onClick: () => {
                 state.update({ [this.props.stateName]: panel.tabName });
+                this.restoreFocus();
               },
             })}
             .dataset=${{ id: panel.id }}
@@ -62,45 +65,59 @@ export class TabControl extends TreeBase {
           </button>`;
         });
     }
-    const panel =
-      panels.find((panel) => panel.active)?.template() || html`<!--empty-->`;
+    this.currentPanel = panels.find((panel) => panel.active);
+    const panel = this.currentPanel?.template() || html`<!--empty-->`;
     return html`<div
       class=${["tabcontrol", "flex", this.props.tabEdge].join(" ")}
       id=${this.id}
     >
-      <div class="panels flex" }>${panel}</div>
+      <div
+        class="panels flex"
+        onfocusin=${({ target }) =>
+          this.currentPanel && (this.currentPanel.lastFocused = target)}
+      >
+        ${panel}
+      </div>
       <div class="buttons">${buttons}</div>
     </div>`;
   }
+
+  restoreFocus() {}
 }
 TreeBase.register(TabControl);
 
+class DesignerTabControl extends TabControl {
+  settings() {
+    return super.template();
+  }
+
+  restoreFocus() {
+    const panel = this.currentPanel;
+    console.log("rf", panel);
+    if (panel && panel.lastFocused) {
+      setTimeout(() => {
+        panel.lastFocused.focus();
+      }, 0);
+    }
+  }
+}
+TreeBase.register(DesignerTabControl);
+
 export class TabPanel extends Stack {
+  name = new Props.String("");
+  label = new Props.String("");
+
   active = false;
   tabName = "";
   tabLabel = "";
-
-  background = new Props.Color("");
-  name = new Props.String("");
-  label = new Props.String("");
-  direction = new Props.Select(["row", "column"]);
-  scale = new Props.Float(1);
-
-  allowedChildren = [
-    "stack",
-    "grid",
-    "display",
-    "radio",
-    "tab control",
-    "vsd",
-    "button",
-  ];
+  /** @type {HTMLElement} */
+  lastFocused = null;
 }
 TreeBase.register(TabPanel);
 
 css`
   .tabcontrol .buttons button:focus {
-    outline: 0;
+    filter: invert(100%);
   }
   .tabcontrol .panels {
     display: flex;

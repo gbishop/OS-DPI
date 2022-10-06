@@ -25,7 +25,7 @@ export class Actions extends TabPanel {
   };
 
   init() {
-    this.applyRules("", "init", {});
+    this.applyRules("init", "init", {});
   }
 
   /** @typedef {Object} eventQueueItem
@@ -64,6 +64,7 @@ export class Actions extends TabPanel {
         const result = rule.conditions.every((restriction) =>
           restriction.Condition.eval(context)
         );
+        console.log({ result });
         if (result) {
           this.last.rule = rule;
           const patch = Object.fromEntries(
@@ -72,6 +73,7 @@ export class Actions extends TabPanel {
               update.newValue.eval(context),
             ])
           );
+          console.log({ patch });
           Globals.state.update(patch);
           break;
         }
@@ -221,6 +223,12 @@ export class Actions extends TabPanel {
     const result = /** @type {Actions} */ (this.fromObject(actions));
     console.log("result", result);
     return result;
+  }
+
+  onUpdate() {
+    console.log("update actions", this);
+    db.write("actions", this.toObject());
+    Globals.state.update();
   }
 }
 TreeBase.register(Actions);

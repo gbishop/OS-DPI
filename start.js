@@ -19,6 +19,7 @@ import { Actions } from "./components/actions";
 import "./components/layout";
 import "./components/content";
 import "./components/logger";
+import "./components/hotkeys";
 
 const safe = false;
 
@@ -198,9 +199,9 @@ export async function start() {
   }
 
   /* Designer */
-  Globals.state.define("editing", true);
+  Globals.state.define("editing", true); // for now
   const designer = TreeBase.fromObject({
-    className: "TabControl",
+    className: "DesignerTabControl",
     props: { tabEdge: "top", stateName: "designerTab" },
     children: [
       {
@@ -245,6 +246,7 @@ export async function start() {
             }
           }}
         >
+          <div id="HotKeyHints"></div>
           ${designer.template()}
         </div>
         <div id="monitor">${monitor.uiTemplate()}</div>
@@ -262,9 +264,7 @@ export async function start() {
         </div>
         ${IDE}`
     );
-    log("rendered");
     Globals.method.refresh();
-    log("refreshed");
     document.getElementById("timer").innerText = (
       performance.now() - startTime
     ).toFixed(0);
@@ -292,20 +292,20 @@ db.addUpdateListener((message) => {
 
 // open and close the ide with the d key
 /** @param {KeyboardEvent} event */
-document.addEventListener("keydown", (event) => {
-  if (event.key == "d") {
-    const target = /** @type {HTMLElement} */ (event.target);
-    if (target && target.tagName != "INPUT" && target.tagName != "TEXTAREA") {
-      event.preventDefault();
-      event.stopPropagation();
-      if (Globals.state) {
-        document.body.classList.toggle("designing");
-        Globals.state.update({ editing: !Globals.state.get("editing") });
-      }
-    }
-  }
-});
-
+// document.addEventListener("keydown", (event) => {
+//   if (event.key == "d") {
+//     const target = /** @type {HTMLElement} */ (event.target);
+//     if (target && target.tagName != "INPUT" && target.tagName != "TEXTAREA") {
+//       event.preventDefault();
+//       event.stopPropagation();
+//       if (Globals.state) {
+//         document.body.classList.toggle("designing");
+//         Globals.state.update({ editing: !Globals.state.get("editing") });
+//       }
+//     }
+//   }
+// });
+//
 // watch for changes to the hash such as using the browser back button
 window.addEventListener("hashchange", () => {
   sessionStorage.clear();
@@ -313,27 +313,27 @@ window.addEventListener("hashchange", () => {
 });
 
 /* Attempt to understand pointer events on page update */
-import { log } from "./log";
-let etype = "";
-for (const eventName of [
-  "pointerover",
-  "pointerout",
-  "pointermove",
-  "pointerdown",
-  "pointerup",
-]) {
-  document.addEventListener(eventName, (event) => {
-    if (
-      (event.type != "pointermove" || event.type != etype) &&
-      event.target instanceof HTMLElement &&
-      event.target.closest("#UI")
-    ) {
-      etype = event.type;
-      log(event.type, event);
-    }
-  });
-}
-
+// import { log } from "./log";
+// let etype = "";
+// for (const eventName of [
+//   "pointerover",
+//   "pointerout",
+//   "pointermove",
+//   "pointerdown",
+//   "pointerup",
+// ]) {
+//   document.addEventListener(eventName, (event) => {
+//     if (
+//       (event.type != "pointermove" || event.type != etype) &&
+//       event.target instanceof HTMLElement &&
+//       event.target.closest("#UI")
+//     ) {
+//       etype = event.type;
+//       log(event.type, event);
+//     }
+//   });
+// }
+//
 css`
   body.designing {
     display: grid;
@@ -357,6 +357,7 @@ css`
     grid-row-start: 1;
     grid-row-end: 4;
     grid-column-start: 2;
+    position: relative;
   }
   body.designing #UI {
     position: relative;

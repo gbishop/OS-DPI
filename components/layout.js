@@ -519,7 +519,7 @@ TreeBase.register(Layout);
 css`
   div.layout {
     display: flex;
-    flex-direction: column;Visible
+    flex-direction: column;
     flex: 1 1 0;
     overflow: hidden;
   }

@@ -12,6 +12,7 @@ export class TreeBase {
   /** @type {string[]} */
   allowedChildren = [];
 
+  // every component has a unique id
   id = "";
 
   designer = {};
