@@ -265,9 +265,11 @@ export async function start() {
         ${IDE}`
     );
     Globals.method.refresh();
-    document.getElementById("timer").innerText = (
-      performance.now() - startTime
-    ).toFixed(0);
+    if (location.host.startsWith("localhost")) {
+      document.getElementById("timer").innerText = (
+        performance.now() - startTime
+      ).toFixed(0);
+    }
   }
   Globals.state.observe(debounce(renderUI));
   renderUI();
