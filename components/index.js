@@ -1,4 +1,3 @@
-import { assemble } from "./base";
 import "./page";
 import "./stack";
 import "./grid";
@@ -14,5 +13,3 @@ import "./speech";
 import "./audio";
 import "./help";
 import "./logger";
-
-export { assemble };

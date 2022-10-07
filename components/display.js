@@ -1,5 +1,4 @@
 import { html } from "uhtml";
-import { Base, componentMap } from "./base";
 import { TreeBase } from "./treebase";
 import * as Props from "./props";
 import { styleString } from "./style";

@@ -1,7 +1,5 @@
 import { html } from "uhtml";
 import { PropInfo } from "../properties";
-import { assemble } from "./base";
-import { colorNamesDataList } from "./style";
 import { TreeBase } from "./treebase";
 import * as Props from "./props";
 import { Stack } from "./stack";
@@ -91,10 +89,10 @@ export class Layout extends TabPanel {
    * @param {string} type
    */
   addChild(type) {
-    const child = assemble({ type, props: {}, children: [] }, this.selected);
-    this.selected.children.push(child);
-    this.setSelected(child, true);
-    this.save();
+    // const child = assemble({ type, props: {}, children: [] }, this.selected);
+    // this.selected.children.push(child);
+    // this.setSelected(child, true);
+    // this.save();
   }
 
   /** Create the add child menu */
