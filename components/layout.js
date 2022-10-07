@@ -504,12 +504,10 @@ export class Layout extends TabPanel {
   }
 
   /** save the layout to the db
+   * likely out of date.
    */
   save() {
-    this.update();
-    const { tree } = Globals;
-    const layout = toDesign(tree);
-    db.write("layout", layout);
+    console.log("Save called");
   }
 }
 TreeBase.register(Layout);

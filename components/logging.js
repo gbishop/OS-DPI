@@ -1,41 +1,48 @@
 import { html } from "uhtml";
 import { TreeBase } from "./treebase";
+import { TabPanel } from "./tabcontrol";
+import * as Props from "./props";
 import { Logger } from "./logger";
-
 import css from "ustyler";
 import Globals from "../globals";
 
-export class Logging extends TreeBase {
-  uiTemplate() {
+export class Logging extends TabPanel {
+  name = new Props.String("Logging");
+
+  template() {
     this.selected = this.selected || Logger.instances?.[0];
 
     return html`
       <div id="logging-panel">
-        <h1>Select Logger</h1>
-        <select
-          onchange=${(e) => {
-            this.selected = Logger.instances?.[e.target.value || 0];
-            Globals.update();
-          }}
+        <h2>Select Logger</h2>
+        <label
+          >Logger
+          <select
+            onchange=${({ target }) => {
+              this.selected = Logger.instances?.[target.value || 0];
+              Globals.update();
+            }}
+          >
+            <option value="" invalid>Choose one...</option>
+            ${Logger.instances.map(
+              (l) =>
+                html`<option
+                  value="${Logger.instances.indexOf(l)}"
+                  ?selected=${l.name === this.selected?.name}
+                >
+                  ${l.name}
+                </option>`
+            )}
+          </select></label
         >
-          ${Logger.instances.map(
-            (l) =>
-              html`<option
-                value="${Logger.instances.indexOf(l)}"
-                ?selected=${l.name === this.selected?.name}
-              >
-                ${l.name}
-              </option>`
-          )}
-        </select>
 
         <h2>Save content as a spreadsheet</h2>
         <label for="sheetType">Spreadsheet type</label>
         <select
           id="sheetType"
-          onchange=${(e) => {
-            if (Logger.instances.length > 0 && e.target.value !== "")
-              this.selected?.DB.save(e.target.value);
+          onchange=${({ target }) => {
+            if (Logger.instances.length > 0 && target.value !== "")
+              this.selected?.DB.save(target.value);
           }}
         >
           <option selected value="">Choose your format</option>
@@ -46,7 +53,7 @@ export class Logging extends TreeBase {
         </select>
 
         <h2>Clear log</h2>
-        <button onclick=${(e) => this.selected?.DB.clear()}>Clear</button>
+        <button onclick=${() => this.selected?.DB.clear()}>Clear</button>
       </div>
     `;
   }

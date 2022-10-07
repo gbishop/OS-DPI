@@ -192,7 +192,7 @@ export class TreeBase {
   }
 
   /**
-   * Called something below is updated
+   * Called when something below is updated
    * @param {TreeBase} _start
    */
   onUpdate(_start) {}

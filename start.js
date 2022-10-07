@@ -16,10 +16,6 @@ import { PatternList } from "./components/access/pattern";
 import { MethodChooser } from "./components/access/method";
 import { CueList } from "./components/access/cues";
 import { Actions } from "./components/actions";
-import "./components/layout";
-import "./components/content";
-import "./components/logger";
-import "./components/hotkeys";
 
 const safe = false;
 
@@ -222,7 +218,7 @@ export async function start() {
         children: [],
       },
       {
-        className: "Logger",
+        className: "Logging",
         props: {},
         children: [],
       },

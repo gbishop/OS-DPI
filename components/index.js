@@ -12,4 +12,7 @@ import "./monitor";
 import "./speech";
 import "./audio";
 import "./help";
-import "./logger";
+import "./logging";
+import "./content";
+import "./layout";
+import "./hotkeys";

@@ -40,6 +40,13 @@ function clearHints() {
 }
 
 function focusTabs() {
+  const currentTab = /** @type {HTMLButtonElement} */ (
+    document.querySelector(".designing .tabcontrol .buttons button[active]")
+  );
+  if (currentTab) {
+    currentTab.focus();
+    return;
+  }
   const tabs = /** @type {HTMLButtonElement[]} */ ([
     ...document.querySelectorAll(".designing .tabcontrol .buttons button"),
   ]);
@@ -77,6 +84,9 @@ function HotKeyHandler(event) {
     clearHints();
     focusTabs();
     event.preventDefault();
+  } else {
+    HKState = "idle";
+    clearHints();
   }
   console.log("active element", document.activeElement);
 }
