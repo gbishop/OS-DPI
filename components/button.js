@@ -1,32 +1,31 @@
 import { html } from "uhtml";
-import { Base, componentMap } from "./base";
+import { TreeBase } from "./treebase";
+import * as Props from "./props";
 import { styleString } from "./style";
 import css from "ustyler";
 import { UpdateAccessData } from "./access";
 
-class Button extends Base {
-  static defaultProps = {
-    label: "click me",
-    name: "button",
-    background: "",
-    scale: "1",
-  };
+class Button extends TreeBase {
+  label = new Props.String("click me");
+  name = new Props.String("button");
+  background = new Props.Color("");
+  scale = new Props.Float(1);
 
-  uiTemplate() {
+  template() {
     const style = styleString({ backgroundColor: this.props.background });
-    const { rules } = Globals;
+    const { name, label } = this.props;
     return html`<button
       class="button"
-      name=${this.props.name}
+      name=${name}
       style=${style}
       id=${this.id}
       ref=${UpdateAccessData({
-        name: this.props.name,
-        label: this.props.label,
+        name: name,
+        label: label,
         component: "button",
       })}
     >
-      ${this.props.label}
+      ${label}
     </button>`;
   }
 
@@ -34,8 +33,7 @@ class Button extends Base {
     return [];
   }
 }
-
-componentMap.addMap("button", Button);
+TreeBase.register(Button);
 
 css`
   button.button {

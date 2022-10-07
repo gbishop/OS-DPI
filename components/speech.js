@@ -15,7 +15,6 @@ class Speech extends TreeBase {
     const { state } = Globals;
     const { stateName, voiceURI, pitch, rate, volume } = this.props;
     const message = strip(state.get(stateName));
-    console.log("speak", message);
     const voices = await getVoices();
     const voice =
       voiceURI && voices.find((voice) => voice.voiceURI == voiceURI);
@@ -34,7 +33,6 @@ class Speech extends TreeBase {
   template() {
     const { stateName } = this.props;
     const { state } = Globals;
-    console.log("speech template");
     if (state.hasBeenUpdated(stateName)) {
       this.speak();
     }

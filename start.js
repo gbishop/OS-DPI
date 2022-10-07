@@ -158,6 +158,9 @@ css`
   }
 `;
 
+/** @type {Function[]} */
+export const PostRenderFunctions = [];
+
 /** Load page and data then go
  */
 export async function start() {
@@ -249,8 +252,8 @@ export async function start() {
           <div id="HotKeyHints"></div>
           ${designer.template()}
         </div>
-        <div id="monitor">${monitor.uiTemplate()}</div>
-        <div id="toolbar">${toolbar.uiTemplate()}</div>
+        <div id="monitor">${monitor.template()}</div>
+        <div id="toolbar">${toolbar.template()}</div>
       `;
     }
     document.body.classList.toggle("designing", Globals.state.get("editing"));
@@ -265,6 +268,10 @@ export async function start() {
         ${IDE}`
     );
     Globals.method.refresh();
+    while (PostRenderFunctions.length > 0) {
+      const PRF = PostRenderFunctions.pop();
+      PRF();
+    }
     if (location.host.startsWith("localhost")) {
       document.getElementById("timer").innerText = (
         performance.now() - startTime

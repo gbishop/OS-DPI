@@ -78,11 +78,7 @@ function HotKeyHandler(event) {
     focusTabs();
     event.preventDefault();
   }
-  console.log(
-    "active element",
-    document.activeElement,
-    document.activeElement.innerHTML
-  );
+  console.log("active element", document.activeElement);
 }
 
 document.addEventListener("keydown", HotKeyHandler, { capture: true });

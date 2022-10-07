@@ -128,7 +128,7 @@ export class Actions extends TabPanel {
   template() {
     const { state, actions } = Globals;
     const ruleIndex = state.get("ruleIndex");
-    return html`<div class="actions" help="Actions">
+    return html`<div class="actions" help="Actions" id=${this.id}>
       <table>
         <thead>
           <tr>

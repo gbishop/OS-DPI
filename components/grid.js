@@ -118,7 +118,6 @@ class Grid extends TreeBase {
     const style = { backgroundColor: this.props.background };
     const { data, state } = Globals;
     let { rows, columns, fillItems } = this.props;
-    console.log("filters", this.filters);
     /** @type {Rows} */
     let items = data.getMatchingRows(this.filters, state, this.cache);
     // reset the page when the key changes
@@ -205,7 +204,7 @@ class Grid extends TreeBase {
 }
 TreeBase.register(Grid);
 
-class GridFilter extends TreeBase {
+export class GridFilter extends TreeBase {
   field = new Props.Field();
   operator = new Props.Select(Object.keys(comparators));
   value = new Props.String("");

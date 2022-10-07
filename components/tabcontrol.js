@@ -6,6 +6,7 @@ import { styleString } from "./style";
 import css from "ustyler";
 import { UpdateAccessData } from "./access";
 import Globals from "../globals";
+import { PostRenderFunctions } from "../start";
 
 export class TabControl extends TreeBase {
   stateName = new Props.String("$tabControl");
@@ -37,7 +38,6 @@ export class TabControl extends TreeBase {
       }
       panel.active = activeTabName == panel.tabName || panels.length === 1;
     });
-    console.log({ panels });
     let buttons = [html`<!--empty-->`];
     if (this.props.tabEdge != "none") {
       buttons = panels
@@ -55,8 +55,10 @@ export class TabControl extends TreeBase {
               label: panel.tabLabel,
               component: this.constructor.name,
               onClick: () => {
+                if (this instanceof DesignerTabControl) {
+                  PostRenderFunctions.push(() => this.restoreFocus());
+                }
                 state.update({ [this.props.stateName]: panel.tabName });
-                this.restoreFocus();
               },
             })}
             .dataset=${{ id: panel.id }}
@@ -71,14 +73,14 @@ export class TabControl extends TreeBase {
       class=${["tabcontrol", "flex", this.props.tabEdge].join(" ")}
       id=${this.id}
     >
+      <div class="buttons">${buttons}</div>
       <div
         class="panels flex"
         onfocusin=${({ target }) =>
-          this.currentPanel && (this.currentPanel.lastFocused = target)}
+          this.currentPanel && (this.currentPanel.lastFocused = target.id)}
       >
         ${panel}
       </div>
-      <div class="buttons">${buttons}</div>
     </div>`;
   }
 
@@ -92,13 +94,28 @@ class DesignerTabControl extends TabControl {
   }
 
   restoreFocus() {
-    const panel = this.currentPanel;
-    console.log("rf", panel);
-    if (panel && panel.lastFocused) {
-      setTimeout(() => {
-        panel.lastFocused.focus();
-      }, 0);
+    console.log("rf", this.currentPanel.lastFocused);
+    if (this.currentPanel) {
+      if (this.currentPanel.lastFocused) {
+        document.getElementById(this.currentPanel.lastFocused)?.focus();
+      } else {
+        console.log(this.currentPanel.id);
+        const panelNode = document.getElementById(this.currentPanel.id);
+        console.log({ panelNode });
+        if (panelNode) {
+          const focusable = /** @type {HTMLElement} */ (
+            panelNode.querySelector(
+              "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), " +
+                'textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled]), ' +
+                "summary:not(:disabled)"
+            )
+          );
+          console.log({ focusable });
+          if (focusable) focusable.focus();
+        }
+      }
     }
+    console.log("ae", document.activeElement);
   }
 }
 TreeBase.register(DesignerTabControl);
@@ -110,8 +127,7 @@ export class TabPanel extends Stack {
   active = false;
   tabName = "";
   tabLabel = "";
-  /** @type {HTMLElement} */
-  lastFocused = null;
+  lastFocused = "";
 }
 TreeBase.register(TabPanel);
 

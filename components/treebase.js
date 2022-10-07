@@ -13,7 +13,8 @@ export class TreeBase {
   allowedChildren = [];
 
   // every component has a unique id
-  id = "";
+  static treeBaseCounter = 0;
+  id = `TreeBase-${TreeBase.treeBaseCounter++}`;
 
   designer = {};
 
@@ -413,7 +414,7 @@ export class TreeBase {
     return result;
   }
 
-  /* Methods from Base */
+  /* Methods from original Base many not used */
 
   get index() {
     const siblings = this.parent?.children || [];

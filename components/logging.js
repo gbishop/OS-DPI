@@ -1,15 +1,11 @@
 import { html } from "uhtml";
-import { Base } from "./base";
+import { TreeBase } from "./treebase";
 import { Logger } from "./logger";
 
 import css from "ustyler";
 import Globals from "../globals";
 
-export class Logging extends Base {
-  static defaultProps = {
-    scale: "1",
-  };
-
+export class Logging extends TreeBase {
   uiTemplate() {
     this.selected = this.selected || Logger.instances?.[0];
 
@@ -55,6 +51,7 @@ export class Logging extends Base {
     `;
   }
 }
+TreeBase.register(Logging);
 
 css`
   #logging-panel {

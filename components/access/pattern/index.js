@@ -68,7 +68,9 @@ export class PatternList extends TabPanel {
   children = [];
 
   template() {
-    return html`<div class="PatternList">${this.unorderedChildren()}</div>`;
+    return html`<div class="PatternList" id=${this.id}>
+      ${this.unorderedChildren()}
+    </div>`;
   }
 
   /** @param {string} key

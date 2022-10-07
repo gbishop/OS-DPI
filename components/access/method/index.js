@@ -53,7 +53,7 @@ export class MethodChooser extends TabPanel {
   }
 
   template() {
-    return html`<div class="MethodChooser">
+    return html`<div class="MethodChooser" id=${this.id}>
       ${this.children.map((child) => child.settings())}
     </div> `;
   }
@@ -127,7 +127,7 @@ export class Method extends TreeBase {
   settings() {
     const { Name, Active, Pattern } = this;
     const timers = [...this.timers.values()];
-    return html`<fieldset class="Method">
+    return html`<fieldset class="Method" id=${this.id}>
       ${Name.input()} ${Active.input()}
       ${Pattern.input(Globals.patterns.patternMap)}
       <details>

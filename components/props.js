@@ -5,6 +5,7 @@ import css from "ustyler";
 import { compileExpression } from "../eval";
 import Globals from "../globals";
 import { TreeBase, TreeBaseSwitchable } from "./treebase";
+import WeakValue from "weak-value";
 
 /**
  * @typedef {Object} PropOptions
@@ -19,6 +20,20 @@ export class Prop {
   label = "";
   /** @type {any} */
   value;
+
+  // assign a unique id to each Prop
+  static idCount = 0;
+  id = `Prop-${Prop.idCount++}`;
+
+  /** Allow mapping from id to Prop
+   * @type {Map<string, Prop>} */
+  static idMap = new WeakValue();
+
+  /** Get the Prop from the id
+   * @param {string} id */
+  static PropFromId(id) {
+    return Prop.idMap.get(id);
+  }
 
   get valueAsNumber() {
     return parseFloat(this.value);
@@ -36,6 +51,7 @@ export class Prop {
     if ("label" in options) {
       this.label = options.label;
     }
+    Prop.idMap.set(this.id, this);
   }
   /** @param {Object} _ - The context */
   eval(_ = {}) {
@@ -84,6 +100,7 @@ export class Select extends Prop {
     return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
       <span>${this.label}</span>
       <select
+        id=${this.id}
         required
         title=${this.options.title}
         onchange=${({ target }) => {
@@ -155,6 +172,7 @@ export class String extends Prop {
       <input
         type="text"
         .value=${this.value}
+        id=${this.id}
         onchange=${({ target }) => {
           this.value = target.value;
           this.update();
@@ -180,6 +198,7 @@ export class Integer extends Prop {
       <input
         type="number"
         .value=${this.value}
+        id=${this.id}
         onchange=${({ target }) => {
           this.value = target.value;
           this.update();
@@ -205,6 +224,7 @@ export class Float extends Prop {
       <input
         type="number"
         .value=${this.value}
+        id=${this.id}
         onchange=${({ target }) => {
           this.value = target.value;
           this.update();
@@ -232,6 +252,7 @@ export class Boolean extends Prop {
       <input
         type="checkbox"
         ?checked=${this.value}
+        id=${this.id}
         onchange=${({ target }) => {
           this.value = target.checked;
           this.update();
@@ -272,6 +293,7 @@ export class Expression extends Prop {
       <input
         type="text"
         .value=${this.value}
+        id=${this.id}
         onchange=${({ target }) => {
           this.value = target.value;
           this.compiled = compileExpression(this.value);
@@ -316,6 +338,7 @@ export class TextArea extends Prop {
       <textarea
         type="text"
         .value=${this.value}
+        id=${this.id}
         onchange=${({ target }) => {
           this.value = target.value;
           this.update();
@@ -340,6 +363,7 @@ export class Color extends Prop {
       <span>${this.label}</span>
       <color-input
         .value=${this.value}
+        id=${this.id}
         onchange=${(/** @type {InputEventWithTarget} */ event) => {
           this.value = event.target.value;
           this.update();
@@ -363,6 +387,7 @@ export class Voice extends Prop {
       <select
         is="select-voice"
         .value=${this.value}
+        id=${this.id}
         onchange=${(/** @type {InputEventWithTarget} */ event) => {
           this.value = event.target.value;
           this.update();
@@ -396,5 +421,8 @@ css`
   }
   option {
     color: black;
+  }
+  :focus {
+    outline: 3px solid orange;
   }
 `;

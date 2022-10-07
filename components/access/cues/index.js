@@ -17,8 +17,7 @@ export class CueList extends TabPanel {
   children = [];
 
   template() {
-    console.log("cuelist", this.children);
-    return html`<div class="CueList">
+    return html`<div class="CueList" id=${this.id}>
       ${this.addChildButton("+Cue", Cue, { title: "Add a Cue" })}
       ${this.unorderedChildren()}
     </div>`;
@@ -45,7 +44,6 @@ export class CueList extends TabPanel {
   }
 
   onUpdate() {
-    console.log("update cues", this);
     db.write("cues", this.toObject());
     Globals.state.update();
   }

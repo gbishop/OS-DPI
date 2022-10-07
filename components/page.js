@@ -19,7 +19,6 @@ export class Page extends TreeBase {
   allowedChildren = ["stack", "modal dialog", "speech", "audio", "logger"];
 
   template() {
-    console.log("Page template");
     return html`${this.children.map((child) => child.template())}`;
   }
 
@@ -30,7 +29,6 @@ export class Page extends TreeBase {
   }
 
   onUpdate() {
-    console.log("update layout", this);
     db.write("layout", this.toObject());
     Globals.state.update();
   }

@@ -116,7 +116,7 @@ export class Content extends TabPanel {
   }
   template() {
     const data = Globals.data;
-    return html`<div class="content">
+    return html`<div class="content" id=${this.id}>
       <h1>Content</h1>
       <p>
         ${data.allrows.length} rows with these fields:

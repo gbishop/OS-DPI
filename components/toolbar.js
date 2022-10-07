@@ -1,11 +1,11 @@
-import { Base } from "./base";
+import { TreeBase } from "./treebase";
 import css from "ustyler";
 import db from "../db";
 import { html } from "uhtml";
 import Globals from "../globals";
 
-export class ToolBar extends Base {
-  uiTemplate() {
+export class ToolBar extends TreeBase {
+  template() {
     const { state } = Globals;
     return html`
       <div class="bar">
