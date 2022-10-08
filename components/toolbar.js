@@ -4,11 +4,16 @@ import db from "../db";
 import { html } from "uhtml";
 import Globals from "../globals";
 
+// TODO: enumerate components, make accessible through search bar and key mappings
+
 export class ToolBar extends TreeBase {
   template() {
     const { state } = Globals;
     return html`
       <div class="bar">
+        <button id="home" onclick=${() => window.open("#", "_blank")}>
+          <img src="../icon.png">
+          Home</button>
         <label for="designName">Name: </label>
         <input
           id="designName"
@@ -18,9 +23,8 @@ export class ToolBar extends TreeBase {
             db
               .renameDesign(event.target.value)
               .then(() => (window.location.hash = db.designName))}
-        />
+          />
         <button onclick=${() => db.saveDesign()}>Export</button>
-        <button onclick=${() => window.open("#", "_blank")}>Home</button>
         <button
           onclick=${async () => {
             const tab = state.get("designerTab").toLowerCase();
@@ -47,6 +51,9 @@ css`
   }
   #toolbar button {
     border-radius: 0.5em;
+  }
+  #home img {
+    max-height: 25px;
   }
   #toolbar input {
     border-radius: 0.5em;
