@@ -1,14 +1,14 @@
 import { html, render } from "uhtml";
-import { TreeBase } from "./treebase";
-import { TabPanel } from "./tabcontrol";
-import * as Props from "./props";
-import db from "../db";
-import { Data } from "../data";
+import { TreeBase } from "../treebase";
+import { TabPanel } from "../tabcontrol";
+import * as Props from "../props";
+import db from "../../db";
+import { Data } from "../../data";
 import { fileOpen } from "browser-fs-access";
 import * as XLSX from "xlsx";
 import css from "ustyler";
-import pleaseWait from "./wait";
-import Globals from "../globals";
+import pleaseWait from "../wait";
+import Globals from "../../globals";
 
 /** @param {Blob} blob */
 async function readSheetFromBlob(blob) {

@@ -94,7 +94,7 @@ class DesignerTabControl extends TabControl {
   }
 
   restoreFocus() {
-    console.log("rf", this.currentPanel.lastFocused);
+    console.log("designer rf", this.currentPanel.lastFocused);
     if (this.currentPanel) {
       if (this.currentPanel.lastFocused) {
         document.getElementById(this.currentPanel.lastFocused)?.focus();
@@ -115,10 +115,42 @@ class DesignerTabControl extends TabControl {
         }
       }
     }
-    console.log("ae", document.activeElement);
+    console.log("designer ae", document.activeElement);
   }
 }
 TreeBase.register(DesignerTabControl);
+
+class MenuTabControl extends TabControl {
+  settings() {
+    return super.template();
+  }
+
+  restoreFocus() {
+    console.log("menu rf", this.currentPanel.lastFocused);
+    if (this.currentPanel) {
+      if (this.currentPanel.lastFocused) {
+        document.getElementById(this.currentPanel.lastFocused)?.focus();
+      } else {
+        console.log(this.currentPanel.id);
+        const panelNode = document.getElementById(this.currentPanel.id);
+        console.log({ panelNode });
+        if (panelNode) {
+          const focusable = /** @type {HTMLElement} */ (
+            panelNode.querySelector(
+              "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), " +
+                'textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled]), ' +
+                "summary:not(:disabled)"
+            )
+          );
+          console.log({ focusable });
+          if (focusable) focusable.focus();
+        }
+      }
+    }
+    console.log("menu ae", document.activeElement);
+  }
+}
+TreeBase.register(MenuTabControl);
 
 export class TabPanel extends Stack {
   name = new Props.String("");

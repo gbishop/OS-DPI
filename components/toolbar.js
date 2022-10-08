@@ -6,9 +6,9 @@ import { html } from "uhtml";
 import Globals from "../globals";
 
 // TODO: enumerate components, make accessible through search bar and key mappings
-const designer = TreeBase.fromObject({
-  className: "DesignerTabControl",
-  props: { tabEdge: "top", stateName: "designerTab" },
+const menuTabs = TreeBase.fromObject({
+  className: "MenuTabControl",
+  props: { tabEdge: "top", stateName: "menuTab" },
   children: [
     {
       className: "File",
@@ -72,7 +72,7 @@ export class ToolBar extends TreeBase {
           Undo
         </button>
         <div
-          id="designer"
+          id="menu"
           onclick=${(/** @type {InputEventWithTarget} */ event) => {
             const button = ButtonWrap(event.target);
             if (button.access && "onClick" in button.access) {
@@ -81,7 +81,7 @@ export class ToolBar extends TreeBase {
           }}
         >
           <div id="HotKeyHints"></div>
-          ${designer.template()}
+          ${menuTabs.template()}
         </div>
       </div>
     `;
