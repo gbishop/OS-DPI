@@ -226,10 +226,10 @@ export async function start() {
   });
 
   /* ToolBar */
-  const toolbar = new ToolBar({}, null);
+  const toolbar = new ToolBar();
 
   /* Monitor */
-  const monitor = new Monitor({}, null);
+  const monitor = new Monitor();
 
   function renderUI() {
     const startTime = performance.now();
@@ -342,7 +342,7 @@ window.addEventListener("hashchange", () => {
 css`
   body.designing {
     display: grid;
-    grid-template-rows: 2.5em 50% auto;
+    grid-template-rows: 5em 2.5em 50% auto;
     grid-template-columns: 50% 50%;
   }
 
@@ -359,21 +359,24 @@ css`
     display: block;
     overflow-y: auto;
     flex: 1 1 0;
-    grid-row-start: 1;
+    grid-row-start: 2;
     grid-row-end: 4;
     grid-column-start: 2;
     position: relative;
   }
   body.designing #UI {
-    position: relative;
+    grid-row-start: 2;
+    grid-row-end: 4;
+    grid-column-start: 1;
   }
   body.designing #monitor {
-    grid-row-start: 3;
+    grid-row-start: 4;
     grid-column-start: 1;
   }
   body.designing #toolbar {
     grid-row-start: 1;
     grid-column-start: 1;
+    grid-column-end: 3;
   }
 `;
 
