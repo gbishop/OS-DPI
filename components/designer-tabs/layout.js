@@ -1,15 +1,15 @@
 import { html } from "uhtml";
-import { PropInfo } from "../properties";
-import { TreeBase } from "./treebase";
-import * as Props from "./props";
-import { Stack } from "./stack";
-import { TabControl, TabPanel } from "./tabcontrol";
-import { propEditor } from "./propEditor";
-import db from "../db";
+import { PropInfo } from "../../properties";
+import { TreeBase } from "../treebase";
+import * as Props from "../props";
+import { Stack } from "../stack";
+import { TabControl, TabPanel } from "../tabcontrol";
+import { propEditor } from "../propEditor";
+import db from "../../db";
 import css from "ustyler";
-import Globals from "../globals";
+import Globals from "../../globals";
 
-import { log } from "../log";
+import { log } from "../../log";
 
 /*
 function html(...args) {

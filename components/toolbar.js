@@ -1,10 +1,47 @@
 import { TreeBase } from "./treebase";
+import { ButtonWrap, } from "../components/access";
 import css from "ustyler";
 import db from "../db";
 import { html } from "uhtml";
 import Globals from "../globals";
 
 // TODO: enumerate components, make accessible through search bar and key mappings
+const designer = TreeBase.fromObject({
+  className: "DesignerTabControl",
+  props: { tabEdge: "top", stateName: "designerTab" },
+  children: [
+    {
+      className: "File",
+      props: {},
+      children: [],
+    },
+    {
+      className: "Load",
+      props: {},
+      children: [],
+    },
+    {
+      className: "Add",
+      props: {},
+      children: [],
+    },
+    {
+      className: "Delete",
+      props: {},
+      children: [],
+    },
+    {
+      className: "Move",
+      props: {},
+      children: [],
+    },
+    {
+      className: "Help",
+      props: {},
+      children: [],
+    },
+  ],
+});
 
 export class ToolBar extends TreeBase {
   template() {
@@ -34,6 +71,18 @@ export class ToolBar extends TreeBase {
         >
           Undo
         </button>
+        <div
+          id="designer"
+          onclick=${(/** @type {InputEventWithTarget} */ event) => {
+            const button = ButtonWrap(event.target);
+            if (button.access && "onClick" in button.access) {
+              button.access.onClick(event);
+            }
+          }}
+        >
+          <div id="HotKeyHints"></div>
+          ${designer.template()}
+        </div>
       </div>
     `;
   }

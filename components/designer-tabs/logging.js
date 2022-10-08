@@ -1,10 +1,10 @@
 import { html } from "uhtml";
-import { TreeBase } from "./treebase";
-import { TabPanel } from "./tabcontrol";
-import * as Props from "./props";
+import { TreeBase } from "../treebase";
+import { TabPanel } from "../tabcontrol";
+import * as Props from "../props";
 import { Logger } from "./logger";
 import css from "ustyler";
-import Globals from "../globals";
+import Globals from "../../globals";
 
 export class Logging extends TabPanel {
   name = new Props.String("Logging");

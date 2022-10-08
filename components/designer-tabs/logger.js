@@ -1,10 +1,10 @@
-import { TabPanel } from "./tabcontrol";
-import * as Props from "./props";
+import { TabPanel } from "../tabcontrol";
+import * as Props from "../props";
 import { html } from "uhtml";
-import { log } from "../log";
+import { log } from "../../log";
 
 import * as XLSX from "xlsx";
-import Globals from "../globals";
+import Globals from "../../globals";
 
 export class Logger extends TabPanel {
   name = new Props.String("Logger");

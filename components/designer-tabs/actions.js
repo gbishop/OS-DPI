@@ -1,11 +1,11 @@
 import { html } from "uhtml";
-import { TreeBase } from "./treebase";
-import * as Props from "./props";
-import { TabPanel } from "./tabcontrol";
-import db from "../db";
+import { TreeBase } from "../treebase";
+import * as Props from "../props";
+import { TabPanel } from "../tabcontrol";
+import db from "../../db";
 import css from "ustyler";
-import Globals from "../globals";
-import { Functions } from "../eval";
+import Globals from "../../globals";
+import { Functions } from "../../eval";
 
 export class Actions extends TabPanel {
   name = new Props.String("Actions");

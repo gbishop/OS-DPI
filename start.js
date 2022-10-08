@@ -15,7 +15,7 @@ import Globals from "./globals";
 import { PatternList } from "./components/access/pattern";
 import { MethodChooser } from "./components/access/method";
 import { CueList } from "./components/access/cues";
-import { Actions } from "./components/actions";
+import { Actions } from "./components/designer-tabs/actions";
 
 const safe = false;
 

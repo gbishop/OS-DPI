@@ -3,7 +3,7 @@ const Globals = {
   state: null,
   /** @type {import("./data").Data} */
   data: null,
-  /** @type {import("./components/actions").Actions} */
+  /** @type {import("./components/designer-tabs/actions").Actions} */
   actions: null,
   /** @type {TreeBase} */
   tree: null,
