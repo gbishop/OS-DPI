@@ -11,9 +11,7 @@ export class ToolBar extends TreeBase {
     const { state } = Globals;
     return html`
       <div class="bar">
-        <button id="home" onclick=${() => window.open("#", "_blank")}>
-          <img src="../icon.png">
-          Home</button>
+        <button id="home" onclick=${() => window.open("#", "_blank")}>Home</button>
         <label for="designName">Name: </label>
         <input
           id="designName"
@@ -51,9 +49,6 @@ css`
   }
   #toolbar button {
     border-radius: 0.5em;
-  }
-  #home img {
-    max-height: 25px;
   }
   #toolbar input {
     border-radius: 0.5em;
