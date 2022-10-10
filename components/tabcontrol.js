@@ -6,7 +6,7 @@ import { styleString } from "./style";
 import css from "ustyler";
 import { UpdateAccessData } from "./access";
 import Globals from "../globals";
-import { PostRenderFunctions } from "../start";
+import { callAfterRender } from "../render";
 
 export class TabControl extends TreeBase {
   stateName = new Props.String("$tabControl");
@@ -56,7 +56,7 @@ export class TabControl extends TreeBase {
               component: this.constructor.name,
               onClick: () => {
                 if (this instanceof DesignerTabControl) {
-                  PostRenderFunctions.push(() => this.restoreFocus());
+                  callAfterRender(() => this.restoreFocus());
                 }
                 state.update({ [this.props.stateName]: panel.tabName });
               },

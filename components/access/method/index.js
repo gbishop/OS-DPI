@@ -5,14 +5,9 @@ import * as Props from "../../props";
 import Globals from "../../../globals";
 import db from "../../../db";
 import * as RxJs from "rxjs";
-import { Handler } from "./handler";
-import { KeyHandler } from "./keyHandler";
-import { PointerHandler } from "./pointerHandler";
-import { TimerHandler } from "./timerHandler";
 import { EventWrap } from "../index";
 // make sure the classes are registered
-import "./handler";
-import "./responses";
+import { HandlerResponse } from "./responses";
 import defaultMethods from "./defaultMethods";
 import { log } from "../../../log";
 import { TabPanel } from "../../tabcontrol";
@@ -130,31 +125,16 @@ export class Method extends TreeBase {
     return html`<fieldset class="Method" id=${this.id}>
       ${Name.input()} ${Active.input()}
       ${Pattern.input(Globals.patterns.patternMap)}
-      <details>
+      <details open>
         <summary>Details</summary>
         ${timers.length > 0
           ? html`<fieldset>
-              <legend>
-                Timers
-                ${this.addChildButton("+", Timer, { title: "Add a timer" })}
-              </legend>
+              <legend>Timers</legend>
               ${this.unorderedChildren(timers)}
             </fieldset>`
-          : html`Timers
-            ${this.addChildButton("+", Timer, { title: "Add a timer" })}`}
+          : html`Timers`}
         <fieldset>
-          <legend>
-            Handlers
-            ${this.addChildButton("+Key", KeyHandler, {
-              title: "Add a key handler",
-            })}
-            ${this.addChildButton("+Pointer", PointerHandler, {
-              title: "Add a pointer handler",
-            })}
-            ${this.addChildButton("+Timer", TimerHandler, {
-              title: "Add a timer handler",
-            })}
-          </legend>
+          <legend>Handlers</legend>
           ${this.orderedChildren(this.handlers)}
         </fieldset>
       </details>
@@ -189,7 +169,6 @@ class Timer extends TreeBase {
 
   settings() {
     return html`${this.Name.input()} ${this.Interval.input()}
-      ${this.deleteButton()}
       <style>
         ${`:root { --${this.Key.value}: ${this.Interval.value}s}`}
       </style> `;
@@ -214,6 +193,84 @@ class Timer extends TreeBase {
   }
 }
 TreeBase.register(Timer);
+
+/** Handler is a base class for all event handlers */
+export class Handler extends TreeBase {
+  /** @type {(HandlerCondition | HandlerKeyCondition | HandlerResponse)[]} */
+  children = [];
+
+  get conditions() {
+    return this.filterChildren(HandlerCondition);
+  }
+
+  get keys() {
+    return this.filterChildren(HandlerKeyCondition);
+  }
+
+  get responses() {
+    return this.filterChildren(HandlerResponse);
+  }
+
+  /**
+   * @param {RxJs.Subject} _stop$
+   * */
+  configure(_stop$) {
+    throw new TypeError("Must override configure");
+  }
+
+  /** @param {WrappedEvent} event */
+  respond(event) {
+    // console.log("handler respond", event.type, this.responses);
+    const method = this.nearestParent(Method);
+    method.cancelTimers();
+    for (const response of this.responses) {
+      response.respond(event);
+    }
+  }
+}
+
+export class HandlerCondition extends TreeBase {
+  Condition = new Props.Expression("", { hiddenLabel: true });
+
+  settings() {
+    const { Condition } = this;
+    return html`
+      <div class="Condition">
+        ${Condition.input()}
+        ${this.deleteButton({ title: "Delete this condition" })}
+      </div>
+    `;
+  }
+
+  /** @param {Object} context */
+  eval(context) {
+    return this.Condition.eval(context);
+  }
+}
+TreeBase.register(HandlerCondition);
+
+const allKeys = new Map([
+  [" ", "Space"],
+  ["Enter", "Enter"],
+  ["ArrowLeft", "Left Arrow"],
+  ["ArrowRight", "Right Arrow"],
+  ["ArrowUp", "Up Arrow"],
+  ["ArrowDown", "Down Arrow"],
+]);
+
+export class HandlerKeyCondition extends TreeBase {
+  Key = new Props.Select(allKeys, { hiddenLabel: true });
+
+  settings() {
+    const { Key } = this;
+    return html`
+      <div class="Key">
+        ${Key.input()} ${this.deleteButton({ title: "Delete this key" })}
+      </div>
+    `;
+  }
+}
+TreeBase.register(HandlerKeyCondition);
 
 css`
   details.Method > *:not(summary) {

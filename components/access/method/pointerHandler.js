@@ -1,11 +1,10 @@
 import { TreeBase } from "../../treebase";
-import { Handler, HandlerCondition } from "./handler";
+import { Handler, HandlerCondition } from "./index";
 import { HandlerResponse } from "./responses";
 import * as Props from "../../props";
 import { html } from "uhtml";
 import { EventWrap, ButtonWrap } from "../index";
 import * as RxJs from "rxjs";
-import { log } from "../../../log";
 
 const pointerSignals = new Map([
   ["pointerdown", "Pointer down"],

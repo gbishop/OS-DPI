@@ -4,7 +4,6 @@ import { html } from "uhtml";
 import css from "ustyler";
 import { compileExpression } from "../eval";
 import Globals from "../globals";
-import { TreeBase, TreeBaseSwitchable } from "./treebase";
 import WeakValue from "weak-value";
 
 /**
@@ -42,7 +41,7 @@ export class Prop {
   /** @type {PropOptions} */
   options = {};
 
-  /** @type {TreeBase} */
+  /** @type {import('./treebase').TreeBase} */
   container = null;
 
   /** @param {PropOptions} options */
@@ -147,7 +146,7 @@ export class State extends Select {
 }
 
 export class TypeSelect extends Select {
-  /** @type {TreeBaseSwitchable} */
+  /** @type {import('./treebase').TreeBaseSwitchable} */
   container = null;
 
   update() {

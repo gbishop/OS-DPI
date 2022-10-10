@@ -27,10 +27,7 @@ export class HandlerResponse extends TreeBaseSwitchable {
 
   settings() {
     return html`
-      <div class="Response">
-        ${this.Response.input()} ${this.subTemplate()}
-        ${this.deleteButton({ title: "Delete this response" })}
-      </div>
+      <div class="Response">${this.Response.input()} ${this.subTemplate()}</div>
     `;
   }
 

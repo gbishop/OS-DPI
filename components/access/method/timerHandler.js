@@ -1,5 +1,5 @@
 import { TreeBase } from "../../treebase";
-import { Handler, HandlerCondition } from "./handler";
+import { Handler, HandlerCondition } from "./index";
 import { HandlerResponse } from "./responses";
 import * as Props from "../../props";
 import { html } from "uhtml";
