@@ -53,7 +53,6 @@ TreeBase.register(ResponderNext);
 class ResponderActivate extends HandlerResponse {
   /** @param {Event & { access: Object }} event */
   respond(event) {
-    console.log("responder activate", event);
     if (this.pattern.cued) {
       this.pattern.activate();
     } else if (
