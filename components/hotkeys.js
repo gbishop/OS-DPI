@@ -36,7 +36,7 @@ function showHints(hints) {
 
 function clearHints() {
   const hintNode = document.getElementById("HotKeyHints");
-  hintNode.classList.remove("show");
+  hintNode && hintNode.classList.remove("show");
 }
 
 function focusTabs() {
@@ -63,7 +63,13 @@ function focusTabs() {
 function HotKeyHandler(event) {
   console.log(event);
   const designing = Globals.state.get("editing");
-  if (event.altKey && event.ctrlKey && event.shiftKey) {
+  if (event.key == "Alt") {
+    HKState = "Alt";
+    showHints(["Tabs"]);
+    event.preventDefault();
+  } else if (event.key == "d" && HKState == "Alt") {
+    HKState = "idle";
+    clearHints();
     if (!designing) {
       document.body.classList.add("designing");
       event.preventDefault();
@@ -74,11 +80,8 @@ function HotKeyHandler(event) {
       Globals.state.update({ editing: false });
     }
   } else if (!designing) {
+    HKState = "idle";
     return;
-  } else if (event.key == "Alt") {
-    HKState = "Alt";
-    showHints(["Tabs"]);
-    event.preventDefault();
   } else if (event.key == "t" && HKState == "Alt") {
     HKState = "idle";
     clearHints();
