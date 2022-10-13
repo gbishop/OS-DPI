@@ -1,16 +1,4 @@
-import { i as isArray } from './index-8a07eae0.js';
-
-// flag for foreign checks (slower path, fast by default)
-let useForeign = false;
-
-class Foreign {
-  constructor(handler, value) {
-    useForeign = true;
-    this._ = (...args) => handler(...args, value);
-  }
-}
-
-const foreign = (handler, value) => new Foreign(handler, value);
+import { i as isArray } from './index-4c872561.js';
 
 const aria = node => values => {
   for (const key in values) {
@@ -23,32 +11,25 @@ const aria = node => values => {
   }
 };
 
+const getValue = value => value == null ? value : value.valueOf();
+
 const attribute = (node, name) => {
   let oldValue, orphan = true;
   const attributeNode = document.createAttributeNS(null, name);
   return newValue => {
-    if (oldValue !== newValue) {
-      oldValue = newValue;
-      if (oldValue == null) {
+    const value =  getValue(newValue);
+    if (oldValue !== value) {
+      if ((oldValue = value) == null) {
         if (!orphan) {
           node.removeAttributeNode(attributeNode);
           orphan = true;
         }
       }
       else {
-        const value = useForeign && (newValue instanceof Foreign) ?
-                        newValue._(node, name) : newValue;
-        if (value == null) {
-          if (!orphan)
-            node.removeAttributeNode(attributeNode);
-            orphan = true;
-        }
-        else {
-          attributeNode.value = value;
-          if (orphan) {
-            node.setAttributeNodeNS(attributeNode);
-            orphan = false;
-          }
+        attributeNode.value = value;
+        if (orphan) {
+          node.setAttributeNodeNS(attributeNode);
+          orphan = false;
         }
       }
     }
@@ -56,10 +37,11 @@ const attribute = (node, name) => {
 };
 
 const boolean = (node, key, oldValue) => newValue => {
-  if (oldValue !== !!newValue) {
+  const value = !!getValue(newValue);
+  if (oldValue !== value) {
     // when IE won't be around anymore ...
-    // node.toggleAttribute(key, oldValue = !!newValue);
-    if ((oldValue = !!newValue))
+    // node.toggleAttribute(key, oldValue = !!value);
+    if ((oldValue = value))
       node.setAttribute(key, '');
     else
       node.removeAttribute(key);
@@ -113,11 +95,12 @@ const setter = (node, key) => key === 'dataset' ?
 const text = node => {
   let oldValue;
   return newValue => {
-    if (oldValue != newValue) {
-      oldValue = newValue;
-      node.textContent = newValue == null ? '' : newValue;
+    const value = getValue(newValue);
+    if (oldValue != value) {
+      oldValue = value;
+      node.textContent = value == null ? '' : value;
     }
   };
 };
 
-export { aria as a, boolean as b, attribute as c, event as e, foreign as f, ref as r, setter as s, text as t };
+export { aria as a, boolean as b, attribute as c, event as e, ref as r, setter as s, text as t };
