@@ -23,6 +23,8 @@ class Button extends Base {
         name: this.props.name,
         label: this.props.label,
         component: "button",
+        ComponentName: this.props.name,
+        ComponentType: this.constructor.name,
       })}
     >
       ${this.props.label}
