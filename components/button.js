@@ -22,7 +22,8 @@ class Button extends TreeBase {
       ref=${UpdateAccessData({
         name: name,
         label: label,
-        component: "button",
+        ComponentName: this.props.name,
+        ComponentType: this.constructor.name,
       })}
     >
       ${label}

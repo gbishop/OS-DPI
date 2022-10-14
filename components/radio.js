@@ -87,7 +87,7 @@ class Radio extends TreeBase {
         value=${child.props.value}
         ?disabled=${disabled}
         ref=${UpdateAccessData({
-          component: this.constructor.name,
+          ComponentType: this.constructor.name,
           name: this.name,
           label: child.props.name,
           onClick: () => state.update({ [stateName]: child.props.value }),
