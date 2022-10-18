@@ -5,7 +5,7 @@ import { TreeBase } from "./components/treebase";
 import "./components";
 import { Page } from "./components/layout-nodes/page";
 import { Monitor } from "./components/monitor";
-import { ToolBar } from "./components/toolbar";
+import { ToolBar } from "./components/toolbar/toolbar";
 import db from "./db";
 import pleaseWait from "./components/wait";
 import { fileOpen } from "browser-fs-access";

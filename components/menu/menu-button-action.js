@@ -30,6 +30,7 @@ export class MenuButtonActions {
       "keydown",
       this.onButtonKeydown.bind(this)
     );
+    
     this.buttonNode.addEventListener("click", this.onButtonClick.bind(this));
 
     var nodes = domNode.querySelectorAll('[role="menuitem"]');

@@ -1,53 +1,30 @@
 import css from "ustyler";
-import db from "../db";
+import db from "../../db";
 import { html } from "uhtml";
-import Globals from "../globals";
-import { TreeBase } from "./treebase";
-import { ButtonWrap } from "./designer-tabs/access";
-import { Menu } from "./menu/index";
-
-// TODO: enumerate components, make accessible through search bar and key mappings
-const menuTabs = TreeBase.fromObject({
-  className: "MenuTabControl",
-  props: { tabEdge: "top", stateName: "menuTab" },
-  children: [
-    {
-      className: "File",
-      props: {},
-      children: [],
-    },
-    {
-      className: "Load",
-      props: {},
-      children: [],
-    },
-    {
-      className: "Add",
-      props: {},
-      children: [],
-    },
-    {
-      className: "Delete",
-      props: {},
-      children: [],
-    },
-    {
-      className: "Move",
-      props: {},
-      children: [],
-    },
-    {
-      className: "Help",
-      props: {},
-      children: [],
-    },
-  ],
-});
+import Globals from "../../globals";
+import { TreeBase } from "../treebase";
+import { ButtonWrap } from "../designer-tabs/access";
+import { Menu } from "../menu/index";
+import { toolbarAction, toolbarActions } from "./toolbar-actions";
 
 /* Menu */
 const menu = new Menu("File", [{"label": "Rename"}, {"label": "Export"}]);
 
-// tab object, filter
+// TODO: menu item interface
+// TODO: use TreeBase to list toolbarActions
+
+// export class PatternList extends TabPanel {
+//   name = new Props.String("Patterns");
+
+//   /** @type {PatternManager[]} */
+//   children = [];
+
+//   template() {
+//     return html`<div class="PatternList" id=${this.id}>
+//       ${this.unorderedChildren()}
+//     </div>`;
+//   }
+// }
 
 export class ToolBar extends TreeBase {
   template() {
