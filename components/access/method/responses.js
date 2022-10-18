@@ -1,46 +1,9 @@
 import { html } from "uhtml";
-import { TreeBase, TreeBaseSwitchable } from "../../treebase";
+import { TreeBase } from "../../treebase";
 import Globals from "../../../globals";
 import * as Props from "../../props";
-import { Method } from "./index";
+import { Method, HandlerResponse } from "./index";
 import { ButtonWrap } from "../index";
-
-const ResponderTypeMap = new Map([
-  ["HandlerResponse", "none"],
-  ["ResponderPatternNext", "pattern next"],
-  ["ResponderPatternActivate", "pattern activate"],
-  ["ResponderPatternCue", "pattern cue"],
-  ["ResponderCue", "cue"],
-  ["ResponderActivate", "activate"],
-  ["ResponderClearCue", "clear cue"],
-  ["ResponderEmit", "emit"],
-  ["ResponderStartTimer", "start timer"],
-]);
-
-export class HandlerResponse extends TreeBaseSwitchable {
-  Response = new Props.TypeSelect(ResponderTypeMap, { hiddenLabel: true });
-
-  /** @param {Event & { access: Object }} event */
-  respond(event) {
-    console.log("no response for", event);
-  }
-
-  settings() {
-    return html`
-      <div class="Response">${this.Response.input()} ${this.subTemplate()}</div>
-    `;
-  }
-
-  get pattern() {
-    const method = this.nearestParent(Method);
-    return method.pattern;
-  }
-
-  subTemplate() {
-    return html`<!--empty-->`;
-  }
-}
-TreeBase.register(HandlerResponse);
 
 class ResponderPatternNext extends HandlerResponse {
   respond() {

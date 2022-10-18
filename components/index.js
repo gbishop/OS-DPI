@@ -17,6 +17,7 @@ import "./content";
 import "./layout";
 import "./hotkeys";
 import "./access/method";
+import "./access/method/responses";
 import "./access/method/keyHandler";
 import "./access/method/pointerHandler";
 import "./access/method/timerHandler";

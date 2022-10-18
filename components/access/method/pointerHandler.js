@@ -1,6 +1,5 @@
 import { TreeBase } from "../../treebase";
-import { Handler, HandlerCondition } from "./index";
-import { HandlerResponse } from "./responses";
+import { Handler, HandlerCondition, HandlerResponse } from "./index";
 import * as Props from "../../props";
 import { html } from "uhtml";
 import { EventWrap, ButtonWrap } from "../index";

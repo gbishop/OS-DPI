@@ -1,13 +1,12 @@
 import { html } from "uhtml";
 import css from "ustyler";
-import { TreeBase } from "../../treebase";
+import { TreeBase, TreeBaseSwitchable } from "../../treebase";
 import * as Props from "../../props";
 import Globals from "../../../globals";
 import db from "../../../db";
 import * as RxJs from "rxjs";
 import { EventWrap } from "../index";
 // make sure the classes are registered
-import { HandlerResponse } from "./responses";
 import defaultMethods from "./defaultMethods";
 import { log } from "../../../log";
 import { TabPanel } from "../../tabcontrol";
@@ -271,6 +270,43 @@ export class HandlerKeyCondition extends TreeBase {
   }
 }
 TreeBase.register(HandlerKeyCondition);
+
+const ResponderTypeMap = new Map([
+  ["HandlerResponse", "none"],
+  ["ResponderPatternNext", "pattern next"],
+  ["ResponderPatternActivate", "pattern activate"],
+  ["ResponderPatternCue", "pattern cue"],
+  ["ResponderCue", "cue"],
+  ["ResponderActivate", "activate"],
+  ["ResponderClearCue", "clear cue"],
+  ["ResponderEmit", "emit"],
+  ["ResponderStartTimer", "start timer"],
+]);
+
+export class HandlerResponse extends TreeBaseSwitchable {
+  Response = new Props.TypeSelect(ResponderTypeMap, { hiddenLabel: true });
+
+  /** @param {Event & { access: Object }} event */
+  respond(event) {
+    console.log("no response for", event);
+  }
+
+  settings() {
+    return html`
+      <div class="Response">${this.Response.input()} ${this.subTemplate()}</div>
+    `;
+  }
+
+  get pattern() {
+    const method = this.nearestParent(Method);
+    return method.pattern;
+  }
+
+  subTemplate() {
+    return html`<!--empty-->`;
+  }
+}
+TreeBase.register(HandlerResponse);
 
 css`
   details.Method > *:not(summary) {
