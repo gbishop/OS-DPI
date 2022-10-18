@@ -85,7 +85,7 @@ async function readSheetFromBlob(blob) {
  * @param {Row[]} rows
  * @param {string} type
  */
-function saveContent(name, rows, type) {
+export function saveContent(name, rows, type) {
   if (!type) return;
   const sheetNames = new Set(rows.map((row) => row.sheetName || "sheet1"));
   const workbook = XLSX.utils.book_new();
