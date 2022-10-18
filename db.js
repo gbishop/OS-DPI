@@ -3,6 +3,8 @@ import { zipSync, strToU8, unzipSync, strFromU8 } from "fflate";
 import { fileSave } from "browser-fs-access";
 import Globals from "./globals";
 
+const SAVE_N_RECORDS = 25;
+
 class DB {
   constructor() {
     this.dbPromise = openDB("os-dpi", 4, {
@@ -169,6 +171,14 @@ class DB {
     const db = await this.dbPromise;
     await db.put("store", { name: this.designName, type, data });
     await db.delete("saved", this.designName);
+
+    /* Only keep the last SAVE_N_RECORDS records per record type */
+    let count = await db.countFromIndex("store", "by-name-type", [this.designName, type]);
+    if(count > SAVE_N_RECORDS) {
+      let keys = await db.getAllKeysFromIndex("store", "by-name-type", [this.designName, type]);
+      keys.slice(0,-SAVE_N_RECORDS).forEach(key => db.delete("store", key));
+    } 
+
     this.notify({ action: "update", name: this.designName });
   }
 
