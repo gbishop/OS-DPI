@@ -167,6 +167,14 @@ class DB {
     const db = await this.dbPromise;
     await db.put("store", { name: this.designName, type, data });
     await db.delete("saved", this.designName);
+
+    /* Only keep the last 100 records per record type */
+    let count = await db.countFromIndex("store", "by-name-type", [this.designName, type]);
+    if(count > 100) {
+      let keys = await db.getAllKeysFromIndex("store", "by-name-type", [this.designName, type]);
+      keys.slice(0,-100).forEach(key => db.delete("store", key));
+    } 
+
     this.notify({ action: "update", name: this.designName });
   }
 
