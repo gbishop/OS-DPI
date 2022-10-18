@@ -28,7 +28,7 @@ export class Logger extends Base {
           this.DB.submit({"timestamp": Date.now(), "value": value});
         }
     
-        return html``;
+        return html`<!--empty-->`;
     }
 
     stringifyInput(arr) {
