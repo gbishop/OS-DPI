@@ -1,10 +1,10 @@
 import { html } from "uhtml";
-import { TreeBase } from "./treebase";
-import * as Props from "./props";
-import { styleString } from "./style";
+import { TreeBase } from "../treebase";
+import * as Props from "../props";
+import { styleString } from "../style";
 import css from "ustyler";
-import "./img-db";
-import Globals from "../globals";
+import "../img-db";
+import Globals from "../../globals";
 import { GridFilter } from "./grid";
 
 /** Allow await'ing for a short time

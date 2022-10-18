@@ -1,11 +1,11 @@
 import { html } from "uhtml";
-import { TreeBase } from "./treebase";
-import * as Props from "./props";
-import { styleString } from "./style";
-import { Functions } from "../eval";
+import { TreeBase } from "../treebase";
+import * as Props from "../props";
+import { styleString } from "../style";
+import { Functions } from "../../eval";
 import merge from "mergerino";
 import css from "ustyler";
-import Globals from "../globals";
+import Globals from "../../globals";
 
 /** Slot descriptor
  * @typedef {Object} Slot

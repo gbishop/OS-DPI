@@ -1,7 +1,7 @@
-import { TreeBase } from "./treebase";
-import * as Props from "./props";
+import { TreeBase } from "../treebase";
+import * as Props from "../props";
 import { html } from "uhtml";
-import { styleString } from "./style";
+import { styleString } from "../style";
 
 export class Stack extends TreeBase {
   direction = new Props.Select(["row", "column"]);

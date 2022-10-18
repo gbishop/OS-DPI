@@ -1,8 +1,8 @@
 import { strip } from "./display";
-import { TreeBase } from "./treebase";
+import { TreeBase } from "../treebase";
 import { html } from "uhtml";
-import Globals from "../globals";
-import * as Props from "./props";
+import Globals from "../../globals";
+import * as Props from "../props";
 
 class Speech extends TreeBase {
   stateName = new Props.String("$Speak");

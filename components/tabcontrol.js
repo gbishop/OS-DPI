@@ -1,7 +1,7 @@
 import { html } from "uhtml";
 import { TreeBase } from "./treebase";
 import * as Props from "./props";
-import { Stack } from "./stack";
+import { Stack } from "./layout-nodes/stack";
 import { styleString } from "./style";
 import css from "ustyler";
 import { UpdateAccessData } from "./access";

@@ -3,7 +3,7 @@ import { Data } from "./data";
 import { State } from "./state";
 import { TreeBase } from "./components/treebase";
 import "./components";
-import { Page } from "./components/page";
+import { Page } from "./components/layout-nodes/page";
 import { Monitor } from "./components/monitor";
 import { ToolBar } from "./components/toolbar";
 import db from "./db";

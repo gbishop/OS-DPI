@@ -1,7 +1,7 @@
 import { html } from "uhtml";
-import { TreeBase } from "./treebase";
-import db from "../db";
-import Globals from "../globals";
+import { TreeBase } from "../treebase";
+import db from "../../db";
+import Globals from "../../globals";
 
 const emptyPage = {
   className: "Page",

@@ -2,7 +2,7 @@ import { html } from "uhtml";
 import { PropInfo } from "../../properties";
 import { TreeBase } from "../treebase";
 import * as Props from "../props";
-import { Stack } from "../stack";
+import { Stack } from "../layout-nodes/stack";
 import { TabControl, TabPanel } from "../tabcontrol";
 import { propEditor } from "../propEditor";
 import db from "../../db";
