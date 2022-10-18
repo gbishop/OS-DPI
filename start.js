@@ -342,7 +342,7 @@ window.addEventListener("hashchange", () => {
 css`
   body.designing {
     display: grid;
-    grid-template-rows: 2.5em 2.5em 7.5em 2.5em 50% auto;
+    grid-template-rows: 2em 2em 2em 50% auto 1em;
     grid-template-columns: 50% 50%;
   }
 
@@ -359,14 +359,14 @@ css`
     display: block;
     overflow-y: auto;
     flex: 1 1 0;
-    grid-row-start: 4;
+    grid-row-start: 3;
     grid-row-end: 6;
     grid-column-start: 2;
     position: relative;
   }
   body.designing #UI {
-    grid-row-start: 4;
-    grid-row-end: 6;
+    grid-row-start: 3;
+    grid-row-end: 5;
     grid-column-start: 1;
   }
   body.designing #monitor {
@@ -375,7 +375,7 @@ css`
   }
   body.designing #toolbar {
     grid-row-start: 1;
-    grid-row-end: 4;
+    grid-row-end: 3;
     grid-column-start: 1;
     grid-column-end: 3;
   }

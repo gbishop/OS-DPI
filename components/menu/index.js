@@ -197,7 +197,7 @@ export function menu(label, choices) {
 css`
   .treebase menu-button {
     display: inline-block;
-    float: right;
+    float: left;
   }
 
   .menu-button-actions {

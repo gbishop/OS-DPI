@@ -1,7 +1,7 @@
 import { html } from "uhtml";
-import { TreeBase } from "../treebase";
-import { TabPanel } from "../tabcontrol";
-import * as Props from "../props";
+import { TreeBase } from "../../components/treebase";
+import { TabPanel } from "../../components/tabcontrol";
+import * as Props from "../../components/props";
 import css from "ustyler";
 import Globals from "../../globals";
 
