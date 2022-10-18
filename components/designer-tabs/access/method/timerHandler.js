@@ -1,11 +1,11 @@
-import { TreeBase } from "../../treebase";
+import { TreeBase } from "../../../treebase";
 import { Handler, HandlerCondition } from "./handler";
 import { HandlerResponse } from "./responses";
-import * as Props from "../../props";
+import * as Props from "../../../props";
 import { html } from "uhtml";
 import * as RxJs from "rxjs";
 import { Method } from "./index";
-import { log } from "../../../log";
+import { log } from "../../../../log";
 
 const timerSignals = new Map([
   ["transitionend", "Transition end"],

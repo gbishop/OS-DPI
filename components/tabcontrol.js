@@ -4,7 +4,7 @@ import * as Props from "./props";
 import { Stack } from "./layout-nodes/stack";
 import { styleString } from "./style";
 import css from "ustyler";
-import { UpdateAccessData } from "./access";
+import { UpdateAccessData } from "./designer-tabs/access";
 import Globals from "../globals";
 import { PostRenderFunctions } from "../start";
 

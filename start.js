@@ -10,11 +10,11 @@ import db from "./db";
 import pleaseWait from "./components/wait";
 import { fileOpen } from "browser-fs-access";
 import css from "ustyler";
-import { ButtonWrap, clearAccessChanged } from "./components/access";
+import { ButtonWrap, clearAccessChanged } from "./components/designer-tabs/access";
 import Globals from "./globals";
-import { PatternList } from "./components/access/pattern";
-import { MethodChooser } from "./components/access/method";
-import { CueList } from "./components/access/cues";
+import { PatternList } from "./components/designer-tabs/access/pattern";
+import { MethodChooser } from "./components/designer-tabs/access/method";
+import { CueList } from "./components/designer-tabs/access/cues";
 import { Actions } from "./components/designer-tabs/actions";
 
 const safe = false;

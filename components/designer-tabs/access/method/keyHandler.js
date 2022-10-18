@@ -1,7 +1,7 @@
-import { TreeBase } from "../../treebase";
+import { TreeBase } from "../../../treebase";
 import { Handler, HandlerCondition } from "./handler";
 import { HandlerResponse } from "./responses";
-import * as Props from "../../props";
+import * as Props from "../../../props";
 import { html } from "uhtml";
 import { EventWrap } from "../index";
 import * as RxJs from "rxjs";

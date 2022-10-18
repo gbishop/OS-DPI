@@ -1,7 +1,7 @@
 import { html } from "uhtml";
-import { TreeBase, TreeBaseSwitchable } from "../../treebase";
-import Globals from "../../../globals";
-import * as Props from "../../props";
+import { TreeBase, TreeBaseSwitchable } from "../../../treebase";
+import Globals from "../../../../globals";
+import * as Props from "../../../props";
 import { Method } from "./index";
 import { ButtonWrap } from "../index";
 

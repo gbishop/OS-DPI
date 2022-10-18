@@ -3,7 +3,7 @@ import * as Props from "../props";
 import { TreeBase } from "../treebase";
 import { styleString } from "../style";
 import { formatSlottedString } from "../helpers";
-import { UpdateAccessData } from "../access";
+import { UpdateAccessData } from "../designer-tabs/access";
 import css from "ustyler";
 import "../img-db";
 import Globals from "../../globals";

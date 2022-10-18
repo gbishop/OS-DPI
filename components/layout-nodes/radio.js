@@ -3,7 +3,7 @@ import { TreeBase } from "../treebase";
 import * as Props from "../props";
 import { styleString } from "../style";
 import css from "ustyler";
-import { UpdateAccessData } from "../access";
+import { UpdateAccessData } from "../designer-tabs/access";
 import Globals from "../../globals";
 import { GridFilter } from "./grid";
 

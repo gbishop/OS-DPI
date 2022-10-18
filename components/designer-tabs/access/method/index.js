@@ -1,9 +1,9 @@
 import { html } from "uhtml";
 import css from "ustyler";
-import { TreeBase } from "../../treebase";
-import * as Props from "../../props";
-import Globals from "../../../globals";
-import db from "../../../db";
+import { TreeBase } from "../../../treebase";
+import * as Props from "../../../props";
+import Globals from "../../../../globals";
+import db from "../../../../db";
 import * as RxJs from "rxjs";
 import { Handler } from "./handler";
 import { KeyHandler } from "./keyHandler";
@@ -14,8 +14,8 @@ import { EventWrap } from "../index";
 import "./handler";
 import "./responses";
 import defaultMethods from "./defaultMethods";
-import { log } from "../../../log";
-import { TabPanel } from "../../tabcontrol";
+import { log } from "../../../../log";
+import { TabPanel } from "../../../tabcontrol";
 
 export class MethodChooser extends TabPanel {
   name = new Props.String("Methods");

@@ -1,5 +1,5 @@
 import { TreeBase } from "./treebase";
-import { ButtonWrap, } from "../components/access";
+import { ButtonWrap, } from "./designer-tabs/access";
 import css from "ustyler";
 import db from "../db";
 import { html } from "uhtml";
