@@ -17,6 +17,8 @@ class Grid extends TreeBase {
   background = new Props.Color("white");
   scale = new Props.Float(1);
 
+  allowedChildren = ["GridFilter"];
+
   /** @type {GridFilter[]} */
   children = [];
 

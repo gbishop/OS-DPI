@@ -270,7 +270,9 @@ export class TreeBase {
    * Create HTML LI nodes from the children
    */
   listChildren(children = this.children) {
-    return children.map((child) => html`<li>${child.settings()}</li>`);
+    return children.map(
+      (child) => html.for(child)`<li>${child.settings()}</li>`
+    );
   }
 
   /**

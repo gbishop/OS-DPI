@@ -100,8 +100,15 @@ class DesignerTabControl extends TabControl {
     if (this.currentPanel) {
       if (this.currentPanel.lastFocused) {
         const elem = document.getElementById(this.currentPanel.lastFocused);
+        console.log(
+          "restore focus",
+          elem,
+          this.currentPanel.lastFocused,
+          this.currentPanel
+        );
         if (elem) elem.focus();
       } else {
+        console.log("restoreFocus else path");
         const panelNode = document.getElementById(this.currentPanel.id);
         if (panelNode) {
           const focusable = /** @type {HTMLElement} */ (
@@ -122,6 +129,9 @@ TreeBase.register(DesignerTabControl);
 export class TabPanel extends Stack {
   name = new Props.String("");
   label = new Props.String("");
+
+  /** @type {TabControl} */
+  parent = null;
 
   active = false;
   tabName = "";
