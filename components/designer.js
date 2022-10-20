@@ -1,8 +1,5 @@
 import { html } from "uhtml";
-import { TreeBase } from "./treebase";
-import * as Props from "./props";
-import { TabControl, TabPanel } from "./tabcontrol";
-import css from "ustyler";
+import { TabControl } from "./tabcontrol";
 
 export class Designer extends TabControl {
   /* TOFIX 
