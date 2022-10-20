@@ -10,6 +10,7 @@ export class Stack extends TreeBase {
 
   allowedChildren = [
     "Stack",
+    "Gap",
     "Grid",
     "Display",
     "Radio",

@@ -221,7 +221,6 @@ export class Actions extends TabPanel {
       console.log("converted", actions);
     }
     const result = /** @type {Actions} */ (this.fromObject(actions));
-    console.log("result", result);
     return result;
   }
 

@@ -480,7 +480,6 @@ export class Layout extends TabPanel {
   // }
   //
   template() {
-    console.log("here");
     return html`<div class="treebase layout" help="Layout tab" id=${this.id}>
       <ol>
         ${this.children.map((child) => html`<li>${child.settings()}</li>`)}

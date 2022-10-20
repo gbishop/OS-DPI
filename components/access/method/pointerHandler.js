@@ -25,23 +25,12 @@ export class PointerHandler extends Handler {
       <fieldset class="Handler">
         <legend>Pointer Handler</legend>
         ${Signal.input()} ${Debounce.input()} ${skip}
-        ${this.deleteButton({ title: "Delete this handler" })}
         <fieldset class="Conditions">
-          <legend>
-            Conditions
-            ${this.addChildButton("+", HandlerCondition, {
-              title: "Add a condition",
-            })}
-          </legend>
+          <legend>Conditions</legend>
           ${this.unorderedChildren(conditions)}
         </fieldset>
         <fieldset class="Responses">
-          <legend>
-            Responses
-            ${this.addChildButton("+", HandlerResponse, {
-              title: "Add a response",
-            })}
-          </legend>
+          <legend>Responses</legend>
           ${this.unorderedChildren(responses)}
         </fieldset>
       </fieldset>

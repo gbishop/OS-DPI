@@ -134,8 +134,6 @@ export class PatternManager extends PatternBase {
         <details>
           <summary>Details</summary>
           ${this.orderedChildren()}
-          ${this.addChildButton("+Selector", PatternSelector)}
-          ${this.addChildButton("+Group", PatternGroup)}
         </details>
       </fieldset>
     `;
@@ -279,9 +277,6 @@ class PatternGroup extends PatternBase {
       <legend>Group: ${Name.value}</legend>
       ${Name.input()} ${Cycles.input()} ${Cue.input(Globals.cues.cueMap)}
       ${this.orderedChildren()}
-      ${this.addChildButton("+Selector", PatternSelector)}
-      ${this.addChildButton("+Group", PatternGroup)}
-      ${this.movementButtons("Group")}
     </fieldset>`;
   }
 
@@ -312,10 +307,7 @@ class PatternSelector extends PatternBase {
   settings() {
     return html`<fieldset class=${this.className}>
       <legend>Selector</legend>
-      ${this.unorderedChildren()} ${this.addChildButton("+Filter", Filter)}
-      ${this.addChildButton("+Order by", OrderBy)}
-      ${this.addChildButton("+Group by", GroupBy)}
-      ${this.movementButtons("selector")}
+      ${this.unorderedChildren()}
     </fieldset>`;
   }
 
@@ -338,9 +330,7 @@ class Filter extends PatternBase {
   Filter = new Props.Expression();
   settings() {
     const { Filter } = this;
-    return html`<div class=${this.className}>
-      ${Filter.input()}${this.deleteButton({ title: "Delete this filter" })}
-    </div>`;
+    return html`<div class=${this.className}>${Filter.input()}</div>`;
   }
   /**
    * Select buttons from the input
@@ -374,9 +364,7 @@ class OrderBy extends PatternBase {
   OrderBy = new Props.Field();
   settings() {
     const { OrderBy } = this;
-    return html`<div class=${this.className}>
-      ${OrderBy.input()}${this.deleteButton({ title: "Delete this order by" })}
-    </div>`;
+    return html`<div class=${this.className}>${OrderBy.input()}</div>`;
   }
   /**
    * Select buttons from the input
@@ -410,9 +398,8 @@ class GroupBy extends PatternBase {
   settings() {
     const { GroupBy, Name, Cue, Cycles } = this;
     return html`<div class=${this.className}>
-      ${GroupBy.input()} ${Name.input()}
-      ${this.deleteButton({ title: "Delete this Group By" })}
-      ${Cue.input(Globals.cues.cueMap)} ${Cycles.input()}
+      ${GroupBy.input()} ${Name.input()} ${Cue.input(Globals.cues.cueMap)}
+      ${Cycles.input()}
     </div>`;
   }
   /**

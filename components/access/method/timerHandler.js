@@ -23,23 +23,12 @@ export class TimerHandler extends Handler {
       <fieldset class="Handler">
         <legend>Timer Handler</legend>
         ${Signal.input()} ${this.TimerName.input(timerNames)}
-        ${this.deleteButton({ title: "Delete this handler" })}
         <fieldset class="Conditions">
-          <legend>
-            Conditions
-            ${this.addChildButton("+", HandlerCondition, {
-              title: "Add a condition",
-            })}
-          </legend>
+          <legend>Conditions</legend>
           ${this.unorderedChildren(conditions)}
         </fieldset>
         <fieldset class="Responses">
-          <legend>
-            Responses
-            ${this.addChildButton("+", HandlerResponse, {
-              title: "Add a response",
-            })}
-          </legend>
+          <legend>Responses</legend>
           ${this.unorderedChildren(responses)}
         </fieldset>
       </fieldset>

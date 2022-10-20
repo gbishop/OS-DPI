@@ -18,7 +18,6 @@ export class CueList extends TabPanel {
 
   template() {
     return html`<div class="CueList" id=${this.id}>
-      ${this.addChildButton("+Cue", Cue, { title: "Add a Cue" })}
       ${this.unorderedChildren()}
     </div>`;
   }

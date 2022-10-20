@@ -1,5 +1,5 @@
 import { html } from "uhtml";
-import { TreeBase } from "./treebase";
+import { Stack } from "./stack";
 import db from "../db";
 import Globals from "../globals";
 
@@ -15,8 +15,18 @@ const emptyPage = {
   ],
 };
 
-export class Page extends TreeBase {
-  allowedChildren = ["stack", "modal dialog", "speech", "audio", "logger"];
+export class Page extends Stack {
+  // you can't delete the page
+  allowDelete = false;
+
+  constructor() {
+    super();
+    this.allowedChildren = this.allowedChildren.concat(
+      "Speech",
+      "Audio",
+      "Logger"
+    );
+  }
 
   template() {
     return html`${this.children.map((child) => child.template())}`;
@@ -33,4 +43,4 @@ export class Page extends TreeBase {
     Globals.state.update();
   }
 }
-TreeBase.register(Page);
+Stack.register(Page);

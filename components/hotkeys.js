@@ -1,24 +1,15 @@
 /** Global Hot Keys for keyboard access */
 
 import Globals from "../globals";
+import { render, html } from "uhtml";
 import css from "ustyler";
-
-/**
- * Toggle the designer interface on and off.
- *
- * I chose the multikey trigger to avoid accidental activation but
- * it is likely to be unacceptable to designers who struggle to use
- * the keyboard.
- *
- * What are the alternatives?
- *
- * @param {KeyboardEvent} event */
-function DesignerToggle(event) {
-  if (event.altKey && event.ctrlKey && event.shiftKey) {
-    document.body.classList.toggle("designing");
-    Globals.state.update({ editing: !Globals.state.get("editing") });
-  }
-}
+import { TabPanel } from "./tabcontrol";
+import {
+  TreeBase,
+  MenuActionAdd,
+  MenuActionDelete,
+  MenuActionMove,
+} from "./treebase";
 
 // document.addEventListener("keydown", DesignerToggle, { capture: true });
 
@@ -96,9 +87,46 @@ function HotKeyHandler(event) {
 
 document.addEventListener("keydown", HotKeyHandler, { capture: true });
 
+/**
+ * A hack to test the MenuActions
+ * @param {TabPanel} panel */
+export function updateMenuActions(panel) {
+  console.log({ panel });
+  if (!panel.lastFocused) {
+    console.log("no lastFocused");
+    return;
+  }
+  const component = TreeBase.componentFromId(panel.lastFocused);
+  if (!component) {
+    console.log("no component");
+    return;
+  }
+  const actions = component.getMenuActions();
+
+  const where = document.getElementById("HotKeyHints");
+
+  const buttons = actions.map((action) => {
+    let label = "";
+    if (action instanceof MenuActionAdd) {
+      label = `+${action.className}`;
+    } else if (action instanceof MenuActionDelete) {
+      label = `-${action.className}`;
+    } else if (action instanceof MenuActionMove) {
+      if (action.step < 0) {
+        label = "Up";
+      } else {
+        label = "Down";
+      }
+    }
+    return html`<button onclick=${() => action.apply()}>${label}</button>`;
+  });
+
+  render(where, html`${buttons}`);
+}
+
 css`
   #HotKeyHints {
-    display: none;
+    display: block;
     position: absolute;
     left: 0;
     top: 0;

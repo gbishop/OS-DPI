@@ -7,6 +7,7 @@ import css from "ustyler";
 import { UpdateAccessData } from "./access";
 import Globals from "../globals";
 import { callAfterRender } from "../render";
+import { updateMenuActions } from "./hotkeys";
 
 export class TabControl extends TreeBase {
   stateName = new Props.String("$tabControl");
@@ -15,7 +16,7 @@ export class TabControl extends TreeBase {
   tabEdge = new Props.Select(["bottom", "top", "left", "right", "none"]);
   name = new Props.String("tabs");
 
-  allowedChildren = ["tab panel"];
+  allowedChildren = ["TabPanel"];
 
   /** @type {TabPanel[]} */
   children = [];
@@ -33,7 +34,6 @@ export class TabControl extends TreeBase {
       panel.tabLabel = state.interpolate(panel.props.label || panel.props.name); // display name
       if (index == 0 && !activeTabName) {
         activeTabName = panel.tabName;
-        console.log({ index, activeTabName, n: this.props.stateName });
         state.define(this.props.stateName, panel.tabName);
       }
       panel.active = activeTabName == panel.tabName || panels.length === 1;
@@ -76,8 +76,11 @@ export class TabControl extends TreeBase {
       <div class="buttons">${buttons}</div>
       <div
         class="panels flex"
-        onfocusin=${({ target }) =>
-          this.currentPanel && (this.currentPanel.lastFocused = target.id)}
+        onfocusin=${({ target }) => {
+          this.currentPanel && (this.currentPanel.lastFocused = target.id);
+          /** FIX: this does not belong here. I'm just seeing if the actions stuff works */
+          updateMenuActions(this.currentPanel);
+        }}
       >
         ${panel}
       </div>
@@ -94,14 +97,12 @@ class DesignerTabControl extends TabControl {
   }
 
   restoreFocus() {
-    console.log("rf", this.currentPanel.lastFocused);
     if (this.currentPanel) {
       if (this.currentPanel.lastFocused) {
-        document.getElementById(this.currentPanel.lastFocused)?.focus();
+        const elem = document.getElementById(this.currentPanel.lastFocused);
+        if (elem) elem.focus();
       } else {
-        console.log(this.currentPanel.id);
         const panelNode = document.getElementById(this.currentPanel.id);
-        console.log({ panelNode });
         if (panelNode) {
           const focusable = /** @type {HTMLElement} */ (
             panelNode.querySelector(
@@ -110,12 +111,10 @@ class DesignerTabControl extends TabControl {
                 "summary:not(:disabled)"
             )
           );
-          console.log({ focusable });
           if (focusable) focusable.focus();
         }
       }
     }
-    console.log("ae", document.activeElement);
   }
 }
 TreeBase.register(DesignerTabControl);

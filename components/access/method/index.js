@@ -233,12 +233,7 @@ export class HandlerCondition extends TreeBase {
 
   settings() {
     const { Condition } = this;
-    return html`
-      <div class="Condition">
-        ${Condition.input()}
-        ${this.deleteButton({ title: "Delete this condition" })}
-      </div>
-    `;
+    return html` <div class="Condition">${Condition.input()}</div> `;
   }
 
   /** @param {Object} context */
@@ -262,11 +257,7 @@ export class HandlerKeyCondition extends TreeBase {
 
   settings() {
     const { Key } = this;
-    return html`
-      <div class="Key">
-        ${Key.input()} ${this.deleteButton({ title: "Delete this key" })}
-      </div>
-    `;
+    return html` <div class="Key">${Key.input()}</div> `;
   }
 }
 TreeBase.register(HandlerKeyCondition);

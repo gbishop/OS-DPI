@@ -8,7 +8,7 @@ import Globals from "../globals";
 export class ModalDialog extends TreeBase {
   stateName = new Props.String("$modalOpen");
 
-  allowedChildren = ["stack"];
+  allowedChildren = ["Stack"];
 
   template() {
     const state = Globals.state;
