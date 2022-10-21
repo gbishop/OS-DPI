@@ -10,6 +10,7 @@ import {
   MenuActionDelete,
   MenuActionMove,
 } from "./treebase";
+import { callAfterRender } from "../render";
 
 // document.addEventListener("keydown", DesignerToggle, { capture: true });
 
@@ -35,6 +36,7 @@ function focusTabs() {
     document.querySelector(".designing .tabcontrol .buttons button[active]")
   );
   if (currentTab) {
+    console.log("focus", currentTab);
     currentTab.focus();
     return;
   }
@@ -43,6 +45,7 @@ function focusTabs() {
   ]);
   console.log({ tabs });
   if (!tabs.length) return;
+  console.log("focus", tabs[0]);
   tabs[0].focus();
 }
 
@@ -118,7 +121,20 @@ export function updateMenuActions(panel) {
         label = "Down";
       }
     }
-    return html`<button onclick=${() => action.apply()}>${label}</button>`;
+    // why do I have to restore the focus. Shouldn't I be able to leave it where it is?
+    // uhtml can redraw the page without trashing focus.
+    // why not here?
+    return html`<button
+      onmousedown=${(e) => e.preventDefault()}
+      onmouseup=${(e) => e.preventDefault()}
+      onclick=${() => {
+        render(where, html`<!--empty-->`);
+        action.apply();
+        // callAfterRender(() => panel.parent.restoreFocus());
+      }}
+    >
+      ${label}
+    </button>`;
   });
 
   render(where, html`${buttons}`);
@@ -126,12 +142,6 @@ export function updateMenuActions(panel) {
 
 css`
   #HotKeyHints {
-    display: block;
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    background: white;
   }
 
   #HotKeyHints.show {
