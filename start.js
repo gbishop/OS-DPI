@@ -95,10 +95,10 @@ export async function start() {
   });
 
   /* ToolBar */
-  const toolbar = new ToolBar({}, null);
+  const toolbar = new ToolBar();
 
   /* Monitor */
-  const monitor = new Monitor({}, null);
+  const monitor = new Monitor();
 
   function renderUI() {
     const startTime = performance.now();
@@ -114,7 +114,7 @@ export async function start() {
             }
           }}
         >
-          <div id="HotKeyHints"></div>
+          <div id="HotKeyHints"><!--empty--></div>
           ${designer.template()}
         </div>
         <div id="monitor">${monitor.template()}</div>

@@ -257,13 +257,22 @@ export class TreeBase {
   }
 
   /**
-   *  * Remove this child from their parent
+   *  * Remove this child from their parent and return the id of the child to receive focus
+   *  @returns {string}
    *  */
   remove() {
     const peers = this.parent.children;
     const index = peers.indexOf(this);
-    peers.splice(index, 1);
+    const parent = this.parent;
     this.parent = null;
+    peers.splice(index, 1);
+    if (peers.length > index) {
+      return peers[index].id;
+    } else if (peers.length > 0) {
+      return peers[peers.length - 1].id;
+    } else {
+      return parent.id;
+    }
   }
 
   /**
@@ -395,7 +404,11 @@ class MenuAction {
   component = null;
   className = "";
 
-  apply() {}
+  /**
+   * @returns {string} */
+  apply() {
+    return "";
+  }
 }
 
 export class MenuActionAdd extends MenuAction {
@@ -408,8 +421,8 @@ export class MenuActionAdd extends MenuAction {
   }
 
   apply() {
-    TreeBase.create(this.className, this.component);
-    this.component.update();
+    const result = TreeBase.create(this.className, this.component);
+    return result.id;
   }
 }
 
@@ -423,8 +436,10 @@ export class MenuActionDelete extends MenuAction {
   }
 
   apply() {
-    this.component.remove();
-    this.component.parent.update();
+    // remove returns the id of the nearest neighbor or the parent
+    const nextId = this.component.remove();
+    console.log({ nextId });
+    return nextId;
   }
 }
 
@@ -443,7 +458,7 @@ export class MenuActionMove extends MenuAction {
 
   apply() {
     this.component.parent.swap(this.index, this.index + this.step);
-    this.component.update();
+    return this.component.id;
   }
 }
 

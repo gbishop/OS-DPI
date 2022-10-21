@@ -124,13 +124,16 @@ export function updateMenuActions(panel) {
     // why do I have to restore the focus. Shouldn't I be able to leave it where it is?
     // uhtml can redraw the page without trashing focus.
     // why not here?
+    // it must have something to do with the focus moving to the button on click?
     return html`<button
-      onmousedown=${(e) => e.preventDefault()}
-      onmouseup=${(e) => e.preventDefault()}
       onclick=${() => {
         render(where, html`<!--empty-->`);
-        action.apply();
-        // callAfterRender(() => panel.parent.restoreFocus());
+        const nextId = action.apply();
+        console.log({ nextId, panel });
+        // we're looking for the settings view but we have the id of the user view
+        panel.lastFocused = nextId + "-settings";
+        callAfterRender(() => panel.parent.restoreFocus());
+        panel.update();
       }}
     >
       ${label}
