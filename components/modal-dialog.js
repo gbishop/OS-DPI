@@ -1,23 +1,24 @@
 import { html } from "uhtml";
-import { Base, componentMap } from "./base";
+import { TreeBase } from "./treebase";
+import * as Props from "./props";
 import css from "ustyler";
 
 import Globals from "../globals";
 
-export class ModalDialog extends Base {
-  static defaultProps = {
-    stateName: "$modalOpen",
-  };
-  static allowedChildren = ["stack"];
+export class ModalDialog extends TreeBase {
+  stateName = new Props.String("$modalOpen");
+
+  allowedChildren = ["Stack"];
 
   template() {
     const state = Globals.state;
-    const open = !!state.get(this.props.stateName);
+    const { stateName } = this.props;
+    const open = !!state.get(stateName);
     if (open) {
       return html`<div
         class="modal"
         id=${this.id}
-        ?open=${!!state.get(this.props.stateName)}
+        ?open=${!!state.get(stateName)}
       >
         <div>${this.children.map((child) => child.template())}</div>
       </div>`;
@@ -26,8 +27,7 @@ export class ModalDialog extends Base {
     }
   }
 }
-
-componentMap.addMap("modal dialog", ModalDialog);
+TreeBase.register(ModalDialog);
 
 css`
   div.modal {

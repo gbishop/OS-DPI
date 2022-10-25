@@ -4,7 +4,7 @@ import { html } from "uhtml";
 import css from "ustyler";
 import { compileExpression } from "../eval";
 import Globals from "../globals";
-import { TreeBase, TreeBaseSwitchable } from "./treebase";
+import WeakValue from "weak-value";
 
 /**
  * @typedef {Object} PropOptions
@@ -20,15 +20,40 @@ export class Prop {
   /** @type {any} */
   value;
 
+  // Each prop gets a unique id based on the id of its container
+  id = "";
+
+  /** @type {import('./treebase').TreeBase} */
+  container = null;
+
+  /** attach the prop to its containing TreeBase component
+   * @param {string} name
+   * @param {any} value
+   * @param {TreeBase} container
+   * */
+  initialize(name, value, container) {
+    // create id from the container id
+    this.id = `${container.id}-${name}`;
+    // link to the container
+    this.container = container;
+    // set the value if provided
+    if (value != null) {
+      this.set(value);
+    }
+    // create a label if it has none
+    this.label =
+      this.label ||
+      name // convert from camelCase to Camel Case
+        .replace(/(?!^)([A-Z])/g, " $1")
+        .replace(/^./, (s) => s.toUpperCase());
+  }
+
   get valueAsNumber() {
     return parseFloat(this.value);
   }
 
   /** @type {PropOptions} */
   options = {};
-
-  /** @type {TreeBase} */
-  container = null;
 
   /** @param {PropOptions} options */
   constructor(options = {}) {
@@ -84,6 +109,7 @@ export class Select extends Prop {
     return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
       <span>${this.label}</span>
       <select
+        id=${this.id}
         required
         title=${this.options.title}
         onchange=${({ target }) => {
@@ -112,15 +138,25 @@ export class Select extends Prop {
 }
 
 export class Field extends Select {
-  /** @param {PropOptions} options */
-  constructor(options = {}) {
-    const choices = [...Globals.data.allFields, "#ComponentName"].sort();
-    super(choices, options);
+  input(choices = null) {
+    if (!choices) {
+      choices = toMap([...Globals.data.allFields, "#ComponentName"].sort());
+    }
+    return super.input(choices);
+  }
+}
+
+export class State extends Select {
+  input(choices = null) {
+    if (!choices) {
+      choices = toMap([...Globals.tree.allStates()]);
+    }
+    return super.input(choices);
   }
 }
 
 export class TypeSelect extends Select {
-  /** @type {TreeBaseSwitchable} */
+  /** @type {import('./treebase').TreeBaseSwitchable} */
   container = null;
 
   update() {
@@ -145,6 +181,7 @@ export class String extends Prop {
       <input
         type="text"
         .value=${this.value}
+        id=${this.id}
         onchange=${({ target }) => {
           this.value = target.value;
           this.update();
@@ -170,6 +207,7 @@ export class Integer extends Prop {
       <input
         type="number"
         .value=${this.value}
+        id=${this.id}
         onchange=${({ target }) => {
           this.value = target.value;
           this.update();
@@ -195,6 +233,7 @@ export class Float extends Prop {
       <input
         type="number"
         .value=${this.value}
+        id=${this.id}
         onchange=${({ target }) => {
           this.value = target.value;
           this.update();
@@ -222,6 +261,7 @@ export class Boolean extends Prop {
       <input
         type="checkbox"
         ?checked=${this.value}
+        id=${this.id}
         onchange=${({ target }) => {
           this.value = target.checked;
           this.update();
@@ -262,6 +302,7 @@ export class Expression extends Prop {
       <input
         type="text"
         .value=${this.value}
+        id=${this.id}
         onchange=${({ target }) => {
           this.value = target.value;
           this.compiled = compileExpression(this.value);
@@ -306,6 +347,7 @@ export class TextArea extends Prop {
       <textarea
         type="text"
         .value=${this.value}
+        id=${this.id}
         onchange=${({ target }) => {
           this.value = target.value;
           this.update();
@@ -330,12 +372,39 @@ export class Color extends Prop {
       <span>${this.label}</span>
       <color-input
         .value=${this.value}
+        id=${this.id}
         onchange=${(/** @type {InputEventWithTarget} */ event) => {
           this.value = event.target.value;
           this.update();
         }}
       />
     </label>`;
+  }
+}
+
+export class Voice extends Prop {
+  value = "";
+
+  constructor(value = "", options = {}) {
+    super(options);
+    this.value = value;
+  }
+
+  input() {
+    return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
+      <span>${this.label}</span>
+      <select
+        is="select-voice"
+        .value=${this.value}
+        id=${this.id}
+        onchange=${(/** @type {InputEventWithTarget} */ event) => {
+          this.value = event.target.value;
+          this.update();
+        }}
+      >
+        <option value="">Default</option>
+      </select></label
+    >`;
   }
 }
 
@@ -361,5 +430,8 @@ css`
   }
   option {
     color: black;
+  }
+  :focus {
+    outline: 3px solid orange;
   }
 `;

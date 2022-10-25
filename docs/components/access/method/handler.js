@@ -1,10 +1,9 @@
 import { html } from "../../../_snowpack/pkg/uhtml.js";
 import { TreeBase } from "../../treebase.js";
 import { HandlerResponse } from "./responses.js";
-import { Select, Expression } from "../../props.js";
-import { Subject } from "../../../_snowpack/pkg/rxjs.js";
+import * as Props from "../../props.js";
+import * as RxJs from "../../../_snowpack/pkg/rxjs.js";
 import { Method } from "./index.js";
-import { EventWrap } from "../index.js";
 
 /** Handler is a base class for all event handlers */
 export class Handler extends TreeBase {
@@ -23,13 +22,16 @@ export class Handler extends TreeBase {
     return this.filterChildren(HandlerResponse);
   }
 
-  /** @param {Subject} _stop$ */
+  /**
+   * @param {RxJs.Subject} _stop$
+   * */
   configure(_stop$) {
     throw new TypeError("Must override configure");
   }
 
   /** @param {WrappedEvent} event */
   respond(event) {
+    // console.log("handler respond", event.type, this.responses);
     const method = this.nearestParent(Method);
     method.cancelTimers();
     for (const response of this.responses) {
@@ -39,7 +41,7 @@ export class Handler extends TreeBase {
 }
 
 export class HandlerCondition extends TreeBase {
-  Condition = new Expression("", { hiddenLabel: true });
+  Condition = new Props.Expression("", { hiddenLabel: true });
 
   template() {
     const { Condition } = this;
@@ -68,7 +70,7 @@ const allKeys = new Map([
 ]);
 
 export class HandlerKeyCondition extends TreeBase {
-  Key = new Select(allKeys, { hiddenLabel: true });
+  Key = new Props.Select(allKeys, { hiddenLabel: true });
 
   template() {
     const { Key } = this;

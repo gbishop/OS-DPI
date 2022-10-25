@@ -1,49 +1,9 @@
 import { html } from "uhtml";
-import { TreeBase, TreeBaseSwitchable } from "../../treebase";
+import { TreeBase } from "../../treebase";
 import Globals from "../../../globals";
 import * as Props from "../../props";
-import { Method } from "./index";
+import { Method, HandlerResponse } from "./index";
 import { ButtonWrap } from "../index";
-
-const ResponderTypeMap = new Map([
-  ["HandlerResponse", "none"],
-  ["ResponderPatternNext", "pattern next"],
-  ["ResponderPatternActivate", "pattern activate"],
-  ["ResponderPatternCue", "pattern cue"],
-  ["ResponderCue", "cue"],
-  ["ResponderActivate", "activate"],
-  ["ResponderClearCue", "clear cue"],
-  ["ResponderEmit", "emit"],
-  ["ResponderStartTimer", "start timer"],
-]);
-
-export class HandlerResponse extends TreeBaseSwitchable {
-  Response = new Props.TypeSelect(ResponderTypeMap, { hiddenLabel: true });
-
-  /** @param {Event & { access: Object }} event */
-  respond(event) {
-    console.log("no response for", event);
-  }
-
-  template() {
-    return html`
-      <div class="Response">
-        ${this.Response.input()} ${this.subTemplate()}
-        ${this.deleteButton({ title: "Delete this response" })}
-      </div>
-    `;
-  }
-
-  get pattern() {
-    const method = this.nearestParent(Method);
-    return method.pattern;
-  }
-
-  subTemplate() {
-    return html`<!--empty-->`;
-  }
-}
-TreeBase.register(HandlerResponse);
 
 class ResponderPatternNext extends HandlerResponse {
   respond() {
@@ -96,7 +56,7 @@ class ResponderActivate extends HandlerResponse {
       if ("onClick" in button.access) {
         button.access.onClick();
       } else {
-        Globals.rules.applyRules(name, "press", button.access);
+        Globals.actions.applyRules(name, "press", button.access);
       }
     }
   }
@@ -115,7 +75,7 @@ TreeBase.register(ResponderClearCue);
 class ResponderEmit extends HandlerResponse {
   /** @param {Event & { access: Object }} event */
   respond(event) {
-    Globals.rules.applyRules(event.access.type, "press", event.access);
+    Globals.actions.applyRules(event.access.type, "press", event.access);
   }
 }
 TreeBase.register(ResponderEmit);

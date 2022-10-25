@@ -1,8 +1,11 @@
 import { html } from "uhtml";
-import { Base, componentMap } from "./base";
+import { TreeBase } from "./treebase";
+import * as Props from "./props";
 import { styleString } from "./style";
 import css from "ustyler";
 import "./img-db";
+import Globals from "../globals";
+import { GridFilter } from "./grid";
 
 /** Allow await'ing for a short time
  * @param {number} ms */
@@ -66,17 +69,25 @@ function pct(v) {
  * @property {boolean} invisible
  */
 /** @typedef {Row & vsdData} VRow */
-class VSD extends Base {
-  static defaultProps = {
-    filters: [],
-    name: "vsd",
-    scale: "1",
-  };
+class VSD extends TreeBase {
+  name = new Props.String("vsd");
+  scale = new Props.Float(1);
 
-  template() {
+  /** @type {GridFilter[]} */
+  children = [];
+
+  get filters() {
+    return this.children.map((child) => ({
+      field: child.field.value,
+      operator: child.operator.value,
+      value: child.value.value,
+    }));
+  }
+
+  uiTemplate() {
     const { data, state, rules } = Globals;
     const items = /** @type {VRow[]} */ (
-      data.getMatchingRows(this.props.filters, state)
+      data.getMatchingRows(this.filters, state)
     );
     const src = items.find((item) => item.image)?.image;
     return html`<div class="vsd flex show" id=${this.id}>
@@ -123,8 +134,7 @@ class VSD extends Base {
     </div>`;
   }
 }
-
-componentMap.addMap("vsd", VSD);
+TreeBase.register(VSD);
 
 css`
   div.vsd {

@@ -1,5 +1,7 @@
 import { html, render } from "uhtml";
-import { Base } from "./base";
+import { TreeBase } from "./treebase";
+import { TabPanel } from "./tabcontrol";
+import * as Props from "./props";
 import db from "../db";
 import { Data } from "../data";
 import { fileOpen } from "browser-fs-access";
@@ -105,14 +107,16 @@ export function saveContent(name, rows, type) {
   XLSX.writeFile(workbook, `${name}.${type}`);
 }
 
-export class Content extends Base {
+export class Content extends TabPanel {
+  name = new Props.String("Content");
+
   init() {
     this.sheetHandle = null;
     this.sheetMessage = "";
   }
   template() {
     const data = Globals.data;
-    return html`<div class="content">
+    return html`<div class="content" id=${this.id}>
       <h1>Content</h1>
       <p>
         ${data.allrows.length} rows with these fields:
@@ -283,6 +287,7 @@ export class Content extends Base {
     </div>`;
   }
 }
+TreeBase.register(Content);
 
 css`
   .content form {

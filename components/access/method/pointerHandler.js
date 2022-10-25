@@ -1,11 +1,9 @@
 import { TreeBase } from "../../treebase";
-import { Handler, HandlerCondition } from "./handler";
-import { HandlerResponse } from "./responses";
+import { Handler, HandlerCondition, HandlerResponse } from "./index";
 import * as Props from "../../props";
 import { html } from "uhtml";
 import { EventWrap, ButtonWrap } from "../index";
 import * as RxJs from "rxjs";
-import { log } from "../../../log";
 
 const pointerSignals = new Map([
   ["pointerdown", "Pointer down"],
@@ -19,7 +17,7 @@ export class PointerHandler extends Handler {
   Debounce = new Props.Float(0.1);
   SkipOnRedraw = new Props.Boolean(false);
 
-  template() {
+  settings() {
     const { conditions, responses, Signal, Debounce } = this;
     const skip =
       this.Signal.value == "pointerover" ? this.SkipOnRedraw.input() : html``;
@@ -27,23 +25,12 @@ export class PointerHandler extends Handler {
       <fieldset class="Handler">
         <legend>Pointer Handler</legend>
         ${Signal.input()} ${Debounce.input()} ${skip}
-        ${this.deleteButton({ title: "Delete this handler" })}
         <fieldset class="Conditions">
-          <legend>
-            Conditions
-            ${this.addChildButton("+", HandlerCondition, {
-              title: "Add a condition",
-            })}
-          </legend>
+          <legend>Conditions</legend>
           ${this.unorderedChildren(conditions)}
         </fieldset>
         <fieldset class="Responses">
-          <legend>
-            Responses
-            ${this.addChildButton("+", HandlerResponse, {
-              title: "Add a response",
-            })}
-          </legend>
+          <legend>Responses</legend>
           ${this.unorderedChildren(responses)}
         </fieldset>
       </fieldset>

@@ -3,9 +3,12 @@ import { Base } from "./base.js";
 import { TabControl, TabPanel } from "./tabcontrol.js";
 import { Layout } from "./layout.js";
 import { Actions } from "./actions.js";
-import { Access } from "./access/index.js";
+import { AccessMethod } from "./access/method/index.js";
+import { AccessPattern } from "./access/pattern/index.js";
+import { AccessCues } from "./access/cues/index.js";
 import { Content } from "./content.js";
 import css from "../_snowpack/pkg/ustyler.js";
+import { Logging } from "./logging.js";
 
 export class Designer extends Base {
   /**
@@ -22,7 +25,7 @@ export class Designer extends Base {
     const contentPanel = new TabPanel(
       {
         name: "Content",
-        background: "yellowish white",
+        background: "#fff8f8",
       },
       tabs
     );
@@ -31,7 +34,7 @@ export class Designer extends Base {
     const layoutPanel = new TabPanel(
       {
         name: "Layout",
-        background: "pinkish white",
+        background: "#fffff8",
       },
       tabs
     );
@@ -40,22 +43,57 @@ export class Designer extends Base {
     const actionPanel = new TabPanel(
       {
         name: "Actions",
-        background: "greenish white",
+        background: "#f8fff8",
       },
       tabs
     );
     actionPanel.children = [new Actions({}, actionPanel)];
 
-    const accessPanel = new TabPanel(
+    const methodPanel = new TabPanel(
       {
-        name: "Access",
-        background: "yellowish white",
+        name: "Methods",
+        background: "#f8ffff",
       },
       tabs
     );
-    accessPanel.children = [new Access({}, accessPanel)];
+    methodPanel.children = [new AccessMethod({}, methodPanel)];
 
-    tabs.children = [contentPanel, layoutPanel, actionPanel, accessPanel];
+    const patternPanel = new TabPanel(
+      {
+        name: "Patterns",
+        background: "#f8f8ff",
+      },
+      tabs
+    );
+    patternPanel.children = [new AccessPattern({}, patternPanel)];
+
+    const cuePanel = new TabPanel(
+      {
+        name: "Cues",
+        background: "#fff8ff",
+      },
+      tabs
+    );
+    cuePanel.children = [new AccessCues({}, cuePanel)];
+
+    const loggingPanel = new TabPanel(
+      {
+        name: "Logging",
+        background: "#ffffff",
+      },
+      tabs
+    );
+    loggingPanel.children = [new Logging({}, loggingPanel)];
+
+    tabs.children = [
+      contentPanel,
+      layoutPanel,
+      actionPanel,
+      methodPanel,
+      patternPanel,
+      cuePanel,
+      loggingPanel,
+    ];
     /** @type {Base[]} */
     this.children = [tabs];
   }

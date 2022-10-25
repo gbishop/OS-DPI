@@ -390,12 +390,6 @@ css`
   .treebase label {
     display: inline-block;
   }
-  .treebase input {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-  .treebase select {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
   .treebase ol {
     list-style-type: none;
     counter-reset: item;

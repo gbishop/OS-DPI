@@ -5,7 +5,6 @@ import css from "../_snowpack/pkg/ustyler.js";
 import { compileExpression } from "../eval.js";
 import Globals from "../globals.js";
 import { TreeBase, TreeBaseSwitchable } from "./treebase.js";
-import { validateColor, getColor } from "./style.js";
 
 /**
  * @typedef {Object} PropOptions
@@ -18,7 +17,7 @@ import { validateColor, getColor } from "./style.js";
 
 export class Prop {
   label = "";
-  /** @type {string} */
+  /** @type {any} */
   value;
 
   get valueAsNumber() {
@@ -115,7 +114,7 @@ export class Select extends Prop {
 export class Field extends Select {
   /** @param {PropOptions} options */
   constructor(options = {}) {
-    const choices = [...Globals.data.allFields, "#componentName"].sort();
+    const choices = [...Globals.data.allFields, "#ComponentName"].sort();
     super(choices, options);
   }
 }
@@ -158,9 +157,11 @@ export class String extends Prop {
 }
 
 export class Integer extends Prop {
+  /** @type {number} */
+  value = 0;
   constructor(value = 0, options = {}) {
     super(options);
-    this.value = value.toString();
+    this.value = value;
   }
 
   input() {
@@ -181,9 +182,11 @@ export class Integer extends Prop {
 }
 
 export class Float extends Prop {
+  /** @type {number} */
+  value = 0;
   constructor(value = 0, options = {}) {
     super(options);
-    this.value = value.toString();
+    this.value = value;
   }
 
   input() {
@@ -205,9 +208,12 @@ export class Float extends Prop {
 }
 
 export class Boolean extends Prop {
+  /** @type {boolean} */
+  value = false;
+
   constructor(value = false, options = {}) {
     super(options);
-    this.value = value.toString();
+    this.value = value;
   }
 
   input() {
@@ -215,14 +221,23 @@ export class Boolean extends Prop {
       <span>${this.label}</span>
       <input
         type="checkbox"
-        ?checked=${this.value == "true"}
+        ?checked=${this.value}
         onchange=${({ target }) => {
-          this.value = target.checked ? "true" : "false";
+          this.value = target.checked;
           this.update();
         }}
         title=${this.options.title}
       />
     </label>`;
+  }
+
+  /** @param {any} value */
+  set(value) {
+    if (typeof value === "boolean") {
+      this.value = value;
+    } else if (typeof value === "string") {
+      this.value = value === "true";
+    }
   }
 }
 

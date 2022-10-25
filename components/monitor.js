@@ -1,11 +1,11 @@
 import { html } from "uhtml";
-import { Base } from "./base";
+import { TreeBase } from "./treebase";
 import css from "ustyler";
 import Globals from "../globals";
 
-export class Monitor extends Base {
-  template() {
-    const { state, rules } = Globals;
+export class Monitor extends TreeBase {
+  uiTemplate() {
+    const { state, actions: rules } = Globals;
     const s = html`<table class="state">
       <thead>
         <tr>
@@ -48,7 +48,7 @@ export class Monitor extends Base {
     return html`<button
         onclick=${() => {
           state.clear();
-          rules.doInit();
+          rules.init();
         }}
       >
         Clear state

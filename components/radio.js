@@ -1,28 +1,42 @@
 import { html } from "uhtml";
-import { Base, componentMap } from "./base";
+import { TreeBase } from "./treebase";
+import * as Props from "./props";
 import { styleString } from "./style";
 import css from "ustyler";
 import { UpdateAccessData } from "./access";
+import Globals from "../globals";
+import { GridFilter } from "./grid";
 
-class Option extends Base {
-  static defaultProps = {
-    name: "",
-    value: "",
-  };
+class Option extends TreeBase {
+  name = new Props.String("");
+  value = new Props.String("");
   cache = {};
 }
-componentMap.addMap("option", Option);
+TreeBase.register(Option);
 
-class Radio extends Base {
-  static defaultProps = {
-    label: "",
-    stateName: "$radio",
-    filters: [],
-    unselected: "lightgray",
-    selected: "pink",
-    scale: "1",
-  };
-  static allowedChildren = ["option"];
+class Radio extends TreeBase {
+  scale = new Props.Float(1);
+  label = new Props.String("");
+  stateName = new Props.String("$radio");
+  unselected = new Props.Color("lightgray");
+  selected = new Props.Color("pink");
+
+  allowedChildren = ["Option"];
+
+  /** @type {(Option | GridFilter)[]} */
+  children = [];
+
+  get filters() {
+    return this.filterChildren(GridFilter).map((child) => ({
+      field: child.field.value,
+      operator: child.operator.value,
+      value: child.value.value,
+    }));
+  }
+
+  get options() {
+    return this.filterChildren(Option);
+  }
 
   /**
    * true if there exist rows with the this.filters and the value
@@ -31,10 +45,11 @@ class Radio extends Base {
    */
   valid(option) {
     const { data, state } = Globals;
+    const filters = this.filters;
     return (
-      !this.props.filters.length ||
+      !filters.length ||
       data.hasMatchingRows(
-        this.props.filters,
+        filters,
         state.clone({ [this.props.stateName]: option.props.value }),
         option.cache
       )
@@ -57,7 +72,7 @@ class Radio extends Base {
     const { state } = Globals;
     const stateName = this.props.stateName;
     let current = state.get(stateName);
-    const choices = this.children.map((child, index) => {
+    const choices = this.options.map((child, index) => {
       const disabled = !this.valid(/** @type {Option}*/ (child));
       if (stateName && !current && !disabled && child.props.value) {
         current = child.props.value;
@@ -72,10 +87,10 @@ class Radio extends Base {
         value=${child.props.value}
         ?disabled=${disabled}
         ref=${UpdateAccessData({
-          component: this.constructor.name,
+          ComponentType: this.constructor.name,
           name: this.name,
           label: child.props.name,
-          onClick: (e) => state.update({ [stateName]: child.props.value }),
+          onClick: () => state.update({ [stateName]: child.props.value }),
         })}
       >
         ${child.props.name}
@@ -95,8 +110,7 @@ class Radio extends Base {
     return this.props.name || this.props.label || this.props.stateName;
   }
 }
-
-componentMap.addMap("radio", Radio);
+TreeBase.register(Radio);
 
 css`
   .radio fieldset {

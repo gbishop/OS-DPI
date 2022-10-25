@@ -1,6 +1,7 @@
 import { openDB } from "idb/with-async-ittr";
 import { zipSync, strToU8, unzipSync, strFromU8 } from "fflate";
 import { fileSave } from "browser-fs-access";
+import Globals from "./globals";
 
 class DB {
   constructor() {
@@ -164,6 +165,7 @@ class DB {
    * @param {Object} data
    */
   async write(type, data) {
+    console.trace("db write", type);
     const db = await this.dbPromise;
     await db.put("store", { name: this.designName, type, data });
     await db.delete("saved", this.designName);
@@ -304,12 +306,12 @@ class DB {
     const db = await this.dbPromise;
 
     // collect the parts of the design
-    const layout = await this.read("layout");
-    const actions = await this.read("actions");
+    const layout = Globals.tree.toObject();
+    const actions = Globals.actions.toObject();
     const content = await this.read("content");
-    const method = await this.read("method");
-    const pattern = await this.read("pattern");
-    const cues = await this.read("cues");
+    const method = Globals.method.toObject();
+    const pattern = Globals.patterns.toObject();
+    const cues = Globals.cues.toObject();
 
     const zipargs = {
       "layout.json": strToU8(JSON.stringify(layout)),

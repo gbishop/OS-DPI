@@ -1,20 +1,13 @@
-import { TabPanel } from "./tabcontrol";
-import * as Props from "./props";
-import { html } from "uhtml";
-import { log } from "../log"
+import { Base, componentMap } from "./base.js";
+import { html } from "../_snowpack/pkg/uhtml.js";
+import { log } from "../log.js"
 
-import css from "ustyler";
-import DB from "../db";
-import * as XLSX from "xlsx";
-import Globals from "../globals";
+import * as XLSX from "../_snowpack/pkg/xlsx.js";
+import Globals from "../globals.js";
 
-export class Logger extends TabPanel {
-  name = new Props.String("Logger");
-  stateName = new Props.String("$Log");
-  dbName = new Props.String("Log");
+export class Logger extends Base {
 
-  /** @type {Logger[]} */
-  static instances = [];
+    static instances = [];
 
     static defaultProps = {
         stateName: "$Log",
@@ -38,18 +31,17 @@ export class Logger extends TabPanel {
         return html``;
     }
 
-  stringifyInput(arr) {
-    let output = {};
-
-    for (let i = 0; i < arr.length; i += 2)
-      output[arr[i]] = Globals.state.interpolate(
-        i + 1 < arr.length ? arr[i + 1] : ""
-      );
-
-    return output;
-  }
+    stringifyInput(arr) {
+        let output = {};
+        
+        for(let i = 0; i < arr.length; i+=2)
+          output[arr[i]] = Globals.state.interpolate(i + 1 < arr.length ? arr[i+1] : "");
+    
+        return output
+    }
 }
-TabPanel.register(Logger);
+
+componentMap.addMap("logger", Logger);
 
 class DB {
 

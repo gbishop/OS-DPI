@@ -1,18 +1,15 @@
 {
-  "name": "3",
-  "version": "1.0.0",
+  "name": "os-dpi",
+  "version": "0.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
-    "start": "snowpack dev",
-    "build": "snowpack build; rm -rf docs/node_modules; touch docs/.nojekyll;"
+    "start": "vite --port 8080",
+    "build": "vite build"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "http2-proxy": "^5.0.53",
-    "snowpack": "^3.8.8",
-    "ustyler": "^1.0.1"
+    "vite": "^3.1.0"
   },
   "dependencies": {
     "@json-editor/json-editor": "^2.8.0",
@@ -31,7 +28,9 @@
     "uhtml": "^3.0.1",
     "umap": "^1.0.2",
     "uparser": "^0.2.1",
+    "ustyler": "^1.0.1",
     "uwire": "^1.1.0",
+    "weak-value": "^1.0.2",
     "xlsx": "^0.18.5"
   }
 }

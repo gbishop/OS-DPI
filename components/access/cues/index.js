@@ -1,7 +1,7 @@
 import { html } from "uhtml";
 import css from "ustyler";
-import { Base } from "../../base";
 import { TreeBase, TreeBaseSwitchable } from "../../treebase";
+import { TabPanel } from "../../tabcontrol";
 import * as Props from "../../props";
 
 import db from "../../../db";
@@ -10,22 +10,15 @@ import { interpolate } from "../../helpers";
 import { getColor } from "../../style";
 import defaultCues from "./defaultCues";
 
-export class AccessCues extends Base {
-  template() {
-    return html`<div class="access-cues">
-      <h1>Cues</h1>
-      ${Globals.cues.template()}
-    </div>`;
-  }
-}
+export class CueList extends TabPanel {
+  name = new Props.String("Cues");
 
-export class CueList extends TreeBase {
+  allowedChildren = ["CueCSS", "CueOverlay"];
   /** @type {Cue[]} */
   children = [];
 
   template() {
-    return html`<div class="CueList">
-      ${this.addChildButton("+Cue", Cue, { title: "Add a Cue" })}
+    return html`<div class="CueList" id=${this.id}>
       ${this.unorderedChildren()}
     </div>`;
   }
@@ -51,7 +44,6 @@ export class CueList extends TreeBase {
   }
 
   onUpdate() {
-    console.log("update cues", this);
     db.write("cues", this.toObject());
     Globals.state.update();
   }
@@ -71,11 +63,10 @@ class Cue extends TreeBaseSwitchable {
   Key = new Props.UID();
   CueType = new Props.TypeSelect(CueTypes);
 
-  template() {
+  settings() {
     return html`
       <fieldset class="Cue">
-        ${this.Name.input()} ${this.CueType.input()}
-        ${this.deleteButton({ title: "Delete this cue" })} ${this.subTemplate()}
+        ${this.Name.input()} ${this.CueType.input()} ${this.subTemplate()}
       </fieldset>
     `;
   }
@@ -90,7 +81,7 @@ class Cue extends TreeBaseSwitchable {
 
   renderCss() {
     return html`<style>
-      ${interpolate(this.css, this.propsAsObject)}
+      ${interpolate(this.css, this.props)}
     </style>`;
   }
 }
@@ -216,7 +207,7 @@ class CueCircle extends Cue {
   }
 
   renderCss() {
-    const props = this.propsAsObject;
+    const props = this.props;
     props["Color"] = getColor(props["Color"]);
     return html`<style>
       ${interpolate(this.css, props)}
