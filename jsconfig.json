@@ -5,7 +5,8 @@
     "target": "ESNext",
     "module": "ESNext",
     "strictNullChecks": false,
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "resolveJsonModule": true
   },
   "exclude": ["node_modules", "docs", "thinking"]
 }
