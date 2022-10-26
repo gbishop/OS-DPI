@@ -1,75 +1,31 @@
 import { html } from "uhtml";
-import { TreeBase, TreeBaseSwitchable } from "../../treebase";
+import { TreeBase } from "../../treebase";
 import Globals from "../../../globals";
 import * as Props from "../../props";
-import { Method } from "./index";
+import { Method, HandlerResponse } from "./index";
 import { ButtonWrap } from "../index";
 
-const ResponderTypeMap = new Map([
-  ["HandlerResponse", "none"],
-  ["ResponderNext", "next"],
-  ["ResponderActivate", "activate"],
-  ["ResponderCue", "cue"],
-  ["ResponderClearCue", "clear cue"],
-  ["ResponderEmit", "emit"],
-  ["ResponderStartTimer", "start timer"],
-]);
-
-export class HandlerResponse extends TreeBaseSwitchable {
-  Response = new Props.TypeSelect(ResponderTypeMap, { hiddenLabel: true });
-
-  /** @param {Event & { access: Object }} event */
-  respond(event) {
-    console.log("no response for", event);
-  }
-
-  template() {
-    return html`
-      <div class="Response">
-        ${this.Response.input()} ${this.subTemplate()}
-        ${this.deleteButton({ title: "Delete this response" })}
-      </div>
-    `;
-  }
-
-  get pattern() {
-    const method = this.nearestParent(Method);
-    return method.pattern;
-  }
-
-  subTemplate() {
-    return html`<!--empty-->`;
-  }
-}
-TreeBase.register(HandlerResponse);
-
-class ResponderNext extends HandlerResponse {
+class ResponderPatternNext extends HandlerResponse {
   respond() {
     this.pattern.next();
   }
 }
-TreeBase.register(ResponderNext);
+TreeBase.register(ResponderPatternNext);
 
-class ResponderActivate extends HandlerResponse {
-  /** @param {Event & { access: Object }} event */
-  respond(event) {
-    if (this.pattern.cued) {
-      this.pattern.activate();
-    } else if (
-      (event instanceof PointerEvent || event.type == "timer") &&
-      event.target instanceof HTMLButtonElement
-    ) {
-      const button = ButtonWrap(event.target);
-      const name = button.access.ComponentName;
-      if ("onClick" in button.access) {
-        button.access.onClick();
-      } else {
-        Globals.rules.applyRules(name, "press", button.access);
-      }
-    }
+class ResponderPatternActivate extends HandlerResponse {
+  respond() {
+    console.log("responder activate");
+    this.pattern.activate();
   }
 }
-TreeBase.register(ResponderActivate);
+TreeBase.register(ResponderPatternActivate);
+
+class ResponderPatternCue extends HandlerResponse {
+  respond() {
+    this.pattern.cue();
+  }
+}
+TreeBase.register(ResponderPatternCue);
 
 class ResponderCue extends HandlerResponse {
   Cue = new Props.Select();
@@ -91,6 +47,22 @@ class ResponderCue extends HandlerResponse {
 }
 TreeBase.register(ResponderCue);
 
+class ResponderActivate extends HandlerResponse {
+  /** @param {Event & { access: Object }} event */
+  respond(event) {
+    if (event.target instanceof HTMLButtonElement) {
+      const button = ButtonWrap(event.target);
+      const name = button.access.ComponentName;
+      if ("onClick" in button.access) {
+        button.access.onClick();
+      } else {
+        Globals.actions.applyRules(name, "press", button.access);
+      }
+    }
+  }
+}
+TreeBase.register(ResponderActivate);
+
 class ResponderClearCue extends HandlerResponse {
   respond() {
     for (const element of document.querySelectorAll("[cue]")) {
@@ -103,7 +75,7 @@ TreeBase.register(ResponderClearCue);
 class ResponderEmit extends HandlerResponse {
   /** @param {Event & { access: Object }} event */
   respond(event) {
-    Globals.rules.applyRules(event.access.type, "press", event.access);
+    Globals.actions.applyRules(event.access.type, "press", event.access);
   }
 }
 TreeBase.register(ResponderEmit);

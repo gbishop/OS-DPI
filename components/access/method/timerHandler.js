@@ -1,6 +1,5 @@
 import { TreeBase } from "../../treebase";
-import { Handler, HandlerCondition } from "./handler";
-import { HandlerResponse } from "./responses";
+import { Handler, HandlerCondition, HandlerResponse } from "./index";
 import * as Props from "../../props";
 import { html } from "uhtml";
 import * as RxJs from "rxjs";
@@ -17,30 +16,19 @@ export class TimerHandler extends Handler {
   Signal = new Props.Select(timerSignals);
   TimerName = new Props.Select([], { hiddenLabel: true });
 
-  template() {
+  settings() {
     const { conditions, responses, Signal } = this;
     const timerNames = this.nearestParent(Method).timerNames;
     return html`
       <fieldset class="Handler">
         <legend>Timer Handler</legend>
         ${Signal.input()} ${this.TimerName.input(timerNames)}
-        ${this.deleteButton({ title: "Delete this handler" })}
         <fieldset class="Conditions">
-          <legend>
-            Conditions
-            ${this.addChildButton("+", HandlerCondition, {
-              title: "Add a condition",
-            })}
-          </legend>
+          <legend>Conditions</legend>
           ${this.unorderedChildren(conditions)}
         </fieldset>
         <fieldset class="Responses">
-          <legend>
-            Responses
-            ${this.addChildButton("+", HandlerResponse, {
-              title: "Add a response",
-            })}
-          </legend>
+          <legend>Responses</legend>
           ${this.unorderedChildren(responses)}
         </fieldset>
       </fieldset>

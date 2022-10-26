@@ -1,22 +1,35 @@
 import { html } from "uhtml";
-import { Base, componentMap } from "./base";
+import * as Props from "./props";
+import { TreeBase } from "./treebase";
 import { styleString } from "./style";
 import { formatSlottedString } from "./helpers";
 import { UpdateAccessData } from "./access";
 import css from "ustyler";
 import "./img-db";
 import Globals from "../globals";
+import { comparators } from "../data";
 
-class Grid extends Base {
-  static defaultProps = {
-    fillItems: false,
-    rows: 3,
-    columns: 3,
-    filters: [],
-    name: "grid",
-    background: "white",
-    scale: "1",
-  };
+class Grid extends TreeBase {
+  fillItems = new Props.Boolean(false);
+  rows = new Props.Integer(3);
+  columns = new Props.Integer(3);
+  name = new Props.String("grid");
+  background = new Props.Color("white");
+  scale = new Props.Float(1);
+
+  allowedChildren = ["GridFilter"];
+
+  /** @type {GridFilter[]} */
+  children = [];
+
+  get filters() {
+    return this.children.map((child) => ({
+      field: child.field.value,
+      operator: child.operator.value,
+      value: child.value.value,
+    }));
+  }
+
   page = 1;
   pageBoundaries = { 0: 0 }; //track starting indices of pages
   /**
@@ -27,8 +40,7 @@ class Grid extends Base {
 
   /** @param {Row} item */
   gridCell(item) {
-    const { rules } = Globals;
-    const { background, name } = this.props;
+    const { name } = this.props;
     let content;
     let msg = formatSlottedString(item.label || "");
     if (item.symbol) {
@@ -107,9 +119,9 @@ class Grid extends Base {
     /** @type {Partial<CSSStyleDeclaration>} */
     const style = { backgroundColor: this.props.background };
     const { data, state } = Globals;
-    let { rows, columns, filters, fillItems } = this.props;
+    let { rows, columns, fillItems } = this.props;
     /** @type {Rows} */
-    let items = data.getMatchingRows(filters, state, this.cache);
+    let items = data.getMatchingRows(this.filters, state, this.cache);
     // reset the page when the key changes
     if (this.cache.updated) {
       this.page = 1;
@@ -187,17 +199,19 @@ class Grid extends Base {
 
     style.gridTemplate = `repeat(${rows}, calc(100% / ${rows})) / repeat(${columns}, 1fr)`;
 
-    return html`<div
-      class="grid"
-      id=${this.id}
-      ref=${this}
-      style=${styleString(style)}
-    >
+    return html`<div class="grid" id=${this.id} style=${styleString(style)}>
       ${result}
     </div>`;
   }
 }
-componentMap.addMap("grid", Grid);
+TreeBase.register(Grid);
+
+export class GridFilter extends TreeBase {
+  field = new Props.Field();
+  operator = new Props.Select(Object.keys(comparators));
+  value = new Props.String("");
+}
+TreeBase.register(GridFilter);
 
 css`
   .grid {

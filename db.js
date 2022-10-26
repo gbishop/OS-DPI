@@ -165,6 +165,7 @@ class DB {
    * @param {Object} data
    */
   async write(type, data) {
+    console.trace("db write", type);
     const db = await this.dbPromise;
     await db.put("store", { name: this.designName, type, data });
     await db.delete("saved", this.designName);
@@ -297,17 +298,20 @@ class DB {
     const db = await this.dbPromise;
 
     // collect the parts of the design
-    const layout = await this.read("layout");
-    const actions = await this.read("actions");
+    const layout = Globals.tree.toObject();
+    const actions = Globals.actions.toObject();
     const content = await this.read("content");
+    const method = Globals.method.toObject();
+    const pattern = Globals.patterns.toObject();
+    const cues = Globals.cues.toObject();
 
     const zipargs = {
       "layout.json": strToU8(JSON.stringify(layout)),
       "actions.json": strToU8(JSON.stringify(actions)),
       "content.json": strToU8(JSON.stringify(content)),
-      "method.json": strToU8(JSON.stringify(Globals.method.toObject())),
-      "pattern.json": strToU8(JSON.stringify(Globals.patterns.toObject())),
-      "cues.json": strToU8(JSON.stringify(Globals.cues.toObject())),
+      "method.json": strToU8(JSON.stringify(method)),
+      "pattern.json": strToU8(JSON.stringify(pattern)),
+      "cues.json": strToU8(JSON.stringify(cues)),
     };
 
     const mediaKeys = (await db.getAllKeys("media")).filter((pair) =>

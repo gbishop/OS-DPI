@@ -26,8 +26,8 @@ export default {
               children: [],
             },
             {
-              className: "ResponderNext",
-              props: { Response: "ResponderNext" },
+              className: "ResponderPatternNext",
+              props: { Response: "ResponderPatternNext" },
               children: [],
             },
           ],
@@ -47,8 +47,8 @@ export default {
               children: [],
             },
             {
-              className: "ResponderActivate",
-              props: { Response: "ResponderActivate" },
+              className: "ResponderPatternActivate",
+              props: { Response: "ResponderPatternActivate" },
               children: [],
             },
           ],
