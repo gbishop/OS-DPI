@@ -11,6 +11,8 @@ export class Actions extends TabPanel {
   name = new Props.String("Actions");
   scale = new Props.Integer(1);
 
+  allowedChildren = ["Action"];
+
   /** @type {Action[]} */
   children = [];
   last = {
@@ -233,6 +235,7 @@ export class Actions extends TabPanel {
 TreeBase.register(Actions);
 
 class Action extends TreeBase {
+  allowedChildren = ["ActionCondition", "ActionUpdate"];
   /** @type {(ActionCondition | ActionUpdate)[]} */
   children = [];
 
