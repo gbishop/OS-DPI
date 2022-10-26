@@ -1,25 +1,32 @@
 import { html } from "uhtml";
-import { Base, componentMap } from "./base";
+import { TreeBase } from "./treebase";
+import * as Props from "./props";
 import { Stack } from "./stack";
 import { styleString } from "./style";
 import css from "ustyler";
 import { UpdateAccessData } from "./access";
 import Globals from "../globals";
+import { callAfterRender } from "../render";
+import { updateMenuActions } from "./hotkeys";
 
-export class TabControl extends Base {
-  static defaultProps = {
-    stateName: "$tabControl",
-    activeTab: "",
-    background: "",
-    scale: "6",
-    tabEdge: "bottom",
-    name: "tabs",
-  };
-  static allowedChildren = ["tab panel"];
+export class TabControl extends TreeBase {
+  stateName = new Props.String("$tabControl");
+  background = new Props.String("");
+  scale = new Props.Float(6);
+  tabEdge = new Props.Select(["bottom", "top", "left", "right", "none"]);
+  name = new Props.String("tabs");
+
+  allowedChildren = ["TabPanel"];
+
+  /** @type {TabPanel[]} */
+  children = [];
+
+  /** @type {TabPanel} */
+  currentPanel = null;
 
   template() {
     const { state } = Globals;
-    const panels = /** @type {TabPanel[]} */ (this.children);
+    const panels = this.children;
     let activeTabName = state.get(this.props.stateName);
     // collect panel info
     panels.forEach((panel, index) => {
@@ -48,6 +55,9 @@ export class TabControl extends Base {
               label: panel.tabLabel,
               component: this.constructor.name,
               onClick: () => {
+                if (this instanceof DesignerTabControl) {
+                  callAfterRender(() => this.restoreFocus());
+                }
                 state.update({ [this.props.stateName]: panel.tabName });
               },
             })}
@@ -57,46 +67,82 @@ export class TabControl extends Base {
           </button>`;
         });
     }
-    const panel =
-      panels.find((panel) => panel.active)?.template() || html`<!--empty-->`;
+    this.currentPanel = panels.find((panel) => panel.active);
+    const panel = this.currentPanel?.template() || html`<!--empty-->`;
     return html`<div
       class=${["tabcontrol", "flex", this.props.tabEdge].join(" ")}
       id=${this.id}
     >
-      <div class="panels flex" }>${panel}</div>
       <div class="buttons">${buttons}</div>
+      <div
+        class="panels flex"
+        onfocusin=${({ target }) => {
+          this.currentPanel && (this.currentPanel.lastFocused = target.id);
+          /** FIX: this does not belong here. I'm just seeing if the actions stuff works */
+          updateMenuActions(this.currentPanel);
+        }}
+      >
+        ${panel}
+      </div>
     </div>`;
   }
+
+  restoreFocus() {}
 }
-componentMap.addMap("tab control", TabControl);
+TreeBase.register(TabControl);
+
+class DesignerTabControl extends TabControl {
+  settings() {
+    return super.template();
+  }
+
+  restoreFocus() {
+    if (this.currentPanel) {
+      if (this.currentPanel.lastFocused) {
+        const elem = document.getElementById(this.currentPanel.lastFocused);
+        console.log(
+          "restore focus",
+          elem,
+          this.currentPanel.lastFocused,
+          this.currentPanel
+        );
+        if (elem) elem.focus();
+      } else {
+        console.log("restoreFocus else path");
+        const panelNode = document.getElementById(this.currentPanel.id);
+        if (panelNode) {
+          const focusable = /** @type {HTMLElement} */ (
+            panelNode.querySelector(
+              "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), " +
+                'textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled]), ' +
+                "summary:not(:disabled)"
+            )
+          );
+          if (focusable) focusable.focus();
+        }
+      }
+    }
+  }
+}
+TreeBase.register(DesignerTabControl);
 
 export class TabPanel extends Stack {
+  name = new Props.String("");
+  label = new Props.String("");
+
+  /** @type {TabControl} */
+  parent = null;
+
   active = false;
   tabName = "";
   tabLabel = "";
-
-  static defaultProps = {
-    background: "",
-    name: "",
-    label: "",
-    direction: "column",
-    scale: "1",
-  };
-  static allowedChildren = [
-    "stack",
-    "grid",
-    "display",
-    "radio",
-    "tab control",
-    "vsd",
-    "button",
-  ];
+  lastFocused = "";
 }
-componentMap.addMap("tab panel", TabPanel);
+TreeBase.register(TabPanel);
 
 css`
   .tabcontrol .buttons button:focus {
-    outline: 0;
+    filter: invert(100%);
   }
   .tabcontrol .panels {
     display: flex;

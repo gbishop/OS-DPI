@@ -1,157 +1,114 @@
-import { Base, componentMap } from "./base";
 import { html } from "uhtml";
-import { log } from "../log"
+import { saveContent } from "./content"
+import { TreeBase } from "./treebase";
+import { TabPanel } from "./tabcontrol";
 
-import * as XLSX from "xlsx";
+import css from "ustyler";
+import DB from "../db";
+import * as Props from "./props";
 import Globals from "../globals";
 
+export class Logger extends TabPanel {
+  name = new Props.String("Logger");
+  stateName = new Props.String("$Log");
+  dbName = new Props.String("Log");
 
-export class Logger extends Base {
+  /** @type {Logger[]} */
+  static instances = [];
 
-    static instances = [];
+  init() {
+      Logger.instances.push(this);
+  }
 
-    static defaultProps = {
-        stateName: "$Log",
-        name: "Log"
-    };
+  template() {
+      const { state } = Globals;
+      const { stateName, name  } = this.props;
+  
+      if(state.hasBeenUpdated(stateName)) {
+          DB.read(this.name.value, []).then(value => {
+              value.push({timestamp: Date.now(), ...this.stringifyInput(state.get(stateName))});
+              DB.write(this.name.value, value);
+          });
+      }
+  
+      return html`<!--empty-->`;
+  }
 
-    init() {
-        this.DB = new DB();
-        Logger.instances.push(this);
-    }
+  stringifyInput(arr) {
+    let output = {};
 
-    template() {
-        const { state } = Globals;
-        const { stateName, name  } = this.props;
-    
-        if(state.hasBeenUpdated(stateName)) {
-          let value = this.stringifyInput(state.get(stateName));
-          this.DB.submit({"timestamp": Date.now(), "value": value});
-        }
-    
-        return html``;
-    }
+    for (let i = 0; i < arr.length; i += 2)
+      output[arr[i]] = Globals.state.interpolate(
+        i + 1 < arr.length ? arr[i + 1] : ""
+      );
 
-    stringifyInput(arr) {
-        let output = {};
-        for(let i = 0; i < arr.length; i+=2)
-          output[arr[i]] = Globals.state.interpolate(i + 1 < arr.length ? arr[i+1] : "");
-    
-        return output
-    }
+    return output;
+  }
 }
+TabPanel.register(Logger);
 
-componentMap.addMap("logger", Logger);
+export class Logging extends TreeBase {
+  name = new Props.String("Logging");
 
-class DB {
+  template() {
+    this.selected = this.selected || Logger.instances?.[0];
 
-    #DB = undefined;
+    return html`
+      <div id="logging-panel">
+        <h2>Select Logger</h2>
+        <label
+          >Logger
+          <select
+            onchange=${({ target }) => {
+              this.selected = Logger.instances?.[target.value || 0];
+            }}
+          >
+            <option value="" invalid>Choose one...</option>
+            ${Logger.instances.map(
+              (l) =>
+                html`<option
+                  value="${Logger.instances.indexOf(l)}"
+                  ?selected=${l.name.value === this.selected?.name.value}
+                >
+                  ${l.name.value}
+                </option>`
+            )}
+          </select></label
+        >
 
-    constructor(name="default-log") {
-        this.name = name;
-        
-        let request = indexedDB.open(name, 3);
-        request.onsuccess = (e) => this.#open(e, false);
-        request.onupgradeneeded = (e) => this.#open(e, true);
-        request.onerror = (e) => log(`'${this.name}' database failed to open!`);
-    }
-
-    #open(event, upgradeNeeded) {
-        this.#DB = event.target.result;
-
-        if(upgradeNeeded) {
-            let eventStore = this.#DB.createObjectStore("event", {keyPath: "timestamp"});
-            eventStore.createIndex("by-timestamp", "timestamp", {unique: false});
-        }
-
-        log(`'${this.name}' database successfully ${upgradeNeeded ? 'created' : 'opened'}!`);
-    }
-
-    clear() {
-        let request = this.#DB
-            .transaction(["event"], "readwrite")
-            .objectStore("event")
-            .clear();
-
-        request.onsuccess = (e) =>  log(`'${this.name}' database successfully cleared!`);
-        request.onerror = (e) =>  log(`'${this.name}' database failed to clear!`);
-    }
-
-    submit(...events) {
-        let eventStore = this.#DB
-            .transaction(["event"], "readwrite")
-            .objectStore("event");
-        
-        events.filter(e => "timestamp" in e).forEach(e => eventStore.add(e));
-    }
-
-    async save(type='csv') {
-        let rows = await this.#fetchRows(type);
-        rows.forEach(row => row.sheetName = (row.sheetName != "undefined" ? row.sheetName : 'event'));
-
-        const sheetNames = new Set(rows.map((row) => row.sheetName));
-        const workbook = XLSX.utils.book_new();
-
-        sheetNames.add('event');
-
-        for (const sheetName of sheetNames) {
-            let sheetRows = rows;
-
-            if (type != "csv") {
-                sheetRows = rows.filter((row) => sheetName == row.sheetName);
-                sheetRows = sheetRows.map((row) => {
-                const { sheetName, ...rest } = row;
-                return rest;
-                });
+        <h2>Save content as a spreadsheet</h2>
+        <label for="sheetType">Spreadsheet type</label>
+        <select
+          id="sheetType"
+          onchange=${({ target }) => {
+            if (this.selected && target.value !== "") {
+              DB.read(this.selected.dbName.value, [{}]).then(rows => {
+                saveContent(this.selected.dbName.value, rows, target.value);
+              });
             }
+          }}
+        >
+          <option selected value="">Choose your format</option>
+          <option value="xlsx">Excel .xlsx</option>
+          <option value="xls">Excel .xls</option>
+          <option value="ods">ODF Spreadsheet .ods</option>
+          <option value="csv">Comma Separated Values .csv</option>
+        </select>
 
-            const worksheet = XLSX.utils.json_to_sheet(sheetRows);
-            XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-        }
-
-        XLSX.writeFile(workbook, `${this.name}.${type}`);
-    }
-
-    async #fetchRows(type='csv') {
-        let request = this.#DB.transaction(["event"], "readonly");
-        let query = request
-            .objectStore("event")
-            .index("by-timestamp");
-
-        let events = new Set(), columns = new Set();
-
-        return new Promise((resolve, reject) => {
-            query.openCursor().onsuccess = (e) => {
-                let cursor = e.target.result;
-
-                if(cursor) {
-                    let event = cursor.value;
-
-                    try {
-                        Object.keys(event.value).forEach(v => columns.add(v));
-                        events.add(event);
-                    } catch(e) {
-
-                    } finally {
-                        cursor.continue();
-                    }
-                }
-
-                else {
-                    let rows = [];
-
-                    for(let event of events) {
-                        let row = {"sheetName": event.sheetName, "timestamp": `${event.timestamp}`};
-
-                        (type.match(/csv/i) ? columns : Object.keys(event.value))
-                            .forEach(column => row[column] = (event.value[column] || ""));
-
-                        rows.push(row);
-                    }
-
-                    resolve(rows);
-                }
-            };
-        });
-    }
+        <h2>Clear log</h2>
+        <button onclick=${() => {
+          if(this.selected) {
+            DB.write(this.selected.dbName.value, [{}]);
+          }
+        }}>Clear</button>
+      </div>
+    `;
+  }
 }
+TreeBase.register(Logging);
+
+css`
+  #logging-panel {
+    margin: 5px;
+  }
+}`;

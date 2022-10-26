@@ -1,4 +1,4 @@
-import { assemble } from "./base";
+import "./page";
 import "./stack";
 import "./grid";
 import "./display";
@@ -13,5 +13,13 @@ import "./speech";
 import "./audio";
 import "./help";
 import "./logger";
-
-export { assemble };
+import "./content";
+import "./layout";
+import "./hotkeys";
+import "./access/method";
+import "./access/method/responses";
+import "./access/method/keyHandler";
+import "./access/method/pointerHandler";
+import "./access/method/timerHandler";
+import "./access/cues";
+import "./access/pattern";

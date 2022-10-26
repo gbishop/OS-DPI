@@ -7,6 +7,7 @@
     "angular-expressions": "./angular-expressions.js",
     "browser-fs-access": "./browser-fs-access.js",
     "cross-fetch": "./cross-fetch.js",
+    "fast-deep-equal": "./fast-deep-equal.js",
     "fflate": "./fflate.js",
     "idb/with-async-ittr": "./idb/with-async-ittr.js",
     "mergerino": "./mergerino.js",

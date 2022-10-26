@@ -4,6 +4,8 @@ import { Base, componentMap } from "./base.js";
 import { html } from "../_snowpack/pkg/uhtml.js";
 import db from "../db.js";
 
+import Globals from "../globals.js";
+
 class Audio extends Base {
   static defaultProps = {
     stateName: "$Audio",

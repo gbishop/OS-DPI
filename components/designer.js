@@ -6,7 +6,7 @@ import { Actions } from "./actions";
 import { Access } from "./access";
 import { Content } from "./content";
 import css from "ustyler";
-import { Logging } from "./logging";
+import { Logging } from "./logger";
 
 export class Designer extends Base {
   /**

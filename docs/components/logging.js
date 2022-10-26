@@ -1,9 +1,9 @@
-import { html } from "uhtml";
-import { Base } from "./base";
-import { Logger } from "./logger";
+import { html } from "../_snowpack/pkg/uhtml.js";
+import { Base } from "./base.js";
+import { Logger } from "./logger.js";
 
-import css from "ustyler";
-import Globals from "../globals";
+import css from "../_snowpack/pkg/ustyler.js";
+import Globals from "../globals.js";
 
 export class Logging extends Base {
 

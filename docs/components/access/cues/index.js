@@ -2,19 +2,13 @@ import { html } from "../../../_snowpack/pkg/uhtml.js";
 import css from "../../../_snowpack/pkg/ustyler.js";
 import { Base } from "../../base.js";
 import { TreeBase, TreeBaseSwitchable } from "../../treebase.js";
-import {
-  String,
-  TypeSelect,
-  UID,
-  TextArea,
-  Color,
-  Float,
-  Select,
-} from "../../props.js";
+import * as Props from "../../props.js";
+
 import db from "../../../db.js";
 import Globals from "../../../globals.js";
 import { interpolate } from "../../helpers.js";
 import { getColor } from "../../style.js";
+import defaultCues from "./defaultCues.js";
 
 export class AccessCues extends Base {
   template() {
@@ -51,12 +45,7 @@ export class CueList extends TreeBase {
    * @returns {Promise<CueList>}
    */
   static async load() {
-    const fallback = {
-      className: "CueList",
-      props: {},
-      children: [],
-    };
-    const list = await db.read("cues", fallback);
+    const list = await db.read("cues", defaultCues);
     const result = /** @type {CueList} */ (this.fromObject(list));
     return result;
   }
@@ -78,9 +67,9 @@ const CueTypes = new Map([
 ]);
 
 class Cue extends TreeBaseSwitchable {
-  Name = new String("a cue");
-  Key = new UID();
-  CueType = new TypeSelect(CueTypes);
+  Name = new Props.String("a cue");
+  Key = new Props.UID();
+  CueType = new Props.TypeSelect(CueTypes);
 
   template() {
     return html`
@@ -108,12 +97,16 @@ class Cue extends TreeBaseSwitchable {
 TreeBase.register(Cue);
 
 class CueCss extends Cue {
-  Code = new TextArea("", {
+  Code = new Props.TextArea("", {
     placeholder: "Enter CSS for this cue",
+    hiddenLabel: true,
   });
 
   subTemplate() {
-    return this.Code.input();
+    return html`<details>
+      <summary>CSS</summary>
+      ${this.Code.input()}
+    </details>`;
   }
 
   get css() {
@@ -123,8 +116,8 @@ class CueCss extends Cue {
 TreeBase.register(CueCss);
 
 class CueOverlay extends Cue {
-  Color = new Color("yellow");
-  Opacity = new Float(0.3);
+  Color = new Props.Color("yellow");
+  Opacity = new Props.Float(0.3);
 
   subTemplate() {
     return html` ${this.Color.input()} ${this.Opacity.input()}
@@ -164,13 +157,14 @@ const fillDirections = new Map([
   ["left", "right to left"],
 ]);
 class CueFill extends Cue {
-  Color = new Color("blue");
-  Opacity = new Float(0.3);
-  Direction = new Select(fillDirections);
+  Color = new Props.Color("blue");
+  Opacity = new Props.Float(0.3);
+  Direction = new Props.Select(fillDirections);
+  Repeat = new Props.Boolean(false);
 
   subTemplate() {
     return html`${this.Color.input()} ${this.Opacity.input()}
-      ${this.Direction.input()}
+      ${this.Direction.input()} ${this.Repeat.input()}
       <details>
         <summary>generated CSS</summary>
         <pre><code>${this.css}</code></pre>
@@ -198,6 +192,7 @@ class CueFill extends Cue {
         animation-name: {{Key}};
         animation-duration: var(--timerInterval);
         animation-timing-function: linear;
+        animation-iteration-count: ${this.Repeat.value ? "infinite" : 1};
       }
       @keyframes {{Key}} {
         0% { {{Direction}}: 100%; }
@@ -209,8 +204,8 @@ class CueFill extends Cue {
 TreeBase.register(CueFill);
 
 class CueCircle extends Cue {
-  Color = new Color("lightblue");
-  Opacity = new Float(0.3);
+  Color = new Props.Color("lightblue");
+  Opacity = new Props.Float(0.3);
 
   subTemplate() {
     return html`${this.Color.input()} ${this.Opacity.input()}

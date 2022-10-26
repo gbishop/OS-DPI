@@ -1,21 +1,24 @@
 import { html } from "../../../_snowpack/pkg/uhtml.js";
 import { TreeBase, TreeBaseSwitchable } from "../../treebase.js";
 import Globals from "../../../globals.js";
-import { Select, TypeSelect } from "../../props.js";
+import * as Props from "../../props.js";
 import { Method } from "./index.js";
+import { ButtonWrap } from "../index.js";
 
 const ResponderTypeMap = new Map([
   ["HandlerResponse", "none"],
-  ["ResponderNext", "next"],
-  ["ResponderActivate", "activate"],
+  ["ResponderPatternNext", "pattern next"],
+  ["ResponderPatternActivate", "pattern activate"],
+  ["ResponderPatternCue", "pattern cue"],
   ["ResponderCue", "cue"],
+  ["ResponderActivate", "activate"],
   ["ResponderClearCue", "clear cue"],
   ["ResponderEmit", "emit"],
   ["ResponderStartTimer", "start timer"],
 ]);
 
 export class HandlerResponse extends TreeBaseSwitchable {
-  Response = new TypeSelect(ResponderTypeMap, { hiddenLabel: true });
+  Response = new Props.TypeSelect(ResponderTypeMap, { hiddenLabel: true });
 
   /** @param {Event & { access: Object }} event */
   respond(event) {
@@ -31,52 +34,94 @@ export class HandlerResponse extends TreeBaseSwitchable {
     `;
   }
 
+  get pattern() {
+    const method = this.nearestParent(Method);
+    return method.pattern;
+  }
+
   subTemplate() {
     return html`<!--empty-->`;
   }
 }
 TreeBase.register(HandlerResponse);
 
-class ResponderNext extends HandlerResponse {
+class ResponderPatternNext extends HandlerResponse {
   respond() {
-    Globals.pattern.next();
+    this.pattern.next();
   }
 }
-TreeBase.register(ResponderNext);
+TreeBase.register(ResponderPatternNext);
 
-class ResponderActivate extends HandlerResponse {
+class ResponderPatternActivate extends HandlerResponse {
   respond() {
     console.log("responder activate");
-    Globals.pattern.activate();
+    this.pattern.activate();
   }
 }
-TreeBase.register(ResponderActivate);
+TreeBase.register(ResponderPatternActivate);
+
+class ResponderPatternCue extends HandlerResponse {
+  respond() {
+    this.pattern.cue();
+  }
+}
+TreeBase.register(ResponderPatternCue);
 
 class ResponderCue extends HandlerResponse {
+  Cue = new Props.Select();
+
+  subTemplate() {
+    return this.Cue.input(Globals.cues.cueMap);
+  }
+
   /** @param {Event & { access: Object }} event */
   respond(event) {
-    Globals.pattern.setCurrent(event.target);
-    Globals.pattern.cue();
+    if (event.target instanceof HTMLButtonElement) {
+      for (const element of document.querySelectorAll("[cue]")) {
+        element.removeAttribute("cue");
+      }
+      const button = ButtonWrap(event.target);
+      button.cue(this.Cue.value);
+    }
   }
 }
 TreeBase.register(ResponderCue);
 
+class ResponderActivate extends HandlerResponse {
+  /** @param {Event & { access: Object }} event */
+  respond(event) {
+    if (event.target instanceof HTMLButtonElement) {
+      const button = ButtonWrap(event.target);
+      const name = button.access.ComponentName;
+      if ("onClick" in button.access) {
+        button.access.onClick();
+      } else {
+        Globals.rules.applyRules(name, "press", button.access);
+      }
+    }
+  }
+}
+TreeBase.register(ResponderActivate);
+
 class ResponderClearCue extends HandlerResponse {
   respond() {
-    Globals.pattern.clearCue();
+    for (const element of document.querySelectorAll("[cue]")) {
+      element.removeAttribute("cue");
+    }
   }
 }
 TreeBase.register(ResponderClearCue);
 
 class ResponderEmit extends HandlerResponse {
-  respond({ access }) {
-    Globals.rules.applyRules(access.type, "press", access);
+  /** @param {Event & { access: Object }} event */
+  respond(event) {
+    Globals.rules.applyRules(event.access.type, "press", event.access);
   }
 }
 TreeBase.register(ResponderEmit);
 
 class ResponderStartTimer extends HandlerResponse {
-  TimerName = new Select([], {
+  TimerName = new Props.Select([], {
     placeholder: "Choose a timer",
     hiddenLabel: true,
   });
@@ -86,7 +131,8 @@ class ResponderStartTimer extends HandlerResponse {
     return html`${this.TimerName.input(timerNames)}`;
   }
 
-  respond({ access }) {
+  /** @param {Event & { access: Object }} event */
+  respond(event) {
     const timer = this.nearestParent(Method).timer(this.TimerName.value);
     if (!timer) return;
     // hand the interval to Cue CSS for animations
@@ -94,7 +140,7 @@ class ResponderStartTimer extends HandlerResponse {
       "--timerInterval",
       `${timer.Interval.value}s`
     );
-    timer.start(access);
+    timer.start(event);
   }
 }
 TreeBase.register(ResponderStartTimer);

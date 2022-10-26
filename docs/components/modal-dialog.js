@@ -2,6 +2,8 @@ import { html } from "../_snowpack/pkg/uhtml.js";
 import { Base, componentMap } from "./base.js";
 import css from "../_snowpack/pkg/ustyler.js";
 
+import Globals from "../globals.js";
+
 export class ModalDialog extends Base {
   static defaultProps = {
     stateName: "$modalOpen",
