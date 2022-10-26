@@ -9,7 +9,6 @@ push:
 
 pushgb:
 	npm run build
-	sed -i 's/unc-project-open-aac/gbishop/g' docs/README.md
 	git add docs
 	git commit -m 'build'
 	git push origin
