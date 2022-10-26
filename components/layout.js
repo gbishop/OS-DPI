@@ -31,6 +31,9 @@ css`
 
   .layout ol {
     list-style-type: none;
+    margin-block-start: 0;
+    padding-inline-start: 1em;
+    border-left: 1px solid #d0d0d0;
   }
 
   .layout details {
