@@ -67,7 +67,7 @@ export async function start() {
   }
 
   /* Designer */
-  Globals.state.define("editing", false); // for now
+  Globals.state.define("editing", true); // for now
   const designer = TreeBase.fromObject({
     className: "DesignerTabControl",
     props: { tabEdge: "top", stateName: "designerTab" },
@@ -95,7 +95,7 @@ export async function start() {
   });
 
   /* ToolBar */
-  const toolbar = new ToolBar();
+  const toolbar = ToolBar.create("ToolBar", null);
 
   /* Monitor */
   const monitor = new Monitor();

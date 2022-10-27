@@ -399,7 +399,7 @@ export class TreeBase {
   }
 }
 
-class MenuAction {
+export class MenuAction {
   /** @type {TreeBase} component */
   component = null;
   className = "";

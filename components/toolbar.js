@@ -3,8 +3,25 @@ import css from "ustyler";
 import db from "../db";
 import { html } from "uhtml";
 import Globals from "../globals";
+import { Menu } from "./menu";
 
 export class ToolBar extends TreeBase {
+  init() {
+    console.log("toolbar init");
+    this.menu = new Menu("Add", () =>
+      ["foo", "add this to that"].map((item) => ({
+        label: item,
+        callback: () => console.log("menu", item),
+      }))
+    );
+    this.menu2 = new Menu("Delete", () =>
+      ["delete this", "delete that"].map((item) => ({
+        label: item,
+        callback: () => console.log("menu", item),
+      }))
+    );
+  }
+
   template() {
     const { state } = Globals;
     return html`
@@ -33,10 +50,12 @@ export class ToolBar extends TreeBase {
         >
           Undo
         </button>
+        ${this.menu.render()} ${this.menu2.render()}
       </div>
     `;
   }
 }
+TreeBase.register(ToolBar);
 
 css`
   #toolbar {
