@@ -32,9 +32,12 @@ export class Menu {
     /* Close the menu when it loses focus */
     this.checkFocusOut = ({ relatedTarget }) => {
       console.log("checkFocusOut", relatedTarget, this.expanded);
-      if (!this.expanded) return;
       if (!relatedTarget) {
-        this.toggleExpanded();
+        callAfterRender(() => {
+          const button = document.getElementById(this.buttonId);
+          if (button) button.focus();
+        });
+        if (this.expanded) this.toggleExpanded();
         return;
       }
       const menu = document.getElementById(this.id);
@@ -58,6 +61,24 @@ export class Menu {
         Globals.state.update();
       }
     };
+
+    this.keyHandler = ({ key }) => {
+      if (key == "Escape") this.toggleExpanded();
+      else if (key == "ArrowUp" || key == "ArrowDown") {
+        const menu = document.getElementById(this.contentId);
+        const items = [...menu.querySelectorAll("button")];
+        const current = /** @type {HTMLButtonElement} */ (
+          menu.querySelector("button:focus")
+        );
+        if (current) {
+          const index = items.indexOf(current);
+          const step = key == "ArrowUp" ? -1 : 1;
+          const count = items.length;
+          const next = (index + step + count) % count;
+          items[next].focus();
+        }
+      }
+    };
   }
 
   render() {
@@ -69,14 +90,14 @@ export class Menu {
     return html`<div
       class="Menu"
       id=${this.id}
-      onkeyup=${({ key }) =>
-        key == "Escape" && this.expanded && this.toggleExpanded()}
+      onkeyup=${this.keyHandler}
       onfocusout=${this.checkFocusOut}
     >
       <button
         id=${this.buttonId}
         aria-expanded=${this.expanded}
         aria-controls=${this.contentId}
+        aria-haspopup="true"
         onclick=${this.toggleExpanded}
       >
         ${this.label}
