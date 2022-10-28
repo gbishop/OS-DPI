@@ -6,7 +6,7 @@
 import { html } from "uhtml";
 import css from "ustyler";
 import Globals from "../globals";
-import { callAfterRender } from "../render";
+import { callAfterRender } from "/render";
 
 /**
  * @typedef {Object} MenuItem
@@ -15,12 +15,15 @@ import { callAfterRender } from "../render";
  */
 
 export class Menu {
+  // a unique id for each menu
   static _menuCount = 0;
   id = `menu_${Menu._menuCount++}`;
+
+  // these are for aria references
   contentId = this.id + "_content";
   buttonId = this.id + "_button";
 
-  expanded = false;
+  expanded = false; // true when the menu is shown
 
   /** @type {MenuItem[]} */
   items = []; // cached items returned from the contentCallback
@@ -90,6 +93,7 @@ export class Menu {
 
   /** @param {number} index */
   setFocus(index) {
+    // make it a circular buffer
     index = (index + this.items.length) % this.items.length;
     const item = /** @type {HTMLElement} */ (
       this.current.querySelector(`button[index="${index}"]`)
@@ -135,6 +139,10 @@ export class Menu {
     }
   };
 
+  /** handle the keyboard when inside the menu
+   *
+   * @param {KeyboardEvent} event
+   * */
   menuKeyHandler = ({ key }) => {
     if (key == "Escape" && this.expanded) {
       this.toggleExpanded();
@@ -162,7 +170,10 @@ export class Menu {
     }
   };
 
-  /** @param {KeyboardEvent} event */
+  /**
+   * Handle the keyboard when on the menu button
+   *
+   * @param {KeyboardEvent} event */
   buttonKeyHandler = (event) => {
     if (event.key == "ArrowDown" || event.key == " ") {
       event.preventDefault();
