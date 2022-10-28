@@ -33,15 +33,21 @@ export class TreeBase {
 
   designer = {};
 
-  /** A mapping from the class name to the class */
-  static classMap = new Map();
-  /** @param {typeof TreeBase} cls */
-  static register(cls) {
-    this.classMap.set(cls.name, cls);
+  /** A mapping from the external class name to the class */
+  static nameToClass = new Map();
+  /** A mapping from the class to the external class name */
+  static classToName = new Map();
+
+  /** @param {typeof TreeBase} cls
+   * @param {string} externalName
+   * */
+  static register(cls, externalName) {
+    this.nameToClass.set(externalName, cls);
+    this.classToName.set(cls, externalName);
   }
 
   get className() {
-    return this.constructor.name;
+    return TreeBase.classToName.get(this.constructor);
   }
 
   /**
@@ -92,7 +98,7 @@ export class TreeBase {
   static create(constructorOrName, parent = null, props = {}) {
     const constructor =
       typeof constructorOrName == "string"
-        ? TreeBase.classMap.get(constructorOrName)
+        ? TreeBase.nameToClass.get(constructorOrName)
         : constructorOrName;
     /** @type {TB} */
     const result = new constructor();
@@ -160,7 +166,7 @@ export class TreeBase {
       obj = newObj;
     }
     const className = obj.className;
-    const constructor = this.classMap.get(className);
+    const constructor = this.nameToClass.get(className);
     if (!constructor) {
       console.trace("className not found", className, obj);
       throw new Error("className not found");

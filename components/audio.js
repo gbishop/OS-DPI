@@ -27,4 +27,4 @@ class Audio extends TreeBase {
     return html`<!--empty-->`;
   }
 }
-TreeBase.register(Audio);
+TreeBase.register(Audio, "Audio");

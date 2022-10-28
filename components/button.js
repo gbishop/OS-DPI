@@ -34,7 +34,7 @@ class Button extends TreeBase {
     return [];
   }
 }
-TreeBase.register(Button);
+TreeBase.register(Button, "Button");
 
 css`
   button.button {

@@ -48,7 +48,7 @@ export class CueList extends TabPanel {
     Globals.state.update();
   }
 }
-TreeBase.register(CueList);
+TreeBase.register(CueList, "CueList");
 
 const CueTypes = new Map([
   ["Cue", "none"],
@@ -85,7 +85,7 @@ class Cue extends TreeBaseSwitchable {
     </style>`;
   }
 }
-TreeBase.register(Cue);
+TreeBase.register(Cue, "Cue");
 
 class CueCss extends Cue {
   Code = new Props.TextArea("", {
@@ -104,7 +104,7 @@ class CueCss extends Cue {
     return this.Code.value;
   }
 }
-TreeBase.register(CueCss);
+TreeBase.register(CueCss, "CueCss");
 
 class CueOverlay extends Cue {
   Color = new Props.Color("yellow");
@@ -139,7 +139,7 @@ class CueOverlay extends Cue {
     `;
   }
 }
-TreeBase.register(CueOverlay);
+TreeBase.register(CueOverlay, "CueOverlay");
 
 const fillDirections = new Map([
   ["top", "up"],
@@ -192,7 +192,7 @@ class CueFill extends Cue {
     `;
   }
 }
-TreeBase.register(CueFill);
+TreeBase.register(CueFill, "CueFill");
 
 class CueCircle extends Cue {
   Color = new Props.Color("lightblue");
@@ -269,7 +269,7 @@ button[cue="{{Key}}"]:after {
     `;
   }
 }
-TreeBase.register(CueCircle);
+TreeBase.register(CueCircle, "CueCircle");
 
 css`
   .Cue textarea {

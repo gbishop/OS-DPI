@@ -58,7 +58,7 @@ export class MethodChooser extends TabPanel {
       .forEach((child) => child.refresh());
   }
 }
-TreeBase.register(MethodChooser);
+TreeBase.register(MethodChooser, "MethodChooser");
 
 export class Method extends TreeBase {
   Name = new Props.String("New method");
@@ -156,7 +156,7 @@ export class Method extends TreeBase {
     this.pattern.refresh();
   }
 }
-TreeBase.register(Method);
+TreeBase.register(Method, "Method");
 
 class Timer extends TreeBase {
   Interval = new Props.Float(0.5, { hiddenLabel: true });
@@ -191,7 +191,7 @@ class Timer extends TreeBase {
     this.subject$.next(event);
   }
 }
-TreeBase.register(Timer);
+TreeBase.register(Timer, "Timer");
 
 /** Handler is a base class for all event handlers */
 export class Handler extends TreeBase {
@@ -241,7 +241,7 @@ export class HandlerCondition extends TreeBase {
     return this.Condition.eval(context);
   }
 }
-TreeBase.register(HandlerCondition);
+TreeBase.register(HandlerCondition, "HandlerCondition");
 
 const allKeys = new Map([
   [" ", "Space"],
@@ -260,7 +260,7 @@ export class HandlerKeyCondition extends TreeBase {
     return html` <div class="Key">${Key.input()}</div> `;
   }
 }
-TreeBase.register(HandlerKeyCondition);
+TreeBase.register(HandlerKeyCondition, "HandlerKeyCondition");
 
 const ResponderTypeMap = new Map([
   ["HandlerResponse", "none"],
@@ -297,7 +297,7 @@ export class HandlerResponse extends TreeBaseSwitchable {
     return html`<!--empty-->`;
   }
 }
-TreeBase.register(HandlerResponse);
+TreeBase.register(HandlerResponse, "HandlerResponse");
 
 css`
   details.Method > *:not(summary) {

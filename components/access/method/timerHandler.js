@@ -53,4 +53,4 @@ export class TimerHandler extends Handler {
       .subscribe((e) => this.respond(e));
   }
 }
-TreeBase.register(TimerHandler);
+TreeBase.register(TimerHandler, "TimerHandler");

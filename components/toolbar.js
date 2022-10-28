@@ -55,7 +55,7 @@ export class ToolBar extends TreeBase {
     `;
   }
 }
-TreeBase.register(ToolBar);
+TreeBase.register(ToolBar, "ToolBar");
 
 css`
   #toolbar {

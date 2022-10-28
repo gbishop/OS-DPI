@@ -236,7 +236,7 @@ export function strip(value) {
   });
   return parts.join("");
 }
-TreeBase.register(Display);
+TreeBase.register(Display, "Display");
 
 css`
   .display {

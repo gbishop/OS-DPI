@@ -19,7 +19,7 @@ export class Layout extends TabPanel {
     Globals.state.update();
   }
 }
-TreeBase.register(Layout);
+TreeBase.register(Layout, "Layout");
 
 css`
   div.layout {

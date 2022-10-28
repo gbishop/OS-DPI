@@ -27,7 +27,7 @@ export class ModalDialog extends TreeBase {
     }
   }
 }
-TreeBase.register(ModalDialog);
+TreeBase.register(ModalDialog, "ModalDialog");
 
 css`
   div.modal {

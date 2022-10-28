@@ -89,7 +89,7 @@ export class TabControl extends TreeBase {
 
   restoreFocus() {}
 }
-TreeBase.register(TabControl);
+TreeBase.register(TabControl, "TabControl");
 
 class DesignerTabControl extends TabControl {
   settings() {
@@ -124,7 +124,7 @@ class DesignerTabControl extends TabControl {
     }
   }
 }
-TreeBase.register(DesignerTabControl);
+TreeBase.register(DesignerTabControl, "DesignerTabControl");
 
 export class TabPanel extends Stack {
   name = new Props.String("");
@@ -138,7 +138,7 @@ export class TabPanel extends Stack {
   tabLabel = "";
   lastFocused = "";
 }
-TreeBase.register(TabPanel);
+TreeBase.register(TabPanel, "TabPanel");
 
 css`
   .tabcontrol .buttons button:focus {

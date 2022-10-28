@@ -1,5 +1,5 @@
 import { html } from "uhtml";
-import { saveContent } from "./content"
+import { saveContent } from "./content";
 import { TreeBase } from "./treebase";
 import { TabPanel } from "./tabcontrol";
 
@@ -17,21 +17,24 @@ export class Logger extends TabPanel {
   static instances = [];
 
   init() {
-      Logger.instances.push(this);
+    Logger.instances.push(this);
   }
 
   template() {
-      const { state } = Globals;
-      const { stateName, name  } = this.props;
-  
-      if(state.hasBeenUpdated(stateName)) {
-          DB.read(this.name.value, []).then(value => {
-              value.push({timestamp: Date.now(), ...this.stringifyInput(state.get(stateName))});
-              DB.write(this.name.value, value);
-          });
-      }
-  
-      return html`<!--empty-->`;
+    const { state } = Globals;
+    const { stateName, name } = this.props;
+
+    if (state.hasBeenUpdated(stateName)) {
+      DB.read(this.name.value, []).then((value) => {
+        value.push({
+          timestamp: Date.now(),
+          ...this.stringifyInput(state.get(stateName)),
+        });
+        DB.write(this.name.value, value);
+      });
+    }
+
+    return html`<!--empty-->`;
   }
 
   stringifyInput(arr) {
@@ -45,7 +48,7 @@ export class Logger extends TabPanel {
     return output;
   }
 }
-TabPanel.register(Logger);
+TabPanel.register(Logger, "Logger");
 
 export class Logging extends TreeBase {
   name = new Props.String("Logging");
@@ -82,7 +85,7 @@ export class Logging extends TreeBase {
           id="sheetType"
           onchange=${({ target }) => {
             if (this.selected && target.value !== "") {
-              DB.read(this.selected.dbName.value, [{}]).then(rows => {
+              DB.read(this.selected.dbName.value, [{}]).then((rows) => {
                 saveContent(this.selected.dbName.value, rows, target.value);
               });
             }
@@ -96,16 +99,20 @@ export class Logging extends TreeBase {
         </select>
 
         <h2>Clear log</h2>
-        <button onclick=${() => {
-          if(this.selected) {
-            DB.write(this.selected.dbName.value, [{}]);
-          }
-        }}>Clear</button>
+        <button
+          onclick=${() => {
+            if (this.selected) {
+              DB.write(this.selected.dbName.value, [{}]);
+            }
+          }}
+        >
+          Clear
+        </button>
       </div>
     `;
   }
 }
-TreeBase.register(Logging);
+TreeBase.register(Logging, "Logging");
 
 css`
   #logging-panel {

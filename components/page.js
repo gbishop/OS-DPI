@@ -43,4 +43,4 @@ export class Page extends Stack {
     Globals.state.update();
   }
 }
-Stack.register(Page);
+Stack.register(Page, "Page");

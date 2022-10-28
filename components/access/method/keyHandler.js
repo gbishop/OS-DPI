@@ -108,4 +108,4 @@ export class KeyHandler extends Handler {
     stream$.pipe(RxJs.takeUntil(stop$)).subscribe((e) => this.respond(e));
   }
 }
-TreeBase.register(KeyHandler);
+TreeBase.register(KeyHandler, "KeyHandler");

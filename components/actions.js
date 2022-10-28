@@ -232,7 +232,7 @@ export class Actions extends TabPanel {
     Globals.state.update();
   }
 }
-TreeBase.register(Actions);
+TreeBase.register(Actions, "Actions");
 
 class Action extends TreeBase {
   allowedChildren = ["ActionCondition", "ActionUpdate"];
@@ -250,18 +250,18 @@ class Action extends TreeBase {
     return this.filterChildren(ActionUpdate);
   }
 }
-TreeBase.register(Action);
+TreeBase.register(Action, "Action");
 
 export class ActionCondition extends TreeBase {
   Condition = new Props.Expression("", { hiddenLabel: true });
 }
-TreeBase.register(ActionCondition);
+TreeBase.register(ActionCondition, "ActionCondition");
 
 export class ActionUpdate extends TreeBase {
   stateName = new Props.String("", { hiddenLabel: true });
   newValue = new Props.Expression("", { hiddenLabel: true });
 }
-TreeBase.register(ActionUpdate);
+TreeBase.register(ActionUpdate, "ActionUpdate");
 
 css`
   div.actions {

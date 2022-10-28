@@ -10,7 +10,7 @@ class ResponderPatternNext extends HandlerResponse {
     this.pattern.next();
   }
 }
-TreeBase.register(ResponderPatternNext);
+TreeBase.register(ResponderPatternNext, "ResponderPatternNext");
 
 class ResponderPatternActivate extends HandlerResponse {
   respond() {
@@ -18,14 +18,14 @@ class ResponderPatternActivate extends HandlerResponse {
     this.pattern.activate();
   }
 }
-TreeBase.register(ResponderPatternActivate);
+TreeBase.register(ResponderPatternActivate, "ResponderPatternActivate");
 
 class ResponderPatternCue extends HandlerResponse {
   respond() {
     this.pattern.cue();
   }
 }
-TreeBase.register(ResponderPatternCue);
+TreeBase.register(ResponderPatternCue, "ResponderPatternCue");
 
 class ResponderCue extends HandlerResponse {
   Cue = new Props.Select();
@@ -45,7 +45,7 @@ class ResponderCue extends HandlerResponse {
     }
   }
 }
-TreeBase.register(ResponderCue);
+TreeBase.register(ResponderCue, "ResponderCue");
 
 class ResponderActivate extends HandlerResponse {
   /** @param {Event & { access: Object }} event */
@@ -61,7 +61,7 @@ class ResponderActivate extends HandlerResponse {
     }
   }
 }
-TreeBase.register(ResponderActivate);
+TreeBase.register(ResponderActivate, "ResponderActivate");
 
 class ResponderClearCue extends HandlerResponse {
   respond() {
@@ -70,7 +70,7 @@ class ResponderClearCue extends HandlerResponse {
     }
   }
 }
-TreeBase.register(ResponderClearCue);
+TreeBase.register(ResponderClearCue, "ResponderClearCue");
 
 class ResponderEmit extends HandlerResponse {
   /** @param {Event & { access: Object }} event */
@@ -78,7 +78,7 @@ class ResponderEmit extends HandlerResponse {
     Globals.actions.applyRules(event.access.type, "press", event.access);
   }
 }
-TreeBase.register(ResponderEmit);
+TreeBase.register(ResponderEmit, "ResponderEmit");
 
 class ResponderStartTimer extends HandlerResponse {
   TimerName = new Props.Select([], {
@@ -103,4 +103,4 @@ class ResponderStartTimer extends HandlerResponse {
     timer.start(event);
   }
 }
-TreeBase.register(ResponderStartTimer);
+TreeBase.register(ResponderStartTimer, "ResponderStartTimer");

@@ -178,4 +178,4 @@ export class PointerHandler extends Handler {
       .subscribe((e) => this.respond(e));
   }
 }
-TreeBase.register(PointerHandler);
+TreeBase.register(PointerHandler, "PointerHandler");

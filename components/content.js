@@ -287,7 +287,7 @@ export class Content extends TabPanel {
     </div>`;
   }
 }
-TreeBase.register(Content);
+TreeBase.register(Content, "Content");
 
 css`
   .content form {

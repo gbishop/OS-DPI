@@ -47,7 +47,7 @@ class Speech extends TreeBase {
   //   </div>`;
   // }
 }
-TreeBase.register(Speech);
+TreeBase.register(Speech, "Speech");
 
 /** @type{SpeechSynthesisVoice[]} */
 let voices = [];

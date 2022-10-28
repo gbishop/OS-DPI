@@ -134,7 +134,7 @@ class VSD extends TreeBase {
     </div>`;
   }
 }
-TreeBase.register(VSD);
+TreeBase.register(VSD, "VSD");
 
 css`
   div.vsd {

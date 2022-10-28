@@ -102,7 +102,7 @@ export class PatternList extends TabPanel {
     Globals.state.update();
   }
 }
-TreeBase.register(PatternList);
+TreeBase.register(PatternList, "PatternList");
 
 export class PatternManager extends PatternBase {
   /** @type {Group} */
@@ -264,7 +264,7 @@ export class PatternManager extends PatternBase {
     current.cue(this.Cue.value);
   }
 }
-PatternBase.register(PatternManager);
+PatternBase.register(PatternManager, "PatternManager");
 
 class PatternGroup extends PatternBase {
   // props
@@ -302,7 +302,7 @@ class PatternGroup extends PatternBase {
     else return [];
   }
 }
-PatternBase.register(PatternGroup);
+PatternBase.register(PatternGroup, "PatternGroup");
 
 class PatternSelector extends PatternBase {
   settings() {
@@ -325,7 +325,7 @@ class PatternSelector extends PatternBase {
     );
   }
 }
-PatternBase.register(PatternSelector);
+PatternBase.register(PatternSelector, "PatternSelector");
 
 class Filter extends PatternBase {
   Filter = new Props.Expression();
@@ -354,7 +354,7 @@ class Filter extends PatternBase {
     }
   }
 }
-PatternBase.register(Filter);
+PatternBase.register(Filter, "Filter");
 
 // allow the sort to handle numbers reasonably
 const comparator = new Intl.Collator(undefined, {
@@ -389,7 +389,7 @@ class OrderBy extends PatternBase {
     }
   }
 }
-PatternBase.register(OrderBy);
+PatternBase.register(OrderBy, "OrderBy");
 
 class GroupBy extends PatternBase {
   GroupBy = new Props.Field();
@@ -444,7 +444,7 @@ class GroupBy extends PatternBase {
     }
   }
 }
-PatternBase.register(GroupBy);
+PatternBase.register(GroupBy, "GroupBy");
 
 css`
   div.access-pattern {

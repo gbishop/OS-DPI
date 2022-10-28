@@ -59,4 +59,4 @@ export class Stack extends TreeBase {
     </div>`;
   }
 }
-TreeBase.register(Stack);
+TreeBase.register(Stack, "Stack");

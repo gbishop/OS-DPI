@@ -12,7 +12,7 @@ class Option extends TreeBase {
   value = new Props.String("");
   cache = {};
 }
-TreeBase.register(Option);
+TreeBase.register(Option, "Option");
 
 class Radio extends TreeBase {
   scale = new Props.Float(1);
@@ -110,7 +110,7 @@ class Radio extends TreeBase {
     return this.props.name || this.props.label || this.props.stateName;
   }
 }
-TreeBase.register(Radio);
+TreeBase.register(Radio, "Radio");
 
 css`
   .radio fieldset {
