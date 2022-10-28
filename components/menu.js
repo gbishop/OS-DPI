@@ -6,7 +6,7 @@
 import { html } from "uhtml";
 import css from "ustyler";
 import Globals from "../globals";
-import { callAfterRender } from "/render";
+import { callAfterRender } from "../render";
 
 /**
  * @typedef {Object} MenuItem
