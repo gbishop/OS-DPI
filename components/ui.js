@@ -1,7 +1,7 @@
 /* Thinking about making the UI more uniform and easier to program */
 
 import { html, svg } from "uhtml";
-import css from "ustyler";
+import "../css/ui.css";
 import { styleString } from "./style";
 // import { Trash, DownArrow, UpArrow } from "./icons";
 import * as icons from "./icons";
@@ -176,35 +176,6 @@ function renderMovementButtons(item, index, container) {
 export function test() {
   return renderGroup(exampleGroup);
 }
-
-css`
-  .movement {
-    margin-top: 0.5em;
-  }
-  .movement button {
-  }
-  button svg {
-    object-fit: contain;
-    width: 1em;
-    height: 1em;
-    vertical-align: middle;
-    margin: -4px;
-  }
-  .access button {
-    background-color: rgba(0, 0, 0, 0.05);
-    border-radius: 0.5em;
-    border: outset;
-  }
-  .access fieldset {
-    margin-bottom: 0.5em;
-  }
-  .access ol {
-    padding-inline-start: 10px;
-  }
-  .access ul {
-    padding-inline-start: 10px;
-  }
-`;
 
 /* Syntax?
 

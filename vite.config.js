@@ -2,6 +2,7 @@
 import { defineConfig } from "vite";
 import { version } from "./package.json";
 import path from "path";
+import analyze from "rollup-plugin-analyzer";
 
 export default defineConfig({
   resolve: {
@@ -21,6 +22,7 @@ export default defineConfig({
         chunkFileNames: `[name].${version}.js`,
         assetFileNames: `[name].${version}.[ext]`,
       },
+      plugins: [analyze()],
     },
   },
 });

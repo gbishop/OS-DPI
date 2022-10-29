@@ -4,7 +4,7 @@
  */
 
 import { html } from "uhtml";
-import css from "ustyler";
+import "../css/menu.css";
 import Globals from "../globals";
 import { callAfterRender } from "../render";
 
@@ -184,40 +184,3 @@ export class Menu {
     }
   };
 }
-
-css`
-  .Menu {
-    display: inline-block;
-  }
-  .Menu [hidden] {
-    display: none;
-  }
-  .Menu > button {
-    display: inline-block;
-    position: relative;
-  }
-  .Menu ul {
-    display: flex;
-    flex-direction: column;
-    position: absolute;
-    margin: 0;
-    padding: 7px 4px;
-    border: 2px solid 0x034575;
-    border-radius: 5px;
-    background-color: #eee;
-  }
-  .Menu li {
-    margin: 0;
-    padding: 6px;
-    display: flex;
-    background-color: #eee;
-    color: black;
-    border-radius: 5px;
-  }
-  .Menu li button {
-    flex: 1;
-  }
-  .Menu li button:hover {
-    outline: 2px solid orange;
-  }
-`;

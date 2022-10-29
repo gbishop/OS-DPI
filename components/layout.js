@@ -1,7 +1,7 @@
 import { html } from "uhtml";
 import { TreeBase } from "./treebase";
 import { TabPanel } from "./tabcontrol";
-import css from "ustyler";
+import "../css/layout.css";
 import db from "../db";
 import Globals from "../globals";
 
@@ -20,38 +20,3 @@ export class Layout extends TabPanel {
   }
 }
 TreeBase.register(Layout, "Layout");
-
-css`
-  div.layout {
-    display: flex;
-    flex-direction: column;
-    flex: 1 1 0;
-    overflow: hidden;
-  }
-
-  .layout ol {
-    list-style-type: none;
-    margin-block-start: 0;
-    padding-inline-start: 1em;
-    border-left: 1px solid #d0d0d0;
-  }
-
-  .layout details {
-    display: inline-block;
-  }
-
-  div.empty {
-    background-color: rgba(15, 15, 15, 0.3);
-    justify-content: center;
-    align-items: center;
-  }
-
-  div.empty::before {
-    content: "Empty";
-  }
-
-  div.highlight {
-    border: 1px solid red;
-    box-sizing: border-box;
-  }
-`;

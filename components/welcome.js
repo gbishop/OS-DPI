@@ -2,7 +2,7 @@ import { html, render } from "uhtml";
 import { fileOpen } from "browser-fs-access";
 import db from "../db";
 import pleaseWait from "./wait";
-import css from "ustyler";
+import "../css/welcome.css";
 
 /** welcome screen
  */
@@ -86,28 +86,3 @@ export async function welcome() {
     `
   );
 }
-
-css`
-  #welcome {
-    padding: 1em;
-  }
-  #welcome #head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: flex-start;
-  }
-  #welcome #head div {
-    padding-left: 1em;
-  }
-  #welcome #head div p {
-    max-width: 40em;
-  }
-  #timer {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 5em;
-    padding: 0.5em;
-    z-index: 10;
-  }
-`;

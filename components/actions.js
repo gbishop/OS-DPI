@@ -3,7 +3,7 @@ import { TreeBase } from "./treebase";
 import * as Props from "./props";
 import { TabPanel } from "./tabcontrol";
 import db from "../db";
-import css from "ustyler";
+import "../css/actions.css";
 import Globals from "../globals";
 import { Functions } from "../eval";
 
@@ -262,87 +262,3 @@ export class ActionUpdate extends TreeBase {
   newValue = new Props.Expression("", { hiddenLabel: true });
 }
 TreeBase.register(ActionUpdate, "ActionUpdate");
-
-css`
-  div.actions {
-    display: flex;
-    flex-direction: column;
-    flex: 1 1 0;
-    overflow: hidden;
-  }
-
-  div.actions div.scroll {
-    overflow-y: auto;
-  }
-
-  .actions table {
-    border-collapse: collapse;
-    width: 100%;
-  }
-
-  .actions tr[used] {
-    font-weight: bold;
-  }
-
-  .actions td {
-    border: 1px solid #999;
-    padding: 0.2em;
-  }
-
-  .actions th {
-    border: 1px solid #999;
-    border-top: 0px;
-    padding: 0.5em;
-  }
-
-  .actions td.conditions {
-    overflow-wrap: anywhere;
-  }
-
-  .actions div.condition + div.condition {
-    margin-top: 0.2em;
-  }
-
-  .actions td.update {
-    overflow-wrap: anywhere;
-  }
-
-  .actions thead tr {
-    background: white;
-  }
-
-  .actions tbody {
-    border: 2px solid black;
-    position: relative;
-    z-index: 10;
-  }
-  .actions thead {
-    border: 2px solid black;
-    border-top: 0px;
-    z-index: 15;
-  }
-
-  .actions tbody[highlight] {
-    outline: 2px solid red;
-    z-index: 100;
-  }
-
-  .actions tbody:nth-child(even) {
-    background-color: rgb(0, 0, 0, 0.05);
-  }
-
-  .actions .updates {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    grid-gap: 0.25em 1em;
-  }
-
-  .actions input {
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .actions label {
-    width: 100%;
-  }
-`;

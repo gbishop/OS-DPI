@@ -1,6 +1,6 @@
 import db from "../../../db";
 import { html } from "uhtml";
-import css from "ustyler";
+import "../../../css/pattern.css";
 import Globals from "../../../globals";
 import * as Props from "../../props";
 import { TreeBase } from "../../treebase";
@@ -445,79 +445,3 @@ class GroupBy extends PatternBase {
   }
 }
 PatternBase.register(GroupBy, "GroupBy");
-
-css`
-  div.access-pattern {
-    padding-left: 12px;
-    padding-top: 12px;
-  }
-  .access-pattern .GroupBy details {
-    display: inline-block;
-    vertical-align: middle;
-  }
-  .access-pattern .GroupBy details[open] {
-    display: inline-block;
-    border: ridge;
-    padding: 0.5em;
-  }
-  .access-pattern .GroupBy details summary {
-    list-style: none;
-    cursor: pointer;
-    width: 1em;
-    height: 1em;
-    border: outset;
-    vertical-align: middle;
-  }
-  .access-pattern .GroupBy details[open] summary {
-    margin-left: calc(100% - 1em);
-    margin-bottom: 0.2em;
-    margin-top: -0.2em;
-  }
-
-  button[cue="group"] {
-    position: relative;
-    border-color: yellow;
-  }
-  button[cue="group"]:after {
-    content: "";
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: yellow;
-    animation: fadein var(--dwell) 1;
-    opacity: 0.3;
-    z-index: 0;
-  }
-  @keyframes fadein {
-    from {
-      background-color: yellow;
-      border-color: yellow;
-    }
-    to {
-      background-color: red;
-      border-color: red;
-    }
-  }
-  button[cue="button"] {
-    position: relative;
-  }
-  button[cue="button"]:after {
-    content: "";
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: url("./target.png");
-    background-size: contain;
-    background-position: center;
-    background-color: rgba(255, 100, 100, 0.5);
-    background-repeat: no-repeat;
-    opacity: 0.4;
-    z-index: 0;
-  }
-`;

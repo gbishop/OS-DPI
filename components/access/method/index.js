@@ -298,9 +298,3 @@ export class HandlerResponse extends TreeBaseSwitchable {
   }
 }
 TreeBase.register(HandlerResponse, "HandlerResponse");
-
-css`
-  details.Method > *:not(summary) {
-    margin-left: 2em;
-  }
-`;

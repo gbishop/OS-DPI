@@ -2,7 +2,7 @@ import { html } from "uhtml";
 import { TreeBase } from "./treebase";
 import * as Props from "./props";
 import { styleString } from "./style";
-import css from "ustyler";
+import "../css/vsd.css";
 import "./img-db";
 import Globals from "../globals";
 import { GridFilter } from "./grid";
@@ -135,45 +135,3 @@ class VSD extends TreeBase {
   }
 }
 TreeBase.register(VSD, "VSD");
-
-css`
-  div.vsd {
-    position: relative;
-  }
-
-  div.vsd button {
-    position: absolute;
-    background-color: transparent;
-    box-shadow: 0 0 0 1px white, 0 0 0 2px red;
-    border-radius: 5px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  div.vsd button[invisible] {
-    box-shadow: none;
-    outline: none;
-    border: none;
-  }
-
-  div.vsd img {
-    flex: 1 1 0;
-    object-fit: contain;
-    width: 100%;
-    height: 100%;
-  }
-
-  div.vsd div.markers button:focus-within {
-    opacity: 1;
-  }
-  div.vsd button span {
-    background-color: white;
-  }
-  div.vsd div.markers button {
-    opacity: 0;
-  }
-  div.vsd.show div.markers button {
-    opacity: 1;
-  }
-`;

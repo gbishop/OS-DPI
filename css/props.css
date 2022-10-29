@@ -1,0 +1,25 @@
+  label {
+    display: inline-block;
+  }
+  label[hiddenLabel] span {
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+  }
+  select:required:invalid {
+    color: gray;
+    border-color: red;
+  }
+  option[value=""][disabled] {
+    display: none;
+  }
+  option {
+    color: black;
+  }
+  :focus {
+    outline: 3px solid orange;
+  }

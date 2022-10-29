@@ -1,7 +1,7 @@
 /** A simple word suggestion add-on for html input controls using uhtml */
 
 import { render, html } from "uhtml";
-import css from "ustyler";
+import "../css/suggest.css";
 
 /**
  * @typedef {Object} SuggestState
@@ -93,11 +93,10 @@ function drawMenu(element) {
   function mouseEnter(event) {
     const li = event.target;
 
-    if(!element.suggest)
-      return;
+    if (!element.suggest) return;
 
     let index = Array.from(li.parentNode.children).indexOf(li);
-    if(index != -1) {
+    if (index != -1) {
       element.suggest.index = index;
       drawMenu(element);
     }
@@ -112,7 +111,13 @@ function drawMenu(element) {
     html`<ul>
       ${element.suggest.results.map(
         (result, i) =>
-          html`<li onmouseenter=${mouseEnter} onmousedown=${mouseDown} ?selected=${i == element.suggest.index}>${result}</li>`
+          html`<li
+            onmouseenter=${mouseEnter}
+            onmousedown=${mouseDown}
+            ?selected=${i == element.suggest.index}
+          >
+            ${result}
+          </li>`
       )}
     </ul>`
   );
@@ -198,41 +203,3 @@ function main() {
   );
 }
 */
-
-css`
-  .suggest {
-    position: relative;
-    display: inline-block;
-    font-family: monospace;
-  }
-
-  .suggest input {
-    width: 100%;
-  }
-
-  .suggest div {
-    position: absolute;
-    border: 1px solid black;
-    background-color: white;
-    z-index: 10;
-  }
-
-  .suggest div:empty {
-    display: none;
-  }
-
-  .suggest ul {
-    list-style-type: none;
-    margin: 0;
-    padding: 10px;
-  }
-
-  .suggest li[selected] {
-    background-color: #ccc;
-  }
-
-  .suggest input {
-    font-family: monospace;
-    font-size: 15px;
-  }
-`;

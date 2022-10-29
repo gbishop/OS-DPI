@@ -4,7 +4,7 @@ import * as Props from "./props";
 import { styleString } from "./style";
 import { Functions } from "../eval";
 import merge from "mergerino";
-import css from "ustyler";
+import "../css/display.css";
 import Globals from "../globals";
 
 /** Slot descriptor
@@ -237,15 +237,3 @@ export function strip(value) {
   return parts.join("");
 }
 TreeBase.register(Display, "Display");
-
-css`
-  .display {
-    border: 1px solid black;
-    padding: 0.25em;
-    box-sizing: border-box;
-    font-size: 200%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-`;

@@ -1,0 +1,35 @@
+  body.designing {
+    display: grid;
+    grid-template-rows: 2.5em 50% auto;
+    grid-template-columns: 50% 50%;
+  }
+
+  body.designing div#UI {
+    font-size: 0.7vw;
+    flex: 1 1 0;
+  }
+
+  div#designer {
+    display: none;
+  }
+
+  body.designing div#designer {
+    display: block;
+    overflow-y: auto;
+    flex: 1 1 0;
+    grid-row-start: 1;
+    grid-row-end: 4;
+    grid-column-start: 2;
+    position: relative;
+  }
+  body.designing #UI {
+    position: relative;
+  }
+  body.designing #monitor {
+    grid-row-start: 3;
+    grid-column-start: 1;
+  }
+  body.designing #toolbar {
+    grid-row-start: 1;
+    grid-column-start: 1;
+  }

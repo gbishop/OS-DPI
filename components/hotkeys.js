@@ -2,7 +2,7 @@
 
 import Globals from "../globals";
 import { render, html } from "uhtml";
-import css from "ustyler";
+import "../css/hotkeys.css";
 import { TabPanel } from "./tabcontrol";
 import {
   TreeBase,
@@ -142,12 +142,3 @@ export function updateMenuActions(panel) {
 
   render(where, html`${buttons}`);
 }
-
-css`
-  #HotKeyHints {
-  }
-
-  #HotKeyHints.show {
-    display: block;
-  }
-`;

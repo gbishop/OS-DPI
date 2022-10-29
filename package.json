@@ -22,6 +22,7 @@
     "idb": "^7.0.2",
     "mergerino": "^0.4.0",
     "proxy-pants": "^0.8.3",
+    "rollup-plugin-analyzer": "^4.0.0",
     "rxjs": "^7.5.6",
     "sheetrock": "^1.2.0",
     "spectre.css": "^0.5.9",

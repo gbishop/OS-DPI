@@ -2,7 +2,7 @@ import { html } from "uhtml";
 import { TreeBase } from "./treebase";
 import * as Props from "./props";
 import { styleString } from "./style";
-import css from "ustyler";
+import "../css/radio.css";
 import { UpdateAccessData } from "./access";
 import Globals from "../globals";
 import { GridFilter } from "./grid";
@@ -111,19 +111,3 @@ class Radio extends TreeBase {
   }
 }
 TreeBase.register(Radio, "Radio");
-
-css`
-  .radio fieldset {
-    flex-flow: wrap;
-    border: 0;
-    padding: 0;
-    margin: 0;
-    justify-content: space-around;
-    gap: 1%;
-  }
-
-  .radio button {
-    min-width: 45%;
-    max-width: 45%;
-  }
-`;

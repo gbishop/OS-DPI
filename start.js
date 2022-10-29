@@ -8,7 +8,7 @@ import { Monitor } from "./components/monitor";
 import { ToolBar } from "./components/toolbar";
 import db from "./db";
 import pleaseWait from "./components/wait";
-import css from "ustyler";
+import "./css/start.css";
 import { ButtonWrap, clearAccessChanged } from "./components/access";
 import Globals from "./globals";
 import { PatternList } from "./components/access/pattern";
@@ -204,44 +204,6 @@ window.addEventListener("hashchange", () => {
 //   });
 // }
 //
-css`
-  body.designing {
-    display: grid;
-    grid-template-rows: 2.5em 50% auto;
-    grid-template-columns: 50% 50%;
-  }
-
-  body.designing div#UI {
-    font-size: 0.7vw;
-    flex: 1 1 0;
-  }
-
-  div#designer {
-    display: none;
-  }
-
-  body.designing div#designer {
-    display: block;
-    overflow-y: auto;
-    flex: 1 1 0;
-    grid-row-start: 1;
-    grid-row-end: 4;
-    grid-column-start: 2;
-    position: relative;
-  }
-  body.designing #UI {
-    position: relative;
-  }
-  body.designing #monitor {
-    grid-row-start: 3;
-    grid-column-start: 1;
-  }
-  body.designing #toolbar {
-    grid-row-start: 1;
-    grid-column-start: 1;
-  }
-`;
-
 /** @typedef {PointerEvent & { target: HTMLElement }} ClickEvent */
 // I think this code mapped clicks back to the tree but no longer...
 // document.addEventListener("click", (/** @type {ClickEvent} */ event) => {

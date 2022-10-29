@@ -5,7 +5,7 @@ import { Layout } from "./layout";
 import { Actions } from "./actions";
 import { Access } from "./access";
 import { Content } from "./content";
-import css from "ustyler";
+import "../css/designer.css";
 import { Logging } from "./logger";
 
 export class Designer extends Base {
@@ -65,7 +65,13 @@ export class Designer extends Base {
     );
     loggingPanel.children = [new Logging({}, loggingPanel)];
 
-    tabs.children = [contentPanel, layoutPanel, actionPanel, accessPanel, loggingPanel];
+    tabs.children = [
+      contentPanel,
+      layoutPanel,
+      actionPanel,
+      accessPanel,
+      loggingPanel,
+    ];
     /** @type {Base[]} */
     this.children = [tabs];
   }
@@ -74,40 +80,3 @@ export class Designer extends Base {
     return html`${this.children.map((child) => child.template())} `;
   }
 }
-
-css`
-  body.designing {
-    display: grid;
-    grid-template-rows: 2.5em 50% auto;
-    grid-template-columns: 50% 50%;
-  }
-
-  body.designing div#UI {
-    font-size: 0.7vw;
-    flex: 1 1 0;
-  }
-
-  div#designer {
-    display: none;
-  }
-
-  body.designing div#designer {
-    display: block;
-    overflow-y: auto;
-    flex: 1 1 0;
-    grid-row-start: 1;
-    grid-row-end: 4;
-    grid-column-start: 2;
-  }
-  body.designing #UI {
-    position: relative;
-  }
-  body.designing #monitor {
-    grid-row-start: 3;
-    grid-column-start: 1;
-  }
-  body.designing #toolbar {
-    grid-row-start: 1;
-    grid-column-start: 1;
-  }
-`;

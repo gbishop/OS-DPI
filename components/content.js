@@ -6,7 +6,7 @@ import db from "../db";
 import { Data } from "../data";
 import { fileOpen } from "browser-fs-access";
 import * as XLSX from "xlsx";
-import css from "ustyler";
+import "../css/content.css";
 import pleaseWait from "./wait";
 import Globals from "../globals";
 
@@ -288,23 +288,3 @@ export class Content extends TabPanel {
   }
 }
 TreeBase.register(Content, "Content");
-
-css`
-  .content form {
-    display: flex;
-    width: 100%;
-    gap: 0.5em;
-  }
-
-  .content form input[type="url"] {
-    flex: 1;
-    max-width: 60%;
-  }
-
-  .content div#messages {
-    color: red;
-    font-size: 2em;
-    padding-left: 1em;
-    padding-top: 1em;
-  }
-`;

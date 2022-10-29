@@ -3,7 +3,7 @@ import { saveContent } from "./content";
 import { TreeBase } from "./treebase";
 import { TabPanel } from "./tabcontrol";
 
-import css from "ustyler";
+import "../css/logger.css";
 import DB from "../db";
 import * as Props from "./props";
 import Globals from "../globals";
@@ -113,9 +113,3 @@ export class Logging extends TreeBase {
   }
 }
 TreeBase.register(Logging, "Logging");
-
-css`
-  #logging-panel {
-    margin: 5px;
-  }
-}`;

@@ -3,7 +3,7 @@ import { TreeBase } from "./treebase";
 import * as Props from "./props";
 import { Stack } from "./stack";
 import { styleString } from "./style";
-import css from "ustyler";
+import "../css/tabcontrol.css";
 import { UpdateAccessData } from "./access";
 import Globals from "../globals";
 import { callAfterRender } from "../render";
@@ -139,105 +139,3 @@ export class TabPanel extends Stack {
   lastFocused = "";
 }
 TreeBase.register(TabPanel, "TabPanel");
-
-css`
-  .tabcontrol .buttons button:focus {
-    filter: invert(100%);
-  }
-  .tabcontrol .panels {
-    display: flex;
-  }
-  .tabcontrol .buttons {
-    display: flex;
-  }
-  .tabcontrol .buttons button {
-    flex: 1 1 0;
-  }
-  .tabcontrol .buttons button[active] {
-    font-weight: bold;
-  }
-
-  .tabcontrol.top {
-    flex-direction: column;
-  }
-  .tabcontrol.top .panels {
-    order: 2;
-  }
-  .tabcontrol.top .buttons {
-    order: 1;
-  }
-  .tabcontrol.top .buttons button[active] {
-    border-bottom: 1px;
-    margin-top: 0px;
-  }
-  .tabcontrol.top .buttons button {
-    border-top-left-radius: 1em;
-    border-top-right-radius: 1em;
-    margin-top: 10px;
-  }
-
-  .tabcontrol.bottom {
-    flex-direction: column;
-  }
-  .tabcontrol.bottom .panels {
-    order: 1;
-  }
-  .tabcontrol.bottom .buttons {
-    order: 2;
-  }
-  .tabcontrol.bottom .buttons button[active] {
-    border-top: 1px;
-    margin-bottom: 0px;
-  }
-  .tabcontrol.bottom .buttons button {
-    border-bottom-left-radius: 1em;
-    border-bottom-right-radius: 1em;
-    margin-bottom: 10px;
-  }
-
-  .tabcontrol.right {
-    flex-direction: row;
-  }
-  .tabcontrol.right .panels {
-    order: 1;
-  }
-  .tabcontrol.right .buttons {
-    order: 2;
-    flex-direction: column;
-  }
-  .tabcontrol.right .buttons button[active] {
-    border-left: 1px;
-    margin-right: 0;
-  }
-  .tabcontrol.right .buttons button {
-    border-top-right-radius: 1em;
-    border-bottom-right-radius: 1em;
-    margin-right: 10px;
-  }
-
-  .tabcontrol.left {
-    flex-direction: row;
-  }
-  .tabcontrol.left .panels {
-    order: 2;
-    flex: 1;
-  }
-  .tabcontrol.left .buttons {
-    order: 1;
-    flex-direction: column;
-    flex: 1;
-  }
-  .tabcontrol.left .buttons button[active] {
-    border-right: 1px;
-    margin-left: 0;
-  }
-  .tabcontrol.left .buttons button {
-    border-top-left-radius: 1em;
-    border-bottom-left-radius: 1em;
-    margin-left: 10px;
-  }
-
-  .tabcontrol.none .buttons {
-    display: none;
-  }
-`;

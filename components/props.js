@@ -1,10 +1,9 @@
 /* Thinking about better properties */
 
 import { html } from "uhtml";
-import css from "ustyler";
+import "../css/props.css";
 import { compileExpression } from "../eval";
 import Globals from "../globals";
-import WeakValue from "weak-value";
 
 /**
  * @typedef {Object} PropOptions
@@ -407,31 +406,3 @@ export class Voice extends Prop {
     >`;
   }
 }
-
-css`
-  label {
-    display: inline-block;
-  }
-  label[hiddenLabel] span {
-    clip: rect(0 0 0 0);
-    clip-path: inset(50%);
-    height: 1px;
-    overflow: hidden;
-    position: absolute;
-    white-space: nowrap;
-    width: 1px;
-  }
-  select:required:invalid {
-    color: gray;
-    border-color: red;
-  }
-  option[value=""][disabled] {
-    display: none;
-  }
-  option {
-    color: black;
-  }
-  :focus {
-    outline: 3px solid orange;
-  }
-`;

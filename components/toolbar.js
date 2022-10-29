@@ -1,5 +1,5 @@
 import { TreeBase } from "./treebase";
-import css from "ustyler";
+import "../css/toolbar.css";
 import db from "../db";
 import { html } from "uhtml";
 import Globals from "../globals";
@@ -56,21 +56,5 @@ export class ToolBar extends TreeBase {
   }
 }
 TreeBase.register(ToolBar, "ToolBar");
-
-css`
-  #toolbar {
-    border: 1px solid black;
-    padding: 3px;
-    margin: 3px;
-    background-color: #7bafd4;
-    border-radius: 0.5em;
-  }
-  #toolbar button {
-    border-radius: 0.5em;
-  }
-  #toolbar input {
-    border-radius: 0.5em;
-  }
-`;
 
 export default toolbar;

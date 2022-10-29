@@ -1,5 +1,5 @@
 import { html } from "uhtml";
-import css from "ustyler";
+import "../../../css/cues.css";
 import { TreeBase, TreeBaseSwitchable } from "../../treebase";
 import { TabPanel } from "../../tabcontrol";
 import * as Props from "../../props";
@@ -270,11 +270,3 @@ button[cue="{{Key}}"]:after {
   }
 }
 TreeBase.register(CueCircle, "CueCircle");
-
-css`
-  .Cue textarea {
-    box-sizing: border-box;
-    width: 100%;
-    height: 6em;
-  }
-`;
