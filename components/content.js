@@ -2,13 +2,13 @@ import { html, render } from "uhtml";
 import { TreeBase } from "./treebase";
 import { TabPanel } from "./tabcontrol";
 import * as Props from "./props";
-import db from "../db";
-import { Data } from "../data";
+import db from "app/db";
+import { Data } from "app/data";
 import { fileOpen } from "browser-fs-access";
 import * as XLSX from "xlsx";
-import "../css/content.css";
+import "css/content.css";
 import pleaseWait from "./wait";
-import Globals from "../globals";
+import Globals from "app/globals";
 
 /** @param {Blob} blob */
 async function readSheetFromBlob(blob) {

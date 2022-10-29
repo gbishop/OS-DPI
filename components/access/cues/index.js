@@ -1,13 +1,13 @@
 import { html } from "uhtml";
-import "../../../css/cues.css";
-import { TreeBase, TreeBaseSwitchable } from "../../treebase";
-import { TabPanel } from "../../tabcontrol";
-import * as Props from "../../props";
+import "css/cues.css";
+import { TreeBase, TreeBaseSwitchable } from "components/treebase";
+import { TabPanel } from "components/tabcontrol";
+import * as Props from "components/props";
 
-import db from "../../../db";
-import Globals from "../../../globals";
-import { interpolate } from "../../helpers";
-import { getColor } from "../../style";
+import db from "app/db";
+import Globals from "app/globals";
+import { interpolate } from "components/helpers";
+import { getColor } from "components/style";
 import defaultCues from "./defaultCues";
 
 export class CueList extends TabPanel {

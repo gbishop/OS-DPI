@@ -1,9 +1,9 @@
 import { html } from "uhtml";
 import { TreeBase } from "./treebase";
 import * as Props from "./props";
-import "../css/modal-dialog.css";
+import "css/modal-dialog.css";
 
-import Globals from "../globals";
+import Globals from "app/globals";
 
 export class ModalDialog extends TreeBase {
   stateName = new Props.String("$modalOpen");

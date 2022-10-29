@@ -1,8 +1,8 @@
 /** Global Hot Keys for keyboard access */
 
-import Globals from "../globals";
+import Globals from "app/globals";
 import { render, html } from "uhtml";
-import "../css/hotkeys.css";
+import "css/hotkeys.css";
 import { TabPanel } from "./tabcontrol";
 import {
   TreeBase,
@@ -10,7 +10,7 @@ import {
   MenuActionDelete,
   MenuActionMove,
 } from "./treebase";
-import { callAfterRender } from "../render";
+import { callAfterRender } from "app/render";
 
 // document.addEventListener("keydown", DesignerToggle, { capture: true });
 

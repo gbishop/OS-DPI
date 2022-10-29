@@ -9,6 +9,7 @@ export default defineConfig({
     alias: {
       components: path.resolve("./components"),
       app: path.resolve("."),
+      css: path.resolve("./css"),
     },
   },
   build: {

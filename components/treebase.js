@@ -1,6 +1,6 @@
 import { html } from "uhtml";
 import * as Props from "./props";
-import "../css/treebase.css";
+import "css/treebase.css";
 import { fromCamelCase } from "./helpers";
 import WeakValue from "weak-value";
 

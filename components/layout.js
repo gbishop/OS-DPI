@@ -1,9 +1,9 @@
 import { html } from "uhtml";
 import { TreeBase } from "./treebase";
 import { TabPanel } from "./tabcontrol";
-import "../css/layout.css";
-import db from "../db";
-import Globals from "../globals";
+import "css/layout.css";
+import db from "app/db";
+import Globals from "app/globals";
 
 export class Layout extends TabPanel {
   template() {

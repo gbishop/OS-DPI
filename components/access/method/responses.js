@@ -1,7 +1,7 @@
 import { html } from "uhtml";
-import { TreeBase } from "../../treebase";
-import Globals from "../../../globals";
-import * as Props from "../../props";
+import { TreeBase } from "components/treebase";
+import Globals from "app/globals";
+import * as Props from "components/props";
 import { Method, HandlerResponse } from "./index";
 import { ButtonWrap } from "../index";
 

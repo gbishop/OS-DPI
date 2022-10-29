@@ -2,7 +2,7 @@ import { html } from "uhtml";
 import { TreeBase } from "./treebase";
 import * as Props from "./props";
 import { styleString } from "./style";
-import "../css/button.css";
+import "css/button.css";
 import { UpdateAccessData } from "./access";
 
 class Button extends TreeBase {

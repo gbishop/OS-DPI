@@ -1,5 +1,5 @@
-import { TreeBase } from "../../treebase";
-import * as Props from "../../props";
+import { TreeBase } from "components/treebase";
+import * as Props from "components/props";
 import { html } from "uhtml";
 import { EventWrap } from "../index";
 import { Handler } from "./index";

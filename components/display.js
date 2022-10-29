@@ -2,10 +2,10 @@ import { html } from "uhtml";
 import { TreeBase } from "./treebase";
 import * as Props from "./props";
 import { styleString } from "./style";
-import { Functions } from "../eval";
+import { Functions } from "app/eval";
 import merge from "mergerino";
-import "../css/display.css";
-import Globals from "../globals";
+import "css/display.css";
+import Globals from "app/globals";
 
 /** Slot descriptor
  * @typedef {Object} Slot

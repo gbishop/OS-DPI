@@ -3,10 +3,10 @@ import { TreeBase } from "./treebase";
 import * as Props from "./props";
 import { Stack } from "./stack";
 import { styleString } from "./style";
-import "../css/tabcontrol.css";
+import "css/tabcontrol.css";
 import { UpdateAccessData } from "./access";
-import Globals from "../globals";
-import { callAfterRender } from "../render";
+import Globals from "app/globals";
+import { callAfterRender } from "app/render";
 import { updateMenuActions } from "./hotkeys";
 
 export class TabControl extends TreeBase {

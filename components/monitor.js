@@ -1,7 +1,7 @@
 import { html } from "uhtml";
 import { TreeBase } from "./treebase";
-import "../css/monitor.css";
-import Globals from "../globals";
+import "css/monitor.css";
+import Globals from "app/globals";
 
 export class Monitor extends TreeBase {
   uiTemplate() {

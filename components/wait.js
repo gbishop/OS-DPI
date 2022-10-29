@@ -1,5 +1,5 @@
 import { html, render } from "uhtml";
-import "../css/wait.css";
+import "css/wait.css";
 
 /**
  * Handle displaying a "please wait" message and error reporting for

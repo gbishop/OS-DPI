@@ -5,9 +5,9 @@ import { styleString } from "./style";
 import { formatSlottedString } from "./helpers";
 import { UpdateAccessData } from "./access";
 import "./img-db";
-import Globals from "../globals";
-import { comparators } from "../data";
-import "../css/grid.css";
+import Globals from "app/globals";
+import { comparators } from "app/data";
+import "css/grid.css";
 
 class Grid extends TreeBase {
   fillItems = new Props.Boolean(false);

@@ -1,6 +1,6 @@
-import { TreeBase } from "../../treebase";
-import { Handler, HandlerCondition, HandlerResponse } from "./index";
-import * as Props from "../../props";
+import { TreeBase } from "components/treebase";
+import { Handler } from "./index";
+import * as Props from "components/props";
 import { html } from "uhtml";
 import { EventWrap, ButtonWrap } from "../index";
 import * as RxJs from "rxjs";

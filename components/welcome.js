@@ -1,8 +1,8 @@
 import { html, render } from "uhtml";
 import { fileOpen } from "browser-fs-access";
-import db from "../db";
+import db from "app/db";
 import pleaseWait from "./wait";
-import "../css/welcome.css";
+import "css/welcome.css";
 
 /** welcome screen
  */

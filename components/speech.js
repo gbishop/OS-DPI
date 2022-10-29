@@ -1,7 +1,7 @@
 import { strip } from "./display";
 import { TreeBase } from "./treebase";
 import { html } from "uhtml";
-import Globals from "../globals";
+import Globals from "app/globals";
 import * as Props from "./props";
 
 class Speech extends TreeBase {

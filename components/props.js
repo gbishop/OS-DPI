@@ -1,9 +1,9 @@
 /* Thinking about better properties */
 
 import { html } from "uhtml";
-import "../css/props.css";
-import { compileExpression } from "../eval";
-import Globals from "../globals";
+import "css/props.css";
+import { compileExpression } from "app/eval";
+import Globals from "app/globals";
 
 /**
  * @typedef {Object} PropOptions

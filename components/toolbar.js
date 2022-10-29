@@ -1,8 +1,8 @@
 import { TreeBase } from "./treebase";
-import "../css/toolbar.css";
-import db from "../db";
+import "css/toolbar.css";
+import db from "app/db";
 import { html } from "uhtml";
-import Globals from "../globals";
+import Globals from "app/globals";
 import { Menu } from "./menu";
 
 export class ToolBar extends TreeBase {

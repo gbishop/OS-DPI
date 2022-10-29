@@ -2,9 +2,9 @@ import { html } from "uhtml";
 import { TreeBase } from "./treebase";
 import * as Props from "./props";
 import { styleString } from "./style";
-import "../css/radio.css";
+import "css/radio.css";
 import { UpdateAccessData } from "./access";
-import Globals from "../globals";
+import Globals from "app/globals";
 import { GridFilter } from "./grid";
 
 class Option extends TreeBase {

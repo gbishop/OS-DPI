@@ -2,9 +2,9 @@ import { html } from "uhtml";
 import { TreeBase } from "./treebase";
 import * as Props from "./props";
 import { styleString } from "./style";
-import "../css/vsd.css";
+import "css/vsd.css";
 import "./img-db";
-import Globals from "../globals";
+import Globals from "app/globals";
 import { GridFilter } from "./grid";
 
 /** Allow await'ing for a short time

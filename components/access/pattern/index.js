@@ -1,12 +1,12 @@
-import db from "../../../db";
+import db from "app/db";
 import { html } from "uhtml";
-import "../../../css/pattern.css";
-import Globals from "../../../globals";
-import * as Props from "../../props";
-import { TreeBase } from "../../treebase";
-import { ButtonWrap, AccessChanged } from "../index";
+import "css/pattern.css";
+import Globals from "app/globals";
+import * as Props from "components/props";
+import { TreeBase } from "components/treebase";
+import { ButtonWrap } from "../index";
 import defaultPatterns from "./defaultPatterns";
-import { TabPanel } from "../../tabcontrol";
+import { TabPanel } from "components/tabcontrol";
 
 /** @typedef {ReturnType<ButtonWrap<Node>>} Button */
 

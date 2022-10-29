@@ -1,7 +1,7 @@
 /** A simple word suggestion add-on for html input controls using uhtml */
 
 import { render, html } from "uhtml";
-import "../css/suggest.css";
+import "css/suggest.css";
 
 /**
  * @typedef {Object} SuggestState

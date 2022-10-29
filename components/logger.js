@@ -3,10 +3,10 @@ import { saveContent } from "./content";
 import { TreeBase } from "./treebase";
 import { TabPanel } from "./tabcontrol";
 
-import "../css/logger.css";
-import DB from "../db";
+import "css/logger.css";
+import DB from "app/db";
 import * as Props from "./props";
-import Globals from "../globals";
+import Globals from "app/globals";
 
 export class Logger extends TabPanel {
   name = new Props.String("Logger");

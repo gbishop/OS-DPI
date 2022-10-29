@@ -1,15 +1,14 @@
 import { html } from "uhtml";
-import css from "ustyler";
-import { TreeBase, TreeBaseSwitchable } from "../../treebase";
-import * as Props from "../../props";
-import Globals from "../../../globals";
-import db from "../../../db";
+import { TreeBase, TreeBaseSwitchable } from "components/treebase";
+import * as Props from "components/props";
+import Globals from "app/globals";
+import db from "app/db";
 import * as RxJs from "rxjs";
 import { EventWrap } from "../index";
 // make sure the classes are registered
 import defaultMethods from "./defaultMethods";
-import { log } from "../../../log";
-import { TabPanel } from "../../tabcontrol";
+import { log } from "app/log";
+import { TabPanel } from "components/tabcontrol";
 
 export class MethodChooser extends TabPanel {
   name = new Props.String("Methods");

@@ -1,11 +1,11 @@
-import { log } from "../log";
+import { log } from "app/log";
 import { strip } from "./display";
 import { TreeBase } from "./treebase";
 import * as Props from "./props";
 import { html } from "uhtml";
-import db from "../db";
+import db from "app/db";
 
-import Globals from "../globals";
+import Globals from "app/globals";
 
 class Audio extends TreeBase {
   stateName = new Props.String("$Audio");

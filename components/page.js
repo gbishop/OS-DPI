@@ -1,7 +1,7 @@
 import { html } from "uhtml";
 import { Stack } from "./stack";
-import db from "../db";
-import Globals from "../globals";
+import db from "app/db";
+import Globals from "app/globals";
 
 const emptyPage = {
   className: "Page",

@@ -5,7 +5,7 @@ import { Layout } from "./layout";
 import { Actions } from "./actions";
 import { Access } from "./access";
 import { Content } from "./content";
-import "../css/designer.css";
+import "css/designer.css";
 import { Logging } from "./logger";
 
 export class Designer extends Base {

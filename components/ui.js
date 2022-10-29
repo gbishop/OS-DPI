@@ -1,7 +1,7 @@
 /* Thinking about making the UI more uniform and easier to program */
 
 import { html, svg } from "uhtml";
-import "../css/ui.css";
+import "css/ui.css";
 import { styleString } from "./style";
 // import { Trash, DownArrow, UpArrow } from "./icons";
 import * as icons from "./icons";
