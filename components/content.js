@@ -5,13 +5,14 @@ import * as Props from "./props";
 import db from "app/db";
 import { Data } from "app/data";
 import { fileOpen } from "browser-fs-access";
-import * as XLSX from "xlsx";
+// import { read, writeFileXLSX, utils } from "xlsx";
 import "css/content.css";
 import pleaseWait from "./wait";
 import Globals from "app/globals";
 
 /** @param {Blob} blob */
 async function readSheetFromBlob(blob) {
+  const XLSX = await import("xlsx");
   const data = await blob.arrayBuffer();
   const workbook = XLSX.read(data, { codepage: 65001 });
   /** @type {Rows} */
@@ -87,8 +88,9 @@ async function readSheetFromBlob(blob) {
  * @param {Row[]} rows
  * @param {string} type
  */
-export function saveContent(name, rows, type) {
+export async function saveContent(name, rows, type) {
   if (!type) return;
+  const XLSX = await import("xlsx");
   const sheetNames = new Set(rows.map((row) => row.sheetName || "sheet1"));
   const workbook = XLSX.utils.book_new();
   for (const sheetName of sheetNames) {
@@ -104,7 +106,7 @@ export function saveContent(name, rows, type) {
     const worksheet = XLSX.utils.json_to_sheet(sheetRows);
     XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
   }
-  XLSX.writeFile(workbook, `${name}.${type}`);
+  XLSX.writeFileXLSX(workbook, `${name}.${type}`);
 }
 
 export class Content extends TabPanel {
