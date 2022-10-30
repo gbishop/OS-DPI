@@ -18,7 +18,7 @@ export async function welcome() {
     html`
       <div id="welcome">
         <div id="head)">
-          <img class="icon" src="./icon.png" />
+          <div id="logo"></div>
           <div>
             <h1>Welcome to the Project Open AAC OS-DPI</h1>
             <p>

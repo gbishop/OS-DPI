@@ -5,6 +5,7 @@ import path from "path";
 import analyze from "rollup-plugin-analyzer";
 
 export default defineConfig({
+  base: "/OS-DPI/",
   resolve: {
     alias: {
       components: path.resolve("./components"),
@@ -23,7 +24,7 @@ export default defineConfig({
         chunkFileNames: `[name].${version}.js`,
         assetFileNames: `[name].${version}.[ext]`,
       },
-      plugins: [analyze()],
+      // plugins: [analyze()],
     },
   },
 });
