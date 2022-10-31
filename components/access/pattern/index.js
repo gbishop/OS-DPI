@@ -1,12 +1,12 @@
-import db from "../../../db";
+import db from "app/db";
 import { html } from "uhtml";
-import css from "ustyler";
-import Globals from "../../../globals";
-import * as Props from "../../props";
-import { TreeBase } from "../../treebase";
-import { ButtonWrap, AccessChanged } from "../index";
+import "css/pattern.css";
+import Globals from "app/globals";
+import * as Props from "components/props";
+import { TreeBase } from "components/treebase";
+import { ButtonWrap } from "../index";
 import defaultPatterns from "./defaultPatterns";
-import { TabPanel } from "../../tabcontrol";
+import { TabPanel } from "components/tabcontrol";
 
 /** @typedef {ReturnType<ButtonWrap<Node>>} Button */
 
@@ -102,7 +102,7 @@ export class PatternList extends TabPanel {
     Globals.state.update();
   }
 }
-TreeBase.register(PatternList);
+TreeBase.register(PatternList, "PatternList");
 
 export class PatternManager extends PatternBase {
   /** @type {Group} */
@@ -264,7 +264,7 @@ export class PatternManager extends PatternBase {
     current.cue(this.Cue.value);
   }
 }
-PatternBase.register(PatternManager);
+PatternBase.register(PatternManager, "PatternManager");
 
 class PatternGroup extends PatternBase {
   // props
@@ -302,7 +302,7 @@ class PatternGroup extends PatternBase {
     else return [];
   }
 }
-PatternBase.register(PatternGroup);
+PatternBase.register(PatternGroup, "PatternGroup");
 
 class PatternSelector extends PatternBase {
   settings() {
@@ -325,7 +325,7 @@ class PatternSelector extends PatternBase {
     );
   }
 }
-PatternBase.register(PatternSelector);
+PatternBase.register(PatternSelector, "PatternSelector");
 
 class Filter extends PatternBase {
   Filter = new Props.Expression();
@@ -354,7 +354,7 @@ class Filter extends PatternBase {
     }
   }
 }
-PatternBase.register(Filter);
+PatternBase.register(Filter, "Filter");
 
 // allow the sort to handle numbers reasonably
 const comparator = new Intl.Collator(undefined, {
@@ -389,7 +389,7 @@ class OrderBy extends PatternBase {
     }
   }
 }
-PatternBase.register(OrderBy);
+PatternBase.register(OrderBy, "OrderBy");
 
 class GroupBy extends PatternBase {
   GroupBy = new Props.Field();
@@ -444,80 +444,4 @@ class GroupBy extends PatternBase {
     }
   }
 }
-PatternBase.register(GroupBy);
-
-css`
-  div.access-pattern {
-    padding-left: 12px;
-    padding-top: 12px;
-  }
-  .access-pattern .GroupBy details {
-    display: inline-block;
-    vertical-align: middle;
-  }
-  .access-pattern .GroupBy details[open] {
-    display: inline-block;
-    border: ridge;
-    padding: 0.5em;
-  }
-  .access-pattern .GroupBy details summary {
-    list-style: none;
-    cursor: pointer;
-    width: 1em;
-    height: 1em;
-    border: outset;
-    vertical-align: middle;
-  }
-  .access-pattern .GroupBy details[open] summary {
-    margin-left: calc(100% - 1em);
-    margin-bottom: 0.2em;
-    margin-top: -0.2em;
-  }
-
-  button[cue="group"] {
-    position: relative;
-    border-color: yellow;
-  }
-  button[cue="group"]:after {
-    content: "";
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: yellow;
-    animation: fadein var(--dwell) 1;
-    opacity: 0.3;
-    z-index: 0;
-  }
-  @keyframes fadein {
-    from {
-      background-color: yellow;
-      border-color: yellow;
-    }
-    to {
-      background-color: red;
-      border-color: red;
-    }
-  }
-  button[cue="button"] {
-    position: relative;
-  }
-  button[cue="button"]:after {
-    content: "";
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: url("./target.png");
-    background-size: contain;
-    background-position: center;
-    background-color: rgba(255, 100, 100, 0.5);
-    background-repeat: no-repeat;
-    opacity: 0.4;
-    z-index: 0;
-  }
-`;
+PatternBase.register(GroupBy, "GroupBy");

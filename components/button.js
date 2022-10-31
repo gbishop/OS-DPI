@@ -2,7 +2,7 @@ import { html } from "uhtml";
 import { TreeBase } from "./treebase";
 import * as Props from "./props";
 import { styleString } from "./style";
-import css from "ustyler";
+import "css/button.css";
 import { UpdateAccessData } from "./access";
 
 class Button extends TreeBase {
@@ -34,11 +34,4 @@ class Button extends TreeBase {
     return [];
   }
 }
-TreeBase.register(Button);
-
-css`
-  button.button {
-    height: 100%;
-    width: 100%;
-  }
-`;
+TreeBase.register(Button, "Button");
