@@ -5,27 +5,33 @@ import * as Props from "components/props";
 import { Method, HandlerResponse } from "./index";
 import { ButtonWrap } from "../index";
 
-class ResponderPatternNext extends HandlerResponse {
+class ResponderNext extends HandlerResponse {
   respond() {
     this.pattern.next();
   }
 }
-TreeBase.register(ResponderPatternNext, "ResponderPatternNext");
+TreeBase.register(ResponderNext, "ResponderNext");
 
-class ResponderPatternActivate extends HandlerResponse {
-  respond() {
-    console.log("responder activate");
-    this.pattern.activate();
+class ResponderActivate extends HandlerResponse {
+  /** @param {Event & { access: Object }} event */
+  respond(event) {
+    if (this.pattern.cued) {
+      this.pattern.activate();
+    } else if (
+      (event instanceof PointerEvent || event.type == "timer") &&
+      event.target instanceof HTMLButtonElement
+    ) {
+      const button = ButtonWrap(event.target);
+      const name = button.access.ComponentName;
+      if ("onClick" in button.access) {
+        button.access.onClick();
+      } else {
+        Globals.actions.applyRules(name, "press", button.access);
+      }
+    }
   }
 }
-TreeBase.register(ResponderPatternActivate, "ResponderPatternActivate");
-
-class ResponderPatternCue extends HandlerResponse {
-  respond() {
-    this.pattern.cue();
-  }
-}
-TreeBase.register(ResponderPatternCue, "ResponderPatternCue");
+TreeBase.register(ResponderActivate, "ResponderActivate");
 
 class ResponderCue extends HandlerResponse {
   Cue = new Props.Select();
@@ -46,22 +52,6 @@ class ResponderCue extends HandlerResponse {
   }
 }
 TreeBase.register(ResponderCue, "ResponderCue");
-
-class ResponderActivate extends HandlerResponse {
-  /** @param {Event & { access: Object }} event */
-  respond(event) {
-    if (event.target instanceof HTMLButtonElement) {
-      const button = ButtonWrap(event.target);
-      const name = button.access.ComponentName;
-      if ("onClick" in button.access) {
-        button.access.onClick();
-      } else {
-        Globals.actions.applyRules(name, "press", button.access);
-      }
-    }
-  }
-}
-TreeBase.register(ResponderActivate, "ResponderActivate");
 
 class ResponderClearCue extends HandlerResponse {
   respond() {
