@@ -18,7 +18,7 @@ class Audio extends TreeBase {
     (await db.getAudio(fileName)).play();
   }
 
-  uiTemplate() {
+  template() {
     const { stateName } = this.props;
     const { state } = Globals;
     if (state.hasBeenUpdated(stateName)) {

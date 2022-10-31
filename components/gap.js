@@ -7,7 +7,7 @@ class Gap extends TreeBase {
   scale = new Props.Float(1);
   background = new Props.Color("");
 
-  uiTemplate() {
+  template() {
     const style = styleString({
       backgroundColor: this.props.background,
     });

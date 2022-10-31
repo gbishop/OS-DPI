@@ -4,7 +4,7 @@ import "css/monitor.css";
 import Globals from "app/globals";
 
 export class Monitor extends TreeBase {
-  uiTemplate() {
+  template() {
     const { state, actions: rules } = Globals;
     const s = html`<table class="state">
       <thead>
@@ -56,3 +56,4 @@ export class Monitor extends TreeBase {
       <div>${s}${f}</div>`;
   }
 }
+TreeBase.register(Monitor, "Monitor");

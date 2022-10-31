@@ -84,7 +84,7 @@ class VSD extends TreeBase {
     }));
   }
 
-  uiTemplate() {
+  template() {
     const { data, state, rules } = Globals;
     const items = /** @type {VRow[]} */ (
       data.getMatchingRows(this.filters, state)

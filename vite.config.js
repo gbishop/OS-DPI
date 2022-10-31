@@ -14,7 +14,6 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: "docs",
     sourcemap: true,
     minify: true,
     target: "esnext",
