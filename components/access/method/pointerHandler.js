@@ -20,7 +20,9 @@ export class PointerHandler extends Handler {
   settings() {
     const { conditions, responses, Signal, Debounce } = this;
     const skip =
-      this.Signal.value == "pointerover" ? this.SkipOnRedraw.input() : html``;
+      this.Signal.value == "pointerover"
+        ? this.SkipOnRedraw.input()
+        : html`<!--empty-->`;
     return html`
       <fieldset class="Handler">
         <legend>Pointer Handler</legend>
