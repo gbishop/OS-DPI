@@ -375,30 +375,38 @@ export class TreeBase {
 
   /** Return a list of available Menu actions on this component
    *
+   * @param {"add" | "delete" | "move" | "all"} which - whice actions to return
    * @returns {MenuAction[]}
    */
-  getMenuActions() {
+  getMenuActions(which = "all") {
     /** @type {MenuAction[]} */
     const result = [];
     // add actions
-    for (const className of this.allowedChildren) {
-      result.push(new MenuActionAdd(this, className));
+    if (which == "add" || which == "all") {
+      for (const className of this.allowedChildren) {
+        result.push(new MenuActionAdd(this, className));
+      }
     }
     // delete
-    if (this.allowDelete) {
-      result.push(new MenuActionDelete(this, this.className));
+    if (which == "delete" || which == "all") {
+      if (this.allowDelete) {
+        result.push(new MenuActionDelete(this, this.className));
+      }
     }
 
-    if (this.parent) {
-      const index = this.parent.children.indexOf(this);
+    // move
+    if (which == "move" || which == "all") {
+      if (this.parent) {
+        const index = this.parent.children.indexOf(this);
 
-      if (index > 0) {
-        // moveup
-        result.push(new MenuActionMove(this, this.className, index, -1));
-      }
-      if (index < this.parent.children.length - 1) {
-        // movedown
-        result.push(new MenuActionMove(this, this.className, index, 1));
+        if (index > 0) {
+          // moveup
+          result.push(new MenuActionMove(this, this.className, index, -1));
+        }
+        if (index < this.parent.children.length - 1) {
+          // movedown
+          result.push(new MenuActionMove(this, this.className, index, 1));
+        }
       }
     }
     return result;
