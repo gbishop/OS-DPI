@@ -218,11 +218,13 @@ export class TreeBase {
    * @returns {Hole}
    */
   settings() {
-    return html`<details class=${this.className}>
+    return html`<div>
+      <details class=${this.className}>
         <summary id=${this.id + "-settings"}>${this.settingsSummary()}</summary>
         ${this.settingsDetails()}
       </details>
-      ${this.orderedChildren()}`;
+      ${this.orderedChildren()}
+    </div>`;
   }
 
   /**
