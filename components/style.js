@@ -1,6 +1,6 @@
-import { log } from "../log";
+import { log } from "app/log";
 import { html, render } from "uhtml";
-import css from "ustyler";
+import "css/style.css";
 import { ColorNames } from "./color-names";
 
 /** @param {Event & { target: HTMLInputElement }} event
@@ -150,27 +150,3 @@ class ColorInput extends HTMLElement {
 }
 
 customElements.define("color-input", ColorInput);
-
-css`
-  color-input {
-    margin-right: 1em;
-    align-items: center;
-  }
-
-  color-input input {
-    flex: 1 1 0;
-    margin-right: 0.2em;
-  }
-
-  color-input .swatch {
-    width: 1em;
-    height: 1em;
-    display: inline-block;
-    border: 1px solid black;
-    vertical-align: middle;
-  }
-  color-input input:invalid {
-    background-color: #fcc;
-    border-color: red;
-  }
-`;

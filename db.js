@@ -165,6 +165,7 @@ class DB {
    * @param {Object} data
    */
   async write(type, data) {
+    console.trace("db write", type);
     const db = await this.dbPromise;
     await db.put("store", { name: this.designName, type, data });
     await db.delete("saved", this.designName);

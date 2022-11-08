@@ -1,5 +1,5 @@
 import { html, render } from "uhtml";
-import css from "ustyler";
+import "css/wait.css";
 
 /**
  * Handle displaying a "please wait" message and error reporting for
@@ -42,38 +42,3 @@ export default async function wait(promise, message = "Please wait") {
     });
   }
 }
-
-css`
-  #PleaseWait {
-    position: fixed;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgb(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-    font-size: 2em;
-    transition: all 0.5s ease-in;
-    opacity: 1;
-  }
-
-  #PleaseWait:empty {
-    background-color: rgb(0, 0, 0, 0);
-    opacity: 0;
-  }
-
-  #PleaseWait div {
-    padding: 5em;
-    border: 1px solid black;
-    background-color: white;
-  }
-
-  #PleaseWait .message {
-    color: blue;
-  }
-
-  #PleaseWait .error {
-    color: red;
-  }
-`;

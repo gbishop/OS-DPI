@@ -7,11 +7,11 @@ class Gap extends TreeBase {
   scale = new Props.Float(1);
   background = new Props.Color("");
 
-  uiTemplate() {
+  template() {
     const style = styleString({
       backgroundColor: this.props.background,
     });
     return html`<div class="gap flex" style=${style} id=${this.id}></div>`;
   }
 }
-TreeBase.register(Gap);
+TreeBase.register(Gap, "Gap");

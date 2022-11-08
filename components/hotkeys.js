@@ -1,24 +1,16 @@
 /** Global Hot Keys for keyboard access */
 
-import Globals from "../globals";
-import css from "ustyler";
-
-/**
- * Toggle the designer interface on and off.
- *
- * I chose the multikey trigger to avoid accidental activation but
- * it is likely to be unacceptable to designers who struggle to use
- * the keyboard.
- *
- * What are the alternatives?
- *
- * @param {KeyboardEvent} event */
-function DesignerToggle(event) {
-  if (event.altKey && event.ctrlKey && event.shiftKey) {
-    document.body.classList.toggle("designing");
-    Globals.state.update({ editing: !Globals.state.get("editing") });
-  }
-}
+import Globals from "app/globals";
+import { render, html } from "uhtml";
+import "css/hotkeys.css";
+import { TabPanel } from "./tabcontrol";
+import {
+  TreeBase,
+  MenuActionAdd,
+  MenuActionDelete,
+  MenuActionMove,
+} from "./treebase";
+import { callAfterRender } from "app/render";
 
 // document.addEventListener("keydown", DesignerToggle, { capture: true });
 
@@ -36,7 +28,7 @@ function showHints(hints) {
 
 function clearHints() {
   const hintNode = document.getElementById("HotKeyHints");
-  hintNode.classList.remove("show");
+  hintNode && hintNode.classList.remove("show");
 }
 
 function focusTabs() {
@@ -44,6 +36,7 @@ function focusTabs() {
     document.querySelector(".designing .tabcontrol .buttons button[active]")
   );
   if (currentTab) {
+    console.log("focus", currentTab);
     currentTab.focus();
     return;
   }
@@ -52,6 +45,7 @@ function focusTabs() {
   ]);
   console.log({ tabs });
   if (!tabs.length) return;
+  console.log("focus", tabs[0]);
   tabs[0].focus();
 }
 
@@ -63,7 +57,13 @@ function focusTabs() {
 function HotKeyHandler(event) {
   console.log(event);
   const designing = Globals.state.get("editing");
-  if (event.altKey && event.ctrlKey && event.shiftKey) {
+  if (event.key == "Alt") {
+    HKState = "Alt";
+    showHints(["Tabs"]);
+    event.preventDefault();
+  } else if (event.key == "d" && HKState == "Alt") {
+    HKState = "idle";
+    clearHints();
     if (!designing) {
       document.body.classList.add("designing");
       event.preventDefault();
@@ -74,11 +74,8 @@ function HotKeyHandler(event) {
       Globals.state.update({ editing: false });
     }
   } else if (!designing) {
+    HKState = "idle";
     return;
-  } else if (event.key == "Alt") {
-    HKState = "Alt";
-    showHints(["Tabs"]);
-    event.preventDefault();
   } else if (event.key == "t" && HKState == "Alt") {
     HKState = "idle";
     clearHints();
@@ -93,17 +90,55 @@ function HotKeyHandler(event) {
 
 document.addEventListener("keydown", HotKeyHandler, { capture: true });
 
-css`
-  #HotKeyHints {
-    display: none;
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    background: white;
+/**
+ * A hack to test the MenuActions
+ * @param {TabPanel} panel */
+export function updateMenuActions(panel) {
+  console.log({ panel });
+  if (!panel.lastFocused) {
+    console.log("no lastFocused");
+    return;
   }
+  const component = TreeBase.componentFromId(panel.lastFocused);
+  if (!component) {
+    console.log("no component");
+    return;
+  }
+  const actions = component.getMenuActions();
 
-  #HotKeyHints.show {
-    display: block;
-  }
-`;
+  const where = document.getElementById("HotKeyHints");
+
+  const buttons = actions.map((action) => {
+    let label = "";
+    if (action instanceof MenuActionAdd) {
+      label = `+${action.className}`;
+    } else if (action instanceof MenuActionDelete) {
+      label = `-${action.className}`;
+    } else if (action instanceof MenuActionMove) {
+      if (action.step < 0) {
+        label = "Up";
+      } else {
+        label = "Down";
+      }
+    }
+    // why do I have to restore the focus. Shouldn't I be able to leave it where it is?
+    // uhtml can redraw the page without trashing focus.
+    // why not here?
+    // it must have something to do with the focus moving to the button on click?
+    return html`<button
+      onclick=${() => {
+        render(where, html`<!--empty-->`);
+        const nextId = action.apply();
+        console.log({ nextId, panel });
+        // we're looking for the settings view but we have the id of the user view
+        panel.lastFocused = nextId + "-settings";
+        callAfterRender(() => panel.parent.restoreFocus());
+        panel.update();
+      }}
+    >
+      ${label}
+    </button>`;
+  });
+
+  render(where, html`${buttons}`);
+}

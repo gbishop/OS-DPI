@@ -1,11 +1,9 @@
 /* Thinking about better properties */
 
 import { html } from "uhtml";
-import css from "ustyler";
-import { compileExpression } from "../eval";
-import Globals from "../globals";
-import { TreeBase, TreeBaseSwitchable } from "./treebase";
-import WeakValue from "weak-value";
+import "css/props.css";
+import { compileExpression } from "app/eval";
+import Globals from "app/globals";
 
 /**
  * @typedef {Object} PropOptions
@@ -21,18 +19,32 @@ export class Prop {
   /** @type {any} */
   value;
 
-  // assign a unique id to each Prop
-  static idCount = 0;
-  id = `Prop-${Prop.idCount++}`;
+  // Each prop gets a unique id based on the id of its container
+  id = "";
 
-  /** Allow mapping from id to Prop
-   * @type {Map<string, Prop>} */
-  static idMap = new WeakValue();
+  /** @type {import('./treebase').TreeBase} */
+  container = null;
 
-  /** Get the Prop from the id
-   * @param {string} id */
-  static PropFromId(id) {
-    return Prop.idMap.get(id);
+  /** attach the prop to its containing TreeBase component
+   * @param {string} name
+   * @param {any} value
+   * @param {TreeBase} container
+   * */
+  initialize(name, value, container) {
+    // create id from the container id
+    this.id = `${container.id}-${name}`;
+    // link to the container
+    this.container = container;
+    // set the value if provided
+    if (value != null) {
+      this.set(value);
+    }
+    // create a label if it has none
+    this.label =
+      this.label ||
+      name // convert from camelCase to Camel Case
+        .replace(/(?!^)([A-Z])/g, " $1")
+        .replace(/^./, (s) => s.toUpperCase());
   }
 
   get valueAsNumber() {
@@ -42,16 +54,12 @@ export class Prop {
   /** @type {PropOptions} */
   options = {};
 
-  /** @type {TreeBase} */
-  container = null;
-
   /** @param {PropOptions} options */
   constructor(options = {}) {
     this.options = options;
     if ("label" in options) {
       this.label = options.label;
     }
-    Prop.idMap.set(this.id, this);
   }
   /** @param {Object} _ - The context */
   eval(_ = {}) {
@@ -147,7 +155,7 @@ export class State extends Select {
 }
 
 export class TypeSelect extends Select {
-  /** @type {TreeBaseSwitchable} */
+  /** @type {import('./treebase').TreeBaseSwitchable} */
   container = null;
 
   update() {
@@ -398,31 +406,3 @@ export class Voice extends Prop {
     >`;
   }
 }
-
-css`
-  label {
-    display: inline-block;
-  }
-  label[hiddenLabel] span {
-    clip: rect(0 0 0 0);
-    clip-path: inset(50%);
-    height: 1px;
-    overflow: hidden;
-    position: absolute;
-    white-space: nowrap;
-    width: 1px;
-  }
-  select:required:invalid {
-    color: gray;
-    border-color: red;
-  }
-  option[value=""][disabled] {
-    display: none;
-  }
-  option {
-    color: black;
-  }
-  :focus {
-    outline: 3px solid orange;
-  }
-`;

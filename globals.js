@@ -13,6 +13,10 @@ const Globals = {
   method: null,
   /** @type {import('./components/designer-tabs/access/cues').CueList} */
   cues: null,
+  /** @type {import('./components/monitor').Monitor} */
+  monitor: null,
+  /** @type {import('./components/toolbar').ToolBar} */
+  toolbar: null,
   restart: null,
 };
 

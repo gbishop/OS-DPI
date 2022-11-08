@@ -1,0 +1,13 @@
+  .radio fieldset {
+    flex-flow: wrap;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    justify-content: space-around;
+    gap: 1%;
+  }
+
+  .radio button {
+    min-width: 45%;
+    max-width: 45%;
+  }

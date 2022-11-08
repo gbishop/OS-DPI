@@ -46,12 +46,10 @@
  * @typedef {Partial<Props>} SomeProps
  */
 
-/** @typedef {import('../components/base').Base} Tree */
-
-/** @typedef {import('../components/treebase').TreeBase} TreeBase */
+/** @typedef {import('components/treebase').TreeBase} TreeBase */
 
 /**
- * @typedef {import("../state").State} State
+ * @typedef {import("app/state").State} State
  */
 
 /**
@@ -121,6 +119,6 @@
  * @property {string} [newName]
  */
 
-/** @typedef {import("../components/img-db.js").imgFromDb} ImgDb */
+/** @typedef {import("components/img-db.js").imgFromDb} ImgDb */
 
 /** @typedef {Event & {access: Object}} WrappedEvent */

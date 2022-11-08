@@ -1,4 +1,4 @@
-import { render, html } from "uhtml";
+import { html } from "uhtml";
 import { Data } from "./data";
 import { State } from "./state";
 import { TreeBase } from "./components/treebase";
@@ -8,35 +8,15 @@ import { Monitor } from "./components/monitor";
 import { ToolBar } from "./components/toolbar/toolbar";
 import db from "./db";
 import pleaseWait from "./components/wait";
-import { fileOpen } from "browser-fs-access";
-import css from "ustyler";
-import { ButtonWrap, clearAccessChanged } from "./components/designer-tabs/access";
+import "css/start.css";
+import { ButtonWrap, clearAccessChanged } from "./components/access";
 import Globals from "./globals";
-import { PatternList } from "./components/designer-tabs/access/pattern";
-import { MethodChooser } from "./components/designer-tabs/access/method";
-import { CueList } from "./components/designer-tabs/access/cues";
-import { Actions } from "./components/designer-tabs/actions";
-
-const safe = false;
-
-/** @param {Element} where
- * @param {Hole} what
- */
-function safeRender(where, what) {
-  let r;
-  if (safe) {
-    try {
-      r = render(where, what);
-    } catch (error) {
-      console.log("crash", error);
-      window.location.reload();
-      return;
-    }
-  } else {
-    r = render(where, what);
-  }
-  return r;
-}
+import { PatternList } from "./components/access/pattern";
+import { MethodChooser } from "./components/access/method";
+import { CueList } from "./components/access/cues";
+import { Actions } from "./components/actions";
+import { welcome } from "./components/welcome";
+import { safeRender } from "./render";
 
 /** let me wait for the page to load */
 const pageLoaded = new Promise((resolve) => {
@@ -45,117 +25,6 @@ const pageLoaded = new Promise((resolve) => {
     resolve(true);
   });
 });
-
-/** welcome screen
- */
-async function welcome() {
-  // clear any values left over
-  sessionStorage.clear();
-  const names = await db.names();
-  const saved = await db.saved();
-  // setup data for the table
-  names.sort();
-  render(
-    document.body,
-    html`
-      <div id="welcome">
-        <div id="head)">
-          <img class="icon" src="./icon.png" />
-          <div>
-            <h1>Welcome to the Project Open AAC OS-DPI</h1>
-            <p>
-              With this tool you can create experimental AAC interfaces. Start
-              by loading a design from an ".osdpi" file or by creating a new
-              one. Switch between the IDE and the User Interface with the "d"
-              key.
-            </p>
-          </div>
-        </div>
-        <button
-          onclick=${() =>
-            fileOpen({
-              mimeTypes: ["application/octet-stream"],
-              extensions: [".osdpi", ".zip"],
-              description: "OS-DPI designs",
-              id: "os-dpi",
-            })
-              .then((file) => pleaseWait(db.readDesignFromFile(file)))
-              .then(() => (window.location.hash = db.designName))}
-        >
-          Import
-        </button>
-        <button
-          onclick=${async () =>
-            (window.location.hash = await db.uniqueName("new"))}
-        >
-          New
-        </button>
-        <h2>Loaded designs:</h2>
-        ${names.map((name) => {
-          const isSaved = saved.indexOf(name) >= 0;
-          const ref = {};
-          return html`<ul>
-            <li>
-              <a href=${"#" + name}>${name}</a>
-              ${isSaved ? "Saved" : "Not saved"}
-
-              <button
-                ?disabled=${!isSaved}
-                onclick=${async () => {
-                  await db.unload(name);
-                  welcome();
-                }}
-                ref=${ref}
-              >
-                Unload
-              </button>
-              ${!isSaved
-                ? html`<label for=${name}>Enable unload without saving: </label>
-                    <input
-                      id=${name}
-                      type="checkbox"
-                      onchange=${({ currentTarget }) => {
-                        if (ref.current)
-                          ref.current.disabled =
-                            !currentTarget.checked && !isSaved;
-                      }}
-                    />`
-                : html`<!--empty-->`}
-            </li>
-          </ul> `;
-        })}
-      </div>
-    `
-  );
-}
-
-css`
-  #welcome {
-    padding: 1em;
-  }
-  #welcome #head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: flex-start;
-  }
-  #welcome #head div {
-    padding-left: 1em;
-  }
-  #welcome #head div p {
-    max-width: 40em;
-  }
-  #timer {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 5em;
-    padding: 0.5em;
-    z-index: 10;
-  }
-`;
-
-/** @type {Function[]} */
-export const PostRenderFunctions = [];
 
 /** Load page and data then go
  */
@@ -226,10 +95,10 @@ export async function start() {
   });
 
   /* ToolBar */
-  const toolbar = new ToolBar();
+  const toolbar = ToolBar.create("ToolBar", null);
 
   /* Monitor */
-  const monitor = new Monitor();
+  const monitor = Monitor.create("Monitor", null);
 
   function renderUI() {
     const startTime = performance.now();
@@ -245,7 +114,7 @@ export async function start() {
             }
           }}
         >
-          <div id="HotKeyHints"></div>
+          <div id="HotKeyHints"><!--empty--></div>
           ${designer.template()}
         </div>
         <div id="monitor">${monitor.template()}</div>
@@ -264,10 +133,6 @@ export async function start() {
         ${IDE}`
     );
     Globals.method.refresh();
-    while (PostRenderFunctions.length > 0) {
-      const PRF = PostRenderFunctions.pop();
-      PRF();
-    }
     if (location.host.startsWith("localhost")) {
       document.getElementById("timer").innerText = (
         performance.now() - startTime
@@ -339,48 +204,6 @@ window.addEventListener("hashchange", () => {
 //   });
 // }
 //
-css`
-  body.designing {
-    display: grid;
-    grid-template-rows: 2em 2em 2em 50% auto 1em;
-    grid-template-columns: 50% 50%;
-  }
-
-  body.designing div#UI {
-    font-size: 0.7vw;
-    flex: 1 1 0;
-  }
-
-  div#designer {
-    display: none;
-  }
-
-  body.designing div#designer {
-    display: block;
-    overflow-y: auto;
-    flex: 1 1 0;
-    grid-row-start: 3;
-    grid-row-end: 6;
-    grid-column-start: 2;
-    position: relative;
-  }
-  body.designing #UI {
-    grid-row-start: 3;
-    grid-row-end: 5;
-    grid-column-start: 1;
-  }
-  body.designing #monitor {
-    grid-row-start: 5;
-    grid-column-start: 1;
-  }
-  body.designing #toolbar {
-    grid-row-start: 1;
-    grid-row-end: 3;
-    grid-column-start: 1;
-    grid-column-end: 3;
-  }
-`;
-
 /** @typedef {PointerEvent & { target: HTMLElement }} ClickEvent */
 // I think this code mapped clicks back to the tree but no longer...
 // document.addEventListener("click", (/** @type {ClickEvent} */ event) => {

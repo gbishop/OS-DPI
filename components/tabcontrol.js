@@ -3,10 +3,11 @@ import { TreeBase } from "./treebase";
 import * as Props from "./props";
 import { Stack } from "./layout-nodes/stack";
 import { styleString } from "./style";
-import css from "ustyler";
-import { UpdateAccessData } from "./designer-tabs/access";
-import Globals from "../globals";
-import { PostRenderFunctions } from "../start";
+import "css/tabcontrol.css";
+import { UpdateAccessData } from "./access";
+import Globals from "app/globals";
+import { callAfterRender } from "app/render";
+import { updateMenuActions } from "./hotkeys";
 
 export class TabControl extends TreeBase {
   stateName = new Props.String("$tabControl");
@@ -15,7 +16,7 @@ export class TabControl extends TreeBase {
   tabEdge = new Props.Select(["bottom", "top", "left", "right", "none"]);
   name = new Props.String("tabs");
 
-  allowedChildren = ["tab panel"];
+  allowedChildren = ["TabPanel"];
 
   /** @type {TabPanel[]} */
   children = [];
@@ -33,7 +34,6 @@ export class TabControl extends TreeBase {
       panel.tabLabel = state.interpolate(panel.props.label || panel.props.name); // display name
       if (index == 0 && !activeTabName) {
         activeTabName = panel.tabName;
-        console.log({ index, activeTabName, n: this.props.stateName });
         state.define(this.props.stateName, panel.tabName);
       }
       panel.active = activeTabName == panel.tabName || panels.length === 1;
@@ -56,7 +56,7 @@ export class TabControl extends TreeBase {
               component: this.constructor.name,
               onClick: () => {
                 if (this instanceof DesignerTabControl) {
-                  PostRenderFunctions.push(() => this.restoreFocus());
+                  callAfterRender(() => this.restoreFocus());
                 }
                 state.update({ [this.props.stateName]: panel.tabName });
               },
@@ -76,8 +76,11 @@ export class TabControl extends TreeBase {
       <div class="buttons">${buttons}</div>
       <div
         class="panels flex"
-        onfocusin=${({ target }) =>
-          this.currentPanel && (this.currentPanel.lastFocused = target.id)}
+        onfocusin=${({ target }) => {
+          this.currentPanel && (this.currentPanel.lastFocused = target.id);
+          /** FIX: this does not belong here. I'm just seeing if the actions stuff works */
+          updateMenuActions(this.currentPanel);
+        }}
       >
         ${panel}
       </div>
@@ -86,7 +89,7 @@ export class TabControl extends TreeBase {
 
   restoreFocus() {}
 }
-TreeBase.register(TabControl);
+TreeBase.register(TabControl, "TabControl");
 
 class DesignerTabControl extends TabControl {
   settings() {
@@ -94,14 +97,19 @@ class DesignerTabControl extends TabControl {
   }
 
   restoreFocus() {
-    console.log("designer rf", this.currentPanel.lastFocused);
     if (this.currentPanel) {
       if (this.currentPanel.lastFocused) {
-        document.getElementById(this.currentPanel.lastFocused)?.focus();
+        const elem = document.getElementById(this.currentPanel.lastFocused);
+        console.log(
+          "restore focus",
+          elem,
+          this.currentPanel.lastFocused,
+          this.currentPanel
+        );
+        if (elem) elem.focus();
       } else {
-        console.log(this.currentPanel.id);
+        console.log("restoreFocus else path");
         const panelNode = document.getElementById(this.currentPanel.id);
-        console.log({ panelNode });
         if (panelNode) {
           const focusable = /** @type {HTMLElement} */ (
             panelNode.querySelector(
@@ -110,15 +118,14 @@ class DesignerTabControl extends TabControl {
                 "summary:not(:disabled)"
             )
           );
-          console.log({ focusable });
           if (focusable) focusable.focus();
         }
       }
     }
-    console.log("designer ae", document.activeElement);
+    console.log("ae", document.activeElement);
   }
 }
-TreeBase.register(DesignerTabControl);
+TreeBase.register(DesignerTabControl, "DesignerTabControl");
 
 class MenuTabControl extends TabControl {
   settings() {
@@ -131,9 +138,8 @@ class MenuTabControl extends TabControl {
       if (this.currentPanel.lastFocused) {
         document.getElementById(this.currentPanel.lastFocused)?.focus();
       } else {
-        console.log(this.currentPanel.id);
+        console.log("restoreFocus else path");
         const panelNode = document.getElementById(this.currentPanel.id);
-        console.log({ panelNode });
         if (panelNode) {
           const focusable = /** @type {HTMLElement} */ (
             panelNode.querySelector(
@@ -142,7 +148,6 @@ class MenuTabControl extends TabControl {
                 "summary:not(:disabled)"
             )
           );
-          console.log({ focusable });
           if (focusable) focusable.focus();
         }
       }
@@ -156,111 +161,12 @@ export class TabPanel extends Stack {
   name = new Props.String("");
   label = new Props.String("");
 
+  /** @type {TabControl} */
+  parent = null;
+
   active = false;
   tabName = "";
   tabLabel = "";
   lastFocused = "";
 }
-TreeBase.register(TabPanel);
-
-css`
-  .tabcontrol .buttons button:focus {
-    filter: invert(100%);
-  }
-  .tabcontrol .panels {
-    display: flex;
-  }
-  .tabcontrol .buttons {
-    display: flex;
-  }
-  .tabcontrol .buttons button {
-    flex: 1 1 0;
-  }
-  .tabcontrol .buttons button[active] {
-    font-weight: bold;
-  }
-
-  .tabcontrol.top {
-    flex-direction: column;
-  }
-  .tabcontrol.top .panels {
-    order: 2;
-  }
-  .tabcontrol.top .buttons {
-    order: 1;
-  }
-  .tabcontrol.top .buttons button[active] {
-    border-bottom: 1px;
-    margin-top: 0px;
-  }
-  .tabcontrol.top .buttons button {
-    border-top-left-radius: 1em;
-    border-top-right-radius: 1em;
-    margin-top: 10px;
-  }
-
-  .tabcontrol.bottom {
-    flex-direction: column;
-  }
-  .tabcontrol.bottom .panels {
-    order: 1;
-  }
-  .tabcontrol.bottom .buttons {
-    order: 2;
-  }
-  .tabcontrol.bottom .buttons button[active] {
-    border-top: 1px;
-    margin-bottom: 0px;
-  }
-  .tabcontrol.bottom .buttons button {
-    border-bottom-left-radius: 1em;
-    border-bottom-right-radius: 1em;
-    margin-bottom: 10px;
-  }
-
-  .tabcontrol.right {
-    flex-direction: row;
-  }
-  .tabcontrol.right .panels {
-    order: 1;
-  }
-  .tabcontrol.right .buttons {
-    order: 2;
-    flex-direction: column;
-  }
-  .tabcontrol.right .buttons button[active] {
-    border-left: 1px;
-    margin-right: 0;
-  }
-  .tabcontrol.right .buttons button {
-    border-top-right-radius: 1em;
-    border-bottom-right-radius: 1em;
-    margin-right: 10px;
-  }
-
-  .tabcontrol.left {
-    flex-direction: row;
-  }
-  .tabcontrol.left .panels {
-    order: 2;
-    flex: 1;
-  }
-  .tabcontrol.left .buttons {
-    order: 1;
-    flex-direction: column;
-    flex: 1;
-  }
-  .tabcontrol.left .buttons button[active] {
-    border-right: 1px;
-    margin-left: 0;
-  }
-  .tabcontrol.left .buttons button {
-    border-top-left-radius: 1em;
-    border-bottom-left-radius: 1em;
-    margin-left: 10px;
-  }
-
-  .tabcontrol.none .buttons {
-    display: none;
-  }
-`;
+TreeBase.register(TabPanel, "TabPanel");
