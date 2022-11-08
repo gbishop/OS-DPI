@@ -7,7 +7,8 @@ import "css/tabcontrol.css";
 import { UpdateAccessData } from "./access";
 import Globals from "app/globals";
 import { callAfterRender } from "app/render";
-import { updateMenuActions } from "./hotkeys";
+// import { updateMenuActions } from "./hotkeys";
+import { updateMenuActions } from "./toolbar";
 
 export class TabControl extends TreeBase {
   stateName = new Props.String("$tabControl");

@@ -8,11 +8,18 @@ import "css/menu.css";
 import Globals from "app/globals";
 import { callAfterRender } from "app/render";
 
-/**
- * @typedef {Object} MenuItem
- * @property {string} label
- * @property {function} callback
- */
+// /**
+//  * @typedef {Object} MenuItem
+//  * @property {string} label
+//  * @property {function} callback
+//  */
+
+export class MenuItem {
+  constructor(label, callback) {
+    this.label = label;
+    this.callback = callback;
+  }
+}
 
 export class Menu {
   // a unique id for each menu
