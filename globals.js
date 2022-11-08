@@ -7,11 +7,11 @@ const Globals = {
   actions: null,
   /** @type {TreeBase} */
   tree: null,
-  /** @type {import('./components/designer-tabs/access/pattern').PatternList} */
+  /** @type {import('./components/access/pattern').PatternList} */
   patterns: null,
-  /** @type {import('./components/designer-tabs/access/method').MethodChooser} */
+  /** @type {import('./components/access/method').MethodChooser} */
   method: null,
-  /** @type {import('./components/designer-tabs/access/cues').CueList} */
+  /** @type {import('./components/access/cues').CueList} */
   cues: null,
   /** @type {import('./components/monitor').Monitor} */
   monitor: null,

@@ -3,7 +3,7 @@ import db from "../../db";
 import { html } from "uhtml";
 import Globals from "../../globals";
 import { TreeBase } from "../treebase";
-import { ButtonWrap } from "../designer-tabs/access";
+import { ButtonWrap } from "../access";
 import { Menu } from "../menu/index";
 import { toolbarAction, toolbarActions } from "./toolbar-actions";
 
