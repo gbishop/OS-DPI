@@ -1,32 +1,54 @@
-  div.layout {
-    display: flex;
-    flex-direction: column;
-    flex: 1 1 0;
-    overflow: hidden;
-  }
+div.layout {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  overflow: hidden;
+}
 
-  .layout ol {
-    list-style-type: none;
-    margin-block-start: 0;
-    padding-inline-start: 1em;
-    border-left: 1px solid #d0d0d0;
-  }
+.layout ol {
+  list-style-type: none;
+  margin-block-start: 0;
+  padding-inline-start: 1em;
+  border-left: 1px solid #d0d0d0;
+}
 
-  .layout details {
-    display: inline-block;
-  }
+.layout details summary {
+  cursor: pointer;
+}
 
-  div.empty {
-    background-color: rgba(15, 15, 15, 0.3);
-    justify-content: center;
-    align-items: center;
-  }
+details summary > * {
+  display: inline;
+}
 
-  div.empty::before {
-    content: "Empty";
-  }
+.layout details[open] {
+  border: 1px solid black;
+  margin-left: 1em;
+}
 
-  div.highlight {
-    border: 1px solid red;
-    box-sizing: border-box;
-  }
+.layout details[open] summary {
+  margin-left: -1em;
+}
+
+.layout details summary h3 {
+  font-weight: 500;
+}
+
+.layout details label {
+  margin-left: 1em;
+  margin-bottom: 0.5em;
+}
+
+div.empty {
+  background-color: rgba(15, 15, 15, 0.3);
+  justify-content: center;
+  align-items: center;
+}
+
+div.empty::before {
+  content: "Empty";
+}
+
+div.highlight {
+  border: 1px solid red;
+  box-sizing: border-box;
+}

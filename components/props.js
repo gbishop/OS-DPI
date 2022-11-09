@@ -254,7 +254,8 @@ export class Boolean extends Prop {
     this.value = value;
   }
 
-  input() {
+  input(options = {}) {
+    options = { ...this.options, ...options };
     return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
       <span>${this.label}</span>
       <input

@@ -117,26 +117,54 @@ export class Method extends TreeBase {
     return this.filterChildren(Handler);
   }
 
-  settings() {
+  // settings() {
+  //   const { Name, Active, Pattern } = this;
+  //   const timers = [...this.timers.values()];
+  //   return html`<fieldset class="Method" id=${this.id}>
+  //     ${Name.input()} ${Active.input()}
+  //     ${Pattern.input(Globals.patterns.patternMap)}
+  //     <details open>
+  //       <summary>Details</summary>
+  //       ${timers.length > 0
+  //         ? html`<fieldset>
+  //             <legend>Timers</legend>
+  //             ${this.unorderedChildren(timers)}
+  //           </fieldset>`
+  //         : html`Timers`}
+  //       <fieldset>
+  //         <legend>Handlers</legend>
+  //         ${this.orderedChildren(this.handlers)}
+  //       </fieldset>
+  //     </details>
+  //   </fieldset> `;
+  // }
+
+  settingsSummary() {
+    const { Name, Active } = this;
+    return html`<h3>${Name.value} ${Active.input({ hiddenLabel: true })}</h3>`;
+  }
+
+  settingsDetails() {
     const { Name, Active, Pattern } = this;
     const timers = [...this.timers.values()];
-    return html`<fieldset class="Method" id=${this.id}>
+    return html`<div>
       ${Name.input()} ${Active.input()}
       ${Pattern.input(Globals.patterns.patternMap)}
-      <details open>
-        <summary>Details</summary>
-        ${timers.length > 0
-          ? html`<fieldset>
-              <legend>Timers</legend>
-              ${this.unorderedChildren(timers)}
-            </fieldset>`
-          : html`Timers`}
-        <fieldset>
-          <legend>Handlers</legend>
-          ${this.orderedChildren(this.handlers)}
-        </fieldset>
-      </details>
-    </fieldset> `;
+      ${timers.length > 0
+        ? html`<fieldset>
+            <legend>Timers</legend>
+            ${this.unorderedChildren(timers)}
+          </fieldset>`
+        : html`<!--empty-->`}
+      <fieldset>
+        <legend>Handlers</legend>
+        ${this.orderedChildren(this.handlers)}
+      </fieldset>
+    </div>`;
+  }
+
+  settingsChildren() {
+    return html`<!--empty-->`;
   }
 
   /** Configure the rxjs pipelines to implement this method */

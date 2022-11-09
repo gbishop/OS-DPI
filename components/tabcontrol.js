@@ -7,7 +7,6 @@ import "css/tabcontrol.css";
 import { UpdateAccessData } from "./access";
 import Globals from "app/globals";
 import { callAfterRender } from "app/render";
-import { updateMenuActions } from "./hotkeys";
 
 export class TabControl extends TreeBase {
   stateName = new Props.String("$tabControl");
@@ -78,8 +77,6 @@ export class TabControl extends TreeBase {
         class="panels flex"
         onfocusin=${({ target }) => {
           this.currentPanel && (this.currentPanel.lastFocused = target.id);
-          /** FIX: this does not belong here. I'm just seeing if the actions stuff works */
-          updateMenuActions(this.currentPanel);
         }}
       >
         ${panel}

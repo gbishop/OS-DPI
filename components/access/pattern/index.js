@@ -125,18 +125,37 @@ export class PatternManager extends PatternBase {
   Name = new Props.String("a pattern");
   Key = new Props.UID();
 
-  settings() {
+  // settings() {
+  //   const { Cycles, Cue, Name } = this;
+  //   return html`
+  //     <fieldset class=${this.className}>
+  //       <legend>${Name.value}</legend>
+  //       ${Name.input()} ${Cycles.input()} ${Cue.input(Globals.cues.cueMap)}
+  //       <details>
+  //         <summary>Details</summary>
+  //         ${this.orderedChildren()}
+  //       </details>
+  //     </fieldset>
+  //   `;
+  // }
+
+  settingsSummary() {
+    const { Name } = this;
+    return html`<h3>${Name.value}</h3>`;
+  }
+
+  settingsDetails() {
     const { Cycles, Cue, Name } = this;
     return html`
-      <fieldset class=${this.className}>
-        <legend>${Name.value}</legend>
+      <div>
         ${Name.input()} ${Cycles.input()} ${Cue.input(Globals.cues.cueMap)}
-        <details>
-          <summary>Details</summary>
-          ${this.orderedChildren()}
-        </details>
-      </fieldset>
+        ${this.orderedChildren()}
+      </div>
     `;
+  }
+
+  settingsChildren() {
+    return html`<!--empty-->`;
   }
 
   /**

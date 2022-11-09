@@ -63,12 +63,22 @@ class Cue extends TreeBaseSwitchable {
   Key = new Props.UID();
   CueType = new Props.TypeSelect(CueTypes);
 
-  settings() {
-    return html`
-      <fieldset class="Cue">
-        ${this.Name.input()} ${this.CueType.input()} ${this.subTemplate()}
-      </fieldset>
-    `;
+  // settings() {
+  //   return html`
+  //     <fieldset class="Cue">
+  //       ${this.Name.input()} ${this.CueType.input()} ${this.subTemplate()}
+  //     </fieldset>
+  //   `;
+  // }
+  //
+  settingsSummary() {
+    return html`${this.Name.value}`;
+  }
+
+  settingsDetails() {
+    return html`<div>
+      ${this.Name.input()} ${this.CueType.input()} ${this.subTemplate()}
+    </div>`;
   }
 
   subTemplate() {
@@ -94,10 +104,7 @@ class CueCss extends Cue {
   });
 
   subTemplate() {
-    return html`<details>
-      <summary>CSS</summary>
-      ${this.Code.input()}
-    </details>`;
+    return this.Code.input();
   }
 
   get css() {
@@ -111,7 +118,7 @@ class CueOverlay extends Cue {
   Opacity = new Props.Float(0.3);
 
   subTemplate() {
-    return html` ${this.Color.input()} ${this.Opacity.input()}
+    return html`${this.Color.input()} ${this.Opacity.input()}
       <details>
         <summary>generated CSS</summary>
         <pre><code>${this.css}</code></pre>

@@ -213,17 +213,23 @@ export class TreeBase {
    */
   onUpdate(_start) {}
 
+  // remember the state of the details element below
+  settingsDetailsOpen = false;
   /**
    * Render the designer interface and return the resulting Hole
    * @returns {Hole}
    */
   settings() {
     return html`<div>
-      <details class=${this.className}>
+      <details
+        class=${this.className}
+        ?open=${this.settingsDetailsOpen}
+        ontoggle=${({ target }) => (this.settingsDetailsOpen = target.open)}
+      >
         <summary id=${this.id + "-settings"}>${this.settingsSummary()}</summary>
         ${this.settingsDetails()}
       </details>
-      ${this.orderedChildren()}
+      ${this.settingsChildren()}
     </div>`;
   }
 
@@ -233,7 +239,7 @@ export class TreeBase {
    *  */
   settingsSummary() {
     const name = this.hasOwnProperty("name") ? this["name"].value : "";
-    return html`${fromCamelCase(this.className)} ${name}`;
+    return html`<h3>${fromCamelCase(this.className)} ${name}</h3>`;
   }
 
   /**
@@ -244,6 +250,10 @@ export class TreeBase {
     const props = this.propsAsProps;
     const inputs = Object.values(props).map((prop) => prop.input());
     return html`${inputs}`;
+  }
+
+  settingsChildren() {
+    return this.orderedChildren();
   }
 
   /**
