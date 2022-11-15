@@ -38,17 +38,20 @@ export class Menu {
   /** @type {HTMLElement} - reference to the outer div */
   current = null;
 
-  /** @param {string} label - label on the menu button
-   * @param {function(): MenuItem[]} contentCallback - returns the menu items to display
+  /** 
+   * @param {string} label - label on the menu button
+   * @param {function(string): MenuItem[]} contentCallback - returns the menu items to display
+   * @param {string} rest - type
    */
-  constructor(label, contentCallback) {
+  constructor(label, contentCallback, rest) {
     this.label = label;
     this.contentCallback = contentCallback;
+    this.rest = rest;
   }
 
   render() {
     if (this.expanded) {
-      this.items = this.contentCallback();
+      this.items = this.contentCallback(this.rest);
     } else {
       this.items = [];
     }

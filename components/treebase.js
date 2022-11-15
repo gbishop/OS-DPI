@@ -377,7 +377,7 @@ export class TreeBase {
 
   /** Return a list of available Menu actions on this component
    *
-   * @param {"add" | "delete" | "move" | "all"} which - whice actions to return
+   * @param {"add" | "delete" | "move" | "all"} which - which actions to return
    * @returns {MenuAction[]}
    */
   getMenuActions(which = "all") {

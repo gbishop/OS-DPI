@@ -18,18 +18,9 @@ export class ToolBar extends TreeBase {
   init() {
     console.log("toolbar init");
 
-    this.menu = new Menu("Add", () =>
-      ["foo", "add this to that"].map((item) => ({
-        label: item,
-        callback: () => console.log("menu", item),
-      }))
-    );
-    this.menu2 = new Menu("Delete", () =>
-      ["delete this", "delete that"].map((item) => ({
-        label: item,
-        callback: () => console.log("menu", item),
-      }))
-    );
+    this.menu = new Menu("Add", getMenuItems, "add");
+    this.menu2 = new Menu("Delete", getMenuItems, "delete");
+    this.menu3 = new Menu("Move", getMenuItems, "move");
   }
 
   template() {
@@ -60,9 +51,9 @@ export class ToolBar extends TreeBase {
         >
           Undo
         </button>
-        <div id="ContextSpecificMenu">
-          ${this.menu.render()} ${this.menu2.render()}
-        </div>
+        <span id="ContextSpecificMenu">
+          ${this.menu.render()} ${this.menu2.render()} ${this.menu3.render()}
+        </span>
       </div>
     `;
   }
@@ -71,6 +62,48 @@ TreeBase.register(ToolBar, "ToolBar");
 
 export default toolbar;
 
+/**
+ * Determines valid menu items given a menu type.
+ * @param {"add" | "delete" | "move" | "all"} type 
+ * @return {MenuItem[]}
+ * */
+export function getMenuItems(type) {
+  const { state } = Globals;
+
+  // Figure out which tab is active
+  const activeTab = state.get("designerTab");
+  console.log(activeTab);
+  // how to get panel from active tab?
+  const panel = null;
+
+  // Ask that tab which component is focused
+  if (!panel.lastFocused) {
+    console.log("no lastFocused");
+    return;
+  }
+  const component = TreeBase.componentFromId(panel.lastFocused);
+  if (!component) {
+    console.log("no component");
+    return;
+  }
+
+  // Ask that component for the list of menu items for "type"
+  const filteredActions = component.getMenuActions(type);
+  const where = document.getElementById("ContextSpecificMenu");
+  let filteredActionsToMenuItems = filteredActions.map((action) => {
+    return new MenuItem((action instanceof MenuActionMove ? ((action.step < 0) ? "Up" : "Down") : `${action.className}`), () => {
+      render(where, html`<!--empty-->`);
+      const nextId = action.apply();
+      console.log({ nextId, panel });
+      // we're looking for the settings view but we have the id of the user view
+      panel.lastFocused = nextId + "-settings";
+      callAfterRender(() => panel.parent.restoreFocus());
+      panel.update();
+    });
+  });
+
+  return filteredActionsToMenuItems;
+}
 
 /**
  * A hack to test the MenuActions
@@ -115,12 +148,21 @@ export function updateMenuActions(panel) {
       });
     });
 
-    return new Menu(menuLabel, () => filteredActionsToMenuItems);
+    // return new Menu(menuLabel, () => filteredActionsToMenuItems);
+
+    // callback asks for current tab -> actions -> menuitems to menu
+    // only calculate actions when need
+    // note on focus: toggle; go to last place focused
+    // way to tab to menu bar
+    // no tab traps
+    // toolbar on right
+    // aria-labeled for buttons...
   });
 
   menus.forEach((menu) => {
-    render(where, html`${menu}`);
+    console.log(menu);
+    // document.getElementById('content').appendChild(html`${menu}`);
   })
 
-  //render(where, html`${menus}`);
+  render(where, html`${menus}`);
 }

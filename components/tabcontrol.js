@@ -89,6 +89,10 @@ export class TabControl extends TreeBase {
   }
 
   restoreFocus() {}
+
+  getCurrentPanel() {
+    return this.currentPanel;
+  }
 }
 TreeBase.register(TabControl, "TabControl");
 
