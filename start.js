@@ -68,7 +68,7 @@ export async function start() {
 
   /* Designer */
   Globals.state.define("editing", true); // for now
-  const designer = TreeBase.fromObject({
+  Globals.designer = TreeBase.fromObject({
     className: "DesignerTabControl",
     props: { tabEdge: "top", stateName: "designerTab" },
     children: [
@@ -115,7 +115,7 @@ export async function start() {
           }}
         >
           <div id="HotKeyHints"><!--empty--></div>
-          ${designer.template()}
+          ${Globals.designer.template()}
         </div>
         <div id="monitor">${monitor.template()}</div>
         <div id="toolbar">${toolbar.template()}</div>

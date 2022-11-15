@@ -1,5 +1,4 @@
 import { html } from "uhtml";
-import { TreeBase } from "./treebase";
 import * as Props from "./props";
 import { Stack } from "./stack";
 import { styleString } from "./style";
@@ -7,8 +6,13 @@ import "css/tabcontrol.css";
 import { UpdateAccessData } from "./access";
 import Globals from "app/globals";
 import { callAfterRender } from "app/render";
-// import { updateMenuActions } from "./hotkeys";
-import { updateMenuActions } from "./toolbar";
+import { MenuItem } from "./menu";
+import {
+  TreeBase,
+  MenuActionAdd,
+  MenuActionDelete,
+  MenuActionMove,
+} from "./treebase";
 
 export class TabControl extends TreeBase {
   stateName = new Props.String("$tabControl");
@@ -52,16 +56,16 @@ export class TabControl extends TreeBase {
             ?active=${panel.active}
             style=${styleString(buttonStyle)}
             ref=${UpdateAccessData({
-              name: this.name,
-              label: panel.tabLabel,
-              component: this.constructor.name,
-              onClick: () => {
-                if (this instanceof DesignerTabControl) {
-                  callAfterRender(() => this.restoreFocus());
-                }
-                state.update({ [this.props.stateName]: panel.tabName });
-              },
-            })}
+            name: this.name,
+            label: panel.tabLabel,
+            component: this.constructor.name,
+            onClick: () => {
+              if (this instanceof DesignerTabControl) {
+                callAfterRender(() => this.restoreFocus());
+              }
+              state.update({ [this.props.stateName]: panel.tabName });
+            },
+          })}
             .dataset=${{ id: panel.id }}
           >
             ${panel.tabLabel}
@@ -78,20 +82,35 @@ export class TabControl extends TreeBase {
       <div
         class="panels flex"
         onfocusin=${({ target }) => {
-          this.currentPanel && (this.currentPanel.lastFocused = target.id);
-          /** FIX: this does not belong here. I'm just seeing if the actions stuff works */
-          updateMenuActions(this.currentPanel);
-        }}
+        this.currentPanel && (this.currentPanel.lastFocused = target.id);
+        /** FIX: this does not belong here. I'm just seeing if the actions stuff works */
+        // updateMenuActions(this.currentPanel);
+      }}
       >
         ${panel}
       </div>
     </div>`;
   }
 
-  restoreFocus() {}
+  // note on focus: toggle; go to last place focused
+  // way to tab to menu bar
+  // no tab traps
+  // toolbar on right
+  // aria-labeled for buttons...
+  restoreFocus() { }
 
   getCurrentPanel() {
-    return this.currentPanel;
+    console.log("in tab control");
+    console.log(this);
+    var vals = Object.keys(this).map(function (key) {
+      return this[key];
+    });
+    console.log({vals});
+    const {allowedChildren, currentPanel } = this;
+    console.log({currentPanel});
+    const actualCurrentPanel = this.currentPanel;
+    console.log({actualCurrentPanel});
+    return actualCurrentPanel;
   }
 }
 TreeBase.register(TabControl, "TabControl");
@@ -119,14 +138,55 @@ class DesignerTabControl extends TabControl {
           const focusable = /** @type {HTMLElement} */ (
             panelNode.querySelector(
               "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), " +
-                'textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled]), ' +
-                "summary:not(:disabled)"
+              'textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled]), ' +
+              "summary:not(:disabled)"
             )
           );
           if (focusable) focusable.focus();
         }
       }
     }
+  }
+
+  /**
+ * Determines valid menu items given a menu type.
+ * @param {"add" | "delete" | "move" | "all"} type 
+ * @param {TabPanel} panel
+ * @return {MenuItem[]}
+ * */
+  getMenuItems(type, panel) {
+    // Figure out which tab is active
+    console.log("in menu items")
+    console.log({panel});
+
+    // Ask that tab which component is focused
+    if (!panel.lastFocused) {
+      console.log("no lastFocused");
+      return;
+    }
+    const component = TreeBase.componentFromId(panel.lastFocused);
+    if (!component) {
+      console.log("no component");
+      return;
+    }
+
+    // Ask that component for the list of menu items for "type"
+    const filteredActions = component.getMenuActions(type);
+    // const where = document.getElementById("ContextSpecificMenu");
+    let filteredActionsToMenuItems = filteredActions.map((action) => {
+      return new MenuItem((action instanceof MenuActionMove ? ((action.step < 0) ? "Up" : "Down") : `${action.className}`), () => {
+        // render(where, html`<!--empty-->`);
+        const nextId = action.apply();
+        console.log({ nextId, panel });
+        // we're looking for the settings view but we have the id of the user view
+        panel.lastFocused = nextId + "-settings";
+        callAfterRender(() => panel.parent.restoreFocus());
+        panel.update();
+      });
+    });
+
+    console.log(filteredActionsToMenuItems);
+    return filteredActionsToMenuItems;
   }
 }
 TreeBase.register(DesignerTabControl, "DesignerTabControl");
