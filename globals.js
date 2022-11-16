@@ -17,6 +17,9 @@ const Globals = {
   monitor: null,
   /** @type {import('./components/toolbar').ToolBar} */
   toolbar: null,
+  /** @type {import('./components/tabcontrol').DesignerTabControl} */
+  designer: null,
+
   restart: null,
 };
 

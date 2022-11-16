@@ -88,7 +88,7 @@ export class TabControl extends TreeBase {
 }
 TreeBase.register(TabControl, "TabControl");
 
-class DesignerTabControl extends TabControl {
+export class DesignerTabControl extends TabControl {
   settings() {
     return super.template();
   }

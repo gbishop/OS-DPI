@@ -37,10 +37,5 @@ export class Page extends Stack {
     const result = /** @type {Page} */ (this.fromObject(page));
     return result;
   }
-
-  onUpdate() {
-    db.write("layout", this.toObject());
-    Globals.state.update();
-  }
 }
 Stack.register(Page, "Page");

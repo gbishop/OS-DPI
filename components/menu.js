@@ -32,16 +32,18 @@ export class Menu {
   current = null;
 
   /** @param {string} label - label on the menu button
-   * @param {function(): MenuItem[]} contentCallback - returns the menu items to display
+   * @param {function(...any): MenuItem[]} contentCallback - returns the menu items to display
+   * @param {any[]} args
    */
-  constructor(label, contentCallback) {
+  constructor(label, contentCallback, ...args) {
     this.label = label;
     this.contentCallback = contentCallback;
+    this.callbackArgs = args;
   }
 
   render() {
     if (this.expanded) {
-      this.items = this.contentCallback();
+      this.items = this.contentCallback(...this.callbackArgs);
     } else {
       this.items = [];
     }

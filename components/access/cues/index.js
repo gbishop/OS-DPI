@@ -72,7 +72,7 @@ class Cue extends TreeBaseSwitchable {
   // }
   //
   settingsSummary() {
-    return html`${this.Name.value}`;
+    return html`<h3>${this.Name.value}</h3>`;
   }
 
   settingsDetails() {

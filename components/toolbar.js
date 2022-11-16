@@ -8,22 +8,12 @@ import { Menu } from "./menu";
 export class ToolBar extends TreeBase {
   init() {
     console.log("toolbar init");
-    this.menu = new Menu("Add", () =>
-      ["foo", "add this to that"].map((item) => ({
-        label: item,
-        callback: () => console.log("menu", item),
-      }))
-    );
-    this.menu2 = new Menu("Delete", () =>
-      ["delete this", "delete that"].map((item) => ({
-        label: item,
-        callback: () => console.log("menu", item),
-      }))
-    );
+    // this.menu = new Menu("Add", getMenuItems, 'add');
+    // this.menu2 = new Menu("Delete", getMenuItems, 'delete');
   }
 
   template() {
-    const { state } = Globals;
+    const { state, designer } = Globals;
     return html`
       <div class="bar">
         <label for="designName">Name: </label>
@@ -50,7 +40,6 @@ export class ToolBar extends TreeBase {
         >
           Undo
         </button>
-        ${this.menu.render()} ${this.menu2.render()}
       </div>
     `;
   }

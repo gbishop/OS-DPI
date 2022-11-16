@@ -9,6 +9,7 @@ import { EventWrap } from "../index";
 import defaultMethods from "./defaultMethods";
 import { log } from "app/log";
 import { TabPanel } from "components/tabcontrol";
+import "css/method.css";
 
 export class MethodChooser extends TabPanel {
   name = new Props.String("Methods");
@@ -47,7 +48,7 @@ export class MethodChooser extends TabPanel {
 
   template() {
     return html`<div class="MethodChooser" id=${this.id}>
-      ${this.children.map((child) => child.settings())}
+      ${this.unorderedChildren()}
     </div> `;
   }
 
