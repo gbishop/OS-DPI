@@ -203,12 +203,47 @@ class Grid extends TreeBase {
       ${result}
     </div>`;
   }
+
+  settingsDetails() {
+    const props = this.propsAsProps;
+    const inputs = Object.values(props).map((prop) => prop.input());
+    const filters = html`<fieldset>
+      <legend>Filters</legend>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Field</th>
+            <th>Operator</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${this.children.map(
+            (filter, index) => html`
+              <tr>
+                <td>${index + 1}</td>
+                <td>${filter.field.input()}</td>
+                <td>${filter.operator.input()}</td>
+                <td>${filter.value.input()}</td>
+              </tr>
+            `
+          )}
+        </tbody>
+      </table>
+    </fieldset>`;
+    return html`<div>${filters}${inputs}</div>`;
+  }
+
+  settingsChildren() {
+    return html``;
+  }
 }
 TreeBase.register(Grid, "Grid");
 
 export class GridFilter extends TreeBase {
-  field = new Props.Field();
-  operator = new Props.Select(Object.keys(comparators));
-  value = new Props.String("");
+  field = new Props.Field([], { hiddenLabel: true });
+  operator = new Props.Select(Object.keys(comparators), { hiddenLabel: true });
+  value = new Props.String("", { hiddenLabel: true });
 }
 TreeBase.register(GridFilter, "GridFilter");

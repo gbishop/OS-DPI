@@ -60,3 +60,12 @@ body:not(.designing) img[dbsrc]:not([src]) {
 .grid .page-control .back-next button {
   flex: 1 1 0;
 }
+
+#designer .Grid td label {
+  margin-left: 0;
+  margin-bottom: 0;
+}
+
+#designer .Grid th {
+  font-weight: normal;
+}
