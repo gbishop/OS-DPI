@@ -13,12 +13,9 @@ export class ToolBar extends TreeBase {
     console.log("toolbar init");
 
     const { designer } = Globals;
-    console.log("in toolbar");
-    // console.log(designer);
-    console.log(designer.getCurrentPanel());
-    this.menu = new Menu("Add", designer.getMenuItems, "add", designer.getCurrentPanel());
-    this.menu2 = new Menu("Delete", designer.getMenuItems, "delete", designer.getCurrentPanel());
-    this.menu3 = new Menu("Move", designer.getMenuItems, "move", designer.getCurrentPanel());
+    this.menu = new Menu("Add", designer.getMenuItems, "add");
+    this.menu2 = new Menu("Delete", designer.getMenuItems, "delete");
+    this.menu3 = new Menu("Move", designer.getMenuItems, "move");
   }
 
   template() {

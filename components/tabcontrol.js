@@ -83,8 +83,6 @@ export class TabControl extends TreeBase {
         class="panels flex"
         onfocusin=${({ target }) => {
         this.currentPanel && (this.currentPanel.lastFocused = target.id);
-        /** FIX: this does not belong here. I'm just seeing if the actions stuff works */
-        // updateMenuActions(this.currentPanel);
       }}
       >
         ${panel}
@@ -99,20 +97,8 @@ export class TabControl extends TreeBase {
   // aria-labeled for buttons...
   restoreFocus() { }
 
-  getCurrentPanel() {
-    console.log("in tab control");
-    console.log(this);
-    var vals = Object.keys(this).map(function (key) {
-      return this[key];
-    });
-    console.log({vals});
-    const {allowedChildren, currentPanel } = this;
-    console.log({currentPanel});
-    const actualCurrentPanel = this.currentPanel;
-    console.log({actualCurrentPanel});
-    return actualCurrentPanel;
-  }
 }
+
 TreeBase.register(TabControl, "TabControl");
 
 class DesignerTabControl extends TabControl {
@@ -151,13 +137,13 @@ class DesignerTabControl extends TabControl {
   /**
  * Determines valid menu items given a menu type.
  * @param {"add" | "delete" | "move" | "all"} type 
- * @param {TabPanel} panel
  * @return {MenuItem[]}
  * */
-  getMenuItems(type, panel) {
+  getMenuItems(type) {
+    console.log(super.currentPanel);
     // Figure out which tab is active
-    console.log("in menu items")
-    console.log({panel});
+    const { designer } = Globals;
+    const panel = designer.currentPanel;
 
     // Ask that tab which component is focused
     if (!panel.lastFocused) {
