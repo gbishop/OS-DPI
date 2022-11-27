@@ -140,7 +140,6 @@ class DesignerTabControl extends TabControl {
  * @return {MenuItem[]}
  * */
   getMenuItems(type) {
-    console.log(super.currentPanel);
     // Figure out which tab is active
     const { designer } = Globals;
     const panel = designer.currentPanel;
@@ -158,6 +157,10 @@ class DesignerTabControl extends TabControl {
 
     // Ask that component for the list of menu items for "type"
     const filteredActions = component.getMenuActions(type);
+    if (filteredActions.length < 1) {
+      console.log("no valid actions");
+      return;
+    }
     // const where = document.getElementById("ContextSpecificMenu");
     let filteredActionsToMenuItems = filteredActions.map((action) => {
       return new MenuItem((action instanceof MenuActionMove ? ((action.step < 0) ? "Up" : "Down") : `${action.className}`), () => {
