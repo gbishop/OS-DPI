@@ -17,6 +17,8 @@ export class CueList extends TabPanel {
   /** @type {Cue[]} */
   children = [];
 
+  allowDelete = false;
+
   template() {
     return html`<div class="CueList" id=${this.id}>
       ${this.unorderedChildren()}
