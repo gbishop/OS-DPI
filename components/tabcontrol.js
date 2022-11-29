@@ -156,12 +156,35 @@ class DesignerTabControl extends TabControl {
     }
 
     // Ask that component for the list of menu items for "type"
-    const filteredActions = component.getMenuActions(type);
+    const filteredActionsCurrentComponent = component.getMenuActions(type);
+    if (filteredActionsCurrentComponent.length < 1) {
+      console.log("no valid actions for focused component");
+    }
+
+    // Ask the component for its parent
+    if (!component.parent) {
+      console.log("no parent"); // return?
+    }
+
+    // console.log({
+    //   currentComponent: component.className,
+    //   parent: component.parent.className
+    // });
+
+    // Ask parent of component for the list of menu items for "type", 
+    // if parent exists, type is NOT move
+    // and component is NOT stack or page
+    const filteredActions = (component.parent &&
+      type !== "move" &&
+      component.className !== "Stack" &&
+      component.className !== "Page") ?
+      filteredActionsCurrentComponent.concat(component.parent.getMenuActions(type))
+      : filteredActionsCurrentComponent;
     if (filteredActions.length < 1) {
       console.log("no valid actions");
       return;
     }
-    // const where = document.getElementById("ContextSpecificMenu");
+
     let filteredActionsToMenuItems = filteredActions.map((action) => {
       return new MenuItem((action instanceof MenuActionMove ? ((action.step < 0) ? "Up" : "Down") : `${action.className}`), () => {
         // render(where, html`<!--empty-->`);
@@ -174,7 +197,7 @@ class DesignerTabControl extends TabControl {
       });
     });
 
-    console.log(filteredActionsToMenuItems);
+    // console.log(filteredActionsToMenuItems);
     return filteredActionsToMenuItems;
   }
 }
