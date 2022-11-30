@@ -107,6 +107,8 @@ export class PatternList extends TabPanel {
 TreeBase.register(PatternList, "PatternList");
 
 export class PatternManager extends PatternBase {
+  allowedChildren = ["PatternSelector", "PatternGroup"];
+
   /** @type {Group} */
   targets;
   /**
@@ -269,6 +271,8 @@ export class PatternManager extends PatternBase {
 PatternBase.register(PatternManager, "PatternManager");
 
 class PatternGroup extends PatternBase {
+  allowedChildren = ["PatternSelector", "PatternGroup"];
+
   // props
   Name = new Props.String("");
   Cycles = new Props.Integer(2, { min: 1 });
@@ -307,6 +311,8 @@ class PatternGroup extends PatternBase {
 PatternBase.register(PatternGroup, "PatternGroup");
 
 class PatternSelector extends PatternBase {
+  allowedChildren = ["Filter", "OrderBy", "GroupBy"];
+
   settings() {
     return html`<fieldset class=${this.className}>
       <legend>Selector</legend>

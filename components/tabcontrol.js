@@ -119,6 +119,7 @@ class DesignerTabControl extends TabControl {
           this.currentPanel
         );
         if (elem) elem.focus();
+        console.log({focusable: document.getElementById(this.currentPanel.id).querySelector(".PatternSelector")})
       } else {
         console.log("restoreFocus else path");
         const panelNode = document.getElementById(this.currentPanel.id);
@@ -183,12 +184,13 @@ class DesignerTabControl extends TabControl {
     // Ask parent of component for the list of menu items for "type", 
     // if parent exists and is not DesignerTabControl, 
     // type is NOT move, and
-    // component is NOT stack or page or DesignerTabControl
+    // component is NOT stack, page, or PatternGroup
     const filteredActions = (component.parent &&
       component.parent.className !== "DesignerTabControl" &&
       type !== "move" &&
       component.className !== "Stack" &&
-      component.className !== "Page") ?
+      component.className !== "Page" &&
+      component.className !== "PatternGroup") ?
       filteredActionsCurrentComponent.concat(component.parent.getMenuActions(type))
       : filteredActionsCurrentComponent;
     if (filteredActions.length < 1) {
