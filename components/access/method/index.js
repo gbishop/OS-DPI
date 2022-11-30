@@ -13,6 +13,7 @@ import { TabPanel } from "components/tabcontrol";
 export class MethodChooser extends TabPanel {
   name = new Props.String("Methods");
 
+  allowedChildren = ["Method"];
   /** @type {Method[]} */
   children = [];
 

@@ -19,13 +19,10 @@ export class Page extends Stack {
   // you can't delete the page
   allowDelete = false;
 
+  allowedChildren = ["Stack", "Modal Dialog", "Speech", "Audio", "Logger"];
+
   constructor() {
     super();
-    this.allowedChildren = this.allowedChildren.concat(
-      "Speech",
-      "Audio",
-      "Logger"
-    );
   }
 
   template() {

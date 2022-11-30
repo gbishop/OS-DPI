@@ -65,6 +65,7 @@ export class PatternList extends TabPanel {
   name = new Props.String("Patterns");
   allowDelete = false;
 
+  allowedChildren = ["PatternManager"];
   /** @type {PatternManager[]} */
   children = [];
 
