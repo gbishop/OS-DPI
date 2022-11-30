@@ -48,7 +48,7 @@ export class MethodChooser extends TabPanel {
   }
 
   template() {
-    return html`<div class="MethodChooser" id=${this.id}>
+    return html`<div class="MethodChooser" id=${this.id} tabindex="-1">
       ${this.children.map((child) => child.settings())}
     </div> `;
   }

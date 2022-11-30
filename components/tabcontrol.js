@@ -103,7 +103,7 @@ TreeBase.register(TabControl, "TabControl");
 
 class DesignerTabControl extends TabControl {
   allowDelete = false;
-  
+
   settings() {
     return super.template();
   }
@@ -130,7 +130,14 @@ class DesignerTabControl extends TabControl {
               "summary:not(:disabled)"
             )
           );
-          if (focusable) focusable.focus();
+          
+          if (focusable) {
+            focusable.focus();
+            console.log("send focus to element in panel");
+          } else {
+            panelNode.focus();
+            console.log("send focus to empty panel")
+          }
         }
       }
     }
@@ -174,9 +181,11 @@ class DesignerTabControl extends TabControl {
     });
 
     // Ask parent of component for the list of menu items for "type", 
-    // if parent exists, type is NOT move
-    // and component is NOT stack or page
+    // if parent exists and is not DesignerTabControl, 
+    // type is NOT move, and
+    // component is NOT stack or page or DesignerTabControl
     const filteredActions = (component.parent &&
+      component.parent.className !== "DesignerTabControl" &&
       type !== "move" &&
       component.className !== "Stack" &&
       component.className !== "Page") ?

@@ -132,7 +132,7 @@ export class Actions extends TabPanel {
   template() {
     const { state, actions } = Globals;
     const ruleIndex = state.get("ruleIndex");
-    return html`<div class="actions" help="Actions" id=${this.id}>
+    return html`<div class="actions" help="Actions" id=${this.id} tabindex="-1" >
       <table>
         <thead>
           <tr>

@@ -20,7 +20,7 @@ export class CueList extends TabPanel {
   allowDelete = false;
 
   template() {
-    return html`<div class="CueList" id=${this.id}>
+    return html`<div class="CueList" id=${this.id} tabindex="-1" >
       ${this.unorderedChildren()}
     </div>`;
   }
