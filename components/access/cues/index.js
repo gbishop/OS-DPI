@@ -13,7 +13,7 @@ import defaultCues from "./defaultCues";
 export class CueList extends TabPanel {
   name = new Props.String("Cues");
 
-  allowedChildren = ["CueCSS", "CueOverlay"];
+  allowedChildren = ["Cue"];
   /** @type {Cue[]} */
   children = [];
 
