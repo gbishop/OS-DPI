@@ -13,6 +13,8 @@ const timerSignals = new Map([
 ]);
 
 export class TimerHandler extends Handler {
+  allowedChildren = ["HandlerCondition", "HandlerResponse"];
+
   Signal = new Props.Select(timerSignals);
   TimerName = new Props.Select([], { hiddenLabel: true });
 

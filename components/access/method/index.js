@@ -70,6 +70,7 @@ export class Method extends TreeBase {
 
   open = false;
 
+  allowedChildren = ["Timer", "KeyHandler", "PointerHandler", "TimerHandler"];
   /** @type {(Handler | Timer)[]} */
   children = [];
 
