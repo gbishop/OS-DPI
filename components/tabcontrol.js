@@ -119,7 +119,9 @@ class DesignerTabControl extends TabControl {
           this.currentPanel
         );
         if (elem) elem.focus();
-        console.log({focusable: document.getElementById(this.currentPanel.id).querySelector(".PatternSelector")})
+
+        // NOTE: this does not belong here; I was just trying to find a PatternSelector.
+        // console.log({focusable: document.getElementById(this.currentPanel.id).querySelector(".PatternSelector")})
       } else {
         console.log("restoreFocus else path");
         const panelNode = document.getElementById(this.currentPanel.id);
