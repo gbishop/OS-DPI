@@ -63,12 +63,14 @@ class PatternBase extends TreeBase {
 
 export class PatternList extends TabPanel {
   name = new Props.String("Patterns");
+  allowDelete = false;
 
+  allowedChildren = ["PatternManager"];
   /** @type {PatternManager[]} */
   children = [];
 
   template() {
-    return html`<div class="PatternList" id=${this.id}>
+    return html`<div class="PatternList" id=${this.id} tabindex="-1">
       ${this.unorderedChildren()}
     </div>`;
   }
@@ -105,6 +107,8 @@ export class PatternList extends TabPanel {
 TreeBase.register(PatternList, "PatternList");
 
 export class PatternManager extends PatternBase {
+  allowedChildren = ["PatternSelector", "PatternGroup"];
+
   /** @type {Group} */
   targets;
   /**

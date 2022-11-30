@@ -8,11 +8,16 @@ import "css/menu.css";
 import Globals from "app/globals";
 import { callAfterRender } from "app/render";
 
-/**
- * @typedef {Object} MenuItem
- * @property {string} label
- * @property {function} callback
- */
+export class MenuItem {
+  /**
+* @param {string} label
+* @param {Function} callback
+*/
+  constructor(label, callback) {
+    this.label = label;
+    this.callback = callback;
+  }
+}
 
 export class Menu {
   // a unique id for each menu
@@ -31,19 +36,23 @@ export class Menu {
   /** @type {HTMLElement} - reference to the outer div */
   current = null;
 
-  /** @param {string} label - label on the menu button
+  /** 
+   * @param {string} label - label on the menu button
    * @param {function(...any): MenuItem[]} contentCallback - returns the menu items to display
-   * @param {any[]} args
+   * @param {any[]} callbackArgs - type
    */
-  constructor(label, contentCallback, ...args) {
+  constructor(label, contentCallback, ...callbackArgs) {
     this.label = label;
     this.contentCallback = contentCallback;
-    this.callbackArgs = args;
+    this.callbackArgs = callbackArgs;
   }
 
   render() {
     if (this.expanded) {
       this.items = this.contentCallback(...this.callbackArgs);
+      if (this.items.length == 0) {
+        this.items = [ new MenuItem("None", null) ];
+      }
     } else {
       this.items = [];
     }
@@ -75,6 +84,7 @@ export class Menu {
             html`<li role="menuitem">
               <button
                 index=${index}
+                ?disabled=${!item.callback}
                 onclick=${() => {
                   this.toggleExpanded();
                   item.callback();

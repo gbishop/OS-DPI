@@ -17,11 +17,14 @@ body.designing div#designer {
   display: block;
   overflow-y: auto;
   flex: 1 1 0;
-  grid-row-start: 1;
+  grid-row-start: 2;
   grid-row-end: 4;
   grid-column-start: 2;
 }
 body.designing #UI {
+  grid-row-start: 1;
+  grid-row-end: 3;
+  grid-column-start: 1;
   position: relative;
 }
 body.designing #monitor {
@@ -30,7 +33,7 @@ body.designing #monitor {
 }
 body.designing #toolbar {
   grid-row-start: 1;
-  grid-column-start: 1;
+  grid-column-start: 2;
 }
 
 #designer ol,

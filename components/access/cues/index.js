@@ -13,12 +13,14 @@ import defaultCues from "./defaultCues";
 export class CueList extends TabPanel {
   name = new Props.String("Cues");
 
-  allowedChildren = ["CueCSS", "CueOverlay"];
+  allowedChildren = ["Cue"];
   /** @type {Cue[]} */
   children = [];
 
+  allowDelete = false;
+
   template() {
-    return html`<div class="CueList" id=${this.id}>
+    return html`<div class="CueList" id=${this.id} tabindex="-1" >
       ${this.unorderedChildren()}
     </div>`;
   }

@@ -16,7 +16,7 @@ import { MethodChooser } from "./components/access/method";
 import { CueList } from "./components/access/cues";
 import { Actions } from "./components/actions";
 import { welcome } from "./components/welcome";
-import { safeRender } from "./render";
+import { callAfterRender, safeRender } from "./render";
 
 /** let me wait for the page to load */
 const pageLoaded = new Promise((resolve) => {
@@ -105,6 +105,7 @@ export async function start() {
     let IDE = html`<!--empty-->`;
     if (Globals.state.get("editing")) {
       IDE = html`
+        <div id="toolbar">${toolbar.template()}</div>
         <div
           id="designer"
           onclick=${(/** @type {InputEventWithTarget} */ event) => {
@@ -114,11 +115,9 @@ export async function start() {
             }
           }}
         >
-          <div id="HotKeyHints"><!--empty--></div>
           ${Globals.designer.template()}
         </div>
         <div id="monitor">${monitor.template()}</div>
-        <div id="toolbar">${toolbar.template()}</div>
       `;
     }
     document.body.classList.toggle("designing", Globals.state.get("editing"));
@@ -140,6 +139,7 @@ export async function start() {
     }
   }
   Globals.state.observe(debounce(renderUI));
+  callAfterRender(() => Globals.designer.restoreFocus())
   renderUI();
 }
 

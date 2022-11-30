@@ -13,6 +13,8 @@ const pointerSignals = new Map([
 ]);
 
 export class PointerHandler extends Handler {
+  allowedChildren = ["HandlerCondition", "HandlerResponse"];
+  
   Signal = new Props.Select(pointerSignals);
   Debounce = new Props.Float(0.1);
   SkipOnRedraw = new Props.Boolean(false);

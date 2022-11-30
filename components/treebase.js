@@ -387,7 +387,7 @@ export class TreeBase {
 
   /** Return a list of available Menu actions on this component
    *
-   * @param {"add" | "delete" | "move" | "all"} which - whice actions to return
+   * @param {"add" | "delete" | "move" | "all"} which - which actions to return
    * @returns {MenuAction[]}
    */
   getMenuActions(which = "all") {
@@ -426,9 +426,12 @@ export class TreeBase {
 }
 
 export class MenuAction {
-  /** @type {TreeBase} component */
-  component = null;
-  className = "";
+  /** @param {TreeBase} component
+   * @param {string} className */
+  constructor(component, className) {
+    this.component = component;
+    this.className = className;
+  }
 
   /**
    * @returns {string} */
@@ -438,14 +441,6 @@ export class MenuAction {
 }
 
 export class MenuActionAdd extends MenuAction {
-  /** @param {TreeBase} component
-   * @param {string} className */
-  constructor(component, className) {
-    super();
-    this.component = component;
-    this.className = className;
-  }
-
   apply() {
     const result = TreeBase.create(this.className, this.component);
     return result.id;
@@ -453,14 +448,6 @@ export class MenuActionAdd extends MenuAction {
 }
 
 export class MenuActionDelete extends MenuAction {
-  /** @param {TreeBase} component
-   * @param {string} className */
-  constructor(component, className) {
-    super();
-    this.component = component;
-    this.className = className;
-  }
-
   apply() {
     // remove returns the id of the nearest neighbor or the parent
     const nextId = this.component.remove();
@@ -475,9 +462,7 @@ export class MenuActionMove extends MenuAction {
    * @param {number} index
    * @param {number} step */
   constructor(component, className, index, step) {
-    super();
-    this.component = component;
-    this.className = className;
+    super(component, className);
     this.index = index;
     this.step = step;
   }

@@ -1,5 +1,4 @@
 import { html } from "uhtml";
-import { TreeBase } from "./treebase";
 import * as Props from "./props";
 import { Stack } from "./stack";
 import { styleString } from "./style";
@@ -7,6 +6,7 @@ import "css/tabcontrol.css";
 import { UpdateAccessData } from "./access";
 import Globals from "app/globals";
 import { callAfterRender } from "app/render";
+import { TreeBase } from "./treebase";
 
 export class TabControl extends TreeBase {
   stateName = new Props.String("$tabControl");
@@ -54,10 +54,7 @@ export class TabControl extends TreeBase {
               label: panel.tabLabel,
               component: this.constructor.name,
               onClick: () => {
-                if (this instanceof DesignerTabControl) {
-                  callAfterRender(() => this.restoreFocus());
-                }
-                state.update({ [this.props.stateName]: panel.tabName });
+                this.switchTab(panel.tabName);
               },
             })}
             .dataset=${{ id: panel.id }}
@@ -73,25 +70,43 @@ export class TabControl extends TreeBase {
       id=${this.id}
     >
       <div class="buttons">${buttons}</div>
-      <div
-        class="panels flex"
-        onfocusin=${({ target }) => {
-          this.currentPanel && (this.currentPanel.lastFocused = target.id);
-        }}
-      >
-        ${panel}
-      </div>
+      <div class="panels flex" onfocusin=${this.focusin}>${panel}</div>
     </div>`;
   }
+
+  /**
+   * @param {string} tabName
+   */
+  switchTab(tabName) {
+    Globals.state.update({ [this.props.stateName]: tabName });
+  }
+
+  focusin = null;
 
   restoreFocus() {}
 }
 TreeBase.register(TabControl, "TabControl");
 
-export class DesignerTabControl extends TabControl {
-  settings() {
-    return super.template();
+/**
+ * Customize the TabControl for use in the Designer interface
+ */
+class DesignerTabControl extends TabControl {
+  allowDelete = false;
+
+  /**
+   * @param {string} tabName
+   */
+  switchTab(tabName) {
+    callAfterRender(() => this.restoreFocus());
+    super.switchTab(tabName);
   }
+
+  /**
+   * capture focusin events so we can remember what was focused last
+   */
+  focusin = ({ target }) => {
+    this.currentPanel && (this.currentPanel.lastFocused = target.id);
+  };
 
   restoreFocus() {
     if (this.currentPanel) {
@@ -115,7 +130,14 @@ export class DesignerTabControl extends TabControl {
                 "summary:not(:disabled)"
             )
           );
-          if (focusable) focusable.focus();
+
+          if (focusable) {
+            focusable.focus();
+            console.log("send focus to element in panel");
+          } else {
+            panelNode.focus();
+            console.log("send focus to empty panel");
+          }
         }
       }
     }
