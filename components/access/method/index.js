@@ -16,6 +16,8 @@ export class MethodChooser extends TabPanel {
   /** @type {Method[]} */
   children = [];
 
+  allowDelete = false;
+
   // allow tearing down handlers when changing configurations
   stop$ = new RxJs.Subject();
 

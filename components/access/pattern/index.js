@@ -63,6 +63,7 @@ class PatternBase extends TreeBase {
 
 export class PatternList extends TabPanel {
   name = new Props.String("Patterns");
+  allowDelete = false;
 
   /** @type {PatternManager[]} */
   children = [];

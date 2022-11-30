@@ -102,6 +102,8 @@ export class TabControl extends TreeBase {
 TreeBase.register(TabControl, "TabControl");
 
 class DesignerTabControl extends TabControl {
+  allowDelete = false;
+  
   settings() {
     return super.template();
   }
@@ -166,10 +168,10 @@ class DesignerTabControl extends TabControl {
       console.log("no parent"); // return?
     }
 
-    // console.log({
-    //   currentComponent: component.className,
-    //   parent: component.parent.className
-    // });
+    console.log({
+      currentComponent: component,
+      parent: component.parent
+    });
 
     // Ask parent of component for the list of menu items for "type", 
     // if parent exists, type is NOT move

@@ -26,6 +26,8 @@ export class Actions extends TabPanel {
     origin: "",
   };
 
+  allowDelete = false;
+
   init() {
     this.applyRules("init", "init", {});
   }
