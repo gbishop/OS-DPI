@@ -12,6 +12,7 @@ import Globals from "app/globals";
  * @property {string} [title]
  * @property {string} [label]
  * @property {boolean} [multiple]
+ * @property {string} [defaultValue]
  */
 
 export class Prop {
@@ -105,6 +106,7 @@ export class Select extends Prop {
     if (!choices) {
       choices = this.choices;
     }
+    this.value = this.value || this.options.defaultValue || "";
     return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
       <span>${this.label}</span>
       <select

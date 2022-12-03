@@ -4,12 +4,7 @@ import Globals from "app/globals";
 import { render, html } from "uhtml";
 import "css/hotkeys.css";
 import { TabPanel } from "./tabcontrol";
-import {
-  TreeBase,
-  MenuActionAdd,
-  MenuActionDelete,
-  MenuActionMove,
-} from "./treebase";
+import { TreeBase } from "./treebase";
 import { callAfterRender } from "app/render";
 
 // document.addEventListener("keydown", DesignerToggle, { capture: true });

@@ -4,7 +4,7 @@ import { html } from "uhtml";
 import { styleString } from "./style";
 
 export class Stack extends TreeBase {
-  direction = new Props.Select(["row", "column"]);
+  direction = new Props.Select(["row", "column"], { defaultValue: "column" });
   background = new Props.Color("");
   scale = new Props.Float(1);
 

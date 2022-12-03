@@ -12,7 +12,9 @@ export class TabControl extends TreeBase {
   stateName = new Props.String("$tabControl");
   background = new Props.String("");
   scale = new Props.Float(6);
-  tabEdge = new Props.Select(["bottom", "top", "left", "right", "none"]);
+  tabEdge = new Props.Select(["bottom", "top", "left", "right", "none"], {
+    defaultValue: "top",
+  });
   name = new Props.String("tabs");
 
   allowedChildren = ["TabPanel"];
@@ -103,9 +105,16 @@ class DesignerTabControl extends TabControl {
 
   /**
    * capture focusin events so we can remember what was focused last
+   * @param {FocusEvent} event
    */
-  focusin = ({ target }) => {
-    this.currentPanel && (this.currentPanel.lastFocused = target.id);
+  focusin = (event) => {
+    if (!(event.target instanceof HTMLElement)) return;
+    const panel = document.getElementById(this.currentPanel.id);
+    for (const element of panel.querySelectorAll("[aria-selected]")) {
+      element.removeAttribute("aria-selected");
+    }
+    this.currentPanel.lastFocused = event.target.id;
+    event.target.setAttribute("aria-selected", "true");
   };
 
   restoreFocus() {

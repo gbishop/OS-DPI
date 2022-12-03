@@ -6,6 +6,8 @@ import db from "app/db";
 import Globals from "app/globals";
 
 export class Layout extends TabPanel {
+  allowDelete = false;
+
   template() {
     return html`<div class="treebase layout" help="Layout tab" id=${this.id}>
       ${this.children[0].settings()}

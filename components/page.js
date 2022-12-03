@@ -28,10 +28,6 @@ export class Page extends Stack {
     );
   }
 
-  template() {
-    return html`${this.children.map((child) => child.template())}`;
-  }
-
   static async load() {
     const page = await db.read("layout", emptyPage);
     const result = /** @type {Page} */ (this.fromObject(page));

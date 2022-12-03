@@ -275,6 +275,14 @@ export class TreeBase {
   }
 
   /**
+   * Get the index of this component in its parent
+   * @returns {number}
+   */
+  get index() {
+    return (this.parent && this.parent.children.indexOf(this)) || 0;
+  }
+
+  /**
    *  * Remove this child from their parent and return the id of the child to receive focus
    *  @returns {string}
    *  */
@@ -383,93 +391,6 @@ export class TreeBase {
   /** @returns {Set<string>} */
   allStates() {
     return this.all(/\$\w+/g);
-  }
-
-  /** Return a list of available Menu actions on this component
-   *
-   * @param {"add" | "delete" | "move" | "all"} which - which actions to return
-   * @returns {MenuAction[]}
-   */
-  getMenuActions(which = "all") {
-    /** @type {MenuAction[]} */
-    const result = [];
-    // add actions
-    if (which == "add" || which == "all") {
-      for (const className of this.allowedChildren) {
-        result.push(new MenuActionAdd(this, className));
-      }
-    }
-    // delete
-    if (which == "delete" || which == "all") {
-      if (this.allowDelete) {
-        result.push(new MenuActionDelete(this, this.className));
-      }
-    }
-
-    // move
-    if (which == "move" || which == "all") {
-      if (this.parent) {
-        const index = this.parent.children.indexOf(this);
-
-        if (index > 0) {
-          // moveup
-          result.push(new MenuActionMove(this, this.className, index, -1));
-        }
-        if (index < this.parent.children.length - 1) {
-          // movedown
-          result.push(new MenuActionMove(this, this.className, index, 1));
-        }
-      }
-    }
-    return result;
-  }
-}
-
-export class MenuAction {
-  /** @param {TreeBase} component
-   * @param {string} className */
-  constructor(component, className) {
-    this.component = component;
-    this.className = className;
-  }
-
-  /**
-   * @returns {string} */
-  apply() {
-    return "";
-  }
-}
-
-export class MenuActionAdd extends MenuAction {
-  apply() {
-    const result = TreeBase.create(this.className, this.component);
-    return result.id;
-  }
-}
-
-export class MenuActionDelete extends MenuAction {
-  apply() {
-    // remove returns the id of the nearest neighbor or the parent
-    const nextId = this.component.remove();
-    console.log({ nextId });
-    return nextId;
-  }
-}
-
-export class MenuActionMove extends MenuAction {
-  /** @param {TreeBase} component
-   * @param {string} className
-   * @param {number} index
-   * @param {number} step */
-  constructor(component, className, index, step) {
-    super(component, className);
-    this.index = index;
-    this.step = step;
-  }
-
-  apply() {
-    this.component.parent.swap(this.index, this.index + this.step);
-    return this.component.id;
   }
 }
 

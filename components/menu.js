@@ -10,12 +10,18 @@ import { callAfterRender } from "app/render";
 
 export class MenuItem {
   /**
-* @param {string} label
-* @param {Function} callback
-*/
-  constructor(label, callback) {
+   * @param {string} label
+   * @param {Function} callback
+   * @param {any[]} args
+   */
+  constructor(label, callback, ...args) {
     this.label = label;
     this.callback = callback;
+    this.args = args;
+  }
+
+  apply() {
+    this.callback(...this.args);
   }
 }
 
@@ -36,7 +42,7 @@ export class Menu {
   /** @type {HTMLElement} - reference to the outer div */
   current = null;
 
-  /** 
+  /**
    * @param {string} label - label on the menu button
    * @param {function(...any): MenuItem[]} contentCallback - returns the menu items to display
    * @param {any[]} callbackArgs - type
@@ -51,7 +57,7 @@ export class Menu {
     if (this.expanded) {
       this.items = this.contentCallback(...this.callbackArgs);
       if (this.items.length == 0) {
-        this.items = [ new MenuItem("None", null) ];
+        this.items = [new MenuItem("None", null)];
       }
     } else {
       this.items = [];
@@ -79,21 +85,23 @@ export class Menu {
         aria-labelledby=${this.buttonId}
         onkeyup=${this.menuKeyHandler}
       >
-        ${this.items.map(
-          (item, index) =>
-            html`<li role="menuitem">
-              <button
-                index=${index}
-                ?disabled=${!item.callback}
-                onclick=${() => {
-                  this.toggleExpanded();
-                  item.callback();
-                }}
-              >
-                ${item.label}
-              </button>
-            </li>`
-        )}
+        ${this.items.map((item, index) => {
+          if (item.label.startsWith("--")) {
+            return html`<hr />`;
+          }
+          return html`<li role="menuitem">
+            <button
+              index=${index}
+              ?disabled=${!item.callback}
+              onclick=${() => {
+                this.toggleExpanded();
+                item.callback();
+              }}
+            >
+              ${item.label}
+            </button>
+          </li>`;
+        })}
       </ul>
     </div>`;
   }

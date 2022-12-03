@@ -69,6 +69,8 @@ export class Method extends TreeBase {
   Active = new Props.Boolean(false);
   Pattern = new Props.Select();
 
+  allowedChildren = ["Timer", "KeyHandler", "PointerHandler", "TimerHandler"];
+
   open = false;
 
   /** @type {(Handler | Timer)[]} */

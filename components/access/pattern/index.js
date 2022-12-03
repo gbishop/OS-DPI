@@ -289,11 +289,13 @@ export class PatternManager extends PatternBase {
 }
 PatternBase.register(PatternManager, "PatternManager");
 
-class PatternGroup extends PatternBase {
+export class PatternGroup extends PatternBase {
   // props
   Name = new Props.String("");
   Cycles = new Props.Integer(2, { min: 1 });
   Cue = new Props.Select();
+
+  allowedChildren = ["PatternGroup", "PatternSelector"];
 
   settings() {
     const { Name, Cycles, Cue } = this;
@@ -328,6 +330,7 @@ class PatternGroup extends PatternBase {
 PatternBase.register(PatternGroup, "PatternGroup");
 
 class PatternSelector extends PatternBase {
+  allowedChildren = ["Filter", "GroupBy", "OrderBy"];
   settings() {
     return html`<fieldset class=${this.className}>
       <legend>Selector</legend>
