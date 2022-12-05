@@ -9,6 +9,7 @@ import { ToolBar } from "./components/toolbar";
 import db from "./db";
 import pleaseWait from "./components/wait";
 import "css/designer.css";
+import "css/colors.css";
 import { ButtonWrap, clearAccessChanged } from "./components/access";
 import Globals from "./globals";
 import { PatternList } from "./components/access/pattern";
@@ -105,7 +106,7 @@ export async function start() {
     let IDE = html`<!--empty-->`;
     if (Globals.state.get("editing")) {
       IDE = html`
-        <div id="toolbar">${toolbar.template()}</div>
+        ${toolbar.template()}
         <div
           id="designer"
           onclick=${(/** @type {InputEventWithTarget} */ event) => {
@@ -139,7 +140,7 @@ export async function start() {
     }
   }
   Globals.state.observe(debounce(renderUI));
-  callAfterRender(() => Globals.designer.restoreFocus())
+  callAfterRender(() => Globals.designer.restoreFocus());
   renderUI();
 }
 

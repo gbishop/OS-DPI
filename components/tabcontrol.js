@@ -92,7 +92,7 @@ TreeBase.register(TabControl, "TabControl");
 /**
  * Customize the TabControl for use in the Designer interface
  */
-class DesignerTabControl extends TabControl {
+export class DesignerTabControl extends TabControl {
   allowDelete = false;
 
   /**
@@ -113,8 +113,10 @@ class DesignerTabControl extends TabControl {
     for (const element of panel.querySelectorAll("[aria-selected]")) {
       element.removeAttribute("aria-selected");
     }
-    this.currentPanel.lastFocused = event.target.id;
+    const id = event.target.closest("[id]").id;
+    this.currentPanel.lastFocused = id;
     event.target.setAttribute("aria-selected", "true");
+    console.log("lf", this.currentPanel.lastFocused);
   };
 
   restoreFocus() {

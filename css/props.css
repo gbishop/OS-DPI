@@ -23,9 +23,3 @@ option[value=""][disabled] {
 option {
   color: black;
 }
-:focus {
-  outline: 3px solid orange;
-}
-*[aria-selected="true"] {
-  outline: 3px solid orange;
-}

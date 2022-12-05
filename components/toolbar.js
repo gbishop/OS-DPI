@@ -86,6 +86,7 @@ function getComponentMenuItems(component, which = "all", wrapper) {
             `Move up ${friendlyName(component.className)}`,
             wrapper(() => {
               component.parent.swap(index, index - 1);
+              return component.id;
             })
           )
         );
@@ -97,6 +98,7 @@ function getComponentMenuItems(component, which = "all", wrapper) {
             `Move down ${friendlyName(component.className)}`,
             wrapper(() => {
               component.parent.swap(index, index + 1);
+              return component.id;
             })
           )
         );
@@ -127,12 +129,19 @@ function getPanelMenuItems(type) {
     return [];
   }
 
-  /** @param {function} arg */
+  /** @param {function():string} arg */
   function itemCallback(arg) {
     return () => {
-      const nextId = arg();
-      // we're looking for the settings view but we have the id of the user view
-      panel.lastFocused = nextId + "-settings";
+      let nextId = arg();
+      // we're looking for the settings view but we may have the id of the user view
+      if (panel.lastFocused.startsWith(nextId)) {
+        nextId = panel.lastFocused;
+      }
+      if (nextId.match(/^TreeBase-\d+$/)) {
+        nextId = nextId + "-settings";
+      }
+      console.log("set lastFocused to result", nextId);
+      panel.lastFocused = nextId;
       callAfterRender(() => panel.parent.restoreFocus());
       panel.update();
     };
@@ -197,7 +206,7 @@ export class ToolBar extends TreeBase {
   template() {
     const { state } = Globals;
     return html`
-      <div class="bar">
+      <div class="toolbar brand">
         <label for="designName">Name: </label>
         <input
           id="designName"
@@ -209,9 +218,7 @@ export class ToolBar extends TreeBase {
               .renameDesign(event.target.value)
               .then(() => (window.location.hash = db.designName))}
         />
-        <span id="ContextSpecificMenu">
-          ${this.menus.map((menu) => menu.render())}
-        </span>
+        ${this.menus.map((menu) => menu.render())}
       </div>
     `;
   }

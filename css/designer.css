@@ -69,3 +69,32 @@ details summary > * {
   margin-left: 1em;
   margin-bottom: 0.5em;
 }
+
+#designer .settings {
+  background-color: var(--surface2);
+  color: var(--text2);
+  border: 0px;
+  box-shadow: none;
+}
+#designer .actions .settings {
+  border: 1px solid var(--text2);
+}
+
+#designer .settings:has([aria-selected="true"]) {
+  background-color: var(--surface1);
+  color: var(--text1);
+  border: 2px solid var(--brand);
+}
+#designer .settings:has(.settings [aria-selected="true"]) {
+  background-color: var(--surface2);
+  color: var(--text2);
+  border: 0px;
+  box-shadow: none;
+}
+/*
+#designer
+  .settings:not(:has(.settings:has([aria-selected="true"]))):has([aria-selected="true"]) {
+  background-color: var(--surface1);
+  color: var(--text1);
+}
+*/

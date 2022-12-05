@@ -132,7 +132,7 @@ export class Actions extends TabPanel {
   template() {
     const { state, actions } = Globals;
     const ruleIndex = state.get("ruleIndex");
-    return html`<div class="actions" help="Actions" id=${this.id} tabindex="-1" >
+    return html`<div class="actions" help="Actions" id=${this.id} tabindex="-1">
       <table>
         <thead>
           <tr>
@@ -156,7 +156,7 @@ export class Actions extends TabPanel {
               <td class="update">${update.newValue.input()}</td>
             `;
           }
-          return html`<tbody ?highlight=${ruleIndex == index}>
+          return html`<tbody ?highlight=${ruleIndex == index} class="settings">
             <tr ?used=${used}>
               <td rowspan=${rs}>${action.origin.input()}</td>
               <td class="conditions" rowspan=${rs}>

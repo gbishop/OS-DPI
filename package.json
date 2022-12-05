@@ -3,7 +3,7 @@
   "version": "0.5.0",
   "description": "",
   "scripts": {
-    "start": "vite --port 8080",
+    "start": "vite --port 8080 --host 0.0.0.0",
     "build": "vite build"
   },
   "author": "",

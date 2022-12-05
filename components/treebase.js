@@ -220,7 +220,7 @@ export class TreeBase {
    * @returns {Hole}
    */
   settings() {
-    return html`<div>
+    return html`<div class="settings">
       <details
         class=${this.className}
         ?open=${this.settingsDetailsOpen}
