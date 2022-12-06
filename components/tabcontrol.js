@@ -60,6 +60,7 @@ export class TabControl extends TreeBase {
               },
             })}
             .dataset=${{ id: panel.id }}
+            tabindex="-1"
           >
             ${panel.tabLabel}
           </button>`;
