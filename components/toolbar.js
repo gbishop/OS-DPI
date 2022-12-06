@@ -194,8 +194,8 @@ function getTabsMenuItems() {
   /** @param {string} name */
   function activateTab(name) {
     const buttons = /** @type {HTMLButtonElement[]} */ ([
-          ...document.querySelectorAll("#designer .tabcontrol .buttons button"),
-        ]);
+      ...document.querySelectorAll("#designer .tabcontrol .buttons button"),
+    ]);
     const target = buttons.find((el) => el.textContent.includes(name));
     console.log({ name, buttons, target });
     target.click();
@@ -228,33 +228,48 @@ export class ToolBar extends TreeBase {
     this.addMenu = new Menu("Add", getPanelMenuItems, "add");
     this.tabsMenu = new Menu("Tabs", getTabsMenuItems);
     this.backButton = html`<button
-      onclick=${()=>Globals.designer.restoreFocus()}>
-      Back</button>`;
+      onclick=${() => Globals.designer.restoreFocus()}
+    >
+      Back
+    </button>`;
   }
 
   template() {
     const { state } = Globals;
     return html`
       <div class="toolbar brand">
-        <label for="designName">Name: </label>
-        ${hinted(
-          html` <input
-            id="designName"
-            type="text"
-            .value=${db.designName}
-            .size=${Math.max(db.designName.length, 12)}
-            onchange=${(event) =>
-              db
-                .renameDesign(event.target.value)
-                .then(() => (window.location.hash = db.designName))}
-          />`,
-          "N"
-        )}
-        ${hinted(this.fileMenu.render(), "F")}
-        ${hinted(this.editMenu.render(), "E")}
-        ${hinted(this.addMenu.render(), "A")}
-        ${hinted(this.tabsMenu.render(), "T")}
-        ${hinted(this.backButton, "B")}
+        <ul>
+          <li>
+            <label for="designName">Name: </label>
+            ${hinted(
+              html` <input
+                id="designName"
+                type="text"
+                .value=${db.designName}
+                .size=${Math.max(db.designName.length, 12)}
+                onchange=${(event) =>
+                  db
+                    .renameDesign(event.target.value)
+                    .then(() => (window.location.hash = db.designName))}
+              />`,
+              "N"
+            )}
+          </li>
+          <li>
+            ${hinted(this.fileMenu.render(), "F")}
+          </li>
+          <li>
+            ${hinted(this.editMenu.render(), "E")}
+          </li>
+          <li>
+            ${hinted(this.addMenu.render(), "A")}
+          </li>
+          <li>
+            ${hinted(this.tabsMenu.render(), "T")}
+          </li>
+          <li>
+            ${hinted(this.backButton, "B")}
+          </li>
       </div>
     `;
   }
