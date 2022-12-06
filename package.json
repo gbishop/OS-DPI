@@ -9,9 +9,13 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@fsouza/prettierd": "^0.22.5",
     "prettier": "^2.7.1",
     "rollup-plugin-analyzer": "^4.0.0",
-    "vite": "^3.1.0"
+    "typescript": "^4.9.3",
+    "typescript-language-server": "^2.1.0",
+    "vite": "^3.1.0",
+    "vscode-css-languageservice": "^6.2.1"
   },
   "dependencies": {
     "angular-expressions": "^1.1.5",

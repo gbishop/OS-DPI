@@ -38,6 +38,9 @@
   width: 100% !important;
   border-radius: 0;
 }
+.Menu li button:hover {
+  outline: 2px dotted var(--brand);
+}
 .Menu li button[aria-disabled="true"] {
   opacity: 0.5;
 }

@@ -3,10 +3,10 @@
   margin: 3px;
   border-radius: 0.5em;
 }
-.toolbar > button {
+.toolbar button {
   border-radius: 0.5em;
 }
-.toolbar > input {
+.toolbar input {
   border-radius: 0.5em;
 }
 

@@ -70,26 +70,16 @@ function HotKeyHandler(event) {
     const index = keys.indexOf(event.key);
     if (index >= 0) {
       const hint = hints[index];
-      const target = hint.parentElement.querySelector("button,input");
+      const target = /** @type {HTMLInputElement} */ (hint.parentElement.querySelector("button,input"));
       console.log({ hint, target });
       event.preventDefault();
       target.focus();
-      // target.click();
+      target.click();
     }
     HKState = "idle";
     clearHints();
   }
-
-  // } else if (event.key == "t" && HKState == "Alt") {
-  //   HKState = "idle";
-  //   clearHints();
-  //   focusTabs();
-  //   event.preventDefault();
-  // } else {
-  //   HKState = "idle";
-  //   clearHints();
-  // }
-  // console.log("active element", document.activeElement);
 }
-
 document.addEventListener("keydown", HotKeyHandler, { capture: true });
+
+window.addEventListener("blur", () => { HKState = "idle"; clearHints(); });

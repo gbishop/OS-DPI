@@ -193,9 +193,9 @@ function getEditMenuItems() {
 function getTabsMenuItems() {
   /** @param {string} name */
   function activateTab(name) {
-    const buttons = [
-      ...document.querySelectorAll("#designer .tabcontrol .buttons button"),
-    ];
+    const buttons = /** @type {HTMLButtonElement[]} */ ([
+          ...document.querySelectorAll("#designer .tabcontrol .buttons button"),
+        ]);
     const target = buttons.find((el) => el.textContent.includes(name));
     console.log({ name, buttons, target });
     target.click();
@@ -227,6 +227,9 @@ export class ToolBar extends TreeBase {
     this.editMenu = new Menu("Edit", getEditMenuItems);
     this.addMenu = new Menu("Add", getPanelMenuItems, "add");
     this.tabsMenu = new Menu("Tabs", getTabsMenuItems);
+    this.backButton = html`<button
+      onclick=${()=>Globals.designer.restoreFocus()}>
+      Back</button>`;
   }
 
   template() {
@@ -251,6 +254,7 @@ export class ToolBar extends TreeBase {
         ${hinted(this.editMenu.render(), "E")}
         ${hinted(this.addMenu.render(), "A")}
         ${hinted(this.tabsMenu.render(), "T")}
+        ${hinted(this.backButton, "B")}
       </div>
     `;
   }
