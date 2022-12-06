@@ -1,7 +1,6 @@
 /** Global Hot Keys for keyboard access */
 
 import Globals from "app/globals";
-import { render, html } from "uhtml";
 import "css/hotkeys.css";
 import { TabPanel } from "./tabcontrol";
 import { TreeBase } from "./treebase";
@@ -11,19 +10,12 @@ import { callAfterRender } from "app/render";
 
 let HKState = "idle";
 
-/** @param {string[]} hints */
-function showHints(hints) {
-  const hintNode = document.getElementById("HotKeyHints");
-  if (!hintNode) return;
-  hintNode.innerHTML = hints
-    .map((hint) => `<span><b>${hint[0]}</b>${hint.slice(1)}</span>`)
-    .join();
-  hintNode.classList.add("show");
+function showHints() {
+  document.body.classList.add("hints");
 }
 
 function clearHints() {
-  const hintNode = document.getElementById("HotKeyHints");
-  hintNode && hintNode.classList.remove("show");
+  document.body.classList.remove("hints");
 }
 
 function focusTabs() {
@@ -54,7 +46,7 @@ function HotKeyHandler(event) {
   const designing = Globals.state.get("editing");
   if (event.key == "Alt") {
     HKState = "Alt";
-    showHints(["Tabs"]);
+    showHints();
     event.preventDefault();
   } else if (event.key == "d" && HKState == "Alt") {
     HKState = "idle";
@@ -71,16 +63,33 @@ function HotKeyHandler(event) {
   } else if (!designing) {
     HKState = "idle";
     return;
-  } else if (event.key == "t" && HKState == "Alt") {
-    HKState = "idle";
-    clearHints();
-    focusTabs();
-    event.preventDefault();
-  } else {
+  } else if (HKState == "Alt") {
+    const hints = [...document.querySelectorAll(".hinted span")];
+    const keys = hints.map((hint) => hint.textContent.toLowerCase());
+    console.log({ keys, key: event.key });
+    const index = keys.indexOf(event.key);
+    if (index >= 0) {
+      const hint = hints[index];
+      const target = hint.parentElement.querySelector("button,input");
+      console.log({ hint, target });
+      event.preventDefault();
+      target.focus();
+      // target.click();
+    }
     HKState = "idle";
     clearHints();
   }
+
+  // } else if (event.key == "t" && HKState == "Alt") {
+  //   HKState = "idle";
+  //   clearHints();
+  //   focusTabs();
+  //   event.preventDefault();
+  // } else {
+  //   HKState = "idle";
+  //   clearHints();
+  // }
   // console.log("active element", document.activeElement);
 }
 
-// document.addEventListener("keydown", HotKeyHandler, { capture: true });
+document.addEventListener("keydown", HotKeyHandler, { capture: true });

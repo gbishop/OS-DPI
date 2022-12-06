@@ -18,9 +18,12 @@ export class MenuItem {
     this.label = label;
     this.callback = callback;
     this.args = args;
+    console.log(label, args);
+    this.divider = false;
   }
 
   apply() {
+    console.log("args are", ...this.args);
     this.callback(...this.args);
   }
 }
@@ -86,16 +89,15 @@ export class Menu {
         onkeyup=${this.menuKeyHandler}
       >
         ${this.items.map((item, index) => {
-          if (item.label.startsWith("--")) {
-            return html`<hr />`;
-          }
-          return html`<li role="menuitem">
+          return html`<li role="menuitem" ?divider=${item.divider}>
             <button
               index=${index}
-              ?disabled=${!item.callback}
+              aria-disabled=${!item.callback}
               onclick=${() => {
-                this.toggleExpanded();
-                item.callback();
+                if (item.callback) {
+                  this.toggleExpanded();
+                  item.apply();
+                }
               }}
             >
               ${item.label}
@@ -144,7 +146,7 @@ export class Menu {
       this.expanded = !this.expanded;
       // this trick lets us distinguish between clicking the menu button with the mouse
       // and hitting Enter on the keyboard
-      const mouseClick = event && event.detail !== 0;
+      const mouseClick = false && event && event.detail !== 0;
       if (this.expanded && (!event || !mouseClick)) {
         // focus on the first element when expanding via keyboard
         callAfterRender(() => {
@@ -164,6 +166,7 @@ export class Menu {
    * @param {KeyboardEvent} event
    * */
   menuKeyHandler = ({ key }) => {
+    console.log({ key });
     if (key == "Escape" && this.expanded) {
       this.toggleExpanded();
     } else if (key == "ArrowUp" || key == "ArrowDown") {
@@ -182,7 +185,11 @@ export class Menu {
       const focused = this.focusedItem;
       const index = +focused.getAttribute("index");
       for (let i = 1; i < this.items.length; i++) {
-        if (this.items[(index + i) % this.items.length].label.startsWith(key)) {
+        if (
+          this.items[(index + i) % this.items.length].label
+            .toLowerCase()
+            .startsWith(key)
+        ) {
           this.setFocus(i + index);
           break;
         }

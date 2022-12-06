@@ -24,11 +24,20 @@
   margin: 2px;
   display: flex;
 }
+.Menu li :has(button[aria-disabled="true"]) {
+  opacity: 0.5;
+}
+.Menu li[divider] {
+  border-top: 1px solid black;
+}
 .Menu li button {
   flex: 1;
   border: 0;
   padding: 2px;
-  background-color: var(--surface2);
+  background-color: inherit;
   width: 100% !important;
   border-radius: 0;
+}
+.Menu li button[aria-disabled="true"] {
+  opacity: 0.5;
 }

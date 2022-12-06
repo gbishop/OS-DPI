@@ -69,31 +69,34 @@ export async function start() {
 
   /* Designer */
   Globals.state.define("editing", true); // for now
-  Globals.designer = TreeBase.fromObject({
-    className: "DesignerTabControl",
-    props: { tabEdge: "top", stateName: "designerTab" },
-    children: [
-      {
-        className: "Layout",
-        props: { name: "Layout" },
-        children: [Globals.tree],
-      },
-      Globals.actions,
-      Globals.cues,
-      Globals.patterns,
-      Globals.method,
-      {
-        className: "Content",
-        props: {},
-        children: [],
-      },
-      {
-        className: "Logging",
-        props: {},
-        children: [],
-      },
-    ],
-  });
+  Globals.designer =
+    /** @type {import("components/tabcontrol").DesignerTabControl} */ (
+      TreeBase.fromObject({
+        className: "DesignerTabControl",
+        props: { tabEdge: "top", stateName: "designerTab" },
+        children: [
+          {
+            className: "Layout",
+            props: { name: "Layout" },
+            children: [Globals.tree],
+          },
+          Globals.actions,
+          Globals.cues,
+          Globals.patterns,
+          Globals.method,
+          {
+            className: "Content",
+            props: {},
+            children: [],
+          },
+          {
+            className: "Logging",
+            props: {},
+            children: [],
+          },
+        ],
+      })
+    );
 
   /* ToolBar */
   const toolbar = ToolBar.create("ToolBar", null);

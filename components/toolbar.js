@@ -161,11 +161,9 @@ function getPanelMenuItems(type) {
   ) {
     const parentItems = getComponentMenuItems(parent, type, itemCallback);
     if (menuItems.length && parentItems.length) {
-      menuItems.push(new MenuItem("--Parent--", null));
+      parentItems[0].divider = true;
     }
-    menuItems = menuItems.concat(
-      getComponentMenuItems(parent, type, itemCallback)
-    );
+    menuItems = menuItems.concat(parentItems);
   }
 
   // console.log(filteredActionsToMenuItems);
@@ -192,15 +190,43 @@ function getEditMenuItems() {
   return items.concat(getPanelMenuItems("delete"), getPanelMenuItems("move"));
 }
 
+function getTabsMenuItems() {
+  /** @param {string} name */
+  function activateTab(name) {
+    const buttons = [
+      ...document.querySelectorAll("#designer .tabcontrol .buttons button"),
+    ];
+    const target = buttons.find((el) => el.textContent.includes(name));
+    console.log({ name, buttons, target });
+    target.click();
+  }
+  return [
+    new MenuItem("Layout", activateTab, "Layout"),
+    new MenuItem("Actions", activateTab, "Actions"),
+    new MenuItem("Cues", activateTab, "Cues"),
+    new MenuItem("Patterns", activateTab, "Patterns"),
+    new MenuItem("Methods", activateTab, "Methods"),
+    new MenuItem("Content", activateTab, "Content"),
+    new MenuItem("Logging", activateTab, "Logging"),
+  ];
+}
+
+/**
+ * @param {Hole} thing
+ * @param {string} hint
+ */
+function hinted(thing, hint) {
+  return html`<div class="hinted">${thing}<span>${hint}</span></div>`;
+}
+
 export class ToolBar extends TreeBase {
   init() {
     console.log("toolbar init");
 
-    this.menus = [
-      new Menu("File", getFileMenuItems),
-      new Menu("Edit", getEditMenuItems),
-      new Menu("Add", getPanelMenuItems, "add"),
-    ];
+    this.fileMenu = new Menu("File", getFileMenuItems);
+    this.editMenu = new Menu("Edit", getEditMenuItems);
+    this.addMenu = new Menu("Add", getPanelMenuItems, "add");
+    this.tabsMenu = new Menu("Tabs", getTabsMenuItems);
   }
 
   template() {
@@ -208,17 +234,23 @@ export class ToolBar extends TreeBase {
     return html`
       <div class="toolbar brand">
         <label for="designName">Name: </label>
-        <input
-          id="designName"
-          type="text"
-          .value=${db.designName}
-          .size=${Math.max(db.designName.length, 12)}
-          onchange=${(event) =>
-            db
-              .renameDesign(event.target.value)
-              .then(() => (window.location.hash = db.designName))}
-        />
-        ${this.menus.map((menu) => menu.render())}
+        ${hinted(
+          html` <input
+            id="designName"
+            type="text"
+            .value=${db.designName}
+            .size=${Math.max(db.designName.length, 12)}
+            onchange=${(event) =>
+              db
+                .renameDesign(event.target.value)
+                .then(() => (window.location.hash = db.designName))}
+          />`,
+          "N"
+        )}
+        ${hinted(this.fileMenu.render(), "F")}
+        ${hinted(this.editMenu.render(), "E")}
+        ${hinted(this.addMenu.render(), "A")}
+        ${hinted(this.tabsMenu.render(), "T")}
       </div>
     `;
   }

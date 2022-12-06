@@ -9,3 +9,20 @@
 .toolbar > input {
   border-radius: 0.5em;
 }
+
+div.hinted {
+  display: inline-block;
+  position: relative;
+}
+div.hinted span {
+  top: 80%;
+  left: 50%;
+  transform: translateX(-50%);
+  position: absolute;
+  background-color: var(--text1);
+  color: var(--surface1);
+  display: none;
+}
+.hints div.hinted span {
+  display: inline;
+}
