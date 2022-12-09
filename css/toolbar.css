@@ -12,6 +12,8 @@
 }
 .toolbar button {
   border-radius: 0.5em;
+  color: var(--text2);
+  background-color: var(--surface2);
 }
 .toolbar input {
   border-radius: 0.5em;
@@ -24,6 +26,8 @@ div.hinted {
 div.hinted span {
   top: 80%;
   left: 50%;
+  font-size: 1.5em;
+  padding: 0.2em;
   transform: translateX(-50%);
   position: absolute;
   background-color: var(--text1);

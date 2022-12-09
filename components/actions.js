@@ -6,6 +6,7 @@ import db from "app/db";
 import "css/actions.css";
 import Globals from "app/globals";
 import { Functions } from "app/eval";
+import { callAfterRender } from "app/render";
 
 export class Actions extends TabPanel {
   name = new Props.String("Actions");
@@ -68,7 +69,6 @@ export class Actions extends TabPanel {
         const result = rule.conditions.every((restriction) =>
           restriction.Condition.eval(context)
         );
-        console.log({ result });
         if (result) {
           this.last.rule = rule;
           const patch = Object.fromEntries(
@@ -77,7 +77,6 @@ export class Actions extends TabPanel {
               update.newValue.eval(context),
             ])
           );
-          console.log({ patch });
           Globals.state.update(patch);
           break;
         }
@@ -130,8 +129,14 @@ export class Actions extends TabPanel {
   }
 
   template() {
-    const { state, actions } = Globals;
-    const ruleIndex = state.get("ruleIndex");
+    const { actions } = Globals;
+    const rule = this.last.rule;
+    callAfterRender(() =>
+      document
+        .querySelector(".actions tbody[highlight]")
+        // @ts-ignore
+        ?.scrollIntoViewIfNeeded({ behavior: "smooth" })
+    );
     return html`<div class="actions" help="Actions" id=${this.id} tabindex="-1">
       <table>
         <thead>
@@ -145,7 +150,7 @@ export class Actions extends TabPanel {
             <th style="width:35%">New value</th>
           </tr>
         </thead>
-        ${actions.children.map((action, index) => {
+        ${actions.children.map((action) => {
           const updates = action.updates;
           const rs = updates.length;
           const used = action === actions.last.rule;
@@ -156,7 +161,7 @@ export class Actions extends TabPanel {
               <td class="update">${update.newValue.input()}</td>
             `;
           }
-          return html`<tbody ?highlight=${ruleIndex == index} class="settings">
+          return html`<tbody ?highlight=${rule == action} class="settings">
             <tr ?used=${used}>
               <td rowspan=${rs}>${action.origin.input()}</td>
               <td class="conditions" rowspan=${rs}>

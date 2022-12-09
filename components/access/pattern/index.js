@@ -7,6 +7,7 @@ import { TreeBase } from "components/treebase";
 import { ButtonWrap } from "../index";
 import defaultPatterns from "./defaultPatterns";
 import { TabPanel } from "components/tabcontrol";
+import { toggleIndicator } from "app/components/helpers";
 
 /** @typedef {ReturnType<ButtonWrap<Node>>} Button */
 
@@ -75,19 +76,11 @@ export class PatternList extends TabPanel {
     </div>`;
   }
 
-  /** @param {string} key
+  /**
    * @returns {PatternManager}
    */
-  byKey(key) {
-    return (
-      this.children.find((child) => child.Key.value == key) || this.children[0]
-    );
-  }
-
-  get patternMap() {
-    return new Map(
-      this.children.map((child) => [child.Key.value, child.Name.value])
-    );
+  get activePattern() {
+    return this.children.find((child) => child.Active.value);
   }
 
   /**
@@ -128,6 +121,7 @@ export class PatternManager extends PatternBase {
   Cue = new Props.Select();
   Name = new Props.String("a pattern");
   Key = new Props.UID();
+  Active = new Props.OneOfGroup(false, { name: "pattern-active" });
 
   // settings() {
   //   const { Cycles, Cue, Name } = this;
@@ -144,16 +138,18 @@ export class PatternManager extends PatternBase {
   // }
 
   settingsSummary() {
-    const { Name } = this;
-    return html`<h3>${Name.value}</h3>`;
+    const { Name, Active } = this;
+    return html`<h3>
+      ${Name.value} ${toggleIndicator(Active.value, "Active")}
+    </h3>`;
   }
 
   settingsDetails() {
-    const { Cycles, Cue, Name } = this;
+    const { Cycles, Cue, Name, Active } = this;
     return html`
       <div>
-        ${Name.input()} ${Cycles.input()} ${Cue.input(Globals.cues.cueMap)}
-        ${this.orderedChildren()}
+        ${Name.input()} ${Active.input()} ${Cycles.input()}
+        ${Cue.input(Globals.cues.cueMap)} ${this.orderedChildren()}
       </div>
     `;
   }
@@ -206,17 +202,9 @@ export class PatternManager extends PatternBase {
       members = buttons;
     }
     this.targets = new Group(members, this.props);
-    this.start();
-  }
-
-  start() {
-    if (this.Name.value == "None") return;
-    // if (AccessChanged || !this.stack.length) {
-    //   console.log("clear stack", AccessChanged);
-    //   this.stack = [{ group: this.targets, index: -1 }];
-    // }
     this.stack = [{ group: this.targets, index: -1 }];
     this.cue();
+    console.log("refresh", this);
   }
 
   /**
@@ -231,7 +219,7 @@ export class PatternManager extends PatternBase {
 
   next() {
     const top = this.stack[0];
-    console.log("next", { top });
+    console.log("next", { top }, this);
     if (top.index < top.group.length - 1) {
       top.index++;
     } else if (this.stack.length > 1) {

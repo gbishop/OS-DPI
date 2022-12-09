@@ -43,7 +43,7 @@ export class TabControl extends TreeBase {
     if (this.props.tabEdge != "none") {
       buttons = panels
         .filter((panel) => panel.props.label != "UNLABELED")
-        .map((panel, index) => {
+        .map((panel) => {
           const color = panel.props.background;
           const buttonStyle = {
             backgroundColor: color,
@@ -73,7 +73,13 @@ export class TabControl extends TreeBase {
       id=${this.id}
     >
       <div class="buttons">${buttons}</div>
-      <div class="panels flex" onfocusin=${this.focusin}>${panel}</div>
+      <div
+        class="panels flex"
+        onfocusin=${this.focusin}
+        onkeydown=${this.keyHandler}
+      >
+        ${panel}
+      </div>
     </div>`;
   }
 
@@ -85,6 +91,8 @@ export class TabControl extends TreeBase {
   }
 
   focusin = null;
+
+  keyHandler = null;
 
   restoreFocus() {}
 }
@@ -117,22 +125,27 @@ export class DesignerTabControl extends TabControl {
     const id = event.target.closest("[id]").id;
     this.currentPanel.lastFocused = id;
     event.target.setAttribute("aria-selected", "true");
-    console.log("lf", this.currentPanel.lastFocused);
   };
 
   restoreFocus() {
     if (this.currentPanel) {
       if (this.currentPanel.lastFocused) {
-        const elem = document.getElementById(this.currentPanel.lastFocused);
-        console.log(
-          "restore focus",
-          elem,
-          this.currentPanel.lastFocused,
-          this.currentPanel
-        );
+        let targetId = this.currentPanel.lastFocused;
+        let elem = document.getElementById(targetId);
+        if (!elem) {
+          // perhaps this one is embeded, look for something that starts with it
+          const prefix = targetId.match(/^TreeBase-\d+/)[0];
+          elem = document.querySelector(`[id^=${prefix}]`);
+        }
+        // console.log(
+        //   "restore focus",
+        //   elem,
+        //   this.currentPanel.lastFocused,
+        //   this.currentPanel
+        // );
         if (elem) elem.focus();
       } else {
-        console.log("restoreFocus else path");
+        // console.log("restoreFocus else path");
         const panelNode = document.getElementById(this.currentPanel.id);
         if (panelNode) {
           const focusable = /** @type {HTMLElement} */ (
@@ -154,6 +167,39 @@ export class DesignerTabControl extends TabControl {
       }
     }
   }
+  /**
+   * @param {KeyboardEvent} event
+   */
+  keyHandler = (event) => {
+    if (event.key != "ArrowDown" && event.key != "ArrowUp") return;
+    // get the components on this panel
+    // todo expand this to all components
+    const components = [...document.querySelectorAll(".panels .settings")];
+    // determine which one contains the focus
+    const focusedComponent = document.querySelector(
+      '.panels .settings:has([aria-selected="true"]):not(:has(.settings [aria-selected="true"]))'
+    );
+    // get its index
+    const index = components.indexOf(focusedComponent);
+    // get the next index
+    const nextIndex = Math.min(
+      components.length - 1,
+      Math.max(0, index + (event.key == "ArrowUp" ? -1 : 1))
+    );
+    if (nextIndex != index) {
+      // focus on the first focusable in the next component
+      const focusable = /** @type {HTMLElement} */ (
+        components[nextIndex].querySelector(
+          "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), " +
+            'textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled]), ' +
+            "summary:not(:disabled)"
+        )
+      );
+      if (focusable) {
+        focusable.focus();
+      }
+    }
+  };
 }
 TreeBase.register(DesignerTabControl, "DesignerTabControl");
 

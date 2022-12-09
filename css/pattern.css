@@ -24,3 +24,9 @@ div.access-pattern {
   margin-bottom: 0.2em;
   margin-top: -0.2em;
 }
+
+details.PatternManager summary h3 label {
+  margin-bottom: 0;
+  font-weight: normal;
+  font-size: 80%;
+}

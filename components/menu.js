@@ -146,7 +146,7 @@ export class Menu {
       this.expanded = !this.expanded;
       // this trick lets us distinguish between clicking the menu button with the mouse
       // and hitting Enter on the keyboard
-      const mouseClick = false && event && event.detail !== 0;
+      const mouseClick = event && event.detail !== 0;
       if (this.expanded && (!event || !mouseClick)) {
         // focus on the first element when expanding via keyboard
         callAfterRender(() => {
@@ -156,6 +156,8 @@ export class Menu {
             this.setFocus(0);
           }
         });
+      } else if (!this.expanded && mouseClick) {
+        callAfterRender(() => Globals.designer.restoreFocus());
       }
       Globals.state.update();
     }

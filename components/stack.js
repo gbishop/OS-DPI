@@ -28,7 +28,7 @@ export class Stack extends TreeBase {
      * @returns {number}
      */
     function getScale(child) {
-      const SCALE_MIN = 0.1;
+      const SCALE_MIN = 0.0;
       let scale = +child.props.scale;
       if (!scale || scale < SCALE_MIN) {
         scale = SCALE_MIN;

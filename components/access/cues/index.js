@@ -6,7 +6,7 @@ import * as Props from "components/props";
 
 import db from "app/db";
 import Globals from "app/globals";
-import { interpolate } from "components/helpers";
+import { interpolate, toggleIndicator } from "components/helpers";
 import { getColor } from "components/style";
 import defaultCues from "./defaultCues";
 
@@ -20,19 +20,29 @@ export class CueList extends TabPanel {
   allowDelete = false;
 
   template() {
-    return html`<div class="CueList" id=${this.id} tabindex="-1" >
+    return html`<div class="CueList" id=${this.id} tabindex="-1">
       ${this.unorderedChildren()}
     </div>`;
   }
 
   renderCss() {
-    return this.children.map((child) => child.renderCss());
+    const result = this.children.map((child) => child.renderCss());
+    result.push(this.defaultCue.renderCss({ Key: "DefaultCue" }));
+    return result;
   }
 
   get cueMap() {
-    return new Map(
-      this.children.map((child) => [child.Key.value, child.Name.value])
-    );
+    /** @type {[string,string][]} */
+    const entries = this.children.map((child) => [
+      child.Key.value,
+      child.Name.value,
+    ]);
+    entries.unshift(["DefaultCue", "Default Cue"]);
+    return new Map(entries);
+  }
+
+  get defaultCue() {
+    return this.children.find((cue) => cue.Default.value) || this.children[0];
   }
 
   /**
@@ -42,10 +52,12 @@ export class CueList extends TabPanel {
   static async load() {
     const list = await db.read("cues", defaultCues);
     const result = /** @type {CueList} */ (this.fromObject(list));
+    console.log("load", result);
     return result;
   }
 
   onUpdate() {
+    console.log("update cues", this.toObject());
     db.write("cues", this.toObject());
     Globals.state.update();
   }
@@ -64,22 +76,18 @@ class Cue extends TreeBaseSwitchable {
   Name = new Props.String("a cue");
   Key = new Props.UID();
   CueType = new Props.TypeSelect(CueTypes);
+  Default = new Props.OneOfGroup(false, { name: "DefaultCue" });
 
-  // settings() {
-  //   return html`
-  //     <fieldset class="Cue">
-  //       ${this.Name.input()} ${this.CueType.input()} ${this.subTemplate()}
-  //     </fieldset>
-  //   `;
-  // }
-  //
   settingsSummary() {
-    return html`<h3>${this.Name.value}</h3>`;
+    return html`<h3>
+      ${this.Name.value} ${toggleIndicator(this.Default.value, "Default cue")}
+    </h3>`;
   }
 
   settingsDetails() {
-    return html`<div>
-      ${this.Name.input()} ${this.CueType.input()} ${this.subTemplate()}
+    return html`<div class="Cue">
+      ${this.Name.input()} ${this.Default.input()} ${this.CueType.input()}
+      ${this.subTemplate()}
     </div>`;
   }
 
@@ -91,9 +99,9 @@ class Cue extends TreeBaseSwitchable {
     return "";
   }
 
-  renderCss() {
+  renderCss(overrideProps = {}) {
     return html`<style>
-      ${interpolate(this.css, this.props)}
+      ${interpolate(this.css, { ...this.props, ...overrideProps })}
     </style>`;
   }
 }

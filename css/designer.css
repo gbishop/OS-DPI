@@ -76,9 +76,6 @@ details summary > * {
   border: 0px;
   box-shadow: none;
 }
-#designer .actions .settings {
-  border: 1px solid var(--text2);
-}
 
 #designer .settings:has([aria-selected="true"]) {
   background-color: var(--surface1);
@@ -91,10 +88,7 @@ details summary > * {
   border: 0px;
   box-shadow: none;
 }
-/*
-#designer
-  .settings:not(:has(.settings:has([aria-selected="true"]))):has([aria-selected="true"]) {
-  background-color: var(--surface1);
-  color: var(--text1);
+
+#designer .indicator {
+  color: var(--brand);
 }
-*/

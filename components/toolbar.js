@@ -133,12 +133,15 @@ function getPanelMenuItems(type) {
   function itemCallback(arg) {
     return () => {
       let nextId = arg();
+      console.log({ nextId });
       // we're looking for the settings view but we may have the id of the user view
       if (panel.lastFocused.startsWith(nextId)) {
+        console.log("set to lf", panel.lastFocused);
         nextId = panel.lastFocused;
       }
       if (nextId.match(/^TreeBase-\d+$/)) {
         nextId = nextId + "-settings";
+        console.log({ nextId });
       }
       console.log("set lastFocused to result", nextId);
       panel.lastFocused = nextId;

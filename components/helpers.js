@@ -42,3 +42,18 @@ export function fromCamelCase(name) {
     .replace(/(?!^)([A-Z])/g, " $1")
     .replace(/^./, (s) => s.toUpperCase());
 }
+
+/**
+ * Conditionally show an indicator with a title
+ *
+ * @param {boolean} toggle
+ * @param {string} title
+ * @returns {Hole}
+ */
+export function toggleIndicator(toggle, title) {
+  if (toggle) {
+    return html`<span class="indicator" title=${title}>&#9679;</span>`;
+  } else {
+    return html`<!--empty-->`;
+  }
+}

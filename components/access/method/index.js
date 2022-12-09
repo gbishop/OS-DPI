@@ -10,6 +10,7 @@ import defaultMethods from "./defaultMethods";
 import { log } from "app/log";
 import { TabPanel } from "components/tabcontrol";
 import "css/method.css";
+import { toggleIndicator } from "app/components/helpers";
 
 export class MethodChooser extends TabPanel {
   name = new Props.String("Methods");
@@ -67,7 +68,6 @@ export class Method extends TreeBase {
   Name = new Props.String("New method");
   Key = new Props.UID();
   Active = new Props.Boolean(false);
-  Pattern = new Props.Select();
 
   allowedChildren = ["Timer", "KeyHandler", "PointerHandler", "TimerHandler"];
 
@@ -80,7 +80,7 @@ export class Method extends TreeBase {
    * @returns {import('../pattern/index.js').PatternManager}
    */
   get pattern() {
-    const r = Globals.patterns.byKey(this.Pattern.value);
+    const r = Globals.patterns.activePattern;
     return r;
   }
 
@@ -123,39 +123,18 @@ export class Method extends TreeBase {
     return this.filterChildren(Handler);
   }
 
-  // settings() {
-  //   const { Name, Active, Pattern } = this;
-  //   const timers = [...this.timers.values()];
-  //   return html`<fieldset class="Method" id=${this.id}>
-  //     ${Name.input()} ${Active.input()}
-  //     ${Pattern.input(Globals.patterns.patternMap)}
-  //     <details open>
-  //       <summary>Details</summary>
-  //       ${timers.length > 0
-  //         ? html`<fieldset>
-  //             <legend>Timers</legend>
-  //             ${this.unorderedChildren(timers)}
-  //           </fieldset>`
-  //         : html`Timers`}
-  //       <fieldset>
-  //         <legend>Handlers</legend>
-  //         ${this.orderedChildren(this.handlers)}
-  //       </fieldset>
-  //     </details>
-  //   </fieldset> `;
-  // }
-
   settingsSummary() {
     const { Name, Active } = this;
-    return html`<h3>${Name.value} ${Active.input({ hiddenLabel: true })}</h3>`;
+    return html`<h3>
+      ${Name.value} ${toggleIndicator(Active.value, "Active")}
+    </h3>`;
   }
 
   settingsDetails() {
-    const { Name, Active, Pattern } = this;
+    const { Name, Active } = this;
     const timers = [...this.timers.values()];
     return html`<div>
       ${Name.input()} ${Active.input()}
-      ${Pattern.input(Globals.patterns.patternMap)}
       ${timers.length > 0
         ? html`<fieldset>
             <legend>Timers</legend>
@@ -297,13 +276,11 @@ TreeBase.register(HandlerKeyCondition, "HandlerKeyCondition");
 
 const ResponderTypeMap = new Map([
   ["HandlerResponse", "none"],
-  ["ResponderPatternNext", "pattern next"],
-  ["ResponderPatternActivate", "pattern activate"],
-  ["ResponderPatternCue", "pattern cue"],
   ["ResponderCue", "cue"],
   ["ResponderActivate", "activate"],
   ["ResponderClearCue", "clear cue"],
   ["ResponderEmit", "emit"],
+  ["ResponderNext", "next"],
   ["ResponderStartTimer", "start timer"],
 ]);
 

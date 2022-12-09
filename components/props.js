@@ -13,6 +13,7 @@ import Globals from "app/globals";
  * @property {string} [label]
  * @property {boolean} [multiple]
  * @property {string} [defaultValue]
+ * @property {string} [group]
  */
 
 export class Prop {
@@ -279,6 +280,65 @@ export class Boolean extends Prop {
       this.value = value;
     } else if (typeof value === "string") {
       this.value = value === "true";
+    }
+  }
+}
+
+export class OneOfGroup extends Prop {
+  /** @type {boolean} */
+  value = false;
+
+  constructor(value = false, options = {}) {
+    super(options);
+    this.value = value;
+  }
+
+  input(options = {}) {
+    options = { ...this.options, ...options };
+    return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
+      <span>${this.label}</span>
+      <input
+        type="checkbox"
+        .checked=${!!this.value}
+        id=${this.id}
+        name=${options.group}
+        onclick=${() => {
+          this.value = true;
+          this.clearPeers(options.group);
+          this.update();
+        }}
+        title=${this.options.title}
+      />
+    </label>`;
+  }
+
+  /** @param {any} value */
+  set(value) {
+    if (typeof value === "boolean") {
+      this.value = value;
+    } else if (typeof value === "string") {
+      this.value = value === "true";
+    }
+  }
+
+  /**
+   * Clear the value of peer radio buttons with the same name
+   * @param {string} name
+   */
+  clearPeers(name) {
+    const peers = this.container.parent.children;
+    for (const peer of peers) {
+      const props = peer.propsAsProps;
+      for (const propName in props) {
+        const prop = props[propName];
+        if (
+          prop instanceof OneOfGroup &&
+          prop.options.group == name &&
+          prop != this
+        ) {
+          prop.set(false);
+        }
+      }
     }
   }
 }

@@ -26,6 +26,7 @@ function match(filter, row) {
   const field = row[filter.field.slice(1)] || "";
   let value = filter.value || "";
   const comparator = comparators[filter.operator];
+  if (!comparator) return true;
   let r = comparator(field.toString(), value.toString());
   return r;
 }
