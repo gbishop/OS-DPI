@@ -7,6 +7,7 @@ import { UpdateAccessData } from "./access";
 import Globals from "app/globals";
 import { callAfterRender } from "app/render";
 import { TreeBase } from "./treebase";
+import db from "app/db";
 
 export class TabControl extends TreeBase {
   stateName = new Props.String("$tabControl");

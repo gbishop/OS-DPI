@@ -8,6 +8,9 @@ import { html } from "uhtml";
 import Globals from "app/globals";
 import { Menu, MenuItem } from "./menu";
 import { callAfterRender } from "app/render";
+import { fileOpen } from "browser-fs-access";
+import pleaseWait from "components/wait";
+import { DB } from "app/db";
 
 const friendlyNamesMap = {
   ActionCondition: "Condition",
@@ -175,11 +178,45 @@ function getPanelMenuItems(type) {
 
 function getFileMenuItems() {
   return [
-    new MenuItem("Import", null),
-    new MenuItem("Export", null),
-    new MenuItem("New", null),
-    new MenuItem("Open", null),
-    new MenuItem("Unload", null),
+    new MenuItem("Import", async () => {
+      const local_db = new DB();
+      fileOpen({
+        mimeTypes: ["application/octet-stream"],
+        extensions: [".osdpi", ".zip"],
+        description: "OS-DPI designs",
+        id: "os-dpi",
+      })
+        .then((file) => pleaseWait(local_db.readDesignFromFile(file)))
+        .then(() => {
+          window.open(`#${local_db.designName}`, "_blank", "noopener=true");
+        });
+    }),
+    new MenuItem("Export", () => {
+      db.saveDesign();
+    }),
+    new MenuItem("New", async () => {
+      const name = await db.uniqueName("new");
+      window.open(`#${name}`, "_blank", "noopener=true");
+    }),
+    new MenuItem("Open", () => {
+      window.open("#", "_blank", "noopener=true");
+    }),
+    new MenuItem("Unload", async () => {
+      const saved = await db.saved();
+      if (saved.indexOf(db.designName) < 0) {
+        try {
+          await db.saveDesign();
+        } catch (e) {
+          if (e instanceof DOMException) {
+            console.log("canceled save");
+          } else {
+            throw e;
+          }
+        }
+      }
+      await db.unload(db.designName);
+      window.close();
+    }),
   ];
 }
 

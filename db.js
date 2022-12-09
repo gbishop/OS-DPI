@@ -5,7 +5,7 @@ import Globals from "./globals";
 
 const SAVE_N_RECORDS = 25;
 
-class DB {
+export class DB {
   constructor() {
     this.dbPromise = openDB("os-dpi", 4, {
       upgrade(db, oldVersion, newVersion) {

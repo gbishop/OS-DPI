@@ -80,7 +80,9 @@ export class PatternList extends TabPanel {
    * @returns {PatternManager}
    */
   get activePattern() {
-    return this.children.find((child) => child.Active.value);
+    return (
+      this.children.find((child) => child.Active.value) || this.children[0]
+    );
   }
 
   /**

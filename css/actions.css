@@ -45,7 +45,9 @@ div.actions div.scroll {
 }
 
 #designer .actions tbody {
-  border: 2px solid black;
+  border-top: 2px solid black;
+  border-left: 2px solid black;
+  border-right: 2px solid black;
   position: relative;
   z-index: 10;
 }
@@ -56,6 +58,7 @@ div.actions div.scroll {
 #designer .actions tbody[highlight] {
   background-color: var(--secondary-fg);
 }
+
 .actions .updates {
   display: grid;
   grid-template-columns: auto 1fr;
