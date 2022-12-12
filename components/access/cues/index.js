@@ -1,7 +1,7 @@
 import { html } from "uhtml";
 import "css/cues.css";
 import { TreeBase, TreeBaseSwitchable } from "components/treebase";
-import { TabPanel } from "components/tabcontrol";
+import { DesignerTabPanel } from "components/tabcontrol";
 import * as Props from "components/props";
 
 import db from "app/db";
@@ -10,8 +10,11 @@ import { interpolate, toggleIndicator } from "components/helpers";
 import { getColor } from "components/style";
 import defaultCues from "./defaultCues";
 
-export class CueList extends TabPanel {
+export class CueList extends DesignerTabPanel {
   name = new Props.String("Cues");
+
+  static tableName = "cues";
+  static defaultValue = defaultCues;
 
   allowedChildren = ["Cue"];
   /** @type {Cue[]} */
@@ -43,23 +46,6 @@ export class CueList extends TabPanel {
 
   get defaultCue() {
     return this.children.find((cue) => cue.Default.value) || this.children[0];
-  }
-
-  /**
-   * Load the CueList from the db
-   * @returns {Promise<CueList>}
-   */
-  static async load() {
-    const list = await db.read("cues", defaultCues);
-    const result = /** @type {CueList} */ (this.fromObject(list));
-    console.log("load", result);
-    return result;
-  }
-
-  onUpdate() {
-    console.log("update cues", this.toObject());
-    db.write("cues", this.toObject());
-    Globals.state.update();
   }
 }
 TreeBase.register(CueList, "CueList");

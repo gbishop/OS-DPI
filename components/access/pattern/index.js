@@ -1,4 +1,3 @@
-import db from "app/db";
 import { html } from "uhtml";
 import "css/pattern.css";
 import Globals from "app/globals";
@@ -6,7 +5,7 @@ import * as Props from "components/props";
 import { TreeBase } from "components/treebase";
 import { ButtonWrap } from "../index";
 import defaultPatterns from "./defaultPatterns";
-import { TabPanel } from "components/tabcontrol";
+import { DesignerTabPanel } from "components/tabcontrol";
 import { toggleIndicator } from "app/components/helpers";
 
 /** @typedef {ReturnType<ButtonWrap<Node>>} Button */
@@ -62,13 +61,16 @@ class PatternBase extends TreeBase {
   }
 }
 
-export class PatternList extends TabPanel {
+export class PatternList extends DesignerTabPanel {
   name = new Props.String("Patterns");
   allowDelete = false;
 
   allowedChildren = ["PatternManager"];
   /** @type {PatternManager[]} */
   children = [];
+
+  static tableName = "pattern";
+  static defaultValue = defaultPatterns;
 
   template() {
     return html`<div class="PatternList" id=${this.id}>
@@ -83,20 +85,6 @@ export class PatternList extends TabPanel {
     return (
       this.children.find((child) => child.Active.value) || this.children[0]
     );
-  }
-
-  /**
-* Load the PatternManager from the db
-  @returns {Promise<PatternList>}
-*/
-  static async load() {
-    const pattern = await db.read("pattern", defaultPatterns);
-    return /** @type {PatternList} */ (PatternList.fromObject(pattern));
-  }
-
-  onUpdate() {
-    db.write("pattern", this.toObject());
-    Globals.state.update();
   }
 }
 TreeBase.register(PatternList, "PatternList");

@@ -222,10 +222,58 @@ function getFileMenuItems() {
 
 function getEditMenuItems() {
   const items = [
-    new MenuItem("Undo", null),
-    new MenuItem("Copy", null),
-    new MenuItem("Cut", null),
-    new MenuItem("Paste", null),
+    new MenuItem("Undo", () => {
+      const panel = Globals.designer.currentPanel;
+      console.log({ panel });
+      Globals.designer.currentPanel.undo();
+    }),
+    new MenuItem("Copy", async () => {
+      const component = Globals.designer.selectedComponent;
+      const json = JSON.stringify(component.toObject());
+      navigator.clipboard.writeText(json);
+    }),
+    new MenuItem("Cut", async () => {
+      const component = Globals.designer.selectedComponent;
+      const json = JSON.stringify(component.toObject());
+      await navigator.clipboard.writeText(json);
+      component.remove();
+      Globals.designer.currentPanel.onUpdate();
+    }),
+    new MenuItem("Paste", async () => {
+      const json = await navigator.clipboard.readText();
+      const obj = JSON.parse(json);
+      const className = obj.className;
+      if (!className) return;
+      // find a place that can accept it
+      const anchor = Globals.designer.selectedComponent;
+      let current = anchor;
+      while (current) {
+        if (current.allowedChildren.indexOf(className) >= 0) {
+          const result = TreeBase.fromObject(obj, current);
+          if (
+            anchor.parent === result.parent &&
+            result.index != anchor.index + 1
+          ) {
+            anchor.moveTo(anchor.index + 1);
+          }
+          Globals.designer.currentPanel.onUpdate();
+          return;
+        }
+        current = current.parent;
+      }
+    }),
+    new MenuItem("Paste Into", async () => {
+      const json = await navigator.clipboard.readText();
+      const obj = JSON.parse(json);
+      const className = obj.className;
+      if (!className) return;
+      // find a place that can accept it
+      const current = Globals.designer.selectedComponent;
+      if (current.allowedChildren.indexOf(className) >= 0) {
+        TreeBase.fromObject(obj, current);
+        Globals.designer.currentPanel.onUpdate();
+      }
+    }),
   ];
   return items.concat(getPanelMenuItems("delete"), getPanelMenuItems("move"));
 }

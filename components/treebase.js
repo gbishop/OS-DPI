@@ -3,6 +3,7 @@ import * as Props from "./props";
 import "css/treebase.css";
 import { fromCamelCase } from "./helpers";
 import WeakValue from "weak-value";
+import Introspected from "introspected";
 
 export class TreeBase {
   /** @type {TreeBase[]} */
@@ -195,6 +196,33 @@ export class TreeBase {
   }
 
   /**
+   * @template T
+   * @param {T} defaultValue
+   * @returns {T}
+   */
+  fetchPersisted(defaultValue) {
+    const result = JSON.parse(sessionStorage.getItem(this.id)) || defaultValue;
+    console.log("getPersisted", this.id, result);
+    return result;
+  }
+  /** @template T
+   * @param {T} value */
+  setPersisted(value) {
+    console.log("setPersisted", this.id, value);
+    sessionStorage.setItem(this.id, JSON.stringify(value));
+  }
+
+  /** Values stored here will be persisted across refreshes in sessionStorage */
+  persisted = Introspected(
+    this.fetchPersisted({
+      settingsDetailsOpen: false, // remember the state of the details element below
+    }),
+    (root, _path) => {
+      this.setPersisted(root);
+    }
+  );
+
+  /**
    * Signal nodes above that something has been updated
    */
   update() {
@@ -213,8 +241,6 @@ export class TreeBase {
    */
   onUpdate(_start) {}
 
-  // remember the state of the details element below
-  settingsDetailsOpen = false;
   /**
    * Render the designer interface and return the resulting Hole
    * @returns {Hole}
@@ -223,8 +249,9 @@ export class TreeBase {
     return html`<div class="settings">
       <details
         class=${this.className}
-        ?open=${this.settingsDetailsOpen}
-        ontoggle=${({ target }) => (this.settingsDetailsOpen = target.open)}
+        ?open=${this.persisted.settingsDetailsOpen}
+        ontoggle=${({ target }) =>
+          (this.persisted.settingsDetailsOpen = target.open)}
       >
         <summary id=${this.id + "-settings"}>${this.settingsSummary()}</summary>
         ${this.settingsDetails()}
@@ -272,6 +299,16 @@ export class TreeBase {
   swap(i, j) {
     const A = this.children;
     [A[i], A[j]] = [A[j], A[i]];
+  }
+
+  /**
+   * Move me to given position in my parent
+   * @param {number} i
+   */
+  moveTo(i) {
+    const peers = this.parent.children;
+    peers.splice(this.index, 1);
+    peers.splice(i, 0, this);
   }
 
   /**

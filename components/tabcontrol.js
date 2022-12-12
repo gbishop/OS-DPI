@@ -105,6 +105,9 @@ TreeBase.register(TabControl, "TabControl");
 export class DesignerTabControl extends TabControl {
   allowDelete = false;
 
+  /** @type {DesignerTabPanel} */
+  currentPanel = null;
+
   /**
    * @param {string} tabName
    */
@@ -127,6 +130,25 @@ export class DesignerTabControl extends TabControl {
     this.currentPanel.lastFocused = id;
     event.target.setAttribute("aria-selected", "true");
   };
+
+  /** @returns {TreeBase} */
+  get selectedComponent() {
+    // Figure out which tab is active
+    const { designer } = Globals;
+    const panel = designer.currentPanel;
+
+    // Ask that tab which component is focused
+    if (!panel.lastFocused) {
+      console.log("no lastFocused");
+      return null;
+    }
+    const component = TreeBase.componentFromId(panel.lastFocused);
+    if (!component) {
+      console.log("no component");
+      return null;
+    }
+    return component;
+  }
 
   restoreFocus() {
     if (this.currentPanel) {
@@ -217,3 +239,67 @@ export class TabPanel extends Stack {
   lastFocused = "";
 }
 TreeBase.register(TabPanel, "TabPanel");
+
+export class DesignerTabPanel extends TabPanel {
+  // where to store in the db
+  static tableName = "";
+  // default value if it isn't found
+  static defaultValue = {};
+
+  /** @returns {string} */
+  get staticTableName() {
+    // @ts-expect-error
+    return this.constructor.tableName;
+  }
+
+  /**
+   * Load a panel from the database.
+   *
+   * I don't know why I have to pass the class as a parameter to get the types
+   * to work. Why can't I refer to this in the static method which should be
+   * the class.
+   *
+   * @template {DesignerTabPanel} T
+   * @param {new()=>T} expected
+   * @returns {Promise<T>}
+   */
+  static async load(expected) {
+    let obj = await db.read(this.tableName, this.defaultValue);
+    obj = this.upgrade(obj);
+    console.log(this.tableName, obj);
+    const result = this.fromObject(obj);
+    if (result instanceof expected) {
+      result.configure();
+      return result;
+    }
+  }
+
+  /**
+   * An opportunity to upgrade the format if needed
+   * @param {any} obj
+   * @returns {Object}
+   */
+  static upgrade(obj) {
+    return obj;
+  }
+
+  configure() {}
+
+  onUpdate() {
+    const tableName = this.staticTableName;
+    if (tableName) {
+      console.log("update", tableName);
+      db.write(tableName, this.toObject());
+      Globals.state.update();
+    }
+  }
+
+  async undo() {
+    const tableName = this.staticTableName;
+    console.log("undo", tableName);
+    if (tableName) {
+      await db.undo(tableName);
+      Globals.restart();
+    }
+  }
+}

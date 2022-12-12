@@ -8,11 +8,11 @@ import { EventWrap } from "../index";
 // make sure the classes are registered
 import defaultMethods from "./defaultMethods";
 import { log } from "app/log";
-import { TabPanel } from "components/tabcontrol";
+import { DesignerTabPanel } from "components/tabcontrol";
 import "css/method.css";
 import { toggleIndicator } from "app/components/helpers";
 
-export class MethodChooser extends TabPanel {
+export class MethodChooser extends DesignerTabPanel {
   name = new Props.String("Methods");
 
   allowedChildren = ["Method"];
@@ -24,11 +24,12 @@ export class MethodChooser extends TabPanel {
   // allow tearing down handlers when changing configurations
   stop$ = new RxJs.Subject();
 
+  static tableName = "method";
+  static defaultValue = defaultMethods;
+
   onUpdate() {
-    console.log("update method", this);
-    db.write("method", this.toObject());
+    super.onUpdate();
     this.configure();
-    Globals.state.update();
   }
 
   configure() {
@@ -37,17 +38,6 @@ export class MethodChooser extends TabPanel {
     for (const method of this.children) {
       method.configure(this.stop$);
     }
-  }
-
-  /**
-* Load the MethodChooser from the db
-  @returns {Promise<MethodChooser>}
-*/
-  static async load() {
-    const method = await db.read("method", defaultMethods);
-    const result = /** @type {MethodChooser} */ (this.fromObject(method));
-    result.configure();
-    return result;
   }
 
   template() {

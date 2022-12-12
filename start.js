@@ -1,7 +1,6 @@
 import { html } from "uhtml";
 import { Data } from "./data";
 import { State } from "./state";
-import { TreeBase } from "./components/treebase";
 import "./components";
 import { Page } from "./components/page";
 import { Monitor } from "./components/monitor";
@@ -18,6 +17,7 @@ import { CueList } from "./components/access/cues";
 import { Actions } from "./components/actions";
 import { welcome } from "./components/welcome";
 import { callAfterRender, safeRender } from "./render";
+import { DesignerTabControl } from "components/tabcontrol";
 
 /** let me wait for the page to load */
 const pageLoaded = new Promise((resolve) => {
@@ -51,11 +51,11 @@ export async function start() {
 
   Globals.tree = await Page.load();
   Globals.state = new State(`UIState`);
-  Globals.actions = await Actions.load();
+  Globals.actions = await Actions.load(Actions);
   Globals.data = new Data(dataArray);
-  Globals.cues = await CueList.load();
-  Globals.patterns = await PatternList.load();
-  Globals.method = await MethodChooser.load();
+  Globals.cues = await CueList.load(CueList);
+  Globals.patterns = await PatternList.load(PatternList);
+  Globals.method = await MethodChooser.load(MethodChooser);
   Globals.restart = start;
 
   /** @param {() => void} f */
@@ -69,34 +69,33 @@ export async function start() {
 
   /* Designer */
   Globals.state.define("editing", true); // for now
-  Globals.designer =
-    /** @type {import("components/tabcontrol").DesignerTabControl} */ (
-      TreeBase.fromObject({
-        className: "DesignerTabControl",
-        props: { tabEdge: "top", stateName: "designerTab" },
-        children: [
-          {
-            className: "Layout",
-            props: { name: "Layout" },
-            children: [Globals.tree],
-          },
-          Globals.actions,
-          Globals.cues,
-          Globals.patterns,
-          Globals.method,
-          {
-            className: "Content",
-            props: {},
-            children: [],
-          },
-          {
-            className: "Logging",
-            props: {},
-            children: [],
-          },
-        ],
-      })
-    );
+  Globals.designer = /** @type {DesignerTabControl} */ (
+    DesignerTabControl.fromObject({
+      className: "DesignerTabControl",
+      props: { tabEdge: "top", stateName: "designerTab" },
+      children: [
+        {
+          className: "Layout",
+          props: { name: "Layout" },
+          children: [Globals.tree],
+        },
+        Globals.actions,
+        Globals.cues,
+        Globals.patterns,
+        Globals.method,
+        {
+          className: "Content",
+          props: {},
+          children: [],
+        },
+        {
+          className: "Logging",
+          props: {},
+          children: [],
+        },
+      ],
+    })
+  );
 
   /* ToolBar */
   const toolbar = ToolBar.create("ToolBar", null);

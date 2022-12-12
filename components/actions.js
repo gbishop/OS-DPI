@@ -1,18 +1,24 @@
 import { html } from "uhtml";
 import { TreeBase } from "./treebase";
 import * as Props from "./props";
-import { TabPanel } from "./tabcontrol";
-import db from "app/db";
+import { DesignerTabPanel } from "./tabcontrol";
 import "css/actions.css";
 import Globals from "app/globals";
 import { Functions } from "app/eval";
 import { callAfterRender } from "app/render";
 
-export class Actions extends TabPanel {
+export class Actions extends DesignerTabPanel {
   name = new Props.String("Actions");
   scale = new Props.Integer(1);
 
   allowedChildren = ["Action"];
+
+  static tableName = "actions";
+  static defaultValue = {
+    className: "Actions",
+    props: {},
+    children: [],
+  };
 
   /** @type {Action[]} */
   children = [];
@@ -191,12 +197,8 @@ export class Actions extends TabPanel {
     </div>`;
   }
 
-  static async load() {
-    let actions = await db.read("actions", {
-      className: "Actions",
-      props: {},
-      children: [],
-    });
+  /** @param {any} actions */
+  static upgrade(actions) {
     // convert from the old format if necessary
     if (Array.isArray(actions)) {
       console.log("converting", actions);
@@ -229,14 +231,7 @@ export class Actions extends TabPanel {
       };
       console.log("converted", actions);
     }
-    const result = /** @type {Actions} */ (this.fromObject(actions));
-    return result;
-  }
-
-  onUpdate() {
-    console.log("update actions", this);
-    db.write("actions", this.toObject());
-    Globals.state.update();
+    return actions;
   }
 }
 TreeBase.register(Actions, "Actions");
