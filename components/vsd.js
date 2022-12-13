@@ -85,7 +85,7 @@ class VSD extends TreeBase {
   }
 
   template() {
-    const { data, state, rules } = Globals;
+    const { data, state, actions } = Globals;
     const items = /** @type {VRow[]} */ (
       data.getMatchingRows(this.filters, state)
     );
@@ -125,13 +125,48 @@ class VSD extends TreeBase {
                 position: "absolute",
               })}
               ?invisible=${item.invisible}
-              onClick=${rules.handler(this.name, item, "press")}
+              onClick=${actions.handler(this.name.value, item, "press")}
             >
               <span>${item.label || ""}</span>
             </button>`
           )}
       </div>
     </div>`;
+  }
+
+  settingsDetails() {
+    const props = this.propsAsProps;
+    const inputs = Object.values(props).map((prop) => prop.input());
+    const filters = html`<fieldset>
+      <legend>Filters</legend>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Field</th>
+            <th>Operator</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${this.children.map(
+            (filter, index) => html`
+              <tr>
+                <td>${index + 1}</td>
+                <td>${filter.field.input()}</td>
+                <td>${filter.operator.input()}</td>
+                <td>${filter.value.input()}</td>
+              </tr>
+            `
+          )}
+        </tbody>
+      </table>
+    </fieldset>`;
+    return html`<div>${filters}${inputs}</div>`;
+  }
+
+  settingsChildren() {
+    return html``;
   }
 }
 TreeBase.register(VSD, "VSD");
