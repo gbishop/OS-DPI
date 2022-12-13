@@ -11,6 +11,7 @@ import { callAfterRender } from "app/render";
 import { fileOpen } from "browser-fs-access";
 import pleaseWait from "components/wait";
 import { DB } from "app/db";
+import { DesignerTabControl } from "./tabcontrol";
 
 const friendlyNamesMap = {
   ActionCondition: "Condition",
@@ -163,7 +164,8 @@ function getPanelMenuItems(type) {
     type !== "move" && // no moves
     parent &&
     !(component instanceof Stack && parent instanceof Stack) &&
-    !(component instanceof PatternGroup && parent instanceof PatternGroup)
+    !(component instanceof PatternGroup && parent instanceof PatternGroup) &&
+    !(parent instanceof DesignerTabControl)
   ) {
     const parentItems = getComponentMenuItems(parent, type, itemCallback);
     if (menuItems.length && parentItems.length) {
