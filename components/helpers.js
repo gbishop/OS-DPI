@@ -39,7 +39,7 @@ export function interpolate(template, values) {
  */
 export function fromCamelCase(name) {
   return name
-    .replace(/(?!^)([A-Z])/g, " $1")
+    .replace(/(?!^)([A-Z][a-z])/g, " $1")
     .replace(/^./, (s) => s.toUpperCase());
 }
 
