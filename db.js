@@ -317,12 +317,12 @@ export class DB {
     const db = await this.dbPromise;
 
     // collect the parts of the design
-    const layout = Globals.tree.toObject();
-    const actions = Globals.actions.toObject();
+    const layout = Globals.tree.toObject(false);
+    const actions = Globals.actions.toObject(false);
     const content = await this.read("content");
-    const method = Globals.method.toObject();
-    const pattern = Globals.patterns.toObject();
-    const cues = Globals.cues.toObject();
+    const method = Globals.method.toObject(false);
+    const pattern = Globals.patterns.toObject(false);
+    const cues = Globals.cues.toObject(false);
 
     const zipargs = {
       "layout.json": strToU8(JSON.stringify(layout)),
