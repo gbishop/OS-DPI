@@ -83,7 +83,7 @@ export class TreeBase {
    * */
   toObject(persist = true) {
     const props = this.props;
-    const children = this.children.map((child) => child.toObject());
+    const children = this.children.map((child) => child.toObject(persist));
     const result = {
       className: this.className,
       props,
