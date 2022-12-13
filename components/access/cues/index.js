@@ -30,7 +30,9 @@ export class CueList extends DesignerTabPanel {
 
   renderCss() {
     const result = this.children.map((child) => child.renderCss());
-    result.push(this.defaultCue.renderCss({ Key: "DefaultCue" }));
+    if (this.children.length > 0) {
+      result.push(this.defaultCue.renderCss({ Key: "DefaultCue" }));
+    }
     return result;
   }
 

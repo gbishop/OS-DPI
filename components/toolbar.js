@@ -1,6 +1,7 @@
 import { TreeBase } from "./treebase";
 import { Stack } from "./stack";
 import { PatternGroup } from "components/access/pattern";
+import { Page } from "components/page";
 
 import "css/toolbar.css";
 import db from "app/db";
@@ -11,6 +12,7 @@ import { callAfterRender } from "app/render";
 import { fileOpen } from "browser-fs-access";
 import pleaseWait from "components/wait";
 import { DB } from "app/db";
+import { DesignerTabControl } from "./tabcontrol";
 
 const friendlyNamesMap = {
   ActionCondition: "Condition",
@@ -163,7 +165,8 @@ function getPanelMenuItems(type) {
     type !== "move" && // no moves
     parent &&
     !(component instanceof Stack && parent instanceof Stack) &&
-    !(component instanceof PatternGroup && parent instanceof PatternGroup)
+    !(component instanceof PatternGroup && parent instanceof PatternGroup) &&
+    !(parent instanceof DesignerTabControl)
   ) {
     const parentItems = getComponentMenuItems(parent, type, itemCallback);
     if (menuItems.length && parentItems.length) {
@@ -229,8 +232,16 @@ function getEditMenuItems() {
     }),
     new MenuItem("Copy", async () => {
       const component = Globals.designer.selectedComponent;
-      const json = JSON.stringify(component.toObject());
-      navigator.clipboard.writeText(json);
+      if (component) {
+        const parent = component.parent;
+        if (
+          !(component instanceof Page) &&
+          !(parent instanceof DesignerTabControl)
+        ) {
+          const json = JSON.stringify(component.toObject());
+          navigator.clipboard.writeText(json);
+        }
+      }
     }),
     new MenuItem("Cut", async () => {
       const component = Globals.designer.selectedComponent;
@@ -330,18 +341,18 @@ export class ToolBar extends TreeBase {
           <li>
             <label for="designName">Name: </label>
             ${hinted(
-              html` <input
+      html` <input
                 id="designName"
                 type="text"
                 .value=${db.designName}
                 .size=${Math.max(db.designName.length, 12)}
                 onchange=${(event) =>
-                  db
-                    .renameDesign(event.target.value)
-                    .then(() => (window.location.hash = db.designName))}
+          db
+            .renameDesign(event.target.value)
+            .then(() => (window.location.hash = db.designName))}
               />`,
-              "N"
-            )}
+      "N"
+    )}
           </li>
           <li>
             ${hinted(this.fileMenu.render(), "F")}
