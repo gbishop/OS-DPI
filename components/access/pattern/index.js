@@ -194,7 +194,7 @@ export class PatternManager extends PatternBase {
     this.targets = new Group(members, this.props);
     this.stack = [{ group: this.targets, index: -1 }];
     this.cue();
-    console.log("refresh", this);
+    // console.log("refresh", this);
   }
 
   /**
@@ -209,40 +209,40 @@ export class PatternManager extends PatternBase {
 
   next() {
     const top = this.stack[0];
-    console.log("next", { top }, this);
+    // console.log("next", { top }, this);
     if (top.index < top.group.length - 1) {
       top.index++;
     } else if (this.stack.length > 1) {
       this.stack.shift();
-      console.log("stack pop");
+      // console.log("stack pop");
     } else if (this.stack.length == 1) {
       top.index = 0;
     } else {
       // stack is empty ignore
-      console.log("empty stack?");
+      // console.log("empty stack?");
     }
     this.cue();
   }
 
   activate() {
-    console.log("activate");
+    // console.log("activate");
     let current = this.current;
     if (!current) return;
     if (current instanceof Group) {
-      console.log("activate group", current, this.stack);
+      // console.log("activate group", current, this.stack);
       while (current.length == 1 && current.members[0] instanceof Group) {
         current = current.members[0];
       }
       this.stack.unshift({ group: current, index: 0 });
-      console.log("push stack", this.current, this.stack);
+      // console.log("push stack", this.current, this.stack);
     } else {
       const name = current.access.ComponentName;
-      console.log("activate button", current);
+      // console.log("activate button", current);
       if ("onClick" in current.access) {
-        console.log("calling onClick");
+        // console.log("calling onClick");
         current.access.onClick();
       } else {
-        console.log("applyRules", name, current.access);
+        // console.log("applyRules", name, current.access);
         Globals.actions.applyRules(name, "press", current.access);
       }
     }
@@ -259,7 +259,7 @@ export class PatternManager extends PatternBase {
   cue() {
     this.clearCue();
     const current = this.current;
-    console.log("cue current", current);
+    // console.log("cue current", current);
     if (!current) return;
     this.cued = true;
     current.cue(this.Cue.value);

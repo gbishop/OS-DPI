@@ -167,7 +167,7 @@ export class DB {
    * @param {Object} data
    */
   async write(type, data) {
-    console.trace("write", type);
+    console.trace("write", type, data);
     const db = await this.dbPromise;
     await db.put("store", { name: this.designName, type, data });
     await db.delete("saved", this.designName);
@@ -177,15 +177,15 @@ export class DB {
       this.designName,
       type,
     ]);
-    console.log({ count });
+    // console.log({ count });
     if (count > SAVE_N_RECORDS) {
       let keys = await db.getAllKeysFromIndex("store", "by-name-type", [
         this.designName,
         type,
       ]);
       // keys.slice(0,-SAVE_N_RECORDS).forEach(key => db.delete("store", key));
-      console.log({ keys });
-      console.log(keys.slice(0, -SAVE_N_RECORDS));
+      // console.log({ keys });
+      // console.log(keys.slice(0, -SAVE_N_RECORDS));
     }
 
     this.notify({ action: "update", name: this.designName });

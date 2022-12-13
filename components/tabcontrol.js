@@ -266,7 +266,6 @@ export class DesignerTabPanel extends TabPanel {
   static async load(expected) {
     let obj = await db.read(this.tableName, this.defaultValue);
     obj = this.upgrade(obj);
-    console.log(this.tableName, obj);
     const result = this.fromObject(obj);
     if (result instanceof expected) {
       result.configure();
