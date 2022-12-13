@@ -1,6 +1,7 @@
 import { TreeBase } from "./treebase";
 import { Stack } from "./stack";
 import { PatternGroup } from "components/access/pattern";
+import { Page } from "components/page";
 
 import "css/toolbar.css";
 import db from "app/db";
@@ -231,8 +232,16 @@ function getEditMenuItems() {
     }),
     new MenuItem("Copy", async () => {
       const component = Globals.designer.selectedComponent;
-      const json = JSON.stringify(component.toObject());
-      navigator.clipboard.writeText(json);
+      if (component) {
+        const parent = component.parent;
+        if (
+          !(component instanceof Page) &&
+          !(parent instanceof DesignerTabControl)
+        ) {
+          const json = JSON.stringify(component.toObject());
+          navigator.clipboard.writeText(json);
+        }
+      }
     }),
     new MenuItem("Cut", async () => {
       const component = Globals.designer.selectedComponent;
@@ -332,18 +341,18 @@ export class ToolBar extends TreeBase {
           <li>
             <label for="designName">Name: </label>
             ${hinted(
-              html` <input
+      html` <input
                 id="designName"
                 type="text"
                 .value=${db.designName}
                 .size=${Math.max(db.designName.length, 12)}
                 onchange=${(event) =>
-                  db
-                    .renameDesign(event.target.value)
-                    .then(() => (window.location.hash = db.designName))}
+          db
+            .renameDesign(event.target.value)
+            .then(() => (window.location.hash = db.designName))}
               />`,
-              "N"
-            )}
+      "N"
+    )}
           </li>
           <li>
             ${hinted(this.fileMenu.render(), "F")}
