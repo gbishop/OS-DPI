@@ -22,7 +22,7 @@ export class CueList extends DesignerTabPanel {
 
   allowDelete = false;
 
-  template() {
+  settings() {
     return html`<div class="CueList" id=${this.id} tabindex="-1">
       ${this.unorderedChildren()}
     </div>`;

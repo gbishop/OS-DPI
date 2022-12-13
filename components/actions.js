@@ -133,7 +133,7 @@ export class Actions extends DesignerTabPanel {
     return result;
   }
 
-  template() {
+  settings() {
     const { actions } = Globals;
     const rule = this.last.rule;
     callAfterRender(() =>
@@ -200,7 +200,6 @@ export class Actions extends DesignerTabPanel {
   static upgrade(actions) {
     // convert from the old format if necessary
     if (Array.isArray(actions)) {
-      console.log("converting", actions);
       actions = {
         className: "Actions",
         props: {},
@@ -221,14 +220,14 @@ export class Actions extends DesignerTabPanel {
               children: [],
             });
           }
+          if (event == "init") origin = "init";
           return {
             className: "Action",
-            props: { event, origin },
+            props: { origin },
             children,
           };
         }),
       };
-      console.log("converted", actions);
     }
     return actions;
   }
@@ -241,7 +240,6 @@ class Action extends TreeBase {
   children = [];
 
   origin = new Props.String("", { hiddenLabel: true });
-  event = new Props.String("press", { hiddenLabel: true });
 
   get conditions() {
     return this.filterChildren(ActionCondition);

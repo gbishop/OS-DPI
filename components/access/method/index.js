@@ -40,7 +40,7 @@ export class MethodChooser extends DesignerTabPanel {
     }
   }
 
-  template() {
+  settings() {
     return html`<div class="MethodChooser" id=${this.id}>
       ${this.unorderedChildren()}
     </div> `;

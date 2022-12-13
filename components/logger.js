@@ -1,7 +1,7 @@
 import { html } from "uhtml";
 import { saveContent } from "./content";
 import { TreeBase } from "./treebase";
-import { TabPanel } from "./tabcontrol";
+import { TabPanel, DesignerTabPanel } from "./tabcontrol";
 
 import "css/logger.css";
 import DB from "app/db";
@@ -53,7 +53,7 @@ TabPanel.register(Logger, "Logger");
 export class Logging extends TreeBase {
   name = new Props.String("Logging");
 
-  template() {
+  settings() {
     this.selected = this.selected || Logger.instances?.[0];
 
     return html`

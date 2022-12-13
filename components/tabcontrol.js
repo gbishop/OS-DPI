@@ -68,7 +68,7 @@ export class TabControl extends TreeBase {
         });
     }
     this.currentPanel = panels.find((panel) => panel.active);
-    const panel = this.currentPanel?.template() || html`<!--empty-->`;
+    const panel = this.panelTemplate();
     return html`<div
       class=${["tabcontrol", "flex", this.props.tabEdge].join(" ")}
       id=${this.id}
@@ -82,6 +82,10 @@ export class TabControl extends TreeBase {
         ${panel}
       </div>
     </div>`;
+  }
+
+  panelTemplate() {
+    return this.currentPanel?.template() || html`<!--empty-->`;
   }
 
   /**
@@ -107,6 +111,10 @@ export class DesignerTabControl extends TabControl {
 
   /** @type {DesignerTabPanel} */
   currentPanel = null;
+
+  panelTemplate() {
+    return this.currentPanel?.settings() || html`<!--empty-->`;
+  }
 
   /**
    * @param {string} tabName

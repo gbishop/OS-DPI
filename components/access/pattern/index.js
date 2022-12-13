@@ -72,7 +72,7 @@ export class PatternList extends DesignerTabPanel {
   static tableName = "pattern";
   static defaultValue = defaultPatterns;
 
-  template() {
+  settings() {
     return html`<div class="PatternList" id=${this.id}>
       ${this.unorderedChildren()}
     </div>`;
