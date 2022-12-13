@@ -3,7 +3,6 @@ import * as Props from "./props";
 import "css/treebase.css";
 import { fromCamelCase } from "./helpers";
 import WeakValue from "weak-value";
-import Introspected from "introspected";
 
 export class TreeBase {
   /** @type {TreeBase[]} */
@@ -13,6 +12,12 @@ export class TreeBase {
   /** @type {string[]} */
   allowedChildren = [];
   allowDelete = true;
+
+  // values here are persisted in the db but not in exports
+  persisted = {
+    // remember the state of the details element below
+    settingsDetailsOpen: false,
+  };
 
   // every component has a unique id
   static treeBaseCounter = 0;
@@ -76,14 +81,18 @@ export class TreeBase {
    * Prepare a TreeBase tree for external storage by converting to simple objects and arrays
    * @returns {Object}
    * */
-  toObject() {
+  toObject(persist = true) {
     const props = this.props;
     const children = this.children.map((child) => child.toObject());
-    return {
+    const result = {
       className: this.className,
       props,
       children,
     };
+    if (persist) {
+      result["persisted"] = this.persisted;
+    }
+    return result;
   }
 
   init() {}
@@ -151,7 +160,9 @@ export class TreeBase {
     };
     // Get the constructor from the class map
     if (!obj) console.trace("fromObject", obj);
+    // TODO: should this be in upgrade?
     if ("type" in obj) {
+      console.log("upgrade obj", obj);
       const newObj = { children: [...obj.children] };
       // convert to new representation
       if (obj.type === "grid" && "filters" in obj.props) {
@@ -176,6 +187,10 @@ export class TreeBase {
     // Create the object and link it to its parent
     const result = this.create(constructor, parent, obj.props);
 
+    if ("persisted" in obj) {
+      result.persisted = { ...result.persisted, ...obj["persisted"] };
+    }
+
     // Link in the children
     for (const childObj of obj.children) {
       if (childObj instanceof TreeBase) {
@@ -194,33 +209,6 @@ export class TreeBase {
     console.error("got", result);
     throw new Error(`fromObject failed`);
   }
-
-  /**
-   * @template T
-   * @param {T} defaultValue
-   * @returns {T}
-   */
-  fetchPersisted(defaultValue) {
-    const result = JSON.parse(sessionStorage.getItem(this.id)) || defaultValue;
-    console.log("getPersisted", this.id, result);
-    return result;
-  }
-  /** @template T
-   * @param {T} value */
-  setPersisted(value) {
-    console.log("setPersisted", this.id, value);
-    sessionStorage.setItem(this.id, JSON.stringify(value));
-  }
-
-  /** Values stored here will be persisted across refreshes in sessionStorage */
-  persisted = Introspected(
-    this.fetchPersisted({
-      settingsDetailsOpen: false, // remember the state of the details element below
-    }),
-    (root, _path) => {
-      this.setPersisted(root);
-    }
-  );
 
   /**
    * Signal nodes above that something has been updated
