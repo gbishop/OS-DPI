@@ -109,5 +109,67 @@ class Radio extends TreeBase {
   get name() {
     return this.props.name || this.props.label || this.props.stateName;
   }
+
+  settingsDetails() {
+    const props = this.propsAsProps;
+    const inputs = Object.values(props).map((prop) => prop.input());
+    const filters = this.filterChildren(GridFilter);
+    const editFilters = !filters.length
+      ? html`<!--empty-->`
+      : html`<fieldset>
+          <legend>Filters</legend>
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Field</th>
+                <th>Operator</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filters.map(
+                (filter, index) => html`
+                  <tr>
+                    <td>${index + 1}</td>
+                    <td>${filter.field.input()}</td>
+                    <td>${filter.operator.input()}</td>
+                    <td>${filter.value.input()}</td>
+                  </tr>
+                `
+              )}
+            </tbody>
+          </table>
+        </fieldset>`;
+    const options = this.filterChildren(Option);
+    const editOptions = html`<fieldset>
+      <legend>Options</legend>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${options.map(
+            (option, index) => html`
+              <tr>
+                <td>${index + 1}</td>
+                <td>${option.name.input()}</td>
+                <td>${option.value.input()}</td>
+              </tr>
+            `
+          )}
+        </tbody>
+      </table>
+    </fieldset>`;
+    return html`<div>${editFilters}${editOptions}${inputs}</div>`;
+  }
+
+  settingsChildren() {
+    return html``;
+  }
 }
 TreeBase.register(Radio, "Radio");
