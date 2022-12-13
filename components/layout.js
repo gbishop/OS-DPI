@@ -56,24 +56,25 @@ export class Layout extends DesignerTabPanel {
   static upgrade(obj) {
     function oldToNew(obj) {
       if ("type" in obj) {
-        const newObj = { children: [...obj.children] };
+        console.log("upgrade", obj);
         // convert to new representation
-        if (
-          (obj.type === "grid" || obj.type === "vsd") &&
-          "filters" in obj.props
-        ) {
-          newObj.children = obj.props.filters.map((filter) => ({
-            className: "GridFilter",
-            props: { ...filter },
-            children: [],
-          }));
-        } else {
-          newObj.children = obj.children.map((child) => oldToNew(child));
+        const newObj = {
+          children: obj.children.map((child) => oldToNew(child)),
+        };
+        if ("filters" in obj.props) {
+          for (const filter of obj.props.filters) {
+            newObj.children.push({
+              className: "GridFilter",
+              props: { ...filter },
+              children: [],
+            });
+          }
         }
         newObj.className = typeToClassName[obj.type];
         const { filters, ...props } = obj.props;
         newObj.props = props;
         obj = newObj;
+        console.log("upgraded", obj);
       }
       return obj;
     }
