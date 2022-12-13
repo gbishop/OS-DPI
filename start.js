@@ -3,6 +3,7 @@ import { Data } from "./data";
 import { State } from "./state";
 import "./components";
 import { Page } from "./components/page";
+import { Layout } from "./components/layout";
 import { Monitor } from "./components/monitor";
 import { ToolBar } from "./components/toolbar";
 import db from "./db";
@@ -49,7 +50,8 @@ export async function start() {
   const dataArray = await db.read("content", []);
   await pageLoaded;
 
-  Globals.tree = await Page.load();
+  const layout = await Layout.load(Layout);
+  Globals.tree = layout.children[0];
   Globals.state = new State(`UIState`);
   Globals.actions = await Actions.load(Actions);
   Globals.data = new Data(dataArray);
@@ -74,11 +76,7 @@ export async function start() {
       className: "DesignerTabControl",
       props: { tabEdge: "top", stateName: "designerTab" },
       children: [
-        {
-          className: "Layout",
-          props: { name: "Layout" },
-          children: [Globals.tree],
-        },
+        layout,
         Globals.actions,
         Globals.cues,
         Globals.patterns,

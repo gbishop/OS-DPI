@@ -140,43 +140,8 @@ export class TreeBase {
    * @returns {TreeBase} - should be {this} but that isn't supported for some reason
    * */
   static fromObject(obj, parent = null) {
-    // map old names to new for the transition
-    const typeToClassName = {
-      audio: "Audio",
-      stack: "Stack",
-      page: "Page",
-      grid: "Grid",
-      speech: "Speech",
-      button: "Button",
-      logger: "Logger",
-      gap: "Gap",
-      option: "Option",
-      radio: "Radio",
-      vsd: "VSD",
-      "modal dialog": "ModalDialog",
-      "tab control": "TabControl",
-      "tab panel": "TabPanel",
-      display: "Display",
-    };
     // Get the constructor from the class map
     if (!obj) console.trace("fromObject", obj);
-    // TODO: should this be in upgrade?
-    if ("type" in obj) {
-      console.log("upgrade obj", obj);
-      const newObj = { children: [...obj.children] };
-      // convert to new representation
-      if (obj.type === "grid" && "filters" in obj.props) {
-        newObj.children = obj.props.filters.map((filter) => ({
-          className: "GridFilter",
-          props: { ...filter },
-          children: [],
-        }));
-      }
-      newObj.className = typeToClassName[obj.type];
-      const { filters, ...props } = obj.props;
-      newObj.props = props;
-      obj = newObj;
-    }
     const className = obj.className;
     const constructor = this.nameToClass.get(className);
     if (!constructor) {
