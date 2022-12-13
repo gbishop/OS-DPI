@@ -35,7 +35,7 @@ export class Actions extends DesignerTabPanel {
 
   allowDelete = false;
 
-  init() {
+  configure() {
     this.applyRules("init", "init", {});
   }
 
@@ -65,7 +65,6 @@ export class Actions extends DesignerTabPanel {
   applyRules(origin, event, data) {
     this.last = { origin, event, data, rule: null };
     // first for the event then for any that got queued.
-    console.log("applyRules", origin, event, data);
     while (true) {
       const context = { ...Functions, state: Globals.state, ...data };
       for (const rule of this.children) {
