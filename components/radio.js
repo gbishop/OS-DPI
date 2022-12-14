@@ -21,7 +21,7 @@ class Radio extends TreeBase {
   unselected = new Props.Color("lightgray");
   selected = new Props.Color("pink");
 
-  allowedChildren = ["Option"];
+  allowedChildren = ["Option", "GridFilter"];
 
   /** @type {(Option | GridFilter)[]} */
   children = [];
