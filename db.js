@@ -3,7 +3,8 @@ import { zipSync, strToU8, unzipSync, strFromU8 } from "fflate";
 import { fileSave } from "browser-fs-access";
 import Globals from "./globals";
 
-const SAVE_N_RECORDS = 25;
+const N_RECORDS_SAVE = 10;
+const N_RECORDS_MAX = 20;
 
 export class DB {
   constructor() {
@@ -169,24 +170,29 @@ export class DB {
   async write(type, data) {
     console.trace("write", type, data);
     const db = await this.dbPromise;
-    await db.put("store", { name: this.designName, type, data });
-    await db.delete("saved", this.designName);
+    // do all this in a transaction
+    const tx = db.transaction(["store", "saved"], "readwrite");
+    // note that this design has been updated
+    await tx.objectStore("saved").delete(this.designName);
+    // add the record to the store
+    const store = tx.objectStore("store");
+    await store.put({ name: this.designName, type, data });
 
-    /* Only keep the last SAVE_N_RECORDS records per record type */
-    let count = await db.countFromIndex("store", "by-name-type", [
-      this.designName,
-      type,
-    ]);
-    // console.log({ count });
-    if (count > SAVE_N_RECORDS) {
-      let keys = await db.getAllKeysFromIndex("store", "by-name-type", [
-        this.designName,
-        type,
-      ]);
-      // keys.slice(0,-SAVE_N_RECORDS).forEach(key => db.delete("store", key));
-      // console.log({ keys });
-      // console.log(keys.slice(0, -SAVE_N_RECORDS));
+    /* Only keep the last few records per type */
+    const index = store.index("by-name-type");
+    const key = [this.designName, type];
+    // count how many we have
+    let count = await index.count(key);
+    if (count > N_RECORDS_MAX) {
+      // get the number to delete
+      let toDelete = count - N_RECORDS_SAVE;
+      // we're getting them in order so this will delete the oldest ones
+      for await (const cursor of index.iterate(key)) {
+        if (--toDelete <= 0) break;
+        cursor.delete();
+      }
     }
+    await tx.done;
 
     this.notify({ action: "update", name: this.designName });
   }
