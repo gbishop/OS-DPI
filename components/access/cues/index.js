@@ -1,16 +1,14 @@
 import { html } from "uhtml";
 import "css/cues.css";
 import { TreeBase, TreeBaseSwitchable } from "components/treebase";
-import { DesignerTabPanel } from "components/tabcontrol";
+import { DesignerPanel } from "components/designer";
 import * as Props from "components/props";
 
-import db from "app/db";
-import Globals from "app/globals";
 import { interpolate, toggleIndicator } from "components/helpers";
 import { getColor } from "components/style";
 import defaultCues from "./defaultCues";
 
-export class CueList extends DesignerTabPanel {
+export class CueList extends DesignerPanel {
   name = new Props.String("Cues");
 
   static tableName = "cues";

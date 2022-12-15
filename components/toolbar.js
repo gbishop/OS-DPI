@@ -12,7 +12,7 @@ import { callAfterRender } from "app/render";
 import { fileOpen } from "browser-fs-access";
 import pleaseWait from "components/wait";
 import { DB } from "app/db";
-import { DesignerTabControl } from "./tabcontrol";
+import { Designer } from "./designer";
 
 const friendlyNamesMap = {
   ActionCondition: "Condition",
@@ -34,6 +34,10 @@ const friendlyNamesMap = {
   TabPanel: "Tab Panel",
 };
 
+/** Get a name for the menu
+ * @param {string} name
+ * @returns {string}
+ */
 function friendlyName(name) {
   return friendlyNamesMap[name] || name;
 }
@@ -166,7 +170,7 @@ function getPanelMenuItems(type) {
     parent &&
     !(component instanceof Stack && parent instanceof Stack) &&
     !(component instanceof PatternGroup && parent instanceof PatternGroup) &&
-    !(parent instanceof DesignerTabControl)
+    !(parent instanceof Designer)
   ) {
     const parentItems = getComponentMenuItems(parent, type, itemCallback);
     if (menuItems.length && parentItems.length) {
@@ -223,6 +227,19 @@ function getFileMenuItems() {
   ];
 }
 
+/**
+ * Create a MenuItem and bind a key to it
+ *
+ * @param {string} keys
+ * @param {string} label
+ * @param {Function} callback
+ * @param {any[]} args
+ * @returns {MenuItem}
+ */
+function keyMenuItem(keys, label, callback, ...args) {
+  return new MenuItem("foo", () => {});
+}
+
 function getEditMenuItems() {
   const items = [
     new MenuItem("Undo", () => {
@@ -234,10 +251,7 @@ function getEditMenuItems() {
       const component = Globals.designer.selectedComponent;
       if (component) {
         const parent = component.parent;
-        if (
-          !(component instanceof Page) &&
-          !(parent instanceof DesignerTabControl)
-        ) {
+        if (!(component instanceof Page) && !(parent instanceof Designer)) {
           const json = JSON.stringify(component.toObject());
           navigator.clipboard.writeText(json);
         }
@@ -341,18 +355,18 @@ export class ToolBar extends TreeBase {
           <li>
             <label for="designName">Name: </label>
             ${hinted(
-      html` <input
+              html` <input
                 id="designName"
                 type="text"
                 .value=${db.designName}
                 .size=${Math.max(db.designName.length, 12)}
                 onchange=${(event) =>
-          db
-            .renameDesign(event.target.value)
-            .then(() => (window.location.hash = db.designName))}
+                  db
+                    .renameDesign(event.target.value)
+                    .then(() => (window.location.hash = db.designName))}
               />`,
-      "N"
-    )}
+              "N"
+            )}
           </li>
           <li>
             ${hinted(this.fileMenu.render(), "F")}
@@ -374,21 +388,3 @@ export class ToolBar extends TreeBase {
   }
 }
 TreeBase.register(ToolBar, "ToolBar");
-
-/*
-        <button onclick=${() => db.saveDesign()}>Export</button>
-        <button onclick=${() => window.open("#", "_blank")}>Home</button>
-        <button
-          onclick=${async () => {
-            const tab = state.get("designerTab").toLowerCase();
-            if (["layout", "actions"].indexOf(tab) >= 0) {
-              await db.undo(tab);
-              Globals.restart();
-            }
-          }}
-        >
-          Undo
-        </button>
-*/
-
-export default toolbar;

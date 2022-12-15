@@ -1,7 +1,8 @@
 import { html } from "uhtml";
 import { saveContent } from "./content";
 import { TreeBase } from "./treebase";
-import { TabPanel, DesignerTabPanel } from "./tabcontrol";
+import { TabPanel } from "./tabcontrol";
+import { DesignerPanel } from "./designer";
 
 import "css/logger.css";
 import DB from "app/db";

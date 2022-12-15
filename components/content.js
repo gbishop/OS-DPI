@@ -1,6 +1,6 @@
 import { html, render } from "uhtml";
 import { TreeBase } from "./treebase";
-import { DesignerTabPanel } from "./tabcontrol";
+import { DesignerPanel } from "./designer";
 import * as Props from "./props";
 import db from "app/db";
 import { Data } from "app/data";
@@ -109,7 +109,7 @@ export async function saveContent(name, rows, type) {
   XLSX.writeFileXLSX(workbook, `${name}.${type}`);
 }
 
-export class Content extends DesignerTabPanel {
+export class Content extends DesignerPanel {
   name = new Props.String("Content");
 
   init() {

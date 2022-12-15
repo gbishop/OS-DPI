@@ -18,7 +18,7 @@ import { CueList } from "./components/access/cues";
 import { Actions } from "./components/actions";
 import { welcome } from "./components/welcome";
 import { callAfterRender, safeRender } from "./render";
-import { DesignerTabControl } from "components/tabcontrol";
+import { Designer } from "components/designer";
 
 /** let me wait for the page to load */
 const pageLoaded = new Promise((resolve) => {
@@ -71,9 +71,9 @@ export async function start() {
 
   /* Designer */
   Globals.state.define("editing", true); // for now
-  Globals.designer = /** @type {DesignerTabControl} */ (
-    DesignerTabControl.fromObject({
-      className: "DesignerTabControl",
+  Globals.designer = /** @type {Designer} */ (
+    Designer.fromObject({
+      className: "Designer",
       props: { tabEdge: "top", stateName: "designerTab" },
       children: [
         layout,

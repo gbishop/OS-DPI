@@ -5,7 +5,7 @@ import * as Props from "components/props";
 import { TreeBase } from "components/treebase";
 import { ButtonWrap } from "../index";
 import defaultPatterns from "./defaultPatterns";
-import { DesignerTabPanel } from "components/tabcontrol";
+import { DesignerPanel } from "components/designer";
 import { toggleIndicator } from "app/components/helpers";
 
 /** @typedef {ReturnType<ButtonWrap<Node>>} Button */
@@ -61,7 +61,7 @@ class PatternBase extends TreeBase {
   }
 }
 
-export class PatternList extends DesignerTabPanel {
+export class PatternList extends DesignerPanel {
   name = new Props.String("Patterns");
   allowDelete = false;
 

@@ -1,6 +1,6 @@
 import { html } from "uhtml";
 import { TreeBase } from "./treebase";
-import { DesignerTabPanel } from "./tabcontrol";
+import { DesignerPanel } from "./designer";
 import "css/layout.css";
 import db from "app/db";
 import Globals from "app/globals";
@@ -36,7 +36,7 @@ const typeToClassName = {
   display: "Display",
 };
 
-export class Layout extends DesignerTabPanel {
+export class Layout extends DesignerPanel {
   allowDelete = false;
 
   static tableName = "layout";

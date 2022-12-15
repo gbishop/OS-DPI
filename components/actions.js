@@ -1,13 +1,13 @@
 import { html } from "uhtml";
 import { TreeBase } from "./treebase";
 import * as Props from "./props";
-import { DesignerTabPanel } from "./tabcontrol";
+import { DesignerPanel } from "./designer";
 import "css/actions.css";
 import Globals from "app/globals";
 import { Functions } from "app/eval";
 import { callAfterRender } from "app/render";
 
-export class Actions extends DesignerTabPanel {
+export class Actions extends DesignerPanel {
   name = new Props.String("Actions");
   scale = new Props.Integer(1);
 

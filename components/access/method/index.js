@@ -2,17 +2,16 @@ import { html } from "uhtml";
 import { TreeBase, TreeBaseSwitchable } from "components/treebase";
 import * as Props from "components/props";
 import Globals from "app/globals";
-import db from "app/db";
 import * as RxJs from "rxjs";
 import { EventWrap } from "../index";
 // make sure the classes are registered
 import defaultMethods from "./defaultMethods";
 import { log } from "app/log";
-import { DesignerTabPanel } from "components/tabcontrol";
+import { DesignerPanel } from "components/designer";
 import "css/method.css";
 import { toggleIndicator } from "app/components/helpers";
 
-export class MethodChooser extends DesignerTabPanel {
+export class MethodChooser extends DesignerPanel {
   name = new Props.String("Methods");
 
   allowedChildren = ["Method"];
