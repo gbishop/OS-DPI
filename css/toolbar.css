@@ -37,3 +37,29 @@ div.hinted span {
 .hints div.hinted span {
   display: inline;
 }
+
+.hints div#designer::before {
+  display: block;
+  content: "D";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background-color: var(--text1);
+  color: var(--surface1);
+  font-size: 5em;
+  padding: 1em;
+  transform: translate(-50%, -50%);
+}
+
+.hints div#UI::before {
+  display: block;
+  content: "UI";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background-color: var(--text1);
+  color: var(--surface1);
+  font-size: 5em;
+  padding: 1em;
+  transform: translate(-50%, -50%);
+}

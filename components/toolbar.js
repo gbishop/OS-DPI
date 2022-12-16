@@ -13,6 +13,8 @@ import { fileOpen } from "browser-fs-access";
 import pleaseWait from "components/wait";
 import { DB } from "app/db";
 import { Designer } from "./designer";
+import { readSheetFromBlob, saveContent } from "./content";
+import { Data } from "app/data";
 
 const friendlyNamesMap = {
   ActionCondition: "Condition",
@@ -34,14 +36,6 @@ const friendlyNamesMap = {
   TabPanel: "Tab Panel",
 };
 
-/** Get a name for the menu
- * @param {string} name
- * @returns {string}
- */
-function friendlyName(name) {
-  return friendlyNamesMap[name] || name;
-}
-
 /** Return a list of available Menu items on this component
  *
  * @param {TreeBase} component
@@ -52,17 +46,26 @@ function friendlyName(name) {
 function getComponentMenuItems(component, which = "all", wrapper) {
   /** @type {MenuItem[]} */
   const result = [];
+
+  /** Get a name for the menu
+   * @param {string} name
+   * @returns {string}
+   */
+  function friendlyName(name) {
+    return friendlyNamesMap[name] || name;
+  }
+
   // add actions
   if (which == "add" || which == "all") {
     for (const className of component.allowedChildren.sort()) {
       result.push(
-        new MenuItem(
-          `${friendlyName(className)}`,
-          wrapper(() => {
+        new MenuItem({
+          label: `${friendlyName(className)}`,
+          callback: wrapper(() => {
             const result = TreeBase.create(className, component);
             return result.id;
-          })
-        )
+          }),
+        })
       );
     }
   }
@@ -70,15 +73,16 @@ function getComponentMenuItems(component, which = "all", wrapper) {
   if (which == "delete" || which == "all") {
     if (component.allowDelete) {
       result.push(
-        new MenuItem(
-          `Delete ${friendlyName(component.className)}`,
-          wrapper(() => {
+        new MenuItem({
+          label: `Delete`,
+          title: `Delete ${friendlyName(component.className)}`,
+          callback: wrapper(() => {
             // remove returns the id of the nearest neighbor or the parent
             const nextId = component.remove();
             console.log({ nextId });
             return nextId;
-          })
-        )
+          }),
+        })
       );
     }
   }
@@ -91,25 +95,27 @@ function getComponentMenuItems(component, which = "all", wrapper) {
       if (index > 0) {
         // moveup
         result.push(
-          new MenuItem(
-            `Move up ${friendlyName(component.className)}`,
-            wrapper(() => {
+          new MenuItem({
+            label: `Move up`,
+            title: `Move up ${friendlyName(component.className)}`,
+            callback: wrapper(() => {
               component.parent.swap(index, index - 1);
               return component.id;
-            })
-          )
+            }),
+          })
         );
       }
       if (index < component.parent.children.length - 1) {
         // movedown
         result.push(
-          new MenuItem(
-            `Move down ${friendlyName(component.className)}`,
-            wrapper(() => {
+          new MenuItem({
+            label: `Move down`,
+            title: `Move down ${friendlyName(component.className)}`,
+            callback: wrapper(() => {
               component.parent.swap(index, index + 1);
               return component.id;
-            })
-          )
+            }),
+          })
         );
       }
     }
@@ -120,7 +126,7 @@ function getComponentMenuItems(component, which = "all", wrapper) {
 /**
  * Determines valid menu items given a menu type.
  * @param {"add" | "delete" | "move" | "all"} type
- * @return {MenuItem[]}
+ * @return {{ child: MenuItem[], parent: MenuItem[]}
  * */
 function getPanelMenuItems(type) {
   // Figure out which tab is active
@@ -130,12 +136,12 @@ function getPanelMenuItems(type) {
   // Ask that tab which component is focused
   if (!panel.lastFocused) {
     console.log("no lastFocused");
-    return [];
+    return { child: [], parent: [] };
   }
   const component = TreeBase.componentFromId(panel.lastFocused);
   if (!component) {
     console.log("no component");
-    return [];
+    return { child: [], parent: [] };
   }
 
   /** @param {function():string} arg */
@@ -165,142 +171,235 @@ function getPanelMenuItems(type) {
   // Add the parent's actions in some cases
   const parent = component.parent;
 
+  let parentItems = [];
   if (
-    type !== "move" && // no moves
+    type === "add" &&
     parent &&
     !(component instanceof Stack && parent instanceof Stack) &&
     !(component instanceof PatternGroup && parent instanceof PatternGroup) &&
     !(parent instanceof Designer)
   ) {
-    const parentItems = getComponentMenuItems(parent, type, itemCallback);
-    if (menuItems.length && parentItems.length) {
-      parentItems[0].divider = true;
-    }
-    menuItems = menuItems.concat(parentItems);
+    parentItems = getComponentMenuItems(parent, type, itemCallback);
+    // if (menuItems.length && parentItems.length) {
+    //   parentItems[0].divider = "Parent";
+    // }
+    // menuItems = menuItems.concat(parentItems);
   }
 
   // console.log(filteredActionsToMenuItems);
-  return menuItems;
+  return { child: menuItems, parent: parentItems };
 }
 
 function getFileMenuItems() {
   return [
-    new MenuItem("Import", async () => {
-      const local_db = new DB();
-      fileOpen({
-        mimeTypes: ["application/octet-stream"],
-        extensions: [".osdpi", ".zip"],
-        description: "OS-DPI designs",
-        id: "os-dpi",
-      })
-        .then((file) => pleaseWait(local_db.readDesignFromFile(file)))
-        .then(() => {
-          window.open(`#${local_db.designName}`, "_blank", "noopener=true");
-        });
+    new MenuItem({
+      label: "Import",
+      callback: async () => {
+        const local_db = new DB();
+        fileOpen({
+          mimeTypes: ["application/octet-stream"],
+          extensions: [".osdpi", ".zip"],
+          description: "OS-DPI designs",
+          id: "os-dpi",
+        })
+          .then((file) => pleaseWait(local_db.readDesignFromFile(file)))
+          .then(() => {
+            window.open(`#${local_db.designName}`, "_blank", "noopener=true");
+          });
+      },
     }),
-    new MenuItem("Export", () => {
-      db.saveDesign();
+    new MenuItem({
+      label: "Export",
+      callback: () => {
+        db.saveDesign();
+      },
     }),
-    new MenuItem("New", async () => {
-      const name = await db.uniqueName("new");
-      window.open(`#${name}`, "_blank", "noopener=true");
+    new MenuItem({
+      label: "New",
+      callback: async () => {
+        const name = await db.uniqueName("new");
+        window.open(`#${name}`, "_blank", "noopener=true");
+      },
     }),
-    new MenuItem("Open", () => {
-      window.open("#", "_blank", "noopener=true");
+    new MenuItem({
+      label: "Open",
+      callback: () => {
+        window.open("#", "_blank", "noopener=true");
+      },
     }),
-    new MenuItem("Unload", async () => {
-      const saved = await db.saved();
-      if (saved.indexOf(db.designName) < 0) {
-        try {
-          await db.saveDesign();
-        } catch (e) {
-          if (e instanceof DOMException) {
-            console.log("canceled save");
-          } else {
-            throw e;
+    new MenuItem({
+      label: "Unload",
+      callback: async () => {
+        const saved = await db.saved();
+        if (saved.indexOf(db.designName) < 0) {
+          try {
+            await db.saveDesign();
+          } catch (e) {
+            if (e instanceof DOMException) {
+              console.log("canceled save");
+            } else {
+              throw e;
+            }
           }
         }
-      }
-      await db.unload(db.designName);
-      window.close();
+        await db.unload(db.designName);
+        window.close();
+      },
+    }),
+    new MenuItem({
+      label: "Load Sheet",
+      title: "Load a spreadsheet of content",
+      divider: "Content",
+      callback: async () => {
+        try {
+          const blob = await fileOpen({
+            extensions: [".csv", ".tsv", ".ods", ".xls", ".xlsx"],
+            description: "Spreadsheets",
+            id: "os-dpi",
+          });
+          if (blob) {
+            sheet.handle = blob.handle;
+            const result = await pleaseWait(readSheetFromBlob(blob));
+            await db.write("content", result);
+            Globals.data = new Data(result);
+            Globals.state.update();
+          }
+        } catch (e) {
+          sheet.handle = null;
+        }
+      },
+    }),
+    new MenuItem({
+      label: "Reload sheet",
+      title: "Reload a spreadsheet of content",
+      callback: async () => {
+        if (sheet.handle) {
+          const blob = await sheet.handle;
+          if (blob) {
+            const result = await pleaseWait(readSheetFromBlob(blob));
+            await db.write("content", result);
+            Globals.data = new Data(result);
+            Globals.state.update();
+          }
+        }
+      },
+    }),
+    new MenuItem({
+      label: "Save sheet",
+      title: "Save the content as a spreadsheet",
+      callback: () => {
+        saveContent(db.designName, Globals.data.allrows, "xlxs");
+      },
+    }),
+    new MenuItem({
+      label: "Load media",
+      title: "Load audio or images into the design",
+      callback: async () => {
+        const files = await fileOpen({
+          description: "Media files",
+          mimeTypes: ["image/*", "audio/*"],
+          multiple: true,
+        });
+        for (const file of files) {
+          await db.addMedia(file, file.name);
+          if (file.type.startsWith("image/")) {
+            for (const img of document.querySelectorAll(
+              `img[dbsrc="${file.name}"]`
+            )) {
+              /** @type {ImgDb} */ (img).refresh();
+            }
+          }
+        }
+        Globals.state.update();
+      },
     }),
   ];
-}
-
-/**
- * Create a MenuItem and bind a key to it
- *
- * @param {string} keys
- * @param {string} label
- * @param {Function} callback
- * @param {any[]} args
- * @returns {MenuItem}
- */
-function keyMenuItem(keys, label, callback, ...args) {
-  return new MenuItem("foo", () => {});
 }
 
 function getEditMenuItems() {
-  const items = [
-    new MenuItem("Undo", () => {
-      const panel = Globals.designer.currentPanel;
-      console.log({ panel });
-      Globals.designer.currentPanel.undo();
+  let items = [
+    new MenuItem({
+      label: "Undo",
+      callback: () => {
+        const panel = Globals.designer.currentPanel;
+        console.log({ panel });
+        Globals.designer.currentPanel.undo();
+      },
     }),
-    new MenuItem("Copy", async () => {
-      const component = Globals.designer.selectedComponent;
-      if (component) {
-        const parent = component.parent;
-        if (!(component instanceof Page) && !(parent instanceof Designer)) {
-          const json = JSON.stringify(component.toObject());
-          navigator.clipboard.writeText(json);
-        }
-      }
-    }),
-    new MenuItem("Cut", async () => {
-      const component = Globals.designer.selectedComponent;
-      const json = JSON.stringify(component.toObject());
-      await navigator.clipboard.writeText(json);
-      component.remove();
-      Globals.designer.currentPanel.onUpdate();
-    }),
-    new MenuItem("Paste", async () => {
-      const json = await navigator.clipboard.readText();
-      const obj = JSON.parse(json);
-      const className = obj.className;
-      if (!className) return;
-      // find a place that can accept it
-      const anchor = Globals.designer.selectedComponent;
-      let current = anchor;
-      while (current) {
-        if (current.allowedChildren.indexOf(className) >= 0) {
-          const result = TreeBase.fromObject(obj, current);
-          if (
-            anchor.parent === result.parent &&
-            result.index != anchor.index + 1
-          ) {
-            anchor.moveTo(anchor.index + 1);
+    new MenuItem({
+      label: "Copy",
+      callback: async () => {
+        const component = Globals.designer.selectedComponent;
+        if (component) {
+          const parent = component.parent;
+          if (!(component instanceof Page) && !(parent instanceof Designer)) {
+            const json = JSON.stringify(component.toObject());
+            navigator.clipboard.writeText(json);
           }
-          Globals.designer.currentPanel.onUpdate();
-          return;
         }
-        current = current.parent;
-      }
+      },
     }),
-    new MenuItem("Paste Into", async () => {
-      const json = await navigator.clipboard.readText();
-      const obj = JSON.parse(json);
-      const className = obj.className;
-      if (!className) return;
-      // find a place that can accept it
-      const current = Globals.designer.selectedComponent;
-      if (current.allowedChildren.indexOf(className) >= 0) {
-        TreeBase.fromObject(obj, current);
+    new MenuItem({
+      label: "Cut",
+      callback: async () => {
+        const component = Globals.designer.selectedComponent;
+        const json = JSON.stringify(component.toObject());
+        await navigator.clipboard.writeText(json);
+        component.remove();
         Globals.designer.currentPanel.onUpdate();
-      }
+      },
+    }),
+    new MenuItem({
+      label: "Paste",
+      callback: async () => {
+        const json = await navigator.clipboard.readText();
+        const obj = JSON.parse(json);
+        const className = obj.className;
+        if (!className) return;
+        // find a place that can accept it
+        const anchor = Globals.designer.selectedComponent;
+        let current = anchor;
+        while (current) {
+          if (current.allowedChildren.indexOf(className) >= 0) {
+            const result = TreeBase.fromObject(obj, current);
+            if (
+              anchor.parent === result.parent &&
+              result.index != anchor.index + 1
+            ) {
+              anchor.moveTo(anchor.index + 1);
+            }
+            Globals.designer.currentPanel.onUpdate();
+            return;
+          }
+          current = current.parent;
+        }
+      },
+    }),
+    new MenuItem({
+      label: "Paste Into",
+      callback: async () => {
+        const json = await navigator.clipboard.readText();
+        const obj = JSON.parse(json);
+        const className = obj.className;
+        if (!className) return;
+        // find a place that can accept it
+        const current = Globals.designer.selectedComponent;
+        if (current.allowedChildren.indexOf(className) >= 0) {
+          TreeBase.fromObject(obj, current);
+          Globals.designer.currentPanel.onUpdate();
+        }
+      },
     }),
   ];
-  return items.concat(getPanelMenuItems("delete"), getPanelMenuItems("move"));
+  const deleteItems = getPanelMenuItems("delete");
+  const moveItems = getPanelMenuItems("move");
+  items = items.concat(moveItems.child, deleteItems.child);
+  const parentItems = moveItems.parent.concat(deleteItems.parent);
+  if (parentItems.length > 0) {
+    parentItems[0].divider = "Parent";
+    items = items.concat(parentItems);
+  }
+  return items;
 }
 
 function getTabsMenuItems() {
@@ -314,16 +413,42 @@ function getTabsMenuItems() {
     target.click();
   }
   return [
-    new MenuItem("Layout", activateTab, "Layout"),
-    new MenuItem("Actions", activateTab, "Actions"),
-    new MenuItem("Cues", activateTab, "Cues"),
-    new MenuItem("Patterns", activateTab, "Patterns"),
-    new MenuItem("Methods", activateTab, "Methods"),
-    new MenuItem("Content", activateTab, "Content"),
-    new MenuItem("Logging", activateTab, "Logging"),
+    new MenuItem({ label: "Layout", callback: activateTab, args: ["Layout"] }),
+    new MenuItem({
+      label: "Actions",
+      callback: activateTab,
+      args: ["Actions"],
+    }),
+    new MenuItem({ label: "Cues", callback: activateTab, args: ["Cues"] }),
+    new MenuItem({
+      label: "Patterns",
+      callback: activateTab,
+      args: ["Patterns"],
+    }),
+    new MenuItem({
+      label: "Methods",
+      callback: activateTab,
+      args: ["Methods"],
+    }),
+    new MenuItem({
+      label: "Content",
+      callback: activateTab,
+      args: ["Content"],
+    }),
+    new MenuItem({
+      label: "Logging",
+      callback: activateTab,
+      args: ["Logging"],
+    }),
   ];
 }
 
+// function getContentMenuItems() {
+//   return [
+//     new MenuItem("Load spreadsheet"),
+//   ];
+// }
+//
 /**
  * @param {Hole} thing
  * @param {string} hint
@@ -332,13 +457,27 @@ function hinted(thing, hint) {
   return html`<div class="hinted">${thing}<span>${hint}</span></div>`;
 }
 
+const sheet = {
+  handle: null,
+};
+
 export class ToolBar extends TreeBase {
   init() {
     console.log("toolbar init");
 
     this.fileMenu = new Menu("File", getFileMenuItems);
     this.editMenu = new Menu("Edit", getEditMenuItems);
-    this.addMenu = new Menu("Add", getPanelMenuItems, "add");
+    this.addMenu = new Menu(
+      "Add",
+      () => {
+        const { child, parent } = getPanelMenuItems("add");
+        if (parent.length > 0) {
+          parent[0].divider = "Parent";
+        }
+        return child.concat(parent);
+      },
+      "add"
+    );
     this.tabsMenu = new Menu("Tabs", getTabsMenuItems);
     this.backButton = html`<button
       onclick=${() => Globals.designer.restoreFocus()}
@@ -348,7 +487,6 @@ export class ToolBar extends TreeBase {
   }
 
   template() {
-    const { state } = Globals;
     return html`
       <div class="toolbar brand">
         <ul>

@@ -10,16 +10,25 @@ import { callAfterRender } from "app/render";
 
 export class MenuItem {
   /**
-   * @param {string} label
-   * @param {Function} callback
-   * @param {any[]} args
+   * @param {Object} obj - argument object
+   * @param {string} obj.label
+   * @param {Function} [ obj.callback ]
+   * @param {any[]} [ obj.args ]
+   * @param {string} [ obj.title ]
+   * @param {string} [ obj.divider ]
    */
-  constructor(label, callback, ...args) {
+  constructor({
+    label,
+    callback = null,
+    args = [],
+    title = null,
+    divider = null,
+  }) {
     this.label = label;
     this.callback = callback;
     this.args = args;
-    console.log(label, args);
-    this.divider = false;
+    this.title = title;
+    this.divider = divider;
   }
 
   apply() {
@@ -60,7 +69,7 @@ export class Menu {
     if (this.expanded) {
       this.items = this.contentCallback(...this.callbackArgs);
       if (this.items.length == 0) {
-        this.items = [new MenuItem("None", null)];
+        this.items = [new MenuItem({ label: "None" })];
       }
     } else {
       this.items = [];
@@ -89,10 +98,11 @@ export class Menu {
         onkeyup=${this.menuKeyHandler}
       >
         ${this.items.map((item, index) => {
-          return html`<li role="menuitem" ?divider=${item.divider}>
+          return html`<li role="menuitem" divider=${item.divider}>
             <button
               index=${index}
               aria-disabled=${!item.callback}
+              title=${item.title}
               onclick=${() => {
                 if (item.callback) {
                   this.toggleExpanded();

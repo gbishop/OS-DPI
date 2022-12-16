@@ -16,9 +16,12 @@
   position: absolute;
   margin: 0;
   padding: 7px 4px;
-  border: 2px solid 0x034575;
   background-color: var(--surface2);
   z-index: 100;
+  width: 8em;
+  border: 1px solid var(--brand);
+  left: 50%;
+  transform: translate(-50%, 0%);
 }
 .Menu li {
   margin: 2px;
@@ -28,7 +31,19 @@
   opacity: 0.5;
 }
 .Menu li[divider] {
-  border-top: 1px solid black;
+  position: relative;
+}
+.Menu li[divider]::before {
+  content: attr(divider);
+  font-size: 0.8em;
+  font-weight: bold;
+  width: 100%;
+  display: block;
+  text-align: center;
+  border-top: 1px solid var(--text1);
+  border-bottom: 1px solid var(--text1);
+  background-color: var(--surface2);
+  margin-bottom: 0.5em;
 }
 .Menu li button {
   flex: 1;
