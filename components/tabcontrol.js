@@ -47,22 +47,24 @@ export class TabControl extends TreeBase {
           const buttonStyle = {
             backgroundColor: color,
           };
-          return html`<button
-            ?active=${panel.active}
-            style=${styleString(buttonStyle)}
-            ref=${UpdateAccessData({
-              name: this.name,
-              label: panel.tabLabel,
-              component: this.constructor.name,
-              onClick: () => {
-                this.switchTab(panel.tabName);
-              },
-            })}
-            .dataset=${{ id: panel.id }}
-            tabindex="-1"
-          >
-            ${panel.tabLabel}
-          </button>`;
+          return html`<li>
+            <button
+              ?active=${panel.active}
+              style=${styleString(buttonStyle)}
+              ref=${UpdateAccessData({
+                name: this.name,
+                label: panel.tabLabel,
+                component: this.constructor.name,
+                onClick: () => {
+                  this.switchTab(panel.tabName);
+                },
+              })}
+              .dataset=${{ id: panel.id }}
+              tabindex="-1"
+            >
+              ${panel.tabLabel}
+            </button>
+          </li>`;
         });
     }
     this.currentPanel = panels.find((panel) => panel.active);
@@ -71,11 +73,13 @@ export class TabControl extends TreeBase {
       class=${["tabcontrol", "flex", this.props.tabEdge].join(" ")}
       id=${this.id}
     >
-      <div class="buttons">${buttons}</div>
+      <ul class="buttons" onkeydown=${this.tabButtonKeyHandler}>
+        ${buttons}
+      </ul>
       <div
         class="panels flex"
         onfocusin=${this.focusin}
-        onkeydown=${this.keyHandler}
+        onkeydown=${this.panelKeyHandler}
       >
         ${panel}
       </div>
@@ -95,7 +99,9 @@ export class TabControl extends TreeBase {
 
   focusin = null;
 
-  keyHandler = null;
+  panelKeyHandler = null;
+
+  tabButtonKeyHandler = null;
 
   restoreFocus() {}
 }

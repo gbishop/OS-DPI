@@ -56,7 +56,7 @@ export class Layout extends DesignerPanel {
   static upgrade(obj) {
     function oldToNew(obj) {
       if ("type" in obj) {
-        console.log("upgrade", obj);
+        // console.log("upgrade", obj);
         // convert to new representation
         const newObj = {
           children: obj.children.map((child) => oldToNew(child)),
@@ -74,7 +74,7 @@ export class Layout extends DesignerPanel {
         const { filters, ...props } = obj.props;
         newObj.props = props;
         obj = newObj;
-        console.log("upgraded", obj);
+        // console.log("upgraded", obj);
       }
       return obj;
     }

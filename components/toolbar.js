@@ -126,7 +126,7 @@ function getComponentMenuItems(component, which = "all", wrapper) {
 /**
  * Determines valid menu items given a menu type.
  * @param {"add" | "delete" | "move" | "all"} type
- * @return {{ child: MenuItem[], parent: MenuItem[]}
+ * @return {{ child: MenuItem[], parent: MenuItem[]}}
  * */
 function getPanelMenuItems(type) {
   // Figure out which tab is active
@@ -454,7 +454,7 @@ function getTabsMenuItems() {
  * @param {string} hint
  */
 function hinted(thing, hint) {
-  return html`<div class="hinted">${thing}<span>${hint}</span></div>`;
+  return html`<div hint=${hint}>${thing}</div>`;
 }
 
 const sheet = {

@@ -104,7 +104,7 @@ export class Designer extends TabControl {
   /**
    * @param {KeyboardEvent} event
    */
-  keyHandler = (event) => {
+  panelKeyHandler = (event) => {
     if (event.key != "ArrowDown" && event.key != "ArrowUp") return;
     // get the components on this panel
     // todo expand this to all components
@@ -131,6 +131,43 @@ export class Designer extends TabControl {
       );
       if (focusable) {
         focusable.focus();
+      }
+    }
+  };
+
+  /**
+   * @param {KeyboardEvent} event
+   */
+  tabButtonKeyHandler = ({ key }) => {
+    console.log({ key });
+    const tabButtons = /** @type {HTMLButtonElement[]} */ ([
+      ...document.querySelectorAll("#designer .tabcontrol .buttons button"),
+    ]);
+    const focused = /** @type {HTMLButtonElement} */ (
+      document.querySelector("#designer .tabcontrol .buttons button:focus")
+    );
+    if (key == "Escape") {
+      Globals.designer.restoreFocus();
+    } else if (key.startsWith("Arrow")) {
+      const index = tabButtons.indexOf(focused);
+      const step = key == "ArrowUp" || key == "ArrowLeft" ? -1 : 1;
+      let nextIndex = (index + step + tabButtons.length) % tabButtons.length;
+      tabButtons[nextIndex].focus();
+    } else if (key == "Home") {
+      tabButtons[0].focus();
+    } else if (key == "End") {
+      tabButtons[tabButtons.length - 1].focus();
+    } else if (
+      key.length == 1 &&
+      ((key >= "a" && key <= "z") || (key >= "A" && key <= "Z"))
+    ) {
+      const index = tabButtons.indexOf(focused);
+      for (let i = 1; i < tabButtons.length; i++) {
+        const j = (index + i) % tabButtons.length;
+        if (tabButtons[j].innerText.toLowerCase().startsWith(key)) {
+          tabButtons[j].focus();
+          break;
+        }
       }
     }
   };

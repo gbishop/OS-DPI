@@ -109,9 +109,10 @@ export async function start() {
         ${toolbar.template()}
         <div
           id="designer"
+          hint="P"
           onclick=${(/** @type {InputEventWithTarget} */ event) => {
             const button = ButtonWrap(event.target);
-            if (button.access && "onClick" in button.access) {
+            if (button.access && button.access.onClick) {
               button.access.onClick(event);
             }
           }}
@@ -126,7 +127,7 @@ export async function start() {
     clearAccessChanged();
     safeRender(
       document.body,
-      html`<div id="UI">
+      html`<div id="UI" hint="U">
           <div id="timer"></div>
           ${Globals.cues.renderCss()}${Globals.tree.template()}
         </div>

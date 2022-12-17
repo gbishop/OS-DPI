@@ -10,6 +10,8 @@ const AccessProto = {
   },
   /** @type {import("./pattern").Group[]} */
   groups: [],
+  /** @type {(event: InputEventWithTarget)=>void} */
+  onClick: null,
 };
 
 /** Maintain data for each visible button in a WeakMap */

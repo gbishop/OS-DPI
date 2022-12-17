@@ -6,6 +6,13 @@
 }
 .tabcontrol .buttons {
   display: flex;
+  list-style-type: none;
+  padding-inline-start: 0 !important;
+  flex-direction: row;
+}
+.tabcontrol .buttons li {
+  flex: 1 1 0;
+  display: flex;
 }
 .tabcontrol .buttons button {
   flex: 1 1 0;
