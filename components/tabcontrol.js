@@ -73,7 +73,11 @@ export class TabControl extends TreeBase {
       class=${["tabcontrol", "flex", this.props.tabEdge].join(" ")}
       id=${this.id}
     >
-      <ul class="buttons" onkeydown=${this.tabButtonKeyHandler}>
+      <ul
+        class="buttons"
+        onkeydown=${this.tabButtonKeyHandler}
+        hint=${this.hint}
+      >
         ${buttons}
       </ul>
       <div
@@ -102,6 +106,8 @@ export class TabControl extends TreeBase {
   panelKeyHandler = null;
 
   tabButtonKeyHandler = null;
+
+  hint = null;
 
   restoreFocus() {}
 }

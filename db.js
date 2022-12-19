@@ -178,6 +178,7 @@ export class DB {
     const store = tx.objectStore("store");
     await store.put({ name: this.designName, type, data });
 
+    // only keep one of the content
     const [n_max, n_save] =
       type == "content" ? [1, 1] : [N_RECORDS_MAX, N_RECORDS_SAVE];
 
@@ -200,10 +201,27 @@ export class DB {
     this.notify({ action: "update", name: this.designName });
   }
 
+  /**
+   * delete records of this type
+   *
+   * @param {string} type
+   * @returns {Promise<void>}
+   */
+  async clear(type) {
+    const db = await this.dbPromise;
+    const tx = db.transaction("store", "readwrite");
+    const index = tx.store.index("by-name-type");
+    for await (const cursor of index.iterate([this.designName, type])) {
+      cursor.delete();
+    }
+    await tx.done;
+  }
+
   /** Undo by deleting the most recent record
    * @param {string} type
    */
   async undo(type) {
+    if (type == "content") return;
     const db = await this.dbPromise;
     const index = db
       .transaction("store", "readwrite")

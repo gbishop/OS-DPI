@@ -2,7 +2,6 @@ import { html } from "uhtml";
 import { Data } from "./data";
 import { State } from "./state";
 import "./components";
-import { Page } from "./components/page";
 import { Layout } from "./components/layout";
 import { Monitor } from "./components/monitor";
 import { ToolBar } from "./components/toolbar";
@@ -86,11 +85,6 @@ export async function start() {
           props: {},
           children: [],
         },
-        {
-          className: "Logging",
-          props: {},
-          children: [],
-        },
       ],
     })
   );
@@ -127,7 +121,7 @@ export async function start() {
     clearAccessChanged();
     safeRender(
       document.body,
-      html`<div id="UI" hint="U">
+      html`<div id="UI" hint="U" tabindex="-1">
           <div id="timer"></div>
           ${Globals.cues.renderCss()}${Globals.tree.template()}
         </div>

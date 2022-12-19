@@ -15,6 +15,7 @@ import { DB } from "app/db";
 import { Designer } from "./designer";
 import { readSheetFromBlob, saveContent } from "./content";
 import { Data } from "app/data";
+import { SaveLogs, ClearLogs } from "./logger";
 
 const friendlyNamesMap = {
   ActionCondition: "Condition",
@@ -313,6 +314,21 @@ function getFileMenuItems() {
         Globals.state.update();
       },
     }),
+    new MenuItem({
+      label: "Save logs",
+      title: "Save any logs as spreadsheets",
+      divider: "Logs",
+      callback: async () => {
+        SaveLogs();
+      },
+    }),
+    new MenuItem({
+      label: "Clear logs",
+      title: "Clear any stored logs",
+      callback: async () => {
+        ClearLogs();
+      },
+    }),
   ];
 }
 
@@ -402,53 +418,6 @@ function getEditMenuItems() {
   return items;
 }
 
-function getTabsMenuItems() {
-  /** @param {string} name */
-  function activateTab(name) {
-    const buttons = /** @type {HTMLButtonElement[]} */ ([
-      ...document.querySelectorAll("#designer .tabcontrol .buttons button"),
-    ]);
-    const target = buttons.find((el) => el.textContent.includes(name));
-    console.log({ name, buttons, target });
-    target.click();
-  }
-  return [
-    new MenuItem({ label: "Layout", callback: activateTab, args: ["Layout"] }),
-    new MenuItem({
-      label: "Actions",
-      callback: activateTab,
-      args: ["Actions"],
-    }),
-    new MenuItem({ label: "Cues", callback: activateTab, args: ["Cues"] }),
-    new MenuItem({
-      label: "Patterns",
-      callback: activateTab,
-      args: ["Patterns"],
-    }),
-    new MenuItem({
-      label: "Methods",
-      callback: activateTab,
-      args: ["Methods"],
-    }),
-    new MenuItem({
-      label: "Content",
-      callback: activateTab,
-      args: ["Content"],
-    }),
-    new MenuItem({
-      label: "Logging",
-      callback: activateTab,
-      args: ["Logging"],
-    }),
-  ];
-}
-
-// function getContentMenuItems() {
-//   return [
-//     new MenuItem("Load spreadsheet"),
-//   ];
-// }
-//
 /**
  * @param {Hole} thing
  * @param {string} hint
@@ -463,8 +432,6 @@ const sheet = {
 
 export class ToolBar extends TreeBase {
   init() {
-    console.log("toolbar init");
-
     this.fileMenu = new Menu("File", getFileMenuItems);
     this.editMenu = new Menu("Edit", getEditMenuItems);
     this.addMenu = new Menu(
@@ -478,12 +445,6 @@ export class ToolBar extends TreeBase {
       },
       "add"
     );
-    this.tabsMenu = new Menu("Tabs", getTabsMenuItems);
-    this.backButton = html`<button
-      onclick=${() => Globals.designer.restoreFocus()}
-    >
-      Back
-    </button>`;
   }
 
   template() {
@@ -514,12 +475,6 @@ export class ToolBar extends TreeBase {
           </li>
           <li>
             ${hinted(this.addMenu.render(), "A")}
-          </li>
-          <li>
-            ${hinted(this.tabsMenu.render(), "T")}
-          </li>
-          <li>
-            ${hinted(this.backButton, "B")}
           </li>
       </div>
     `;

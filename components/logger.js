@@ -1,18 +1,17 @@
 import { html } from "uhtml";
 import { saveContent } from "./content";
 import { TreeBase } from "./treebase";
-import { TabPanel } from "./tabcontrol";
-import { DesignerPanel } from "./designer";
-
-import "css/logger.css";
-import DB from "app/db";
+import db from "app/db";
 import * as Props from "./props";
 import Globals from "app/globals";
 
-export class Logger extends TabPanel {
-  name = new Props.String("Logger");
+export class Logger extends TreeBase {
+  name = new Props.String("Log");
   stateName = new Props.String("$Log");
-  dbName = new Props.String("Log");
+
+  get type() {
+    return "_" + this.name.value;
+  }
 
   /** @type {Logger[]} */
   static instances = [];
@@ -23,21 +22,19 @@ export class Logger extends TabPanel {
 
   template() {
     const { state } = Globals;
-    const { stateName, name } = this.props;
+    const stateName = this.stateName.value;
+    const type = this.type;
 
     if (state.hasBeenUpdated(stateName)) {
-      DB.read(this.name.value, []).then((value) => {
-        value.push({
-          timestamp: Date.now(),
-          ...this.stringifyInput(state.get(stateName)),
-        });
-        DB.write(this.name.value, value);
-      });
+      const value = state.get(stateName);
+      const record = { timestamp: Date.now(), ...this.stringifyInput(value) };
+      db.write(type, record);
     }
 
     return html`<!--empty-->`;
   }
 
+  /** @param {string[]} arr */
   stringifyInput(arr) {
     let output = {};
 
@@ -49,68 +46,17 @@ export class Logger extends TabPanel {
     return output;
   }
 }
-TabPanel.register(Logger, "Logger");
+TreeBase.register(Logger, "Logger");
 
-export class Logging extends TreeBase {
-  name = new Props.String("Logging");
-
-  settings() {
-    this.selected = this.selected || Logger.instances?.[0];
-
-    return html`
-      <div id="logging-panel">
-        <h2>Select Logger</h2>
-        <label
-          >Logger
-          <select
-            onchange=${({ target }) => {
-              this.selected = Logger.instances?.[target.value || 0];
-            }}
-          >
-            <option value="" invalid>Choose one...</option>
-            ${Logger.instances.map(
-              (l) =>
-                html`<option
-                  value="${Logger.instances.indexOf(l)}"
-                  ?selected=${l.name.value === this.selected?.name.value}
-                >
-                  ${l.name.value}
-                </option>`
-            )}
-          </select></label
-        >
-
-        <h2>Save content as a spreadsheet</h2>
-        <label for="sheetType">Spreadsheet type</label>
-        <select
-          id="sheetType"
-          onchange=${({ target }) => {
-            if (this.selected && target.value !== "") {
-              DB.read(this.selected.dbName.value, [{}]).then((rows) => {
-                saveContent(this.selected.dbName.value, rows, target.value);
-              });
-            }
-          }}
-        >
-          <option selected value="">Choose your format</option>
-          <option value="xlsx">Excel .xlsx</option>
-          <option value="xls">Excel .xls</option>
-          <option value="ods">ODF Spreadsheet .ods</option>
-          <option value="csv">Comma Separated Values .csv</option>
-        </select>
-
-        <h2>Clear log</h2>
-        <button
-          onclick=${() => {
-            if (this.selected) {
-              DB.write(this.selected.dbName.value, [{}]);
-            }
-          }}
-        >
-          Clear
-        </button>
-      </div>
-    `;
+export async function SaveLogs() {
+  for (const log of Logger.instances) {
+    const toSave = await db.read(log.type, [{}]);
+    await saveContent(log.name.value, toSave, "xlsx");
   }
 }
-TreeBase.register(Logging, "Logging");
+
+export async function ClearLogs() {
+  for (const log of Logger.instances) {
+    await db.clear(log.type);
+  }
+}

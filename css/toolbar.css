@@ -19,11 +19,11 @@
   border-radius: 0.5em;
 }
 
-div[hint] {
+[hint] {
   display: inline-block;
   position: relative;
 }
-.hints div[hint]::after {
+.hints [hint]::after {
   content: attr(hint);
   top: 50%;
   left: 50%;

@@ -15,6 +15,8 @@ export class Designer extends TabControl {
   /** @type {DesignerPanel} */
   currentPanel = null;
 
+  hint = "T";
+
   panelTemplate() {
     return this.currentPanel?.settings() || html`<!--empty-->`;
   }
