@@ -1,4 +1,3 @@
-import { Group } from "./pattern";
 import { extender } from "proxy-pants";
 import equal from "fast-deep-equal";
 
@@ -9,8 +8,10 @@ const AccessProto = {
   cue(value) {
     this.setAttribute("cue", value);
   },
-  /** @type {Group[]} */
+  /** @type {import("./pattern").Group[]} */
   groups: [],
+  /** @type {(event: InputEventWithTarget)=>void} */
+  onClick: null,
 };
 
 /** Maintain data for each visible button in a WeakMap */

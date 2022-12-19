@@ -10,8 +10,8 @@
  *   Array
  */
 
-import Globals from "../globals";
-import { evalInContext, Functions } from "../eval";
+import Globals from "app/globals";
+import { evalInContext, Functions } from "app/eval";
 
 class Prop {
   props = {};

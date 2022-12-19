@@ -1,0 +1,9 @@
+details.Method > *:not(summary) {
+  margin-left: 2em;
+}
+
+#designer details.Method summary h3 label {
+  margin-bottom: 0;
+  font-weight: normal;
+  font-size: 80%;
+}

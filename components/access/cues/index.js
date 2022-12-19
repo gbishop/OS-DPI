@@ -1,62 +1,54 @@
 import { html } from "uhtml";
-import css from "ustyler";
-import { Base } from "../../base";
-import { TreeBase, TreeBaseSwitchable } from "../../treebase";
-import * as Props from "../../props";
+import "css/cues.css";
+import { TreeBase, TreeBaseSwitchable } from "components/treebase";
+import { DesignerPanel } from "components/designer";
+import * as Props from "components/props";
 
-import db from "../../../db";
-import Globals from "../../../globals";
-import { interpolate } from "../../helpers";
-import { getColor } from "../../style";
+import { interpolate, toggleIndicator } from "components/helpers";
+import { getColor } from "components/style";
 import defaultCues from "./defaultCues";
 
-export class AccessCues extends Base {
-  template() {
-    return html`<div class="access-cues">
-      <h1>Cues</h1>
-      ${Globals.cues.template()}
-    </div>`;
-  }
-}
+export class CueList extends DesignerPanel {
+  name = new Props.String("Cues");
 
-export class CueList extends TreeBase {
+  static tableName = "cues";
+  static defaultValue = defaultCues;
+
+  allowedChildren = ["Cue"];
   /** @type {Cue[]} */
   children = [];
 
-  template() {
-    return html`<div class="CueList">
-      ${this.addChildButton("+Cue", Cue, { title: "Add a Cue" })}
+  allowDelete = false;
+
+  settings() {
+    return html`<div class="CueList" id=${this.id} tabindex="-1">
       ${this.unorderedChildren()}
     </div>`;
   }
 
   renderCss() {
-    return this.children.map((child) => child.renderCss());
-  }
-
-  get cueMap() {
-    return new Map(
-      this.children.map((child) => [child.Key.value, child.Name.value])
-    );
-  }
-
-  /**
-   * Load the CueList from the db
-   * @returns {Promise<CueList>}
-   */
-  static async load() {
-    const list = await db.read("cues", defaultCues);
-    const result = /** @type {CueList} */ (this.fromObject(list));
+    const result = this.children.map((child) => child.renderCss());
+    if (this.children.length > 0) {
+      result.push(this.defaultCue.renderCss({ Key: "DefaultCue" }));
+    }
     return result;
   }
 
-  onUpdate() {
-    console.log("update cues", this);
-    db.write("cues", this.toObject());
-    Globals.state.update();
+  get cueMap() {
+    /** @type {[string,string][]} */
+    const entries = this.children.map((child) => [
+      child.Key.value,
+      child.Name.value,
+    ]);
+    entries.unshift(["DefaultCue", "Default Cue"]);
+    return new Map(entries);
+  }
+
+  get defaultCue() {
+    return this.children.find((cue) => cue.Default.value) || this.children[0];
   }
 }
-TreeBase.register(CueList);
+TreeBase.register(CueList, "CueList");
 
 const CueTypes = new Map([
   ["Cue", "none"],
@@ -70,14 +62,19 @@ class Cue extends TreeBaseSwitchable {
   Name = new Props.String("a cue");
   Key = new Props.UID();
   CueType = new Props.TypeSelect(CueTypes);
+  Default = new Props.OneOfGroup(false, { name: "DefaultCue" });
 
-  template() {
-    return html`
-      <fieldset class="Cue">
-        ${this.Name.input()} ${this.CueType.input()}
-        ${this.deleteButton({ title: "Delete this cue" })} ${this.subTemplate()}
-      </fieldset>
-    `;
+  settingsSummary() {
+    return html`<h3>
+      ${this.Name.value} ${toggleIndicator(this.Default.value, "Default cue")}
+    </h3>`;
+  }
+
+  settingsDetails() {
+    return html`<div class="Cue">
+      ${this.Name.input()} ${this.Default.input()} ${this.CueType.input()}
+      ${this.subTemplate()}
+    </div>`;
   }
 
   subTemplate() {
@@ -88,13 +85,13 @@ class Cue extends TreeBaseSwitchable {
     return "";
   }
 
-  renderCss() {
+  renderCss(overrideProps = {}) {
     return html`<style>
-      ${interpolate(this.css, this.propsAsObject)}
+      ${interpolate(this.css, { ...this.props, ...overrideProps })}
     </style>`;
   }
 }
-TreeBase.register(Cue);
+TreeBase.register(Cue, "Cue");
 
 class CueCss extends Cue {
   Code = new Props.TextArea("", {
@@ -103,24 +100,21 @@ class CueCss extends Cue {
   });
 
   subTemplate() {
-    return html`<details>
-      <summary>CSS</summary>
-      ${this.Code.input()}
-    </details>`;
+    return this.Code.input();
   }
 
   get css() {
     return this.Code.value;
   }
 }
-TreeBase.register(CueCss);
+TreeBase.register(CueCss, "CueCss");
 
 class CueOverlay extends Cue {
   Color = new Props.Color("yellow");
   Opacity = new Props.Float(0.3);
 
   subTemplate() {
-    return html` ${this.Color.input()} ${this.Opacity.input()}
+    return html`${this.Color.input()} ${this.Opacity.input()}
       <details>
         <summary>generated CSS</summary>
         <pre><code>${this.css}</code></pre>
@@ -148,7 +142,7 @@ class CueOverlay extends Cue {
     `;
   }
 }
-TreeBase.register(CueOverlay);
+TreeBase.register(CueOverlay, "CueOverlay");
 
 const fillDirections = new Map([
   ["top", "up"],
@@ -201,7 +195,7 @@ class CueFill extends Cue {
     `;
   }
 }
-TreeBase.register(CueFill);
+TreeBase.register(CueFill, "CueFill");
 
 class CueCircle extends Cue {
   Color = new Props.Color("lightblue");
@@ -216,7 +210,7 @@ class CueCircle extends Cue {
   }
 
   renderCss() {
-    const props = this.propsAsObject;
+    const props = this.props;
     props["Color"] = getColor(props["Color"]);
     return html`<style>
       ${interpolate(this.css, props)}
@@ -278,12 +272,4 @@ button[cue="{{Key}}"]:after {
     `;
   }
 }
-TreeBase.register(CueCircle);
-
-css`
-  .Cue textarea {
-    box-sizing: border-box;
-    width: 100%;
-    height: 6em;
-  }
-`;
+TreeBase.register(CueCircle, "CueCircle");

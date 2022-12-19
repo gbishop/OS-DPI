@@ -3,7 +3,10 @@ import { zipSync, strToU8, unzipSync, strFromU8 } from "fflate";
 import { fileSave } from "browser-fs-access";
 import Globals from "./globals";
 
-class DB {
+const N_RECORDS_SAVE = 10;
+const N_RECORDS_MAX = 20;
+
+export class DB {
   constructor() {
     this.dbPromise = openDB("os-dpi", 4, {
       upgrade(db, oldVersion, newVersion) {
@@ -165,16 +168,60 @@ class DB {
    * @param {Object} data
    */
   async write(type, data) {
+    console.trace("write", type, data);
     const db = await this.dbPromise;
-    await db.put("store", { name: this.designName, type, data });
-    await db.delete("saved", this.designName);
+    // do all this in a transaction
+    const tx = db.transaction(["store", "saved"], "readwrite");
+    // note that this design has been updated
+    await tx.objectStore("saved").delete(this.designName);
+    // add the record to the store
+    const store = tx.objectStore("store");
+    await store.put({ name: this.designName, type, data });
+
+    // only keep one of the content
+    const [n_max, n_save] =
+      type == "content" ? [1, 1] : [N_RECORDS_MAX, N_RECORDS_SAVE];
+
+    /* Only keep the last few records per type */
+    const index = store.index("by-name-type");
+    const key = [this.designName, type];
+    // count how many we have
+    let count = await index.count(key);
+    if (count > n_max) {
+      // get the number to delete
+      let toDelete = count - n_save;
+      // we're getting them in order so this will delete the oldest ones
+      for await (const cursor of index.iterate(key)) {
+        if (--toDelete <= 0) break;
+        cursor.delete();
+      }
+    }
+    await tx.done;
+
     this.notify({ action: "update", name: this.designName });
+  }
+
+  /**
+   * delete records of this type
+   *
+   * @param {string} type
+   * @returns {Promise<void>}
+   */
+  async clear(type) {
+    const db = await this.dbPromise;
+    const tx = db.transaction("store", "readwrite");
+    const index = tx.store.index("by-name-type");
+    for await (const cursor of index.iterate([this.designName, type])) {
+      cursor.delete();
+    }
+    await tx.done;
   }
 
   /** Undo by deleting the most recent record
    * @param {string} type
    */
   async undo(type) {
+    if (type == "content") return;
     const db = await this.dbPromise;
     const index = db
       .transaction("store", "readwrite")
@@ -297,17 +344,20 @@ class DB {
     const db = await this.dbPromise;
 
     // collect the parts of the design
-    const layout = await this.read("layout");
-    const actions = await this.read("actions");
+    const layout = Globals.tree.toObject(false);
+    const actions = Globals.actions.toObject(false);
     const content = await this.read("content");
+    const method = Globals.method.toObject(false);
+    const pattern = Globals.patterns.toObject(false);
+    const cues = Globals.cues.toObject(false);
 
     const zipargs = {
       "layout.json": strToU8(JSON.stringify(layout)),
       "actions.json": strToU8(JSON.stringify(actions)),
       "content.json": strToU8(JSON.stringify(content)),
-      "method.json": strToU8(JSON.stringify(Globals.method.toObject())),
-      "pattern.json": strToU8(JSON.stringify(Globals.patterns.toObject())),
-      "cues.json": strToU8(JSON.stringify(Globals.cues.toObject())),
+      "method.json": strToU8(JSON.stringify(method)),
+      "pattern.json": strToU8(JSON.stringify(pattern)),
+      "cues.json": strToU8(JSON.stringify(cues)),
     };
 
     const mediaKeys = (await db.getAllKeys("media")).filter((pair) =>

@@ -1,9 +1,11 @@
 import { html } from "uhtml";
-import { Base, componentMap } from "./base";
+import { TreeBase } from "./treebase";
+import * as Props from "./props";
 import { styleString } from "./style";
 
-class Gap extends Base {
-  static defaultProps = { scale: "1", background: "" };
+class Gap extends TreeBase {
+  scale = new Props.Float(1);
+  background = new Props.Color("");
 
   template() {
     const style = styleString({
@@ -12,5 +14,4 @@ class Gap extends Base {
     return html`<div class="gap flex" style=${style} id=${this.id}></div>`;
   }
 }
-
-componentMap.addMap("gap", Gap);
+TreeBase.register(Gap, "Gap");

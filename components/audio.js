@@ -1,15 +1,14 @@
-import { log } from "../log";
+import { log } from "app/log";
 import { strip } from "./display";
-import { Base, componentMap } from "./base";
+import { TreeBase } from "./treebase";
+import * as Props from "./props";
 import { html } from "uhtml";
-import db from "../db";
+import db from "app/db";
 
-import Globals from "../globals";
+import Globals from "app/globals";
 
-class Audio extends Base {
-  static defaultProps = {
-    stateName: "$Audio",
-  };
+class Audio extends TreeBase {
+  stateName = new Props.String("$Audio");
 
   async playAudio() {
     const { state } = Globals;
@@ -28,5 +27,4 @@ class Audio extends Base {
     return html`<!--empty-->`;
   }
 }
-
-componentMap.addMap("audio", Audio);
+TreeBase.register(Audio, "Audio");

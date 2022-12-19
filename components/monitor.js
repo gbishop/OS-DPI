@@ -1,11 +1,11 @@
 import { html } from "uhtml";
-import { Base } from "./base";
-import css from "ustyler";
-import Globals from "../globals";
+import { TreeBase } from "./treebase";
+import "css/monitor.css";
+import Globals from "app/globals";
 
-export class Monitor extends Base {
+export class Monitor extends TreeBase {
   template() {
-    const { state, rules } = Globals;
+    const { state, actions: rules } = Globals;
     const s = html`<table class="state">
       <thead>
         <tr>
@@ -48,7 +48,7 @@ export class Monitor extends Base {
     return html`<button
         onclick=${() => {
           state.clear();
-          rules.doInit();
+          rules.init();
         }}
       >
         Clear state
@@ -56,31 +56,4 @@ export class Monitor extends Base {
       <div>${s}${f}</div>`;
   }
 }
-
-css`
-  #monitor {
-    margin-top: 1em;
-    margin-left: 1em;
-  }
-
-  #monitor div {
-    display: flex;
-    height: 100%;
-    overflow-y: auto;
-    font-size: 75%;
-    margin-top: 0.2em;
-  }
-
-  #monitor table {
-    border-collapse: collapse;
-    border: 1px solid black;
-    height: max-content;
-    margin-right: 1em;
-  }
-
-  #monitor table td,
-  #monitor table th {
-    border: 1px solid black;
-    padding: 0.5em;
-  }
-`;
+TreeBase.register(Monitor, "Monitor");

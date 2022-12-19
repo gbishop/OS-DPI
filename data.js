@@ -7,9 +7,10 @@ import { evalInContext } from "./eval";
  */
 export const comparators = {
   equals: (f, v) =>
-    f.localeCompare(v, undefined, { sensitivity: "base" }) === 0 ||
-    f === "*" ||
-    v === "*",
+    f.length == v.length &&
+    (f.localeCompare(v, undefined, { sensitivity: "base" }) === 0 ||
+      f === "*" ||
+      v === "*"),
   "less than": (f, v) => f.localeCompare(v, undefined, { numeric: true }) < 0,
   "starts with": (f, v) =>
     f.toUpperCase().startsWith(v.toUpperCase()) || f === "*" || v === "*",
@@ -26,6 +27,7 @@ function match(filter, row) {
   const field = row[filter.field.slice(1)] || "";
   let value = filter.value || "";
   const comparator = comparators[filter.operator];
+  if (!comparator) return true;
   let r = comparator(field.toString(), value.toString());
   return r;
 }

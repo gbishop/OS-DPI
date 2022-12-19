@@ -1,11 +1,10 @@
-import { TreeBase } from "../../treebase";
-import { Handler, HandlerCondition } from "./handler";
-import { HandlerResponse } from "./responses";
-import * as Props from "../../props";
+import { TreeBase } from "components/treebase";
+import { Handler } from "./index";
+import * as Props from "components/props";
 import { html } from "uhtml";
 import * as RxJs from "rxjs";
 import { Method } from "./index";
-import { log } from "../../../log";
+import { log } from "app/log";
 
 const timerSignals = new Map([
   ["transitionend", "Transition end"],
@@ -14,33 +13,24 @@ const timerSignals = new Map([
 ]);
 
 export class TimerHandler extends Handler {
+  allowedChildren = ["HandlerCondition", "HandlerResponse"];
+
   Signal = new Props.Select(timerSignals);
   TimerName = new Props.Select([], { hiddenLabel: true });
 
-  template() {
+  settings() {
     const { conditions, responses, Signal } = this;
     const timerNames = this.nearestParent(Method).timerNames;
     return html`
       <fieldset class="Handler">
         <legend>Timer Handler</legend>
         ${Signal.input()} ${this.TimerName.input(timerNames)}
-        ${this.deleteButton({ title: "Delete this handler" })}
         <fieldset class="Conditions">
-          <legend>
-            Conditions
-            ${this.addChildButton("+", HandlerCondition, {
-              title: "Add a condition",
-            })}
-          </legend>
+          <legend>Conditions</legend>
           ${this.unorderedChildren(conditions)}
         </fieldset>
         <fieldset class="Responses">
-          <legend>
-            Responses
-            ${this.addChildButton("+", HandlerResponse, {
-              title: "Add a response",
-            })}
-          </legend>
+          <legend>Responses</legend>
           ${this.unorderedChildren(responses)}
         </fieldset>
       </fieldset>
@@ -65,4 +55,4 @@ export class TimerHandler extends Handler {
       .subscribe((e) => this.respond(e));
   }
 }
-TreeBase.register(TimerHandler);
+TreeBase.register(TimerHandler, "TimerHandler");

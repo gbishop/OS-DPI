@@ -1,9 +1,11 @@
 import { html } from "uhtml";
-import { Base, componentMap } from "./base";
+import { TreeBase } from "./treebase";
+import * as Props from "./props";
 import { styleString } from "./style";
-import css from "ustyler";
+import "css/vsd.css";
 import "./img-db";
-import Globals from "../globals";
+import Globals from "app/globals";
+import { GridFilter } from "./grid";
 
 /** Allow await'ing for a short time
  * @param {number} ms */
@@ -67,17 +69,25 @@ function pct(v) {
  * @property {boolean} invisible
  */
 /** @typedef {Row & vsdData} VRow */
-class VSD extends Base {
-  static defaultProps = {
-    filters: [],
-    name: "vsd",
-    scale: "1",
-  };
+class VSD extends TreeBase {
+  name = new Props.String("vsd");
+  scale = new Props.Float(1);
+
+  /** @type {GridFilter[]} */
+  children = [];
+
+  get filters() {
+    return this.children.map((child) => ({
+      field: child.field.value,
+      operator: child.operator.value,
+      value: child.value.value,
+    }));
+  }
 
   template() {
-    const { data, state, rules } = Globals;
+    const { data, state, actions } = Globals;
     const items = /** @type {VRow[]} */ (
-      data.getMatchingRows(this.props.filters, state)
+      data.getMatchingRows(this.filters, state)
     );
     const src = items.find((item) => item.image)?.image;
     return html`<div class="vsd flex show" id=${this.id}>
@@ -115,7 +125,7 @@ class VSD extends Base {
                 position: "absolute",
               })}
               ?invisible=${item.invisible}
-              onClick=${rules.handler(this.name, item, "press")}
+              onClick=${actions.handler(this.name.value, item, "press")}
             >
               <span>${item.label || ""}</span>
             </button>`
@@ -123,48 +133,40 @@ class VSD extends Base {
       </div>
     </div>`;
   }
+
+  settingsDetails() {
+    const props = this.propsAsProps;
+    const inputs = Object.values(props).map((prop) => prop.input());
+    const filters = html`<fieldset>
+      <legend>Filters</legend>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Field</th>
+            <th>Operator</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${this.children.map(
+            (filter, index) => html`
+              <tr>
+                <td>${index + 1}</td>
+                <td>${filter.field.input()}</td>
+                <td>${filter.operator.input()}</td>
+                <td>${filter.value.input()}</td>
+              </tr>
+            `
+          )}
+        </tbody>
+      </table>
+    </fieldset>`;
+    return html`<div>${filters}${inputs}</div>`;
+  }
+
+  settingsChildren() {
+    return html``;
+  }
 }
-
-componentMap.addMap("vsd", VSD);
-
-css`
-  div.vsd {
-    position: relative;
-  }
-
-  div.vsd button {
-    position: absolute;
-    background-color: transparent;
-    box-shadow: 0 0 0 1px white, 0 0 0 2px red;
-    border-radius: 5px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  div.vsd button[invisible] {
-    box-shadow: none;
-    outline: none;
-    border: none;
-  }
-
-  div.vsd img {
-    flex: 1 1 0;
-    object-fit: contain;
-    width: 100%;
-    height: 100%;
-  }
-
-  div.vsd div.markers button:focus-within {
-    opacity: 1;
-  }
-  div.vsd button span {
-    background-color: white;
-  }
-  div.vsd div.markers button {
-    opacity: 0;
-  }
-  div.vsd.show div.markers button {
-    opacity: 1;
-  }
-`;
+TreeBase.register(VSD, "VSD");

@@ -1,10 +1,9 @@
 /* Thinking about better properties */
 
 import { html } from "uhtml";
-import css from "ustyler";
-import { compileExpression } from "../eval";
-import Globals from "../globals";
-import { TreeBase, TreeBaseSwitchable } from "./treebase";
+import "css/props.css";
+import { compileExpression } from "app/eval";
+import Globals from "app/globals";
 
 /**
  * @typedef {Object} PropOptions
@@ -13,6 +12,8 @@ import { TreeBase, TreeBaseSwitchable } from "./treebase";
  * @property {string} [title]
  * @property {string} [label]
  * @property {boolean} [multiple]
+ * @property {string} [defaultValue]
+ * @property {string} [group]
  */
 
 export class Prop {
@@ -20,15 +21,40 @@ export class Prop {
   /** @type {any} */
   value;
 
+  // Each prop gets a unique id based on the id of its container
+  id = "";
+
+  /** @type {import('./treebase').TreeBase} */
+  container = null;
+
+  /** attach the prop to its containing TreeBase component
+   * @param {string} name
+   * @param {any} value
+   * @param {TreeBase} container
+   * */
+  initialize(name, value, container) {
+    // create id from the container id
+    this.id = `${container.id}-${name}`;
+    // link to the container
+    this.container = container;
+    // set the value if provided
+    if (value != null) {
+      this.set(value);
+    }
+    // create a label if it has none
+    this.label =
+      this.label ||
+      name // convert from camelCase to Camel Case
+        .replace(/(?!^)([A-Z])/g, " $1")
+        .replace(/^./, (s) => s.toUpperCase());
+  }
+
   get valueAsNumber() {
     return parseFloat(this.value);
   }
 
   /** @type {PropOptions} */
   options = {};
-
-  /** @type {TreeBase} */
-  container = null;
 
   /** @param {PropOptions} options */
   constructor(options = {}) {
@@ -81,9 +107,11 @@ export class Select extends Prop {
     if (!choices) {
       choices = this.choices;
     }
+    this.value = this.value || this.options.defaultValue || "";
     return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
       <span>${this.label}</span>
       <select
+        id=${this.id}
         required
         title=${this.options.title}
         onchange=${({ target }) => {
@@ -112,15 +140,25 @@ export class Select extends Prop {
 }
 
 export class Field extends Select {
-  /** @param {PropOptions} options */
-  constructor(options = {}) {
-    const choices = [...Globals.data.allFields, "#ComponentName"].sort();
-    super(choices, options);
+  input(choices = null) {
+    if (!choices) {
+      choices = toMap([...Globals.data.allFields, "#ComponentName"].sort());
+    }
+    return super.input(choices);
+  }
+}
+
+export class State extends Select {
+  input(choices = null) {
+    if (!choices) {
+      choices = toMap([...Globals.tree.allStates()]);
+    }
+    return super.input(choices);
   }
 }
 
 export class TypeSelect extends Select {
-  /** @type {TreeBaseSwitchable} */
+  /** @type {import('./treebase').TreeBaseSwitchable} */
   container = null;
 
   update() {
@@ -145,6 +183,7 @@ export class String extends Prop {
       <input
         type="text"
         .value=${this.value}
+        id=${this.id}
         onchange=${({ target }) => {
           this.value = target.value;
           this.update();
@@ -170,6 +209,7 @@ export class Integer extends Prop {
       <input
         type="number"
         .value=${this.value}
+        id=${this.id}
         onchange=${({ target }) => {
           this.value = target.value;
           this.update();
@@ -195,6 +235,7 @@ export class Float extends Prop {
       <input
         type="number"
         .value=${this.value}
+        id=${this.id}
         onchange=${({ target }) => {
           this.value = target.value;
           this.update();
@@ -216,12 +257,14 @@ export class Boolean extends Prop {
     this.value = value;
   }
 
-  input() {
+  input(options = {}) {
+    options = { ...this.options, ...options };
     return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
       <span>${this.label}</span>
       <input
         type="checkbox"
         ?checked=${this.value}
+        id=${this.id}
         onchange=${({ target }) => {
           this.value = target.checked;
           this.update();
@@ -237,6 +280,65 @@ export class Boolean extends Prop {
       this.value = value;
     } else if (typeof value === "string") {
       this.value = value === "true";
+    }
+  }
+}
+
+export class OneOfGroup extends Prop {
+  /** @type {boolean} */
+  value = false;
+
+  constructor(value = false, options = {}) {
+    super(options);
+    this.value = value;
+  }
+
+  input(options = {}) {
+    options = { ...this.options, ...options };
+    return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
+      <span>${this.label}</span>
+      <input
+        type="checkbox"
+        .checked=${!!this.value}
+        id=${this.id}
+        name=${options.group}
+        onclick=${() => {
+          this.value = true;
+          this.clearPeers(options.group);
+          this.update();
+        }}
+        title=${this.options.title}
+      />
+    </label>`;
+  }
+
+  /** @param {any} value */
+  set(value) {
+    if (typeof value === "boolean") {
+      this.value = value;
+    } else if (typeof value === "string") {
+      this.value = value === "true";
+    }
+  }
+
+  /**
+   * Clear the value of peer radio buttons with the same name
+   * @param {string} name
+   */
+  clearPeers(name) {
+    const peers = this.container.parent.children;
+    for (const peer of peers) {
+      const props = peer.propsAsProps;
+      for (const propName in props) {
+        const prop = props[propName];
+        if (
+          prop instanceof OneOfGroup &&
+          prop.options.group == name &&
+          prop != this
+        ) {
+          prop.set(false);
+        }
+      }
     }
   }
 }
@@ -262,6 +364,7 @@ export class Expression extends Prop {
       <input
         type="text"
         .value=${this.value}
+        id=${this.id}
         onchange=${({ target }) => {
           this.value = target.value;
           this.compiled = compileExpression(this.value);
@@ -306,6 +409,7 @@ export class TextArea extends Prop {
       <textarea
         type="text"
         .value=${this.value}
+        id=${this.id}
         onchange=${({ target }) => {
           this.value = target.value;
           this.update();
@@ -330,6 +434,7 @@ export class Color extends Prop {
       <span>${this.label}</span>
       <color-input
         .value=${this.value}
+        id=${this.id}
         onchange=${(/** @type {InputEventWithTarget} */ event) => {
           this.value = event.target.value;
           this.update();
@@ -339,27 +444,28 @@ export class Color extends Prop {
   }
 }
 
-css`
-  label {
-    display: inline-block;
+export class Voice extends Prop {
+  value = "";
+
+  constructor(value = "", options = {}) {
+    super(options);
+    this.value = value;
   }
-  label[hiddenLabel] span {
-    clip: rect(0 0 0 0);
-    clip-path: inset(50%);
-    height: 1px;
-    overflow: hidden;
-    position: absolute;
-    white-space: nowrap;
-    width: 1px;
+
+  input() {
+    return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
+      <span>${this.label}</span>
+      <select
+        is="select-voice"
+        .value=${this.value}
+        id=${this.id}
+        onchange=${(/** @type {InputEventWithTarget} */ event) => {
+          this.value = event.target.value;
+          this.update();
+        }}
+      >
+        <option value="">Default</option>
+      </select></label
+    >`;
   }
-  select:required:invalid {
-    color: gray;
-    border-color: red;
-  }
-  option[value=""][disabled] {
-    display: none;
-  }
-  option {
-    color: black;
-  }
-`;
+}

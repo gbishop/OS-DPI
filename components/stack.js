@@ -1,17 +1,22 @@
-import { Base, componentMap } from "./base";
+import { TreeBase } from "./treebase";
+import * as Props from "./props";
 import { html } from "uhtml";
 import { styleString } from "./style";
 
-export class Stack extends Base {
-  static defaultProps = { direction: "column", background: "", scale: "1" };
-  static allowedChildren = [
-    "stack",
-    "grid",
-    "display",
-    "radio",
-    "tab control",
-    "vsd",
-    "button",
+export class Stack extends TreeBase {
+  direction = new Props.Select(["row", "column"], { defaultValue: "column" });
+  background = new Props.Color("");
+  scale = new Props.Float(1);
+
+  allowedChildren = [
+    "Stack",
+    "Gap",
+    "Grid",
+    "Display",
+    "Radio",
+    "TabControl",
+    "Vsd",
+    "Button",
   ];
 
   template() {
@@ -19,11 +24,11 @@ export class Stack extends Base {
       backgroundColor: this.props.background,
     });
     /** return the scale of the child making sure it isn't zero or undefined.
-     * @param {Base} child
+     * @param {TreeBase} child
      * @returns {number}
      */
     function getScale(child) {
-      const SCALE_MIN = 0.1;
+      const SCALE_MIN = 0.0;
       let scale = +child.props.scale;
       if (!scale || scale < SCALE_MIN) {
         scale = SCALE_MIN;
@@ -53,9 +58,5 @@ export class Stack extends Base {
       )}
     </div>`;
   }
-
-  get name() {
-    return this.props.name || this.props.direction;
-  }
 }
-componentMap.addMap("stack", Stack);
+TreeBase.register(Stack, "Stack");

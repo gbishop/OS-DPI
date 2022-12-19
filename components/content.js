@@ -1,15 +1,18 @@
 import { html, render } from "uhtml";
-import { Base } from "./base";
-import db from "../db";
-import { Data } from "../data";
+import { TreeBase } from "./treebase";
+import { DesignerPanel } from "./designer";
+import * as Props from "./props";
+import db from "app/db";
+import { Data } from "app/data";
 import { fileOpen } from "browser-fs-access";
-import * as XLSX from "xlsx";
-import css from "ustyler";
+// import { read, writeFileXLSX, utils } from "xlsx";
+import "css/content.css";
 import pleaseWait from "./wait";
-import Globals from "../globals";
+import Globals from "app/globals";
 
 /** @param {Blob} blob */
-async function readSheetFromBlob(blob) {
+export async function readSheetFromBlob(blob) {
+  const XLSX = await import("xlsx");
   const data = await blob.arrayBuffer();
   const workbook = XLSX.read(data, { codepage: 65001 });
   /** @type {Rows} */
@@ -85,8 +88,9 @@ async function readSheetFromBlob(blob) {
  * @param {Row[]} rows
  * @param {string} type
  */
-function saveContent(name, rows, type) {
+export async function saveContent(name, rows, type) {
   if (!type) return;
+  const XLSX = await import("xlsx");
   const sheetNames = new Set(rows.map((row) => row.sheetName || "sheet1"));
   const workbook = XLSX.utils.book_new();
   for (const sheetName of sheetNames) {
@@ -102,167 +106,25 @@ function saveContent(name, rows, type) {
     const worksheet = XLSX.utils.json_to_sheet(sheetRows);
     XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
   }
-  XLSX.writeFile(workbook, `${name}.${type}`);
+  XLSX.writeFileXLSX(workbook, `${name}.${type}`);
 }
 
-export class Content extends Base {
+export class Content extends DesignerPanel {
+  name = new Props.String("Content");
+
   init() {
     this.sheetHandle = null;
     this.sheetMessage = "";
   }
-  template() {
+  settings() {
     const data = Globals.data;
-    return html`<div class="content">
+    return html`<div class="content" id=${this.id}>
       <h1>Content</h1>
       <p>
         ${data.allrows.length} rows with these fields:
         ${String(data.allFields).replaceAll(",", ", ")}
       </p>
-      <h2>Load content from spreadsheets</h2>
-      <form
-        onsubmit=${(/** @type {SubmitEvent} */ e) => {
-          e.preventDefault();
-          // clear messages
-          const form = e.target;
-          /** @type {string} */
-          let URL = form[0].value;
-          if (URL.length === 0) return;
-          sessionStorage.setItem("remoteSheetUrl", URL);
-          // check for a Google Sheets URL
-          if (
-            URL.match(/https:\/\/docs.google.com\/spreadsheets\/.*\/edit.*/)
-          ) {
-            // hack Google Sheets URL to use the gviz interface
-            URL = URL.replace(/\/edit.*$/, "/gviz/tq?tqx=out:csv&tq=SELECT *");
-          }
-          // do this part asynchronously
-          pleaseWait(
-            (async () => {
-              const response = await fetch(URL);
-              if (!response.ok)
-                throw new Error(`Fetching the URL failed: ${response.status}`);
-              const blob = await response.blob();
-              var result = await readSheetFromBlob(blob);
-              await db.write("content", result);
-              Globals.data = new Data(result);
-              Globals.state.update();
-            })()
-          );
-        }}
-      >
-        <label for="remoteFileInput">URL: </label>
-        <input
-          id="remoteFileInput"
-          name="url"
-          type="url"
-          value=${sessionStorage.getItem("remoteSheetUrl")}
-          placeholder="Enter a URL"
-        />
-        <input type="submit" value="Load remote sheet" />
-      </form>
-      <br />
-      <button
-        onclick=${async () => {
-          this.sheetMessage = "";
-          try {
-            const blob = await fileOpen({
-              extensions: [".csv", ".tsv", ".ods", ".xls", ".xlsx"],
-              description: "Spreadsheets",
-              id: "os-dpi",
-            });
-            if (blob) {
-              this.sheetHandle = blob.handle;
-              const result = await pleaseWait(readSheetFromBlob(blob));
-              await db.write("content", result);
-              this.sheetMessage = `Loaded ${blob.name}`;
-              Globals.data = new Data(result);
-              Globals.state.update();
-            }
-          } catch (e) {
-            this.sheetHandle = null;
-          }
-        }}
-      >
-        Load local sheet
-      </button>
-      <button
-        ?disabled=${!this.sheetHandle}
-        onclick=${async () => {
-          // @ts-ignore
-          const blob = await this.sheetHandle.getFile();
-          const result = await pleaseWait(readSheetFromBlob(blob));
-          await db.write("content", result);
-          this.sheetMessage = `Reloaded ${blob.name}`;
-          Globals.data = new Data(result);
-          Globals.state.update();
-        }}
-      >
-        Reload local sheet
-      </button>
-      <span>${this.sheetMessage}</span>
-      <h2>Save content as a spreadsheet</h2>
-      <label for="sheetType">Spreadsheet type</label>
-      <select
-        id="sheetType"
-        onchange=${(e) => {
-          saveContent(db.designName, data.allrows, e.target.value);
-        }}
-      >
-        <option selected value="">Choose your format</option>
-        <option value="xlsx">Excel .xlsx</option>
-        <option value="xls">Excel .xls</option>
-        <option value="ods">ODF Spreadsheet .ods</option>
-        <option value="csv">Comma Separated Values .csv</option>
-      </select>
-
-      <h2>Load audio clips</h2>
-      <label for="audio">Upload audio clips: </label>
-      <input
-        id="audio"
-        type="file"
-        multiple
-        accept="audio/*"
-        onchange=${async (/** @type {InputEventWithTarget} */ event) => {
-          const input = /** @type {HTMLInputElement} */ (event.currentTarget);
-          if (!input || !input.files || !input.files.length) {
-            return;
-          }
-          for (const file of input.files) {
-            if (file && file.type.startsWith("audio/")) {
-              await db.addMedia(file, file.name);
-            }
-          }
-          Globals.state.update();
-        }}
-      />
-
-      <h2>Load images</h2>
-      <label for="images">Upload images: </label>
-      <input
-        id="images"
-        type="file"
-        multiple
-        accept="image/*"
-        onchange=${async (/** @type {InputEventWithTarget} */ event) => {
-          const input = /** @type {HTMLInputElement} */ (event.currentTarget);
-          if (!input || !input.files || !input.files.length) {
-            return;
-          }
-          for (const file of input.files) {
-            if (file && file.type.startsWith("image/")) {
-              await db.addMedia(file, file.name);
-              // ask any live images with this name to refresh
-              for (const img of document.querySelectorAll(
-                `img[dbsrc="${file.name}"]`
-              )) {
-                /** @type {ImgDb} */ (img).refresh();
-              }
-            }
-          }
-          Globals.state.update();
-        }}
-      />
-      <h2>Currently loaded media files</h2>
+      <h2>Media files</h2>
       <ol style="column-count: 3">
         ${(/** @type {HTMLElement} */ comment) => {
           /* I'm experimenting here. db.listImages() is asynchronous but I don't want
@@ -283,23 +145,4 @@ export class Content extends Base {
     </div>`;
   }
 }
-
-css`
-  .content form {
-    display: flex;
-    width: 100%;
-    gap: 0.5em;
-  }
-
-  .content form input[type="url"] {
-    flex: 1;
-    max-width: 60%;
-  }
-
-  .content div#messages {
-    color: red;
-    font-size: 2em;
-    padding-left: 1em;
-    padding-top: 1em;
-  }
-`;
+TreeBase.register(Content, "Content");

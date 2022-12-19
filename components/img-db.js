@@ -1,4 +1,4 @@
-import db from "../db";
+import db from "app/db";
 
 /**
  * An image that is extracted from the database

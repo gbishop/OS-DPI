@@ -1,11 +1,9 @@
-import { TreeBase } from "../../treebase";
-import { Handler, HandlerCondition } from "./handler";
-import { HandlerResponse } from "./responses";
-import * as Props from "../../props";
+import { TreeBase } from "components/treebase";
+import { Handler } from "./index";
+import * as Props from "components/props";
 import { html } from "uhtml";
 import { EventWrap, ButtonWrap } from "../index";
 import * as RxJs from "rxjs";
-import { log } from "../../../log";
 
 const pointerSignals = new Map([
   ["pointerdown", "Pointer down"],
@@ -15,35 +13,28 @@ const pointerSignals = new Map([
 ]);
 
 export class PointerHandler extends Handler {
+  allowedChildren = ["HandlerCondition", "HandlerResponse"];
+  
   Signal = new Props.Select(pointerSignals);
   Debounce = new Props.Float(0.1);
   SkipOnRedraw = new Props.Boolean(false);
 
-  template() {
+  settings() {
     const { conditions, responses, Signal, Debounce } = this;
     const skip =
-      this.Signal.value == "pointerover" ? this.SkipOnRedraw.input() : html``;
+      this.Signal.value == "pointerover"
+        ? this.SkipOnRedraw.input()
+        : html`<!--empty-->`;
     return html`
       <fieldset class="Handler">
         <legend>Pointer Handler</legend>
         ${Signal.input()} ${Debounce.input()} ${skip}
-        ${this.deleteButton({ title: "Delete this handler" })}
         <fieldset class="Conditions">
-          <legend>
-            Conditions
-            ${this.addChildButton("+", HandlerCondition, {
-              title: "Add a condition",
-            })}
-          </legend>
+          <legend>Conditions</legend>
           ${this.unorderedChildren(conditions)}
         </fieldset>
         <fieldset class="Responses">
-          <legend>
-            Responses
-            ${this.addChildButton("+", HandlerResponse, {
-              title: "Add a response",
-            })}
-          </legend>
+          <legend>Responses</legend>
           ${this.unorderedChildren(responses)}
         </fieldset>
       </fieldset>
@@ -191,4 +182,4 @@ export class PointerHandler extends Handler {
       .subscribe((e) => this.respond(e));
   }
 }
-TreeBase.register(PointerHandler);
+TreeBase.register(PointerHandler, "PointerHandler");

@@ -1,20 +1,12 @@
-import db from "../../../db";
 import { html } from "uhtml";
-import css from "ustyler";
-import Globals from "../../../globals";
-import * as Props from "../../props";
-import { TreeBase } from "../../treebase";
-import { Base } from "../../base";
-import { ButtonWrap, AccessChanged } from "../index";
+import "css/pattern.css";
+import Globals from "app/globals";
+import * as Props from "components/props";
+import { TreeBase } from "components/treebase";
+import { ButtonWrap } from "../index";
 import defaultPatterns from "./defaultPatterns";
-
-export class AccessPattern extends Base {
-  template() {
-    return html`<div class="access-pattern treebase">
-      ${Globals.patterns.template()}
-    </div>`;
-  }
-}
+import { DesignerPanel } from "components/designer";
+import { toggleIndicator } from "app/components/helpers";
 
 /** @typedef {ReturnType<ButtonWrap<Node>>} Button */
 
@@ -36,7 +28,7 @@ export class Group {
   }
 
   get length() {
-    return this.members.length * this.groupProps.Cycles.value;
+    return this.members.length * +this.groupProps.Cycles;
   }
 
   /** @param {Number} index */
@@ -51,7 +43,7 @@ export class Group {
   cue() {
     // console.log("cue group", this.members);
     for (const member of this.members) {
-      member.cue(this.groupProps.Cue.value);
+      member.cue(this.groupProps.Cue);
     }
   }
 }
@@ -69,51 +61,37 @@ class PatternBase extends TreeBase {
   }
 }
 
-export class PatternList extends TreeBase {
+export class PatternList extends DesignerPanel {
+  name = new Props.String("Patterns");
+  allowDelete = false;
+
+  allowedChildren = ["PatternManager"];
   /** @type {PatternManager[]} */
   children = [];
 
-  template() {
-    return html`<div class="PatternList">
-      ${this.addChildButton("+Pattern", PatternManager, {
-        title: "Add a Pattern",
-      })}
+  static tableName = "pattern";
+  static defaultValue = defaultPatterns;
+
+  settings() {
+    return html`<div class="PatternList" id=${this.id}>
       ${this.unorderedChildren()}
     </div>`;
   }
 
-  /** @param {string} key
+  /**
    * @returns {PatternManager}
    */
-  byKey(key) {
+  get activePattern() {
     return (
-      this.children.find((child) => child.Key.value == key) || this.children[0]
+      this.children.find((child) => child.Active.value) || this.children[0]
     );
-  }
-
-  get patternMap() {
-    return new Map(
-      this.children.map((child) => [child.Key.value, child.Name.value])
-    );
-  }
-
-  /**
-* Load the PatternManager from the db
-  @returns {Promise<PatternList>}
-*/
-  static async load() {
-    const pattern = await db.read("pattern", defaultPatterns);
-    return /** @type {PatternList} */ (PatternList.fromObject(pattern));
-  }
-
-  onUpdate() {
-    db.write("pattern", this.toObject());
-    Globals.state.update();
   }
 }
-TreeBase.register(PatternList);
+TreeBase.register(PatternList, "PatternList");
 
 export class PatternManager extends PatternBase {
+  allowedChildren = ["PatternSelector", "PatternGroup"];
+
   /** @type {Group} */
   targets;
   /**
@@ -133,21 +111,41 @@ export class PatternManager extends PatternBase {
   Cue = new Props.Select();
   Name = new Props.String("a pattern");
   Key = new Props.UID();
+  Active = new Props.OneOfGroup(false, { name: "pattern-active" });
 
-  template() {
-    const { Cycles, Cue, Name } = this;
+  // settings() {
+  //   const { Cycles, Cue, Name } = this;
+  //   return html`
+  //     <fieldset class=${this.className}>
+  //       <legend>${Name.value}</legend>
+  //       ${Name.input()} ${Cycles.input()} ${Cue.input(Globals.cues.cueMap)}
+  //       <details>
+  //         <summary>Details</summary>
+  //         ${this.orderedChildren()}
+  //       </details>
+  //     </fieldset>
+  //   `;
+  // }
+
+  settingsSummary() {
+    const { Name, Active } = this;
+    return html`<h3>
+      ${Name.value} ${toggleIndicator(Active.value, "Active")}
+    </h3>`;
+  }
+
+  settingsDetails() {
+    const { Cycles, Cue, Name, Active } = this;
     return html`
-      <fieldset class=${this.className}>
-        <legend>${Name.value}</legend>
-        ${Name.input()} ${Cycles.input()} ${Cue.input(Globals.cues.cueMap)}
-        <details>
-          <summary>Details</summary>
-          ${this.orderedChildren()}
-          ${this.addChildButton("+Selector", PatternSelector)}
-          ${this.addChildButton("+Group", PatternGroup)}
-        </details>
-      </fieldset>
+      <div>
+        ${Name.input()} ${Active.input()} ${Cycles.input()}
+        ${Cue.input(Globals.cues.cueMap)} ${this.orderedChildren()}
+      </div>
     `;
+  }
+
+  settingsChildren() {
+    return html`<!--empty-->`;
   }
 
   /**
@@ -194,17 +192,9 @@ export class PatternManager extends PatternBase {
       members = buttons;
     }
     this.targets = new Group(members, this.props);
-    this.start();
-  }
-
-  start() {
-    if (this.Name.value == "None") return;
-    // if (AccessChanged || !this.stack.length) {
-    //   console.log("clear stack", AccessChanged);
-    //   this.stack = [{ group: this.targets, index: -1 }];
-    // }
     this.stack = [{ group: this.targets, index: -1 }];
     this.cue();
+    // console.log("refresh", this);
   }
 
   /**
@@ -219,41 +209,41 @@ export class PatternManager extends PatternBase {
 
   next() {
     const top = this.stack[0];
-    console.log("next", { top });
+    // console.log("next", { top }, this);
     if (top.index < top.group.length - 1) {
       top.index++;
     } else if (this.stack.length > 1) {
       this.stack.shift();
-      console.log("stack pop");
+      // console.log("stack pop");
     } else if (this.stack.length == 1) {
       top.index = 0;
     } else {
       // stack is empty ignore
-      console.log("empty stack?");
+      // console.log("empty stack?");
     }
     this.cue();
   }
 
   activate() {
-    console.log("activate");
+    // console.log("activate");
     let current = this.current;
     if (!current) return;
     if (current instanceof Group) {
-      console.log("activate group", current, this.stack);
+      // console.log("activate group", current, this.stack);
       while (current.length == 1 && current.members[0] instanceof Group) {
         current = current.members[0];
       }
       this.stack.unshift({ group: current, index: 0 });
-      console.log("push stack", this.current, this.stack);
+      // console.log("push stack", this.current, this.stack);
     } else {
       const name = current.access.ComponentName;
-      console.log("activate button", current);
+      // console.log("activate button", current);
       if ("onClick" in current.access) {
-        console.log("calling onClick");
+        // console.log("calling onClick");
         current.access.onClick();
       } else {
-        console.log("applyRules", name, current.access);
-        Globals.rules.applyRules(name, "press", current.access);
+        // console.log("applyRules", name, current.access);
+        Globals.actions.applyRules(name, "press", current.access);
       }
     }
     this.cue();
@@ -269,29 +259,28 @@ export class PatternManager extends PatternBase {
   cue() {
     this.clearCue();
     const current = this.current;
-    console.log("cue current", current);
+    // console.log("cue current", current);
     if (!current) return;
     this.cued = true;
     current.cue(this.Cue.value);
   }
 }
-PatternBase.register(PatternManager);
+PatternBase.register(PatternManager, "PatternManager");
 
-class PatternGroup extends PatternBase {
+export class PatternGroup extends PatternBase {
   // props
   Name = new Props.String("");
   Cycles = new Props.Integer(2, { min: 1 });
   Cue = new Props.Select();
 
-  template() {
+  allowedChildren = ["PatternGroup", "PatternSelector"];
+
+  settings() {
     const { Name, Cycles, Cue } = this;
     return html`<fieldset class=${this.className}>
       <legend>Group: ${Name.value}</legend>
       ${Name.input()} ${Cycles.input()} ${Cue.input(Globals.cues.cueMap)}
       ${this.orderedChildren()}
-      ${this.addChildButton("+Selector", PatternSelector)}
-      ${this.addChildButton("+Group", PatternGroup)}
-      ${this.movementButtons("Group")}
     </fieldset>`;
   }
 
@@ -316,16 +305,14 @@ class PatternGroup extends PatternBase {
     else return [];
   }
 }
-PatternBase.register(PatternGroup);
+PatternBase.register(PatternGroup, "PatternGroup");
 
 class PatternSelector extends PatternBase {
-  template() {
+  allowedChildren = ["Filter", "GroupBy", "OrderBy"];
+  settings() {
     return html`<fieldset class=${this.className}>
       <legend>Selector</legend>
-      ${this.unorderedChildren()} ${this.addChildButton("+Filter", Filter)}
-      ${this.addChildButton("+Order by", OrderBy)}
-      ${this.addChildButton("+Group by", GroupBy)}
-      ${this.movementButtons("selector")}
+      ${this.unorderedChildren()}
     </fieldset>`;
   }
 
@@ -342,15 +329,13 @@ class PatternSelector extends PatternBase {
     );
   }
 }
-PatternBase.register(PatternSelector);
+PatternBase.register(PatternSelector, "PatternSelector");
 
 class Filter extends PatternBase {
   Filter = new Props.Expression();
-  template() {
+  settings() {
     const { Filter } = this;
-    return html`<div class=${this.className}>
-      ${Filter.input()}${this.deleteButton({ title: "Delete this filter" })}
-    </div>`;
+    return html`<div class=${this.className}>${Filter.input()}</div>`;
   }
   /**
    * Select buttons from the input
@@ -373,7 +358,7 @@ class Filter extends PatternBase {
     }
   }
 }
-PatternBase.register(Filter);
+PatternBase.register(Filter, "Filter");
 
 // allow the sort to handle numbers reasonably
 const comparator = new Intl.Collator(undefined, {
@@ -382,11 +367,9 @@ const comparator = new Intl.Collator(undefined, {
 
 class OrderBy extends PatternBase {
   OrderBy = new Props.Field();
-  template() {
+  settings() {
     const { OrderBy } = this;
-    return html`<div class=${this.className}>
-      ${OrderBy.input()}${this.deleteButton({ title: "Delete this order by" })}
-    </div>`;
+    return html`<div class=${this.className}>${OrderBy.input()}</div>`;
   }
   /**
    * Select buttons from the input
@@ -410,19 +393,18 @@ class OrderBy extends PatternBase {
     }
   }
 }
-PatternBase.register(OrderBy);
+PatternBase.register(OrderBy, "OrderBy");
 
 class GroupBy extends PatternBase {
   GroupBy = new Props.Field();
   Name = new Props.String("");
   Cue = new Props.Select();
   Cycles = new Props.Integer(2);
-  template() {
+  settings() {
     const { GroupBy, Name, Cue, Cycles } = this;
     return html`<div class=${this.className}>
-      ${GroupBy.input()} ${Name.input()}
-      ${this.deleteButton({ title: "Delete this Group By" })}
-      ${Cue.input(Globals.cues.cueMap)} ${Cycles.input()}
+      ${GroupBy.input()} ${Name.input()} ${Cue.input(Globals.cues.cueMap)}
+      ${Cycles.input()}
     </div>`;
   }
   /**
@@ -441,7 +423,7 @@ class GroupBy extends PatternBase {
         .filter((target) => target.length > 0);
     } else {
       const { GroupBy, ...props } = this.props;
-      const key = GroupBy.value.slice(1);
+      const key = GroupBy.slice(1);
       const result = [];
       const groupMap = new Map();
       for (const button of /** @type {Button[]} */ (input)) {
@@ -466,80 +448,4 @@ class GroupBy extends PatternBase {
     }
   }
 }
-PatternBase.register(GroupBy);
-
-css`
-  div.access-pattern {
-    padding-left: 12px;
-    padding-top: 12px;
-  }
-  .access-pattern .GroupBy details {
-    display: inline-block;
-    vertical-align: middle;
-  }
-  .access-pattern .GroupBy details[open] {
-    display: inline-block;
-    border: ridge;
-    padding: 0.5em;
-  }
-  .access-pattern .GroupBy details summary {
-    list-style: none;
-    cursor: pointer;
-    width: 1em;
-    height: 1em;
-    border: outset;
-    vertical-align: middle;
-  }
-  .access-pattern .GroupBy details[open] summary {
-    margin-left: calc(100% - 1em);
-    margin-bottom: 0.2em;
-    margin-top: -0.2em;
-  }
-
-  button[cue="group"] {
-    position: relative;
-    border-color: yellow;
-  }
-  button[cue="group"]:after {
-    content: "";
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: yellow;
-    animation: fadein var(--dwell) 1;
-    opacity: 0.3;
-    z-index: 0;
-  }
-  @keyframes fadein {
-    from {
-      background-color: yellow;
-      border-color: yellow;
-    }
-    to {
-      background-color: red;
-      border-color: red;
-    }
-  }
-  button[cue="button"] {
-    position: relative;
-  }
-  button[cue="button"]:after {
-    content: "";
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: url("./target.png");
-    background-size: contain;
-    background-position: center;
-    background-color: rgba(255, 100, 100, 0.5);
-    background-repeat: no-repeat;
-    opacity: 0.4;
-    z-index: 0;
-  }
-`;
+PatternBase.register(GroupBy, "GroupBy");

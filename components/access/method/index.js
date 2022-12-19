@@ -1,39 +1,34 @@
 import { html } from "uhtml";
-import css from "ustyler";
-import { Base } from "../../base";
-import { TreeBase } from "../../treebase";
-import * as Props from "../../props";
-import Globals from "../../../globals";
-import db from "../../../db";
+import { TreeBase, TreeBaseSwitchable } from "components/treebase";
+import * as Props from "components/props";
+import Globals from "app/globals";
 import * as RxJs from "rxjs";
-import { Handler } from "./handler";
-import { KeyHandler } from "./keyHandler";
-import { PointerHandler } from "./pointerHandler";
-import { TimerHandler } from "./timerHandler";
 import { EventWrap } from "../index";
+// make sure the classes are registered
 import defaultMethods from "./defaultMethods";
-import { log } from "../../../log";
+import { log } from "app/log";
+import { DesignerPanel } from "components/designer";
+import "css/method.css";
+import { toggleIndicator } from "app/components/helpers";
 
-export class AccessMethod extends Base {
-  template() {
-    return html`<div class="access-method treebase">
-      ${Globals.method.template()}
-    </div>`;
-  }
-}
+export class MethodChooser extends DesignerPanel {
+  name = new Props.String("Methods");
 
-export class MethodChooser extends TreeBase {
+  allowedChildren = ["Method"];
   /** @type {Method[]} */
   children = [];
+
+  allowDelete = false;
 
   // allow tearing down handlers when changing configurations
   stop$ = new RxJs.Subject();
 
+  static tableName = "method";
+  static defaultValue = defaultMethods;
+
   onUpdate() {
-    console.log("update method", this);
-    db.write("method", this.toObject());
+    super.onUpdate();
     this.configure();
-    Globals.state.update();
   }
 
   configure() {
@@ -44,23 +39,9 @@ export class MethodChooser extends TreeBase {
     }
   }
 
-  /**
-* Load the MethodChooser from the db
-  @returns {Promise<MethodChooser>}
-*/
-  static async load() {
-    const method = await db.read("method", defaultMethods);
-    const result = /** @type {MethodChooser} */ (this.fromObject(method));
-    result.configure();
-    return result;
-  }
-
-  template() {
-    return html`<div class="MethodChooser">
-      ${this.addChildButton("Add Method", Method, {
-        title: "Create a new access method",
-      })}
-      ${this.children.map((child) => child.template())}
+  settings() {
+    return html`<div class="MethodChooser" id=${this.id}>
+      ${this.unorderedChildren()}
     </div> `;
   }
 
@@ -70,13 +51,14 @@ export class MethodChooser extends TreeBase {
       .forEach((child) => child.refresh());
   }
 }
-TreeBase.register(MethodChooser);
+TreeBase.register(MethodChooser, "MethodChooser");
 
 export class Method extends TreeBase {
   Name = new Props.String("New method");
   Key = new Props.UID();
   Active = new Props.Boolean(false);
-  Pattern = new Props.Select();
+
+  allowedChildren = ["Timer", "KeyHandler", "PointerHandler", "TimerHandler"];
 
   open = false;
 
@@ -87,7 +69,7 @@ export class Method extends TreeBase {
    * @returns {import('../pattern/index.js').PatternManager}
    */
   get pattern() {
-    const r = Globals.patterns.byKey(this.Pattern.value);
+    const r = Globals.patterns.activePattern;
     return r;
   }
 
@@ -130,42 +112,33 @@ export class Method extends TreeBase {
     return this.filterChildren(Handler);
   }
 
-  template() {
-    const { Name, Active, Pattern } = this;
+  settingsSummary() {
+    const { Name, Active } = this;
+    return html`<h3>
+      ${Name.value} ${toggleIndicator(Active.value, "Active")}
+    </h3>`;
+  }
+
+  settingsDetails() {
+    const { Name, Active } = this;
     const timers = [...this.timers.values()];
-    return html`<fieldset class="Method">
+    return html`<div>
       ${Name.input()} ${Active.input()}
-      ${Pattern.input(Globals.patterns.patternMap)}
-      ${this.deleteButton({ title: "Delete this method" })}
-      <details>
-        <summary>Details</summary>
-        ${timers.length > 0
-          ? html`<fieldset>
-              <legend>
-                Timers
-                ${this.addChildButton("+", Timer, { title: "Add a timer" })}
-              </legend>
-              ${this.unorderedChildren(timers)}
-            </fieldset>`
-          : html`Timers
-            ${this.addChildButton("+", Timer, { title: "Add a timer" })}`}
-        <fieldset>
-          <legend>
-            Handlers
-            ${this.addChildButton("+Key", KeyHandler, {
-              title: "Add a key handler",
-            })}
-            ${this.addChildButton("+Pointer", PointerHandler, {
-              title: "Add a pointer handler",
-            })}
-            ${this.addChildButton("+Timer", TimerHandler, {
-              title: "Add a timer handler",
-            })}
-          </legend>
-          ${this.orderedChildren(this.handlers)}
-        </fieldset>
-      </details>
-    </fieldset> `;
+      ${timers.length > 0
+        ? html`<fieldset>
+            <legend>Timers</legend>
+            ${this.unorderedChildren(timers)}
+          </fieldset>`
+        : html`<!--empty-->`}
+      <fieldset>
+        <legend>Handlers</legend>
+        ${this.orderedChildren(this.handlers)}
+      </fieldset>
+    </div>`;
+  }
+
+  settingsChildren() {
+    return html`<!--empty-->`;
   }
 
   /** Configure the rxjs pipelines to implement this method */
@@ -184,7 +157,7 @@ export class Method extends TreeBase {
     this.pattern.refresh();
   }
 }
-TreeBase.register(Method);
+TreeBase.register(Method, "Method");
 
 class Timer extends TreeBase {
   Interval = new Props.Float(0.5, { hiddenLabel: true });
@@ -194,9 +167,8 @@ class Timer extends TreeBase {
   /** @type {RxJs.Subject<WrappedEvent>} */
   subject$ = new RxJs.Subject();
 
-  template() {
+  settings() {
     return html`${this.Name.input()} ${this.Interval.input()}
-      ${this.deleteButton()}
       <style>
         ${`:root { --${this.Key.value}: ${this.Interval.value}s}`}
       </style> `;
@@ -220,10 +192,108 @@ class Timer extends TreeBase {
     this.subject$.next(event);
   }
 }
-TreeBase.register(Timer);
+TreeBase.register(Timer, "Timer");
 
-css`
-  details.Method > *:not(summary) {
-    margin-left: 2em;
+/** Handler is a base class for all event handlers */
+export class Handler extends TreeBase {
+  /** @type {(HandlerCondition | HandlerKeyCondition | HandlerResponse)[]} */
+  children = [];
+
+  get conditions() {
+    return this.filterChildren(HandlerCondition);
   }
-`;
+
+  get keys() {
+    return this.filterChildren(HandlerKeyCondition);
+  }
+
+  get responses() {
+    return this.filterChildren(HandlerResponse);
+  }
+
+  /**
+   * @param {RxJs.Subject} _stop$
+   * */
+  configure(_stop$) {
+    throw new TypeError("Must override configure");
+  }
+
+  /** @param {WrappedEvent} event */
+  respond(event) {
+    // console.log("handler respond", event.type, this.responses);
+    const method = this.nearestParent(Method);
+    method.cancelTimers();
+    for (const response of this.responses) {
+      response.respond(event);
+    }
+  }
+}
+
+export class HandlerCondition extends TreeBase {
+  Condition = new Props.Expression("", { hiddenLabel: true });
+
+  settings() {
+    const { Condition } = this;
+    return html` <div class="Condition">${Condition.input()}</div> `;
+  }
+
+  /** @param {Object} context */
+  eval(context) {
+    return this.Condition.eval(context);
+  }
+}
+TreeBase.register(HandlerCondition, "HandlerCondition");
+
+const allKeys = new Map([
+  [" ", "Space"],
+  ["Enter", "Enter"],
+  ["ArrowLeft", "Left Arrow"],
+  ["ArrowRight", "Right Arrow"],
+  ["ArrowUp", "Up Arrow"],
+  ["ArrowDown", "Down Arrow"],
+]);
+
+export class HandlerKeyCondition extends TreeBase {
+  Key = new Props.Select(allKeys, { hiddenLabel: true });
+
+  settings() {
+    const { Key } = this;
+    return html` <div class="Key">${Key.input()}</div> `;
+  }
+}
+TreeBase.register(HandlerKeyCondition, "HandlerKeyCondition");
+
+const ResponderTypeMap = new Map([
+  ["HandlerResponse", "none"],
+  ["ResponderCue", "cue"],
+  ["ResponderActivate", "activate"],
+  ["ResponderClearCue", "clear cue"],
+  ["ResponderEmit", "emit"],
+  ["ResponderNext", "next"],
+  ["ResponderStartTimer", "start timer"],
+]);
+
+export class HandlerResponse extends TreeBaseSwitchable {
+  Response = new Props.TypeSelect(ResponderTypeMap, { hiddenLabel: true });
+
+  /** @param {Event & { access: Object }} event */
+  respond(event) {
+    console.log("no response for", event);
+  }
+
+  settings() {
+    return html`
+      <div class="Response">${this.Response.input()} ${this.subTemplate()}</div>
+    `;
+  }
+
+  get pattern() {
+    const method = this.nearestParent(Method);
+    return method.pattern;
+  }
+
+  subTemplate() {
+    return html`<!--empty-->`;
+  }
+}
+TreeBase.register(HandlerResponse, "HandlerResponse");

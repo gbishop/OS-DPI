@@ -1,86 +1,121 @@
 import { html } from "uhtml";
-import { Prop } from "./props";
-import * as icons from "./icons";
-import css from "ustyler";
+import * as Props from "./props";
+import "css/treebase.css";
+import { fromCamelCase } from "./helpers";
+import WeakValue from "weak-value";
 
 export class TreeBase {
   /** @type {TreeBase[]} */
   children = [];
   /** @type {TreeBase} */
   parent = null;
+  /** @type {string[]} */
+  allowedChildren = [];
+  allowDelete = true;
 
-  /** A mapping from the class name to the class */
-  static classMap = new Map();
-  /** @param {typeof TreeBase} cls */
-  static register(cls) {
-    this.classMap.set(cls.name, cls);
+  // values here are persisted in the db but not in exports
+  persisted = {
+    // remember the state of the details element below
+    settingsDetailsOpen: false,
+  };
+
+  // every component has a unique id
+  static treeBaseCounter = 0;
+  id = `TreeBase-${TreeBase.treeBaseCounter++}`;
+
+  // map from id to the component
+  static idMap = new WeakValue();
+
+  /** @param {string} id
+   * @returns {TreeBase} */
+  static componentFromId(id) {
+    // strip off any added bits of the id
+    const match = id.match(/TreeBase-\d+/);
+    if (match) {
+      return this.idMap.get(match[0]);
+    }
+    return null;
+  }
+
+  designer = {};
+
+  /** A mapping from the external class name to the class */
+  static nameToClass = new Map();
+  /** A mapping from the class to the external class name */
+  static classToName = new Map();
+
+  /** @param {typeof TreeBase} cls
+   * @param {string} externalName
+   * */
+  static register(cls, externalName) {
+    this.nameToClass.set(externalName, cls);
+    this.classToName.set(cls, externalName);
   }
 
   get className() {
-    return this.constructor.name;
+    return TreeBase.classToName.get(this.constructor);
   }
 
   /**
-   * Extract the class fields that are Props
-   * @returns {Object<string, Prop>}
+   * Extract the class fields that are Props and return their values as an Object
+   * @returns {Object<string, any>}
    */
   get props() {
     return Object.fromEntries(
-      Object.entries(this).filter(([_, prop]) => prop instanceof Prop)
+      Object.entries(this)
+        .filter(([_, prop]) => prop instanceof Props.Prop)
+        .map(([name, prop]) => [name, prop.value])
     );
   }
 
   /**
    * Extract the values of the fields that are Props
-   * @returns {Object<string, string>}
+   * @returns {Object<string, Props.Prop>}
    */
-  get propsAsObject() {
+  get propsAsProps() {
     return Object.fromEntries(
-      Object.entries(this.props).map(([name, prop]) => [name, prop.value])
+      Object.entries(this).filter(([_, prop]) => prop instanceof Props.Prop)
     );
   }
   /**
    * Prepare a TreeBase tree for external storage by converting to simple objects and arrays
    * @returns {Object}
    * */
-  toObject() {
-    const props = this.propsAsObject;
-    const children = this.children.map((child) => child.toObject());
-    return {
+  toObject(persist = true) {
+    const props = this.props;
+    const children = this.children.map((child) => child.toObject(persist));
+    const result = {
       className: this.className,
       props,
       children,
     };
+    if (persist) {
+      result["persisted"] = this.persisted;
+    }
+    return result;
   }
+
+  init() {}
 
   /**
    *   Create a TreeBase object
    *   @template {TreeBase} TB
    *   @param {string|(new()=>TB)} constructorOrName
    *   @param {TreeBase} parent
-   *   @param {Object<string,string>} props
+   *   @param {Object<string,string|number|boolean>} props
    *   @returns {TB}
    *   */
   static create(constructorOrName, parent = null, props = {}) {
     const constructor =
       typeof constructorOrName == "string"
-        ? TreeBase.classMap.get(constructorOrName)
+        ? TreeBase.nameToClass.get(constructorOrName)
         : constructorOrName;
+    /** @type {TB} */
     const result = new constructor();
 
     // initialize the props
-    for (const [name, prop] of Object.entries(result.props)) {
-      if (name in props) {
-        prop.set(props[name]);
-      }
-      // create a label if it has none
-      prop.label =
-        prop.label ||
-        name // convert from camelCase to Camel Case
-          .replace(/(?!^)([A-Z])/g, " $1")
-          .replace(/^./, (s) => s.toUpperCase());
-      // give each prop a link to the TreeBase that contains it.
-      prop.container = result;
+    for (const [name, prop] of Object.entries(result.propsAsProps)) {
+      prop.initialize(name, props[name], result);
     }
 
     // link it to its parent
@@ -88,6 +123,12 @@ export class TreeBase {
       result.parent = parent;
       parent.children.push(result);
     }
+
+    // allow the component to initialize itself
+    result.init();
+
+    // remember the relationship between id and component
+    TreeBase.idMap.set(result.id, result);
 
     return result;
   }
@@ -100,15 +141,29 @@ export class TreeBase {
    * */
   static fromObject(obj, parent = null) {
     // Get the constructor from the class map
-    const constructor = this.classMap.get(obj.className);
-    if (!constructor) return null;
+    if (!obj) console.trace("fromObject", obj);
+    const className = obj.className;
+    const constructor = this.nameToClass.get(className);
+    if (!constructor) {
+      console.trace("className not found", className, obj);
+      throw new Error("className not found");
+    }
 
     // Create the object and link it to its parent
     const result = this.create(constructor, parent, obj.props);
 
+    if ("persisted" in obj) {
+      result.persisted = { ...result.persisted, ...obj["persisted"] };
+    }
+
     // Link in the children
     for (const childObj of obj.children) {
-      TreeBase.fromObject(childObj, result);
+      if (childObj instanceof TreeBase) {
+        childObj.parent = result;
+        result.children.push(childObj);
+      } else {
+        TreeBase.fromObject(childObj, result);
+      }
     }
 
     // Validate the type is what was expected
@@ -134,13 +189,55 @@ export class TreeBase {
   }
 
   /**
-   * Called something below is updated
+   * Called when something below is updated
    * @param {TreeBase} _start
    */
   onUpdate(_start) {}
 
   /**
-   * Render this node and return the resulting Hole
+   * Render the designer interface and return the resulting Hole
+   * @returns {Hole}
+   */
+  settings() {
+    return html`<div class="settings">
+      <details
+        class=${this.className}
+        ?open=${this.persisted.settingsDetailsOpen}
+        ontoggle=${({ target }) =>
+          (this.persisted.settingsDetailsOpen = target.open)}
+      >
+        <summary id=${this.id + "-settings"}>${this.settingsSummary()}</summary>
+        ${this.settingsDetails()}
+      </details>
+      ${this.settingsChildren()}
+    </div>`;
+  }
+
+  /**
+   *  * Render the summary of a components settings
+   *  * @returns {Hole}
+   *  */
+  settingsSummary() {
+    const name = this.hasOwnProperty("name") ? this["name"].value : "";
+    return html`<h3>${fromCamelCase(this.className)} ${name}</h3>`;
+  }
+
+  /**
+   *  * Render the details of a components settings
+   *  * @returns {Hole}
+   *  */
+  settingsDetails() {
+    const props = this.propsAsProps;
+    const inputs = Object.values(props).map((prop) => prop.input());
+    return html`${inputs}`;
+  }
+
+  settingsChildren() {
+    return this.orderedChildren();
+  }
+
+  /**
+   * Render the user interface and return the resulting Hole
    * @returns {Hole}
    */
   template() {
@@ -148,129 +245,59 @@ export class TreeBase {
   }
 
   /**
-   * @typedef {Object} Options
-   * @property {string} [title]
-   * @property {function():void} [onClick]
-   */
-
-  /**
-   * @param {string} label
-   * @param {typeof TreeBase} constructor
-   * @param {Options} options
-   * @returns
-   */
-  addChildButton(label, constructor, options = {}) {
-    return html`<button
-      title=${options.title}
-      onClick=${() => {
-        TreeBase.create(constructor, this);
-        console.log("added", this);
-        if (options.onClick) options.onClick();
-        this.update();
-      }}
-    >
-      ${label}
-    </button>`;
-  }
-
-  /**
-   * Swap two children
-   * @param {TreeBase[]} A
+   * Swap two of my children
    * @param {number} i
    * @param {number} j
    */
-  swap(A, i, j) {
+  swap(i, j) {
+    const A = this.children;
     [A[i], A[j]] = [A[j], A[i]];
   }
 
   /**
-   * @param {Options} options
-   * @returns
+   * Move me to given position in my parent
+   * @param {number} i
    */
-  moveUpButton(options = {}) {
+  moveTo(i) {
     const peers = this.parent.children;
-    const index = peers.indexOf(this);
-    return html`<button
-      class="treebase"
-      title=${options.title}
-      ?disabled=${index == 0}
-      onClick=${() => {
-        this.swap(peers, index, index - 1);
-        if (options.onClick) options.onClick();
-        this.update();
-      }}
-    >
-      ${icons.UpArrow}
-    </button>`;
+    peers.splice(this.index, 1);
+    peers.splice(i, 0, this);
   }
 
   /**
-   * @param {Options} options
-   * @returns
+   * Get the index of this component in its parent
+   * @returns {number}
    */
-  moveDownButton(options = {}) {
-    const peers = this.parent.children;
-    const index = peers.indexOf(this);
-    return html`<button
-      class="treebase"
-      title=${options.title}
-      ?disabled=${index >= peers.length - 1}
-      onClick=${() => {
-        this.swap(peers, index, index + 1);
-        if (options.onClick) options.onClick();
-        this.update();
-      }}
-    >
-      ${icons.DownArrow}
-    </button>`;
+  get index() {
+    return (this.parent && this.parent.children.indexOf(this)) || 0;
   }
 
   /**
-   *  * Remove this child from their parent
+   *  * Remove this child from their parent and return the id of the child to receive focus
+   *  @returns {string}
    *  */
   remove() {
     const peers = this.parent.children;
     const index = peers.indexOf(this);
-    peers.splice(index, 1);
+    const parent = this.parent;
     this.parent = null;
-  }
-
-  /**
-   * Create a button to delete the current item
-   * @param {Options} options
-   * @returns {Hole}
-   */
-  deleteButton(options = {}) {
-    return html`<button
-      class="treebase"
-      title=${options.title}
-      onClick=${() => {
-        const parent = this.parent;
-        this.remove();
-        if (options.onClick) options.onClick();
-        parent.update();
-      }}
-    >
-      ${icons.Trash}
-    </button>`;
-  }
-
-  /**
-   * Create movement buttons
-   */
-  movementButtons(name = "") {
-    return html`<div class="movement">
-      ${this.moveUpButton({ title: `Move this ${name} up` })}
-      ${this.moveDownButton({ title: `Move this ${name} down` })}
-      ${this.deleteButton({ title: `Delete this ${name}` })}
-    </div>`;
+    peers.splice(index, 1);
+    if (peers.length > index) {
+      return peers[index].id;
+    } else if (peers.length > 0) {
+      return peers[peers.length - 1].id;
+    } else {
+      return parent.id;
+    }
   }
 
   /**
    * Create HTML LI nodes from the children
    */
   listChildren(children = this.children) {
-    return children.map((child) => html`<li>${child.template()}</li>`);
+    return children.map(
+      (child) => html.for(child)`<li>${child.settings()}</li>`
+    );
   }
 
   /**
@@ -324,6 +351,37 @@ export class TreeBase {
     }
     return result;
   }
+
+  /* Methods from original Base many not used */
+
+  /** Return matching strings from props
+   * @param {RegExp} pattern
+   * @param {string[]} [props]
+   * @returns {Set<string>}
+   */
+  all(pattern, props) {
+    const matches = new Set();
+    for (const [name, theProp] of Object.entries(this.props)) {
+      if (!props || props.indexOf(name) >= 0) {
+        if (theProp instanceof Props.String) {
+          for (const [match] of theProp.value.matchAll(pattern)) {
+            matches.add(match);
+          }
+        }
+      }
+    }
+    for (const child of this.children) {
+      for (const match of child.all(pattern, props)) {
+        matches.add(match);
+      }
+    }
+    return matches;
+  }
+
+  /** @returns {Set<string>} */
+  allStates() {
+    return this.all(/\$\w+/g);
+  }
 }
 
 /**
@@ -336,7 +394,7 @@ export class TreeBaseSwitchable extends TreeBase {
     console.log("replacing", this.className, className);
     if (this.className == className) return;
     // extract the values of the old props
-    const props = this.propsAsObject;
+    const props = this.props;
     const replacement = TreeBase.create(className, null, props);
     const index = this.parent.children.indexOf(this);
     this.parent.children[index] = replacement;
@@ -344,78 +402,3 @@ export class TreeBaseSwitchable extends TreeBase {
     this.update();
   }
 }
-
-css`
-  button.treebase {
-    background-color: rgba(0, 0, 0, 0.05);
-    border-radius: 0.5em;
-    border: outset;
-  }
-  button.treebase svg {
-    object-fit: contain;
-    width: 1em;
-    height: 1em;
-    vertical-align: middle;
-    margin: -4px;
-  }
-  .treebase .movement {
-    margin-top: 0.5em;
-  }
-  .treebase button svg {
-    object-fit: contain;
-    width: 1em;
-    height: 1em;
-    vertical-align: middle;
-    margin: -4px;
-  }
-  .treebase button {
-    background-color: rgba(0, 0, 0, 0.05);
-    border-radius: 0.5em;
-    border: outset;
-  }
-  .treebase fieldset {
-    margin-bottom: 0.5em;
-    border-style: inset;
-    border-width: 3px;
-  }
-  .treebase label[hiddenlabel] span {
-    clip: rect(0 0 0 0);
-    clip-path: inset(50%);
-    height: 1px;
-    overflow: hidden;
-    position: absolute;
-    white-space: nowrap;
-    width: 1px;
-  }
-  .treebase label {
-    display: inline-block;
-  }
-  .treebase ol {
-    list-style-type: none;
-    counter-reset: item;
-    margin: 0;
-    padding: 0;
-  }
-
-  .treebase ol > li {
-    display: table;
-    counter-increment: item;
-    margin-bottom: 0.6em;
-    width: 100%;
-  }
-
-  .treebase ol > li:before {
-    content: counters(item, ".") ". ";
-    display: table-cell;
-    padding-right: 0.6em;
-    font-size: 80%;
-  }
-
-  .treebase li ol > li {
-    margin: 0;
-  }
-
-  .treebase li ol > li:before {
-    content: counters(item, ".") " ";
-  }
-`;

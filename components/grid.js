@@ -1,22 +1,35 @@
 import { html } from "uhtml";
-import { Base, componentMap } from "./base";
+import * as Props from "./props";
+import { TreeBase } from "./treebase";
 import { styleString } from "./style";
 import { formatSlottedString } from "./helpers";
 import { UpdateAccessData } from "./access";
-import css from "ustyler";
 import "./img-db";
-import Globals from "../globals";
+import Globals from "app/globals";
+import { comparators } from "app/data";
+import "css/grid.css";
 
-class Grid extends Base {
-  static defaultProps = {
-    fillItems: false,
-    rows: 3,
-    columns: 3,
-    filters: [],
-    name: "grid",
-    background: "white",
-    scale: "1",
-  };
+class Grid extends TreeBase {
+  fillItems = new Props.Boolean(false);
+  rows = new Props.Integer(3);
+  columns = new Props.Integer(3);
+  scale = new Props.Float(1);
+  name = new Props.String("grid");
+  background = new Props.Color("white");
+
+  allowedChildren = ["GridFilter"];
+
+  /** @type {GridFilter[]} */
+  children = [];
+
+  get filters() {
+    return this.children.map((child) => ({
+      field: child.field.value,
+      operator: child.operator.value,
+      value: child.value.value,
+    }));
+  }
+
   page = 1;
   pageBoundaries = { 0: 0 }; //track starting indices of pages
   /**
@@ -27,8 +40,7 @@ class Grid extends Base {
 
   /** @param {Row} item */
   gridCell(item) {
-    const { rules } = Globals;
-    const { background, name } = this.props;
+    const { name } = this.props;
     let content;
     let msg = formatSlottedString(item.label || "");
     if (item.symbol) {
@@ -107,9 +119,9 @@ class Grid extends Base {
     /** @type {Partial<CSSStyleDeclaration>} */
     const style = { backgroundColor: this.props.background };
     const { data, state } = Globals;
-    let { rows, columns, filters, fillItems } = this.props;
+    let { rows, columns, fillItems } = this.props;
     /** @type {Rows} */
-    let items = data.getMatchingRows(filters, state, this.cache);
+    let items = data.getMatchingRows(this.filters, state, this.cache);
     // reset the page when the key changes
     if (this.cache.updated) {
       this.page = 1;
@@ -187,79 +199,51 @@ class Grid extends Base {
 
     style.gridTemplate = `repeat(${rows}, calc(100% / ${rows})) / repeat(${columns}, 1fr)`;
 
-    return html`<div
-      class="grid"
-      id=${this.id}
-      ref=${this}
-      style=${styleString(style)}
-    >
+    return html`<div class="grid" id=${this.id} style=${styleString(style)}>
       ${result}
     </div>`;
   }
+
+  settingsDetails() {
+    const props = this.propsAsProps;
+    const inputs = Object.values(props).map((prop) => prop.input());
+    const filters = html`<fieldset>
+      <legend>Filters</legend>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Field</th>
+            <th>Operator</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${this.children.map(
+            (filter, index) => html`
+              <tr>
+                <td>${index + 1}</td>
+                <td>${filter.field.input()}</td>
+                <td>${filter.operator.input()}</td>
+                <td>${filter.value.input()}</td>
+              </tr>
+            `
+          )}
+        </tbody>
+      </table>
+    </fieldset>`;
+    return html`<div>${filters}${inputs}</div>`;
+  }
+
+  settingsChildren() {
+    return html``;
+  }
 }
-componentMap.addMap("grid", Grid);
+TreeBase.register(Grid, "Grid");
 
-css`
-  .grid {
-    display: grid;
-    grid-auto-rows: 1fr;
-    height: 100%;
-    width: 100%;
-  }
-
-  .grid button {
-    overflow-wrap: normal;
-    overflow: hidden;
-    border-radius: 5px;
-    background-color: inherit;
-    user-select: none;
-  }
-  .grid button div {
-    display: flex;
-    height: 100%;
-    pointer-events: none;
-  }
-  .grid button figure {
-    margin: 2px;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    margin-block-start: 0;
-    margin-block-end: 0;
-    margin-inline-start: 0;
-    margin-inline-end: 0;
-    justify-content: center;
-  }
-  body:not(.designing) img[dbsrc]:not([src]) {
-    display: none;
-  }
-  .grid button figure figcaption {
-    width: 100%;
-  }
-  .grid button figure img {
-    object-fit: contain;
-    width: 100%;
-    height: 100%;
-    min-height: 0;
-  }
-  .grid b {
-    color: blue;
-  }
-  .grid .page-control {
-    display: flex;
-    flex-direction: column;
-  }
-  .grid .page-control .text {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .grid .page-control .back-next {
-    display: flex;
-    flex: 1 1 0;
-  }
-  .grid .page-control .back-next button {
-    flex: 1 1 0;
-  }
-`;
+export class GridFilter extends TreeBase {
+  field = new Props.Field([], { hiddenLabel: true });
+  operator = new Props.Select(Object.keys(comparators), { hiddenLabel: true });
+  value = new Props.String("", { hiddenLabel: true });
+}
+TreeBase.register(GridFilter, "GridFilter");

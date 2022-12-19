@@ -1,25 +1,32 @@
 import { html } from "uhtml";
-import { Base, componentMap } from "./base";
+import * as Props from "./props";
 import { Stack } from "./stack";
 import { styleString } from "./style";
-import css from "ustyler";
+import "css/tabcontrol.css";
 import { UpdateAccessData } from "./access";
-import Globals from "../globals";
+import Globals from "app/globals";
+import { TreeBase } from "./treebase";
 
-export class TabControl extends Base {
-  static defaultProps = {
-    stateName: "$tabControl",
-    activeTab: "",
-    background: "",
-    scale: "6",
-    tabEdge: "bottom",
-    name: "tabs",
-  };
-  static allowedChildren = ["tab panel"];
+export class TabControl extends TreeBase {
+  stateName = new Props.String("$tabControl");
+  background = new Props.String("");
+  scale = new Props.Float(6);
+  tabEdge = new Props.Select(["bottom", "top", "left", "right", "none"], {
+    defaultValue: "top",
+  });
+  name = new Props.String("tabs");
+
+  allowedChildren = ["TabPanel"];
+
+  /** @type {TabPanel[]} */
+  children = [];
+
+  /** @type {TabPanel} */
+  currentPanel = null;
 
   template() {
     const { state } = Globals;
-    const panels = /** @type {TabPanel[]} */ (this.children);
+    const panels = this.children;
     let activeTabName = state.get(this.props.stateName);
     // collect panel info
     panels.forEach((panel, index) => {
@@ -35,163 +42,87 @@ export class TabControl extends Base {
     if (this.props.tabEdge != "none") {
       buttons = panels
         .filter((panel) => panel.props.label != "UNLABELED")
-        .map((panel, index) => {
+        .map((panel) => {
           const color = panel.props.background;
           const buttonStyle = {
             backgroundColor: color,
           };
-          return html`<button
-            ?active=${panel.active}
-            style=${styleString(buttonStyle)}
-            ref=${UpdateAccessData({
-              name: this.name,
-              label: panel.tabLabel,
-              component: this.constructor.name,
-              onClick: () => {
-                state.update({ [this.props.stateName]: panel.tabName });
-              },
-            })}
-            .dataset=${{ id: panel.id }}
-          >
-            ${panel.tabLabel}
-          </button>`;
+          return html`<li>
+            <button
+              ?active=${panel.active}
+              style=${styleString(buttonStyle)}
+              ref=${UpdateAccessData({
+                name: this.name,
+                label: panel.tabLabel,
+                component: this.constructor.name,
+                onClick: () => {
+                  this.switchTab(panel.tabName);
+                },
+              })}
+              .dataset=${{ id: panel.id }}
+              tabindex="-1"
+            >
+              ${panel.tabLabel}
+            </button>
+          </li>`;
         });
     }
-    const panel =
-      panels.find((panel) => panel.active)?.template() || html`<!--empty-->`;
+    this.currentPanel = panels.find((panel) => panel.active);
+    const panel = this.panelTemplate();
     return html`<div
       class=${["tabcontrol", "flex", this.props.tabEdge].join(" ")}
       id=${this.id}
     >
-      <div class="panels flex" }>${panel}</div>
-      <div class="buttons">${buttons}</div>
+      <ul
+        class="buttons"
+        onkeydown=${this.tabButtonKeyHandler}
+        hint=${this.hint}
+      >
+        ${buttons}
+      </ul>
+      <div
+        class="panels flex"
+        onfocusin=${this.focusin}
+        onkeydown=${this.panelKeyHandler}
+      >
+        ${panel}
+      </div>
     </div>`;
   }
+
+  panelTemplate() {
+    return this.currentPanel?.template() || html`<!--empty-->`;
+  }
+
+  /**
+   * @param {string} tabName
+   */
+  switchTab(tabName) {
+    Globals.state.update({ [this.props.stateName]: tabName });
+  }
+
+  focusin = null;
+
+  panelKeyHandler = null;
+
+  tabButtonKeyHandler = null;
+
+  hint = null;
+
+  restoreFocus() {}
 }
-componentMap.addMap("tab control", TabControl);
+TreeBase.register(TabControl, "TabControl");
 
 export class TabPanel extends Stack {
+  name = new Props.String("");
+  label = new Props.String("");
+
+  /** @type {TabControl} */
+  parent = null;
+
   active = false;
   tabName = "";
   tabLabel = "";
-
-  static defaultProps = {
-    background: "",
-    name: "",
-    label: "",
-    direction: "column",
-    scale: "1",
-  };
-  static allowedChildren = [
-    "stack",
-    "grid",
-    "display",
-    "radio",
-    "tab control",
-    "vsd",
-    "button",
-  ];
+  lastFocused = "";
 }
-componentMap.addMap("tab panel", TabPanel);
-
-css`
-  .tabcontrol .buttons button:focus {
-    outline: 0;
-  }
-  .tabcontrol .panels {
-    display: flex;
-  }
-  .tabcontrol .buttons {
-    display: flex;
-  }
-  .tabcontrol .buttons button {
-    flex: 1 1 0;
-  }
-  .tabcontrol .buttons button[active] {
-    font-weight: bold;
-  }
-
-  .tabcontrol.top {
-    flex-direction: column;
-  }
-  .tabcontrol.top .panels {
-    order: 2;
-  }
-  .tabcontrol.top .buttons {
-    order: 1;
-  }
-  .tabcontrol.top .buttons button[active] {
-    border-bottom: 1px;
-    margin-top: 0px;
-  }
-  .tabcontrol.top .buttons button {
-    border-top-left-radius: 1em;
-    border-top-right-radius: 1em;
-    margin-top: 10px;
-  }
-
-  .tabcontrol.bottom {
-    flex-direction: column;
-  }
-  .tabcontrol.bottom .panels {
-    order: 1;
-  }
-  .tabcontrol.bottom .buttons {
-    order: 2;
-  }
-  .tabcontrol.bottom .buttons button[active] {
-    border-top: 1px;
-    margin-bottom: 0px;
-  }
-  .tabcontrol.bottom .buttons button {
-    border-bottom-left-radius: 1em;
-    border-bottom-right-radius: 1em;
-    margin-bottom: 10px;
-  }
-
-  .tabcontrol.right {
-    flex-direction: row;
-  }
-  .tabcontrol.right .panels {
-    order: 1;
-  }
-  .tabcontrol.right .buttons {
-    order: 2;
-    flex-direction: column;
-  }
-  .tabcontrol.right .buttons button[active] {
-    border-left: 1px;
-    margin-right: 0;
-  }
-  .tabcontrol.right .buttons button {
-    border-top-right-radius: 1em;
-    border-bottom-right-radius: 1em;
-    margin-right: 10px;
-  }
-
-  .tabcontrol.left {
-    flex-direction: row;
-  }
-  .tabcontrol.left .panels {
-    order: 2;
-    flex: 1;
-  }
-  .tabcontrol.left .buttons {
-    order: 1;
-    flex-direction: column;
-    flex: 1;
-  }
-  .tabcontrol.left .buttons button[active] {
-    border-right: 1px;
-    margin-left: 0;
-  }
-  .tabcontrol.left .buttons button {
-    border-top-left-radius: 1em;
-    border-bottom-left-radius: 1em;
-    margin-left: 10px;
-  }
-
-  .tabcontrol.none .buttons {
-    display: none;
-  }
-`;
+TreeBase.register(TabPanel, "TabPanel");

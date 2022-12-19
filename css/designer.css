@@ -1,0 +1,94 @@
+body.designing {
+  display: grid;
+  grid-template-rows: 2.5em 50% auto;
+  grid-template-columns: 50% 50%;
+}
+
+body.designing div#UI {
+  font-size: 0.7vw;
+  flex: 1 1 0;
+}
+
+div#designer {
+  display: none;
+}
+
+body.designing div#designer {
+  display: block;
+  overflow-y: auto;
+  flex: 1 1 0;
+  grid-row-start: 2;
+  grid-row-end: 4;
+  grid-column-start: 2;
+}
+body.designing #UI {
+  grid-row-start: 1;
+  grid-row-end: 3;
+  grid-column-start: 1;
+  position: relative;
+}
+body.designing #monitor {
+  grid-row-start: 3;
+  grid-column-start: 1;
+}
+body.designing #toolbar {
+  grid-row-start: 1;
+  grid-column-start: 2;
+}
+
+#designer ol,
+#designer ul {
+  list-style-type: none;
+  margin-block-start: 0;
+  padding-inline-start: 1em;
+  border-left: 1px solid #d0d0d0;
+}
+
+#designer details summary {
+  cursor: pointer;
+}
+
+details summary > * {
+  display: inline;
+}
+
+#designer details[open] {
+  border: 1px solid black;
+  margin-left: 1em;
+}
+
+#designer details[open] summary {
+  margin-left: -1em;
+}
+
+#designer details summary h3 {
+  font-weight: 500;
+}
+
+#designer details label {
+  margin-left: 1em;
+  margin-bottom: 0.5em;
+}
+
+#designer .settings {
+  background-color: var(--surface2);
+  color: var(--text2);
+  border: 0px;
+  box-shadow: none;
+}
+
+#designer .settings:has([aria-selected="true"]) {
+  background-color: var(--surface1);
+  color: var(--text1);
+  border: 2px solid var(--brand);
+}
+#designer .settings:has(.settings [aria-selected="true"]) {
+  background-color: var(--surface2);
+  color: var(--text2);
+  border: 0px;
+  box-shadow: none;
+}
+
+#designer .indicator {
+  color: var(--brand);
+}

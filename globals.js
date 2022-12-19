@@ -3,9 +3,9 @@ const Globals = {
   state: null,
   /** @type {import("./data").Data} */
   data: null,
-  /** @type {import("./rules").Rules} */
-  rules: null,
-  /** @type {Tree} */
+  /** @type {import("./components/actions").Actions} */
+  actions: null,
+  /** @type {TreeBase} */
   tree: null,
   /** @type {import('./components/access/pattern').PatternList} */
   patterns: null,
@@ -13,6 +13,13 @@ const Globals = {
   method: null,
   /** @type {import('./components/access/cues').CueList} */
   cues: null,
+  /** @type {import('./components/monitor').Monitor} */
+  monitor: null,
+  /** @type {import('./components/toolbar').ToolBar} */
+  toolbar: null,
+  /** @type {import('./components/tabcontrol').DesignerTabControl} */
+  designer: null,
+
   restart: null,
 };
 

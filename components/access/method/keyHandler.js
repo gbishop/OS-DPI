@@ -1,11 +1,9 @@
-import { TreeBase } from "../../treebase";
-import { Handler, HandlerCondition } from "./handler";
-import { HandlerResponse } from "./responses";
-import * as Props from "../../props";
+import { TreeBase } from "components/treebase";
+import * as Props from "components/props";
 import { html } from "uhtml";
 import { EventWrap } from "../index";
+import { Handler } from "./index";
 import * as RxJs from "rxjs";
-import { HandlerKeyCondition } from "./handler";
 
 const keySignals = new Map([
   ["keyup", "Key up"],
@@ -13,42 +11,28 @@ const keySignals = new Map([
 ]);
 
 export class KeyHandler extends Handler {
+  allowedChildren = ["HandlerKeyCondition", "HandlerCondition", "HandlerResponse"];
+
   Signal = new Props.Select(keySignals);
   Debounce = new Props.Float(0.1);
 
-  template() {
+  settings() {
     const { conditions, responses, keys } = this;
     const { Signal, Debounce } = this;
     return html`
       <fieldset class="Handler">
         <legend>Key Handler</legend>
         ${Signal.input()} ${Debounce.input()}
-        ${this.deleteButton({ title: "Delete this handler" })}
         <fieldset class="Keys">
-          <legend>
-            Keys
-            ${this.addChildButton("+", HandlerKeyCondition, {
-              title: "Add a key",
-            })}
-          </legend>
+          <legend>Keys</legend>
           ${this.unorderedChildren(keys)}
         </fieldset>
         <fieldset class="Conditions">
-          <legend>
-            Conditions
-            ${this.addChildButton("+", HandlerCondition, {
-              title: "Add a condition",
-            })}
-          </legend>
+          <legend>Conditions</legend>
           ${this.unorderedChildren(conditions)}
         </fieldset>
         <fieldset class="Responses">
-          <legend>
-            Responses
-            ${this.addChildButton("+", HandlerResponse, {
-              title: "Add a response",
-            })}
-          </legend>
+          <legend>Responses</legend>
           ${this.unorderedChildren(responses)}
         </fieldset>
       </fieldset>
@@ -126,4 +110,4 @@ export class KeyHandler extends Handler {
     stream$.pipe(RxJs.takeUntil(stop$)).subscribe((e) => this.respond(e));
   }
 }
-TreeBase.register(KeyHandler);
+TreeBase.register(KeyHandler, "KeyHandler");

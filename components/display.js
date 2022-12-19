@@ -1,10 +1,11 @@
 import { html } from "uhtml";
-import { Base, componentMap } from "./base";
+import { TreeBase } from "./treebase";
+import * as Props from "./props";
 import { styleString } from "./style";
-import { Functions } from "../eval";
+import { Functions } from "app/eval";
 import merge from "mergerino";
-import css from "ustyler";
-import Globals from "../globals";
+import "css/display.css";
+import Globals from "app/globals";
 
 /** Slot descriptor
  * @typedef {Object} Slot
@@ -20,13 +21,12 @@ import Globals from "../globals";
  * @property {String} slotName - current slot type
  */
 
-class Display extends Base {
-  static defaultProps = {
-    stateName: "$Display",
-    background: "white",
-    fontSize: "2",
-    scale: "1",
-  };
+class Display extends TreeBase {
+  stateName = new Props.String("$Display");
+  background = new Props.Color("white");
+  fontSize = new Props.Float(2);
+  scale = new Props.Float(1);
+
   static functionsInitialized = false;
 
   template() {
@@ -74,7 +74,7 @@ class Display extends Base {
   init() {
     if (!Display.functionsInitialized) {
       Display.functionsInitialized = true;
-      let { rules } = Globals;
+      let { actions: rules } = Globals;
 
       /** return true of the message contains slots
        * @param {String|Editor} message
@@ -210,10 +210,6 @@ class Display extends Base {
       };
     }
   }
-
-  get name() {
-    return this.props.name || this.props.stateName;
-  }
 }
 /* TODO: refactor the multiple versions of this formatting code */
 
@@ -240,17 +236,4 @@ export function strip(value) {
   });
   return parts.join("");
 }
-
-componentMap.addMap("display", Display);
-
-css`
-  .display {
-    border: 1px solid black;
-    padding: 0.25em;
-    box-sizing: border-box;
-    font-size: 200%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-`;
+TreeBase.register(Display, "Display");

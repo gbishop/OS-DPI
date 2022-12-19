@@ -1,0 +1,14 @@
+div.empty {
+  background-color: rgba(15, 15, 15, 0.3);
+  justify-content: center;
+  align-items: center;
+}
+
+div.empty::before {
+  content: "Empty";
+}
+
+div.highlight {
+  border: 1px solid red;
+  box-sizing: border-box;
+}
