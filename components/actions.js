@@ -63,6 +63,7 @@ export class Actions extends DesignerPanel {
    * @param {Object} data - data associated with the event
    */
   applyRules(origin, event, data) {
+    console.trace({ origin, event, data });
     this.last = { origin, event, data, rule: null };
     // first for the event then for any that got queued.
     while (true) {

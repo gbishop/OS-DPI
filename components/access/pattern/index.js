@@ -3,14 +3,21 @@ import "css/pattern.css";
 import Globals from "app/globals";
 import * as Props from "components/props";
 import { TreeBase } from "components/treebase";
-import { ButtonWrap } from "../index";
 import defaultPatterns from "./defaultPatterns";
 import { DesignerPanel } from "components/designer";
 import { toggleIndicator } from "app/components/helpers";
 
-/** @typedef {ReturnType<ButtonWrap<Node>>} Button */
+/** @typedef {HTMLButtonElement | Group} Target */
 
-/** @typedef {Button | Group} Target */
+/** @param {Target} target
+ * @param {string} value */
+export function cueTarget(target, value) {
+  if (target instanceof HTMLButtonElement) {
+    target.setAttribute("cue", value);
+  } else {
+    target.cue(value);
+  }
+}
 
 /**
  * Group is a collection of Buttons or Groups and associated properties such as
@@ -40,10 +47,11 @@ export class Group {
     }
   }
 
-  cue() {
+  /** @param {string} _ */
+  cue(_) {
     // console.log("cue group", this.members);
     for (const member of this.members) {
-      member.cue(this.groupProps.Cue);
+      cueTarget(member, this.groupProps.Cue);
     }
   }
 }
@@ -172,8 +180,10 @@ export class PatternManager extends PatternBase {
   refresh() {
     // gather the buttons from the UI
     const buttons = [];
-    for (const node of document.querySelectorAll("#UI button:not(:disabled)")) {
-      buttons.push(ButtonWrap(node));
+    for (const node of /** @type {NodeListOf<HTMLButtonElement>} */ (
+      document.querySelectorAll("#UI button:not(:disabled)")
+    )) {
+      buttons.push(node);
     }
 
     let members = [];
@@ -236,15 +246,10 @@ export class PatternManager extends PatternBase {
       this.stack.unshift({ group: current, index: 0 });
       // console.log("push stack", this.current, this.stack);
     } else {
-      const name = current.access.ComponentName;
+      const name = current.dataset.ComponentName;
       // console.log("activate button", current);
-      if ("onClick" in current.access) {
-        // console.log("calling onClick");
-        current.access.onClick();
-      } else {
-        // console.log("applyRules", name, current.access);
-        Globals.actions.applyRules(name, "press", current.access);
-      }
+      // console.log("applyRules", name, current.access);
+      Globals.actions.applyRules(name, "press", current.dataset);
     }
     this.cue();
   }
@@ -262,7 +267,7 @@ export class PatternManager extends PatternBase {
     // console.log("cue current", current);
     if (!current) return;
     this.cued = true;
-    current.cue(this.Cue.value);
+    cueTarget(current, this.Cue.value);
   }
 }
 PatternBase.register(PatternManager, "PatternManager");
@@ -352,8 +357,8 @@ class Filter extends PatternBase {
         )
         .filter((target) => target.length > 0);
     } else {
-      return input.filter((/** @type {Button} */ button) =>
-        this.Filter.eval(button.access)
+      return input.filter((/** @type {HTMLButtonElement} */ button) =>
+        this.Filter.eval(button.dataset)
       );
     }
   }
@@ -387,8 +392,8 @@ class OrderBy extends PatternBase {
         .filter((target) => target.length > 0);
     } else {
       const key = this.OrderBy.value.slice(1);
-      return [.../** @type {Button[]} */ (input)].sort((a, b) =>
-        comparator.compare(a.access[key], b.access[key])
+      return [.../** @type {HTMLButtonElement[]} */ (input)].sort((a, b) =>
+        comparator.compare(a.dataset[key], b.dataset[key])
       );
     }
   }
@@ -402,8 +407,16 @@ class GroupBy extends PatternBase {
   Cycles = new Props.Integer(2);
   settings() {
     const { GroupBy, Name, Cue, Cycles } = this;
+    const fields = Props.toMap([
+      ...new Set([
+        ...Globals.data.allFields,
+        "#ComponentName",
+        "#row",
+        "#column",
+      ]),
+    ]);
     return html`<div class=${this.className}>
-      ${GroupBy.input()} ${Name.input()} ${Cue.input(Globals.cues.cueMap)}
+      ${GroupBy.input(fields)} ${Name.input()} ${Cue.input(Globals.cues.cueMap)}
       ${Cycles.input()}
     </div>`;
   }
@@ -426,9 +439,9 @@ class GroupBy extends PatternBase {
       const key = GroupBy.slice(1);
       const result = [];
       const groupMap = new Map();
-      for (const button of /** @type {Button[]} */ (input)) {
-        let k = button.access[key];
-        if (!k) continue;
+      for (const button of /** @type {HTMLButtonElement[]} */ (input)) {
+        let k = button.dataset[key] || "";
+        // if (!k) continue;
         k = k.toString();
         // we got a key, check to see if we have a group
         let group = groupMap.get(k);

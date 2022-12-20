@@ -2,7 +2,7 @@ import { TreeBase } from "components/treebase";
 import { Handler } from "./index";
 import * as Props from "components/props";
 import { html } from "uhtml";
-import { EventWrap, ButtonWrap } from "../index";
+import { EventWrap } from "../index";
 import * as RxJs from "rxjs";
 
 const pointerSignals = new Map([
@@ -14,7 +14,7 @@ const pointerSignals = new Map([
 
 export class PointerHandler extends Handler {
   allowedChildren = ["HandlerCondition", "HandlerResponse"];
-  
+
   Signal = new Props.Select(pointerSignals);
   Debounce = new Props.Float(0.1);
   SkipOnRedraw = new Props.Boolean(false);
@@ -135,7 +135,7 @@ export class PointerHandler extends Handler {
       ),
       RxJs.map((e) => {
         const ew = EventWrap(e);
-        ew.access = { ...ButtonWrap(e.target).access };
+        ew.access = { .../** @type {HTMLButtonElement} */ (e.target).dataset };
         ew.access.eventType = e.type;
         return ew;
       })
@@ -146,7 +146,7 @@ export class PointerHandler extends Handler {
      *
      * TODO: I bet there is a cleaner way to do this.
      */
-    const firstEvent = ButtonWrap(new PointerEvent("first"));
+    const firstEvent = EventWrap(new PointerEvent("first"));
     if (signal == "pointerover" && this.SkipOnRedraw.value) {
       stream$ = stream$.pipe(
         // a fake event to startup pairwise

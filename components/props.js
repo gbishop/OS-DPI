@@ -83,7 +83,7 @@ export class Prop {
 /** @param {string[] | Map<string,string>} arrayOrMap
  * @returns Map<string, string>
  */
-function toMap(arrayOrMap) {
+export function toMap(arrayOrMap) {
   if (Array.isArray(arrayOrMap)) {
     return new Map(arrayOrMap.map((item) => [item, item]));
   }

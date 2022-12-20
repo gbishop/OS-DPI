@@ -3,7 +3,7 @@ import { TreeBase } from "components/treebase";
 import Globals from "app/globals";
 import * as Props from "components/props";
 import { Method, HandlerResponse } from "./index";
-import { ButtonWrap } from "../index";
+import { cueTarget } from "../pattern";
 
 class ResponderNext extends HandlerResponse {
   respond() {
@@ -13,7 +13,7 @@ class ResponderNext extends HandlerResponse {
 TreeBase.register(ResponderNext, "ResponderNext");
 
 class ResponderActivate extends HandlerResponse {
-  /** @param {Event & { access: Object }} event */
+  /** @param {Event} event */
   respond(event) {
     if (this.pattern.cued) {
       this.pattern.activate();
@@ -21,12 +21,12 @@ class ResponderActivate extends HandlerResponse {
       (event instanceof PointerEvent || event.type == "timer") &&
       event.target instanceof HTMLButtonElement
     ) {
-      const button = ButtonWrap(event.target);
-      const name = button.access.ComponentName;
-      if ("onClick" in button.access) {
-        button.access.onClick();
+      const button = event.target;
+      const name = button.dataset.ComponentName;
+      if ("onClick" in button.dataset) {
+        console.log("wanted to call onclick");
       } else {
-        Globals.actions.applyRules(name, "press", button.access);
+        Globals.actions.applyRules(name, "press", button.dataset);
       }
     }
   }
@@ -46,8 +46,8 @@ class ResponderCue extends HandlerResponse {
       for (const element of document.querySelectorAll("[cue]")) {
         element.removeAttribute("cue");
       }
-      const button = ButtonWrap(event.target);
-      button.cue(this.Cue.value);
+      const button = event.target;
+      cueTarget(button, this.Cue.value);
     }
   }
 }

@@ -48,7 +48,7 @@ export class Monitor extends TreeBase {
     return html`<button
         onclick=${() => {
           state.clear();
-          rules.init();
+          rules.configure();
         }}
       >
         Clear state
