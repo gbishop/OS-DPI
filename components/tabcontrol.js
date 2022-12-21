@@ -56,6 +56,7 @@ export class TabControl extends TreeBase {
                 component: this.constructor.name,
                 id: panel.id,
               }}
+              click
               onClick=${() => {
                 this.switchTab(panel.tabName);
               }}

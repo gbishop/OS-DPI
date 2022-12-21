@@ -245,6 +245,8 @@ export class PatternManager extends PatternBase {
       }
       this.stack.unshift({ group: current, index: 0 });
       // console.log("push stack", this.current, this.stack);
+    } else if (current.hasAttribute("click")) {
+      current.click();
     } else {
       const name = current.dataset.ComponentName;
       // console.log("activate button", current);

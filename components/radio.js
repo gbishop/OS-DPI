@@ -90,6 +90,7 @@ class Radio extends TreeBase {
           ComponentName: this.name,
           label: child.props.name,
         }}
+        click
         onClick=${() => state.update({ [stateName]: child.props.value })}
       >
         ${child.props.name}

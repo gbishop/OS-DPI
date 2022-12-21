@@ -23,8 +23,8 @@ class ResponderActivate extends HandlerResponse {
     ) {
       const button = event.target;
       const name = button.dataset.ComponentName;
-      if ("onClick" in button.dataset) {
-        console.log("wanted to call onclick");
+      if (button.hasAttribute("click")) {
+        button.click();
       } else {
         Globals.actions.applyRules(name, "press", button.dataset);
       }
