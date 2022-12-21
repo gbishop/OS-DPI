@@ -1,8 +1,8 @@
 // vite.config.js
 import { defineConfig } from "vite";
-import { version } from "./package.json";
 import path from "path";
-import analyze from "rollup-plugin-analyzer";
+
+const version = new Date().toJSON().replace(/[:-]/g, "").replace(/\..*$/, "");
 
 export default defineConfig({
   base: "/OS-DPI/",
