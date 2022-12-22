@@ -72,32 +72,40 @@ function focusTabs() {
 }
 
 /** Implement a state machine for managing the hotkeys
+ * @enum {string}
  */
+const State = {
+  user: "user",
+  userA: "userA",
+  editing: "editing",
+  hints: "hints",
+};
+
+/** @type {State} */
 let state = null;
 
 /**
  * State machine transition table
- * @typedef {Object} TransitionTable
- * @property {string} state - current state
- * @property {RegExp} key - optional input key
- * @property {string} next - next state
+ * @typedef {Object} Transition
+ * @property {State} state - current state
+ * @property {RegExp} key - input key
+ * @property {State} next - next state
  * @property {Function} [call] - function to call on entering
- * @property {boolean} [allow] - prevent default unless allowed
- *
- * @type {TransitionTable[]}
  */
+
+/** @type {Transition[]} */
+// prettier-ignore
 const transitions = [
-  { state: "user", key: /alt/, next: "userA" },
-  { state: "userA", key: /d/, next: "editing", call: editMode },
-  // { state: "userA", key: /.*/, next: "user", allow: true },
-  { state: "editing", key: /alt/, next: "hints", call: showHints },
-  { state: "hints", key: /d/, next: "user", call: userMode },
-  { state: "hints", key: /[nfea]/, next: "editing", call: clickToolbar },
-  { state: "hints", key: /t/, next: "editing", call: focusTabs },
-  { state: "hints", key: /u/, next: "editing", call: focusUI },
-  { state: "hints", key: /p/, next: "editing", call: focusPanel },
-  { state: "hints", key: /shift/, next: "hints", allow: true },
-  { state: "hints", key: /.*/, next: "editing", call: clearHints, allow: true },
+  { state: State.user,    key: /alt/i,    next: State.userA                       },
+  { state: State.userA,   key: /d/i,      next: State.editing, call: editMode     },
+  { state: State.editing, key: /alt/i,    next: State.hints,   call: showHints    },
+  { state: State.hints,   key: /d/i,      next: State.user,    call: userMode     },
+  { state: State.hints,   key: /[nfea]/i, next: State.editing, call: clickToolbar },
+  { state: State.hints,   key: /t/i,      next: State.editing, call: focusTabs    },
+  { state: State.hints,   key: /u/i,      next: State.editing, call: focusUI      },
+  { state: State.hints,   key: /p/i,      next: State.editing, call: focusPanel   },
+  { state: State.hints,   key: /shift/i,  next: State.hints                       },
+  { state: State.hints,   key: /.*/i,     next: State.editing, call: clearHints   },
 ];
 
 /** Toolbar activation and hints
@@ -105,14 +113,17 @@ const transitions = [
  * @param {KeyboardEvent} event */
 function HotKeyHandler(event) {
   if (!state) {
+    // initialize the state on first call
     state = Globals.state.get("editing") ? "editing" : "user";
   }
-  const key = event.key.toLowerCase();
+  const key = event.key;
   for (const T of transitions) {
     if (T.state == state) {
       const match = key.match(T.key);
       if (match && match[0].length === key.length) {
+        // exact match
         event.preventDefault();
+        if (event.repeat) break; // kill key repeat
         state = T.next;
         if (T.call) {
           T.call(key);
