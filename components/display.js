@@ -30,6 +30,7 @@ class Display extends TreeBase {
   static functionsInitialized = false;
 
   template() {
+    this.initFunctions();
     const style = styleString({
       backgroundColor: this.props.background,
       fontSize: this.props.fontSize + "rem",
@@ -71,10 +72,11 @@ class Display extends TreeBase {
     </div>`;
   }
 
-  init() {
+  initFunctions() {
     if (!Display.functionsInitialized) {
       Display.functionsInitialized = true;
-      let { actions: rules } = Globals;
+      let { actions } = Globals;
+      // console.log({ actions });
 
       /** return true of the message contains slots
        * @param {String|Editor} message
@@ -141,7 +143,7 @@ class Display extends TreeBase {
             }
             slotIndex++;
             if (slotIndex >= slots.length) {
-              rules.queueEvent("okSlot", "press");
+              actions.queueEvent("okSlot", "press");
             }
           }
           return merge(old, {
@@ -161,7 +163,7 @@ class Display extends TreeBase {
           if (!old) return;
           const slotIndex = old.slotIndex + 1;
           if (slotIndex >= old.slots.length) {
-            rules.queueEvent("okSlot", "press");
+            actions.queueEvent("okSlot", "press");
           }
           return merge(old, { slotIndex });
         };

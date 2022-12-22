@@ -92,3 +92,7 @@ details summary > * {
 #designer .indicator {
   color: var(--brand);
 }
+
+#designer .panels {
+  display: block;
+}

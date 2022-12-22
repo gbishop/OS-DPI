@@ -11,7 +11,11 @@ const keySignals = new Map([
 ]);
 
 export class KeyHandler extends Handler {
-  allowedChildren = ["HandlerKeyCondition", "HandlerCondition", "HandlerResponse"];
+  allowedChildren = [
+    "HandlerKeyCondition",
+    "HandlerCondition",
+    "HandlerResponse",
+  ];
 
   Signal = new Props.Select(keySignals);
   Debounce = new Props.Float(0.1);

@@ -9,7 +9,8 @@ export class Page extends Stack {
     this.allowedChildren = this.allowedChildren.concat(
       "Speech",
       "Audio",
-      "Logger"
+      "Logger",
+      "Customize"
     );
   }
 }

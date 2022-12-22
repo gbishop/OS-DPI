@@ -3,7 +3,6 @@ import * as Props from "./props";
 import { Stack } from "./stack";
 import { styleString } from "./style";
 import "css/tabcontrol.css";
-import { UpdateAccessData } from "./access";
 import Globals from "app/globals";
 import { TreeBase } from "./treebase";
 
@@ -51,15 +50,16 @@ export class TabControl extends TreeBase {
             <button
               ?active=${panel.active}
               style=${styleString(buttonStyle)}
-              ref=${UpdateAccessData({
+              .dataset=${{
                 name: this.name,
                 label: panel.tabLabel,
                 component: this.constructor.name,
-                onClick: () => {
-                  this.switchTab(panel.tabName);
-                },
-              })}
-              .dataset=${{ id: panel.id }}
+                id: panel.id,
+              }}
+              click
+              onClick=${() => {
+                this.switchTab(panel.tabName);
+              }}
               tabindex="-1"
             >
               ${panel.tabLabel}

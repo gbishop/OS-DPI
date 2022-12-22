@@ -25,6 +25,7 @@
     "idb": "^7.0.2",
     "introspected": "^0.2.6",
     "mergerino": "^0.4.0",
+    "prismjs": "^1.29.0",
     "proxy-pants": "^0.8.3",
     "rxjs": "^7.5.6",
     "sheetrock": "^1.2.0",

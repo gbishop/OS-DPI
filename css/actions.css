@@ -36,6 +36,14 @@ div.actions div.scroll {
   margin-top: 0.2em;
 }
 
+.actions div.condition div.labeledInput {
+  width: 100%;
+}
+
+.actions td.update div.labeledInput {
+  width: 100%;
+}
+
 .actions td.update {
   overflow-wrap: anywhere;
 }

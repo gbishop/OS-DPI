@@ -3,7 +3,6 @@ import * as Props from "./props";
 import { TreeBase } from "./treebase";
 import { styleString } from "./style";
 import { formatSlottedString } from "./helpers";
-import { UpdateAccessData } from "./access";
 import "./img-db";
 import Globals from "app/globals";
 import { comparators } from "app/data";
@@ -55,11 +54,11 @@ class Grid extends TreeBase {
     }
     return html`<button
       tabindex="-1"
-      ref=${UpdateAccessData({
+      .dataset=${{
         ...item,
         ComponentName: name,
-        ComponentType: this.constructor.name,
-      })}
+        ComponentType: this.className,
+      }}
       ?disabled=${!item.label && !item.symbol}
     >
       ${content}
@@ -86,27 +85,29 @@ class Grid extends TreeBase {
         <button
           style=${styleString({ backgroundColor: background })}
           .disabled=${this.page == 1}
-          ref=${UpdateAccessData({
+          .dataset=${{
             ...info,
-            name,
-            onClick: () => {
-              this.page = ((((this.page - 2) % pages) + pages) % pages) + 1;
-              state.update(); // trigger redraw
-            },
-          })}
+            ComponentName: name,
+            ComponentType: this.className,
+          }}
+          onClick=${() => {
+            this.page = ((((this.page - 2) % pages) + pages) % pages) + 1;
+            state.update(); // trigger redraw
+          }}
           tabindex="-1"
         >
           &#9754;</button
         ><button
           .disabled=${this.page == pages}
-          ref=${UpdateAccessData({
+          .dataset=${{
             ...info,
-            name,
-            onClick: () => {
-              this.page = (this.page % pages) + 1;
-              state.update(); // trigger redraw
-            },
-          })}
+            ComponentName: name,
+            ComponentType: this.className,
+          }}
+          onClick=${() => {
+            this.page = (this.page % pages) + 1;
+            state.update(); // trigger redraw
+          }}
           tabindex="-1"
         >
           &#9755;
@@ -185,7 +186,7 @@ class Grid extends TreeBase {
         const row = Math.floor(i / columns) + 1;
         const column = (i % columns) + 1;
         const item = { ...items[i], row, column };
-        result.push(this.gridCell(item));
+        result.push(this.gridCell({ ...item, row: row, column: column }));
       }
       // fill any spaces that remain
       for (let i = items.length; i < perPage; i++) {

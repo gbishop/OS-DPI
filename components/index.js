@@ -16,6 +16,7 @@ import "./logger";
 import "./content";
 import "./layout";
 import "./hotkeys";
+import "./customize";
 import "./access/method";
 import "./access/method/responses";
 import "./access/method/keyHandler";

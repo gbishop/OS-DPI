@@ -94,10 +94,10 @@ export class Designer extends TabControl {
 
           if (focusable) {
             focusable.focus();
-            console.log("send focus to element in panel");
+            // console.log("send focus to element in panel");
           } else {
             panelNode.focus();
-            console.log("send focus to empty panel");
+            // console.log("send focus to empty panel");
           }
         }
       }

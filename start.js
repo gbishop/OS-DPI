@@ -9,7 +9,7 @@ import db from "./db";
 import pleaseWait from "./components/wait";
 import "css/designer.css";
 import "css/colors.css";
-import { ButtonWrap, clearAccessChanged } from "./components/access";
+import { clearAccessChanged } from "./components/access";
 import Globals from "./globals";
 import { PatternList } from "./components/access/pattern";
 import { MethodChooser } from "./components/access/method";
@@ -101,18 +101,7 @@ export async function start() {
     if (Globals.state.get("editing")) {
       IDE = html`
         ${toolbar.template()}
-        <div
-          id="designer"
-          hint="P"
-          onclick=${(/** @type {InputEventWithTarget} */ event) => {
-            const button = ButtonWrap(event.target);
-            if (button.access && button.access.onClick) {
-              button.access.onClick(event);
-            }
-          }}
-        >
-          ${Globals.designer.template()}
-        </div>
+        <div id="designer" hint="P">${Globals.designer.template()}</div>
         <div id="monitor">${monitor.template()}</div>
       `;
     }

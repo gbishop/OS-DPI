@@ -3,6 +3,7 @@ import "css/cues.css";
 import { TreeBase, TreeBaseSwitchable } from "components/treebase";
 import { DesignerPanel } from "components/designer";
 import * as Props from "components/props";
+import Prism from "prismjs";
 
 import { interpolate, toggleIndicator } from "components/helpers";
 import { getColor } from "components/style";
@@ -94,7 +95,7 @@ class Cue extends TreeBaseSwitchable {
 TreeBase.register(Cue, "Cue");
 
 class CueCss extends Cue {
-  Code = new Props.TextArea("", {
+  Code = new Props.Code("", {
     placeholder: "Enter CSS for this cue",
     hiddenLabel: true,
   });
@@ -117,7 +118,8 @@ class CueOverlay extends Cue {
     return html`${this.Color.input()} ${this.Opacity.input()}
       <details>
         <summary>generated CSS</summary>
-        <pre><code>${this.css}</code></pre>
+        <pre><code class="language-css" ref=${(element) =>
+          Prism.highlightElement(element)}>${this.css}</code></pre>
       </details>`;
   }
 
@@ -161,7 +163,8 @@ class CueFill extends Cue {
       ${this.Direction.input()} ${this.Repeat.input()}
       <details>
         <summary>generated CSS</summary>
-        <pre><code>${this.css}</code></pre>
+        <pre><code class="language-css" ref=${(element) =>
+          Prism.highlightElement(element)}>${this.css}</code></pre>
       </details> `;
   }
 
@@ -205,7 +208,8 @@ class CueCircle extends Cue {
     return html`${this.Color.input()} ${this.Opacity.input()}
       <details>
         <summary>generated CSS</summary>
-        <pre><code>${this.css}</code></pre>
+        <pre><code class="language-css" ref=${(element) =>
+          Prism.highlightElement(element)}>${this.css}</code></pre>
       </details> `;
   }
 

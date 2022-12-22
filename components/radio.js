@@ -3,7 +3,6 @@ import { TreeBase } from "./treebase";
 import * as Props from "./props";
 import { styleString } from "./style";
 import "css/radio.css";
-import { UpdateAccessData } from "./access";
 import Globals from "app/globals";
 import { GridFilter } from "./grid";
 
@@ -86,12 +85,13 @@ class Radio extends TreeBase {
         style=${styleString({ backgroundColor: color })}
         value=${child.props.value}
         ?disabled=${disabled}
-        ref=${UpdateAccessData({
-          ComponentType: this.constructor.name,
-          name: this.name,
+        .dataset=${{
+          ComponentType: this.className,
+          ComponentName: this.name,
           label: child.props.name,
-          onClick: () => state.update({ [stateName]: child.props.value }),
-        })}
+        }}
+        click
+        onClick=${() => state.update({ [stateName]: child.props.value })}
       >
         ${child.props.name}
       </button>`;

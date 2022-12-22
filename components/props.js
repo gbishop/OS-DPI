@@ -4,6 +4,15 @@ import { html } from "uhtml";
 import "css/props.css";
 import { compileExpression } from "app/eval";
 import Globals from "app/globals";
+import "app/node_modules/prismjs/themes/prism.css";
+import Prism from "prismjs";
+import "app/lib/code-input/code-input.css";
+import codeInput from "app/lib/code-input/code-input";
+
+codeInput.registerTemplate(
+  "syntax-highlighted",
+  codeInput.templates.prism(Prism, [])
+);
 
 /**
  * @typedef {Object} PropOptions
@@ -14,6 +23,7 @@ import Globals from "app/globals";
  * @property {boolean} [multiple]
  * @property {string} [defaultValue]
  * @property {string} [group]
+ * @property {string} [language]
  */
 
 export class Prop {
@@ -70,6 +80,16 @@ export class Prop {
   input() {
     return html`<!--empty-->`;
   }
+  /** @param {Hole} body */
+  labeled(body) {
+    return html`<div class="labeledInput">
+      <label ?hiddenLabel=${this.options.hiddenLabel} for=${this.id}
+        >${this.label}</label
+      >
+      ${body}
+    </div>`;
+  }
+
   /** @param {any} value */
   set(value) {
     this.value = value;
@@ -83,7 +103,7 @@ export class Prop {
 /** @param {string[] | Map<string,string>} arrayOrMap
  * @returns Map<string, string>
  */
-function toMap(arrayOrMap) {
+export function toMap(arrayOrMap) {
   if (Array.isArray(arrayOrMap)) {
     return new Map(arrayOrMap.map((item) => [item, item]));
   }
@@ -108,29 +128,26 @@ export class Select extends Prop {
       choices = this.choices;
     }
     this.value = this.value || this.options.defaultValue || "";
-    return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
-      <span>${this.label}</span>
-      <select
-        id=${this.id}
-        required
-        title=${this.options.title}
-        onchange=${({ target }) => {
-          this.value = target.value;
-          console.log("select", this, this.value, target.value);
-          this.update();
-        }}
-      >
-        <option value="" disabled ?selected=${!choices.has(this.value)}>
-          ${this.options.placeholder || "Choose one..."}
-        </option>
-        ${[...choices.entries()].map(
-          ([key, value]) =>
-            html`<option value=${key} ?selected=${this.value == key}>
-              ${value}
-            </option>`
-        )}
-      </select></label
-    >`;
+    return this.labeled(html`<select
+      id=${this.id}
+      required
+      title=${this.options.title}
+      onchange=${({ target }) => {
+        this.value = target.value;
+        console.log("select", this, this.value, target.value);
+        this.update();
+      }}
+    >
+      <option value="" disabled ?selected=${!choices.has(this.value)}>
+        ${this.options.placeholder || "Choose one..."}
+      </option>
+      ${[...choices.entries()].map(
+        ([key, value]) =>
+          html`<option value=${key} ?selected=${this.value == key}>
+            ${value}
+          </option>`
+      )}
+    </select>`);
   }
 
   /** @param {any} value */
@@ -178,20 +195,17 @@ export class String extends Prop {
   }
 
   input() {
-    return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
-      <span>${this.label}</span>
-      <input
-        type="text"
-        .value=${this.value}
-        id=${this.id}
-        onchange=${({ target }) => {
-          this.value = target.value;
-          this.update();
-        }}
-        title=${this.options.title}
-        placeholder=${this.options.placeholder}
-      />
-    </label>`;
+    return this.labeled(html`<input
+      type="text"
+      .value=${this.value}
+      id=${this.id}
+      onchange=${({ target }) => {
+        this.value = target.value;
+        this.update();
+      }}
+      title=${this.options.title}
+      placeholder=${this.options.placeholder}
+    />`);
   }
 }
 
@@ -204,20 +218,21 @@ export class Integer extends Prop {
   }
 
   input() {
-    return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
-      <span>${this.label}</span>
-      <input
-        type="number"
-        .value=${this.value}
-        id=${this.id}
-        onchange=${({ target }) => {
-          this.value = target.value;
+    return this.labeled(html`<input
+      type="text"
+      inputmode="numeric"
+      pattern="[0-9]+"
+      .value=${this.value}
+      id=${this.id}
+      onchange=${({ target }) => {
+        if (target.checkValidity()) {
+          this.value = parseInt(target.value);
           this.update();
-        }}
-        title=${this.options.title}
-        placeholder=${this.options.placeholder}
-      />
-    </label>`;
+        }
+      }}
+      title=${this.options.title}
+      placeholder=${this.options.placeholder}
+    />`);
   }
 }
 
@@ -230,21 +245,22 @@ export class Float extends Prop {
   }
 
   input() {
-    return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
-      <span>${this.label}</span>
-      <input
-        type="number"
-        .value=${this.value}
-        id=${this.id}
-        onchange=${({ target }) => {
-          this.value = target.value;
+    return this.labeled(html`<input
+      type="text"
+      inputmode="numeric"
+      pattern="[0-9]*([,.][0-9]*)?"
+      .value=${this.value}
+      id=${this.id}
+      onchange=${({ target }) => {
+        if (target.checkValidity()) {
+          this.value = parseFloat(target.value);
           this.update();
-        }}
-        title=${this.options.title}
-        placeholder=${this.options.placeholder}
-        step="any"
-      />
-    </label>`;
+        }
+      }}
+      title=${this.options.title}
+      placeholder=${this.options.placeholder}
+      step="any"
+    />`);
   }
 }
 
@@ -259,19 +275,16 @@ export class Boolean extends Prop {
 
   input(options = {}) {
     options = { ...this.options, ...options };
-    return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
-      <span>${this.label}</span>
-      <input
-        type="checkbox"
-        ?checked=${this.value}
-        id=${this.id}
-        onchange=${({ target }) => {
-          this.value = target.checked;
-          this.update();
-        }}
-        title=${this.options.title}
-      />
-    </label>`;
+    return this.labeled(html`<input
+      type="checkbox"
+      ?checked=${this.value}
+      id=${this.id}
+      onchange=${({ target }) => {
+        this.value = target.checked;
+        this.update();
+      }}
+      title=${this.options.title}
+    />`);
   }
 
   /** @param {any} value */
@@ -295,21 +308,18 @@ export class OneOfGroup extends Prop {
 
   input(options = {}) {
     options = { ...this.options, ...options };
-    return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
-      <span>${this.label}</span>
-      <input
-        type="checkbox"
-        .checked=${!!this.value}
-        id=${this.id}
-        name=${options.group}
-        onclick=${() => {
-          this.value = true;
-          this.clearPeers(options.group);
-          this.update();
-        }}
-        title=${this.options.title}
-      />
-    </label>`;
+    return this.labeled(html`<input
+      type="checkbox"
+      .checked=${!!this.value}
+      id=${this.id}
+      name=${options.group}
+      onclick=${() => {
+        this.value = true;
+        this.clearPeers(options.group);
+        this.update();
+      }}
+      title=${this.options.title}
+    />`);
   }
 
   /** @param {any} value */
@@ -359,22 +369,19 @@ export class Expression extends Prop {
   }
 
   input() {
-    return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
-      <span>${this.label}</span>
-      <input
-        type="text"
-        .value=${this.value}
-        id=${this.id}
-        onchange=${({ target }) => {
-          this.value = target.value;
-          this.compiled = compileExpression(this.value);
-          console.log("compiled", this.compiled);
-          this.update();
-        }}
-        title=${this.options.title}
-        placeholder=${this.options.placeholder}
-      />
-    </label>`;
+    return this.labeled(html`<input
+      type="text"
+      .value=${this.value}
+      id=${this.id}
+      onchange=${({ target }) => {
+        this.value = target.value;
+        this.compiled = compileExpression(this.value);
+        console.log("compiled", this.compiled);
+        this.update();
+      }}
+      title=${this.options.title}
+      placeholder=${this.options.placeholder}
+    />`);
   }
 
   /** @param {string} value */
@@ -392,32 +399,28 @@ export class Expression extends Prop {
   }
 }
 
-export class TextArea extends Prop {
+export class Code extends Prop {
   value = "";
 
+  /** @param {PropOptions} options */
   constructor(value = "", options = {}) {
+    options = { language: "css", ...options };
     super(options);
     this.value = value;
   }
 
   input() {
-    return html`<label
-      ?hiddenLabel=${this.options.hiddenLabel}
-      style="width:100%"
-    >
-      <span>${this.label}</span>
-      <textarea
-        type="text"
-        .value=${this.value}
-        id=${this.id}
-        onchange=${({ target }) => {
-          this.value = target.value;
-          this.update();
-        }}
-        title=${this.options.title}
-        placeholder=${this.options.placeholder}
-      ></textarea>
-    </label>`;
+    return this.labeled(html`<code-input
+      lang=${this.options.language}
+      .value=${this.value}
+      id=${this.id}
+      onchange=${({ target }) => {
+        this.value = target.value;
+        this.update();
+      }}
+      title=${this.options.title}
+      placeholder=${this.options.placeholder}
+    ></code-input>`);
   }
 }
 
@@ -430,17 +433,14 @@ export class Color extends Prop {
   }
 
   input() {
-    return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
-      <span>${this.label}</span>
-      <color-input
-        .value=${this.value}
-        id=${this.id}
-        onchange=${(/** @type {InputEventWithTarget} */ event) => {
-          this.value = event.target.value;
-          this.update();
-        }}
-      />
-    </label>`;
+    return this.labeled(html`<color-input
+      .value=${this.value}
+      id=${this.id}
+      onchange=${(/** @type {InputEventWithTarget} */ event) => {
+        this.value = event.target.value;
+        this.update();
+      }}
+    />`);
   }
 }
 
@@ -453,19 +453,16 @@ export class Voice extends Prop {
   }
 
   input() {
-    return html`<label ?hiddenLabel=${this.options.hiddenLabel}>
-      <span>${this.label}</span>
-      <select
-        is="select-voice"
-        .value=${this.value}
-        id=${this.id}
-        onchange=${(/** @type {InputEventWithTarget} */ event) => {
-          this.value = event.target.value;
-          this.update();
-        }}
-      >
-        <option value="">Default</option>
-      </select></label
-    >`;
+    return this.labeled(html`<select
+      is="select-voice"
+      .value=${this.value}
+      id=${this.id}
+      onchange=${(/** @type {InputEventWithTarget} */ event) => {
+        this.value = event.target.value;
+        this.update();
+      }}
+    >
+      <option value="">Default</option>
+    </select>`);
   }
 }
