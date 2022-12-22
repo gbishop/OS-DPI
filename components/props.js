@@ -23,7 +23,7 @@ codeInput.registerTemplate(
  * @property {boolean} [multiple]
  * @property {string} [defaultValue]
  * @property {string} [group]
- * @property {boolean} [fullWidth]
+ * @property {string} [language]
  */
 
 export class Prop {
@@ -82,7 +82,7 @@ export class Prop {
   }
   /** @param {Hole} body */
   labeled(body) {
-    return html`<div class="labeledInput" ?fullWidth=${this.options.fullWidth}>
+    return html`<div class="labeledInput">
       <label ?hiddenLabel=${this.options.hiddenLabel} for=${this.id}
         >${this.label}</label
       >
@@ -399,17 +399,19 @@ export class Expression extends Prop {
   }
 }
 
-export class TextArea extends Prop {
+export class Code extends Prop {
   value = "";
 
+  /** @param {PropOptions} options */
   constructor(value = "", options = {}) {
+    options = { language: "css", ...options };
     super(options);
     this.value = value;
   }
 
   input() {
     return this.labeled(html`<code-input
-      lang="css"
+      lang=${this.options.language}
       .value=${this.value}
       id=${this.id}
       onchange=${({ target }) => {

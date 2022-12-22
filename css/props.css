@@ -1,7 +1,7 @@
 div.labeledInput {
   display: inline-block;
 }
-div.labeledInput[fullWidth] {
+div.labeledInput:has(code-input) {
   display: block;
   width: calc(100% - 16px);
 }

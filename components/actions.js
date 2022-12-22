@@ -63,7 +63,7 @@ export class Actions extends DesignerPanel {
    * @param {Object} data - data associated with the event
    */
   applyRules(origin, event, data) {
-    console.trace({ origin, event, data });
+    // console.trace({ origin, event, data });
     this.last = { origin, event, data, rule: null };
     // first for the event then for any that got queued.
     while (true) {
@@ -259,6 +259,6 @@ TreeBase.register(ActionCondition, "ActionCondition");
 
 export class ActionUpdate extends TreeBase {
   stateName = new Props.String("", { hiddenLabel: true });
-  newValue = new Props.Expression("", { hiddenLabel: true, fullWidth: true });
+  newValue = new Props.Expression("", { hiddenLabel: true });
 }
 TreeBase.register(ActionUpdate, "ActionUpdate");

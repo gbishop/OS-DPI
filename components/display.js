@@ -76,7 +76,7 @@ class Display extends TreeBase {
     if (!Display.functionsInitialized) {
       Display.functionsInitialized = true;
       let { actions } = Globals;
-      console.log({ actions });
+      // console.log({ actions });
 
       /** return true of the message contains slots
        * @param {String|Editor} message
