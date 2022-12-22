@@ -3,7 +3,7 @@ div.Cue {
   flex-wrap: wrap;
 }
 
-.Cue textarea {
+.Cue code-input {
   box-sizing: border-box;
   width: 100%;
   flex-basis: 100%;

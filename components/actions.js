@@ -259,6 +259,6 @@ TreeBase.register(ActionCondition, "ActionCondition");
 
 export class ActionUpdate extends TreeBase {
   stateName = new Props.String("", { hiddenLabel: true });
-  newValue = new Props.Expression("", { hiddenLabel: true });
+  newValue = new Props.Expression("", { hiddenLabel: true, fullWidth: true });
 }
 TreeBase.register(ActionUpdate, "ActionUpdate");

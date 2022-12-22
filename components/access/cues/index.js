@@ -97,6 +97,7 @@ class CueCss extends Cue {
   Code = new Props.TextArea("", {
     placeholder: "Enter CSS for this cue",
     hiddenLabel: true,
+    fullWidth: true,
   });
 
   subTemplate() {
