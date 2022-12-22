@@ -12,6 +12,7 @@ function clearHints() {
 }
 
 function editMode() {
+  console.log("editMode");
   Globals.state.update({ editing: true });
 }
 
@@ -86,8 +87,8 @@ let state = null;
  * @type {TransitionTable[]}
  */
 const transitions = [
-  { state: "user", key: /alt/, next: "userAlt" },
-  { state: "userA", key: /d/, next: "designer", call: editMode },
+  { state: "user", key: /alt/, next: "userA" },
+  { state: "userA", key: /d/, next: "editing", call: editMode },
   // { state: "userA", key: /.*/, next: "user", allow: true },
   { state: "editing", key: /alt/, next: "hints", call: showHints },
   { state: "hints", key: /d/, next: "user", call: userMode },
