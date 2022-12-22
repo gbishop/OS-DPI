@@ -19,7 +19,9 @@ export async function readSheetFromBlob(blob) {
   const dataArray = [];
   for (const sheetName of workbook.SheetNames) {
     const sheet = workbook.Sheets[sheetName];
-    const range = XLSX.utils.decode_range(sheet["!ref"]);
+    const ref = sheet["!ref"];
+    if (!ref) continue;
+    const range = XLSX.utils.decode_range(ref);
     const names = [];
     const handlers = [];
     const validColumns = [];

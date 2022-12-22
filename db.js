@@ -160,7 +160,13 @@ export class DB {
       .transaction("store", "readonly")
       .store.index("by-name-type");
     const cursor = await index.openCursor([this.designName, type], "prev");
-    return cursor?.value.data || defaultValue;
+    if (cursor) {
+      const data = cursor.value.data;
+      if (typeof data == "string") {
+        return defaultValue;
+      }
+    }
+    return defaultValue;
   }
 
   /** Add a new record
