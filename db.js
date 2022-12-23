@@ -155,7 +155,6 @@ export class DB {
    * @returns {Promise<Object>}
    */
   async read(type, defaultValue) {
-    console.log("read", { type, defaultValue });
     const db = await this.dbPromise;
     const index = db
       .transaction("store", "readonly")
