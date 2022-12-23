@@ -15,7 +15,7 @@ export class Stack extends TreeBase {
     "Display",
     "Radio",
     "TabControl",
-    "Vsd",
+    "VSD",
     "Button",
   ];
 
