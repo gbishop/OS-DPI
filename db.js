@@ -323,7 +323,13 @@ export class DB {
       const mimetype = mime(fname) || "application/octet-stream";
       if (mimetype == "application/json") {
         const text = strFromU8(unzipped[fname]);
-        const obj = JSON.parse(text);
+        let obj = {};
+        try {
+          obj = JSON.parse(text);
+        } catch (e) {
+          obj = {};
+          console.trace(e);
+        }
         const type = fname.split(".")[0];
         await this.write(type, obj);
       } else if (mimetype.startsWith("image") || mimetype.startsWith("audio")) {
