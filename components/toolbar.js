@@ -289,7 +289,7 @@ function getFileMenuItems() {
       label: "Save sheet",
       title: "Save the content as a spreadsheet",
       callback: () => {
-        saveContent(db.designName, Globals.data.allrows, "xlxs");
+        saveContent(db.designName, Globals.data.allrows, "xlsx");
       },
     }),
     new MenuItem({
