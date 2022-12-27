@@ -275,7 +275,7 @@ function getFileMenuItems() {
       title: "Reload a spreadsheet of content",
       callback: async () => {
         if (sheet.handle) {
-          const blob = await sheet.handle;
+          const blob = await sheet.handle.getFile();
           if (blob) {
             const result = await pleaseWait(readSheetFromBlob(blob));
             await db.write("content", result);
