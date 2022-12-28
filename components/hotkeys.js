@@ -82,7 +82,6 @@ function help() {
   const currentId = designer.currentPanel.lastFocused;
   let inputName = "";
   let componentName = "";
-  let panelName = designer.currentPanel.name.value;
   if (currentId) {
     const label = /** @type {HTMLLabelElement} */ (
       document.querySelector(`label[for="${currentId}"]`)
@@ -90,7 +89,7 @@ function help() {
     inputName = label.innerText;
     componentName = TreeBase.componentFromId(currentId).className;
   }
-  const url = `${wiki}/${panelName} panel: ${componentName}#${inputName}`;
+  const url = `${wiki}/${componentName}#${inputName}`;
   console.log("help", url);
   window.open(url, "help");
 }
