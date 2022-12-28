@@ -188,6 +188,9 @@ export class DesignerPanel extends TabPanel {
     return this.constructor.tableName;
   }
 
+  /** @type {string[]} */
+  allowedChildren = [];
+
   /**
    * Load a panel from the database.
    *
