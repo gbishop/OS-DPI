@@ -80,7 +80,6 @@ function getComponentMenuItems(component, which = "all", wrapper) {
           callback: wrapper(() => {
             // remove returns the id of the nearest neighbor or the parent
             const nextId = component.remove();
-            console.log({ nextId });
             return nextId;
           }),
         })
@@ -136,12 +135,10 @@ function getPanelMenuItems(type) {
 
   // Ask that tab which component is focused
   if (!panel.lastFocused) {
-    console.log("no lastFocused");
     return { child: [], parent: [] };
   }
   const component = TreeBase.componentFromId(panel.lastFocused);
   if (!component) {
-    console.log("no component");
     return { child: [], parent: [] };
   }
 
@@ -149,17 +146,13 @@ function getPanelMenuItems(type) {
   function itemCallback(arg) {
     return () => {
       let nextId = arg();
-      console.log({ nextId });
       // we're looking for the settings view but we may have the id of the user view
       if (panel.lastFocused.startsWith(nextId)) {
-        console.log("set to lf", panel.lastFocused);
         nextId = panel.lastFocused;
       }
       if (nextId.match(/^TreeBase-\d+$/)) {
         nextId = nextId + "-settings";
-        console.log({ nextId });
       }
-      console.log("set lastFocused to result", nextId);
       panel.lastFocused = nextId;
       callAfterRender(() => panel.parent.restoreFocus());
       panel.update();
@@ -187,7 +180,6 @@ function getPanelMenuItems(type) {
     // menuItems = menuItems.concat(parentItems);
   }
 
-  // console.log(filteredActionsToMenuItems);
   return { child: menuItems, parent: parentItems };
 }
 
@@ -267,23 +259,27 @@ function getFileMenuItems() {
           }
         } catch (e) {
           sheet.handle = null;
+          console.log("cleared sheet.handle");
         }
       },
     }),
     new MenuItem({
       label: "Reload sheet",
       title: "Reload a spreadsheet of content",
-      callback: async () => {
-        if (sheet.handle) {
-          const blob = await sheet.handle.getFile();
+      callback:
+        sheet.handle && // only offer reload if we have the handle
+        (async () => {
+          let blob;
+          blob = await sheet.handle.getFile();
           if (blob) {
             const result = await pleaseWait(readSheetFromBlob(blob));
             await db.write("content", result);
             Globals.data = new Data(result);
             Globals.state.update();
+          } else {
+            console.log("no file to reload");
           }
-        }
-      },
+        }),
     }),
     new MenuItem({
       label: "Save sheet",
@@ -338,7 +334,6 @@ function getEditMenuItems() {
       label: "Undo",
       callback: () => {
         const panel = Globals.designer.currentPanel;
-        console.log({ panel });
         Globals.designer.currentPanel.undo();
       },
     }),
