@@ -1,9 +1,9 @@
 div.labeledInput {
   display: inline-block;
 }
-div.labeledInput:has(code-input) {
+div.labeledInput:has(div.Code) {
   display: block;
-  width: calc(100% - 16px);
+  flex-basis: 100%;
 }
 label[hiddenLabel] {
   clip: rect(0 0 0 0);
@@ -31,3 +31,52 @@ option[value=""][disabled] {
 option {
   color: black;
 }
+
+div.Code {
+  width: 100%;
+}
+
+div.Code div.numbered-textarea {
+  width: 100%;
+  display: inline-flex;
+  gap: 10px;
+  font-family: monospace;
+  border-radius: 2px;
+  padding: 5px 10px 10px;
+  border: 1px solid var(--text2);
+}
+
+div.Code textarea {
+  padding: 0;
+  border: 0;
+  outline: none;
+  resize: none;
+  line-height: 1.2em;
+  padding: 4px;
+}
+
+div.Code textarea.text {
+  width: 100%;
+  background-color: var(--surface1);
+}
+
+div.Code textarea.line-numbers {
+  width: 2em;
+  text-align: right;
+  padding-top: 4px;
+  background-color: var(--surface2);
+  color: var(--text2);
+  scrollbar-width: none;
+  overflow: hidden;
+}
+
+div.Code div.errors {
+  color: red;
+  white-space: pre;
+}
+
+/*
+div.Code textarea.line-numbers::-webkit-scrollbar {
+  display: none;
+}
+*/
