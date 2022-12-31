@@ -68,6 +68,8 @@ def render(component):
                 print('## Properties')
                 print()
                 for prop, ptype in info['props'].items():
+                    if prop == 'Key':
+                        continue
                     print(f'### {friendlyName(prop).title()}')
                     if prop in bp:
                         print(bp[prop].substitute(component=component, ptype=ptype))
