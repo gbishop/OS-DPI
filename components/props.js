@@ -4,15 +4,6 @@ import { html } from "uhtml";
 import "css/props.css";
 import { compileExpression } from "app/eval";
 import Globals from "app/globals";
-import "app/node_modules/prismjs/themes/prism.css";
-import Prism from "prismjs";
-import "app/lib/code-input/code-input.css";
-import codeInput from "app/lib/code-input/code-input";
-
-codeInput.registerTemplate(
-  "syntax-highlighted",
-  codeInput.templates.prism(Prism, [])
-);
 
 /**
  * @typedef {Object} PropOptions
@@ -24,6 +15,7 @@ codeInput.registerTemplate(
  * @property {string} [defaultValue]
  * @property {string} [group]
  * @property {string} [language]
+ * @property {Object<string,string>} [replacements]
  */
 
 export class Prop {
@@ -134,7 +126,6 @@ export class Select extends Prop {
       title=${this.options.title}
       onchange=${({ target }) => {
         this.value = target.value;
-        console.log("select", this, this.value, target.value);
         this.update();
       }}
     >
@@ -376,7 +367,6 @@ export class Expression extends Prop {
       onchange=${({ target }) => {
         this.value = target.value;
         this.compiled = compileExpression(this.value);
-        console.log("compiled", this.compiled);
         this.update();
       }}
       title=${this.options.title}
@@ -401,26 +391,148 @@ export class Expression extends Prop {
 
 export class Code extends Prop {
   value = "";
+  editedValue = "";
+
+  /** @type {string[]} */
+  errors = [];
+
+  /** @type {number[]} */
+  lineOffsets = [];
 
   /** @param {PropOptions} options */
   constructor(value = "", options = {}) {
-    options = { language: "css", ...options };
+    options = {
+      language: "css",
+      replacements: {},
+      ...options,
+    };
     super(options);
     this.value = value;
   }
 
+  /** @param {HTMLTextAreaElement} target */
+  addLineNumbers = (target) => {
+    const numberOfLines = target.value.split("\n").length;
+    const lineNumbers = /** @type {HTMLTextAreaElement} */ (
+      target.previousElementSibling
+    );
+    const numbers = [];
+    for (let ln = 1; ln <= numberOfLines; ln++) {
+      numbers.push(ln);
+    }
+    lineNumbers.value = numbers.join("\n");
+    const rows = Math.max(4, Math.min(10, numberOfLines));
+    target.rows = rows;
+    lineNumbers.rows = rows;
+    lineNumbers.scrollTop = target.scrollTop;
+  };
+
+  /** @param {number} offset - where the error happened
+   * @param {string} message - the error message
+   */
+  addError(offset, message) {
+    const line = this.value.slice(0, offset).match(/$/gm).length;
+    this.errors.push(`${line}: ${message}`);
+  }
+
+  /** Edit and validate the value */
+  editCSS(props = {}, editSelector = (selector = "") => selector) {
+    // replaces props in the full text
+    let value = this.value;
+    for (const prop in props) {
+      value = value.replaceAll("$" + prop, props[prop]);
+    }
+    // clear the errors
+    this.errors = [];
+    // build the new rules here
+    const editedRules = [];
+    // match a single rule
+    const ruleRE = /([\s\S]*?)({\s*[\s\S]*?}\s*)/dg;
+    for (const ruleMatch of value.matchAll(ruleRE)) {
+      let selector = ruleMatch[1];
+      const selectorOffset = ruleMatch["indices"][1][0];
+      const body = ruleMatch[2];
+      const bodyOffset = ruleMatch["indices"][2][0];
+      // replace field names in the selector
+      selector = selector.replace(
+        /#(\w+)/g,
+        (_, name) =>
+          `data-${name.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`)}`
+      );
+      // prefix the selector so it only applies to the UI
+      selector = `#UI ${editSelector(selector)}`;
+      // reconstruct the rule
+      const rule = selector + body;
+      // add it to the result
+      editedRules.push(rule);
+      // validate the rule
+      const styleSheet = new CSSStyleSheet();
+      try {
+        // add the rule to the sheet. If the selector is bad we'll get an
+        // exception. If any properties are bad they will omitted in the
+        // result. I'm adding a bogus ;gap:0; property to the end of the body
+        // because we get an exception if there is only one invalid property.
+        const index = styleSheet.insertRule(rule.replace("}", ";gap:0;}"));
+        // retrieve the rule
+        const newRule = styleSheet.cssRules[index].cssText;
+        // extract the body
+        const ruleRE = /([\s\S]*?)({\s*[\s\S]*?}\s*)/dg;
+        const match = ruleRE.exec(newRule);
+        if (match) {
+          const newBody = match[2];
+          const propRE = /[-\w]+:/g;
+          const newProperties = newBody.match(propRE);
+          for (const propMatch of body.matchAll(propRE)) {
+            if (newProperties.indexOf(propMatch[0]) < 0) {
+              // the property was invalid
+              this.addError(
+                bodyOffset + propMatch.index,
+                `property ${propMatch[0]} is invalid`
+              );
+            }
+          }
+        } else {
+          this.addError(selectorOffset, "Rule is invalid");
+        }
+      } catch (e) {
+        this.addError(selectorOffset, "Rule is invalid");
+      }
+    }
+    this.editedValue = editedRules.join("");
+  }
+
   input() {
-    return this.labeled(html`<code-input
-      lang=${this.options.language}
-      .value=${this.value}
-      id=${this.id}
-      onchange=${({ target }) => {
-        this.value = target.value;
-        this.update();
-      }}
-      title=${this.options.title}
-      placeholder=${this.options.placeholder}
-    ></code-input>`);
+    return this.labeled(html`<div class="Code">
+      <div class="numbered-textarea">
+        <textarea class="line-numbers" readonly></textarea>
+        <textarea
+          class="text"
+          .value=${this.value}
+          id=${this.id}
+          onchange=${({ target }) => {
+            this.value = target.value;
+            this.editCSS();
+            this.update();
+          }}
+          onkeyup=${(event) => {
+            this.addLineNumbers(event.target);
+          }}
+          onscroll=${({ target }) => {
+            target.previousElementSibling.scrollTop = target.scrollTop;
+          }}
+          ref=${this.addLineNumbers}
+          title=${this.options.title}
+          placeholder=${this.options.placeholder}
+        ></textarea>
+      </div>
+      <div class="errors">${this.errors.join("\n")}</div>
+    </div>`);
+  }
+
+  /** @param {string} value */
+  set(value) {
+    this.value = value;
+    this.editCSS();
   }
 }
 

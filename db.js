@@ -175,7 +175,6 @@ export class DB {
    * @param {Object} data
    */
   async write(type, data) {
-    console.trace("write", type, data);
     const db = await this.dbPromise;
     // do all this in a transaction
     const tx = db.transaction(["store", "saved"], "readwrite");
@@ -274,7 +273,6 @@ export class DB {
     const response = await fetch(url, { headers });
     if (response.status == 304) {
       // we already have it
-      console.log("no need to fetch, we have it", name);
       this.designName = name;
       return;
     }
@@ -323,7 +321,13 @@ export class DB {
       const mimetype = mime(fname) || "application/octet-stream";
       if (mimetype == "application/json") {
         const text = strFromU8(unzipped[fname]);
-        const obj = JSON.parse(text);
+        let obj = {};
+        try {
+          obj = JSON.parse(text);
+        } catch (e) {
+          obj = {};
+          console.trace(e);
+        }
         const type = fname.split(".")[0];
         await this.write(type, obj);
       } else if (mimetype.startsWith("image") || mimetype.startsWith("audio")) {

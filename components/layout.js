@@ -48,6 +48,8 @@ export class Layout extends DesignerPanel {
     </div>`;
   }
 
+  allowedChildren = ["Page"];
+
   /**
    * An opportunity to upgrade the format if needed
    * @param {any} obj

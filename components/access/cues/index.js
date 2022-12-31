@@ -3,7 +3,6 @@ import "css/cues.css";
 import { TreeBase, TreeBaseSwitchable } from "components/treebase";
 import { DesignerPanel } from "components/designer";
 import * as Props from "components/props";
-import Prism from "prismjs";
 
 import { interpolate, toggleIndicator } from "components/helpers";
 import { getColor } from "components/style";
@@ -15,7 +14,7 @@ export class CueList extends DesignerPanel {
   static tableName = "cues";
   static defaultValue = defaultCues;
 
-  allowedChildren = ["Cue"];
+  allowedChildren = ["CueCss", "CueFill", "CueOverlay", "CueCircle"];
   /** @type {Cue[]} */
   children = [];
 
@@ -28,9 +27,23 @@ export class CueList extends DesignerPanel {
   }
 
   renderCss() {
-    const result = this.children.map((child) => child.renderCss());
+    const result = this.children.map(
+      (child) =>
+        html`<style>
+          ${child.css}
+        </style>`
+    );
     if (this.children.length > 0) {
-      result.push(this.defaultCue.renderCss({ Key: "DefaultCue" }));
+      const defaultCue = this.defaultCue;
+      const defaultCSS = defaultCue.css.replaceAll(
+        defaultCue.Key.value,
+        "DefaultCue"
+      );
+      result.push(
+        html`<style>
+          ${defaultCSS}
+        </style>`
+      );
     }
     return result;
   }
@@ -47,6 +60,19 @@ export class CueList extends DesignerPanel {
 
   get defaultCue() {
     return this.children.find((cue) => cue.Default.value) || this.children[0];
+  }
+
+  /** @param {Object} obj */
+  static upgrade(obj) {
+    // update any CueCss entries to the new style interpolation
+    if (obj.className == "CueList") {
+      for (const child of obj.children) {
+        if (child.className == "CueCss") {
+          child.props.Code = child.props.Code.replaceAll("{{Key}}", "$Key");
+        }
+      }
+    }
+    return obj;
   }
 }
 TreeBase.register(CueList, "CueList");
@@ -85,12 +111,6 @@ class Cue extends TreeBaseSwitchable {
   get css() {
     return "";
   }
-
-  renderCss(overrideProps = {}) {
-    return html`<style>
-      ${interpolate(this.css, { ...this.props, ...overrideProps })}
-    </style>`;
-  }
 }
 TreeBase.register(Cue, "Cue");
 
@@ -105,7 +125,15 @@ class CueCss extends Cue {
   }
 
   get css() {
-    return this.Code.value;
+    return this.Code.editedValue;
+  }
+
+  onUpdate() {
+    this.Code.editCSS(this.props);
+  }
+
+  init() {
+    this.onUpdate();
   }
 }
 TreeBase.register(CueCss, "CueCss");
@@ -118,18 +146,17 @@ class CueOverlay extends Cue {
     return html`${this.Color.input()} ${this.Opacity.input()}
       <details>
         <summary>generated CSS</summary>
-        <pre><code class="language-css" ref=${(element) =>
-          Prism.highlightElement(element)}>${this.css}</code></pre>
+        <pre><code>${this.css.replaceAll(this.Key.value, "$Key")}</code></pre>
       </details>`;
   }
 
   get css() {
     return `
-      button[cue="{{Key}}"] {
+#UI button[cue="${this.Key.value}"] {
         position: relative;
-        border-color: {{Color}};
+        border-color: ${getColor(this.Color.value)};
       }
-      button[cue="{{Key}}"]:after {
+#UI button[cue="${this.Key.value}"]:after {
         content: "";
         display: block;
         position: absolute;
@@ -137,8 +164,8 @@ class CueOverlay extends Cue {
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: {{Color}};
-        opacity: {{Opacity}};
+        background-color: ${getColor(this.Color.value)};
+        opacity: ${this.Opacity.value};
         z-index: 10;
       }
     `;
@@ -163,18 +190,17 @@ class CueFill extends Cue {
       ${this.Direction.input()} ${this.Repeat.input()}
       <details>
         <summary>generated CSS</summary>
-        <pre><code class="language-css" ref=${(element) =>
-          Prism.highlightElement(element)}>${this.css}</code></pre>
+        <pre><code>${this.css.replaceAll(this.Key.value, "$Key")}</code></pre>
       </details> `;
   }
 
   get css() {
     return `
-      button[cue="{{Key}}"] {
+      button[cue="${this.Key.value}"] {
         position: relative;
-        border-color: {{Color}};
+        border-color: ${getColor(this.Color.value)};
       }
-      button[cue="{{Key}}"]:after {
+      button[cue="${this.Key.value}"]:after {
         content: "";
         display: block;
         position: absolute;
@@ -183,17 +209,17 @@ class CueFill extends Cue {
         bottom: 0;
         right: 0;
 
-        background-color: {{Color}};
-        opacity: {{Opacity}};
+        background-color: ${getColor(this.Color.value)};
+        opacity: ${this.Opacity.value};
         z-index: 10;
-        animation-name: {{Key}};
+        animation-name: ${this.Key.value};
         animation-duration: var(--timerInterval);
         animation-timing-function: linear;
         animation-iteration-count: ${this.Repeat.value ? "infinite" : 1};
       }
-      @keyframes {{Key}} {
-        0% { {{Direction}}: 100%; }
-      100% { {{Direction}}: 0%; }
+      @keyframes ${this.Key.value} {
+        0% { ${this.Direction.value}: 100%; }
+      100% { ${this.Direction.value}: 0%; }
       }
     `;
   }
@@ -208,31 +234,22 @@ class CueCircle extends Cue {
     return html`${this.Color.input()} ${this.Opacity.input()}
       <details>
         <summary>generated CSS</summary>
-        <pre><code class="language-css" ref=${(element) =>
-          Prism.highlightElement(element)}>${this.css}</code></pre>
+        <pre><code>${this.css.replaceAll(this.Key.value, "$Key")}</code></pre>
       </details> `;
-  }
-
-  renderCss() {
-    const props = this.props;
-    props["Color"] = getColor(props["Color"]);
-    return html`<style>
-      ${interpolate(this.css, props)}
-    </style>`;
   }
 
   get css() {
     return `
-@property --percent-{{Key}} {
+@property --percent-${this.Key.value} {
   syntax: "<percentage>";
   initial-value: 100%;
   inherits: false;
 }
-button[cue="{{Key}}"] {
+button[cue="${this.Key.value}"] {
   position: relative;
-  border-color: {{Color}};
+  border-color: ${getColor(this.Color.value)};
 }
-button[cue="{{Key}}"]:after {
+button[cue="${this.Key.value}"]:after {
   content: "";
   display: block;
   position: absolute;
@@ -251,26 +268,26 @@ button[cue="{{Key}}"]:after {
 
   background-image: conic-gradient(
     from 0,
-      {{Color}},
-      {{Color}} var(--percent-{{Key}}),
-    transparent var(--percent-{{Key}})
+      ${getColor(this.Color.value)},
+      ${getColor(this.Color.value)} var(--percent-${this.Key.value}),
+    transparent var(--percent-${this.Key.value})
   );
-  opacity: {{Opacity}};
+  opacity: ${this.Opacity.value};
 
-  animation-name: conic-gradient-{{Key}};
+  animation-name: conic-gradient-${this.Key.value};
   animation-duration: var(--timerInterval);
   animation-timing-function: linear;
 
   z-index: 0;
 }
 
-@keyframes conic-gradient-{{Key}} {
+@keyframes conic-gradient-${this.Key.value} {
   0% {
-    --percent-{{Key}}: 0%;
+    --percent-${this.Key.value}: 0%;
   }
 
   100% {
-    --percent-{{Key}}: 100%;
+    --percent-${this.Key.value}: 100%;
   }
 }
     `;

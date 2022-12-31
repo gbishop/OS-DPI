@@ -3,9 +3,6 @@ import { TreeBase } from "./treebase";
 import { DesignerPanel } from "./designer";
 import * as Props from "./props";
 import db from "app/db";
-import { Data } from "app/data";
-import { fileOpen } from "browser-fs-access";
-// import { read, writeFileXLSX, utils } from "xlsx";
 import "css/content.css";
 import pleaseWait from "./wait";
 import Globals from "app/globals";
@@ -91,8 +88,7 @@ export async function readSheetFromBlob(blob) {
  * @param {string} type
  */
 export async function saveContent(name, rows, type) {
-  if (!type) return;
-  const XLSX = await import("xlsx");
+  const XLSX = await pleaseWait(import("xlsx"));
   const sheetNames = new Set(rows.map((row) => row.sheetName || "sheet1"));
   const workbook = XLSX.utils.book_new();
   for (const sheetName of sheetNames) {

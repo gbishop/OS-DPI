@@ -76,15 +76,15 @@ export async function start() {
       props: { tabEdge: "top", stateName: "designerTab" },
       children: [
         layout,
-        Globals.actions,
-        Globals.cues,
-        Globals.patterns,
-        Globals.method,
         {
           className: "Content",
           props: {},
           children: [],
         },
+        Globals.actions,
+        Globals.cues,
+        Globals.patterns,
+        Globals.method,
       ],
     })
   );

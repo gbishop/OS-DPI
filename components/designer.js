@@ -107,6 +107,7 @@ export class Designer extends TabControl {
    * @param {KeyboardEvent} event
    */
   panelKeyHandler = (event) => {
+    if (event.target instanceof HTMLTextAreaElement) return;
     if (event.key != "ArrowDown" && event.key != "ArrowUp") return;
     // get the components on this panel
     // todo expand this to all components
@@ -187,6 +188,9 @@ export class DesignerPanel extends TabPanel {
     // @ts-expect-error
     return this.constructor.tableName;
   }
+
+  /** @type {string[]} */
+  allowedChildren = [];
 
   /**
    * Load a panel from the database.

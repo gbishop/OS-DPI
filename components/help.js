@@ -1,7 +1,7 @@
 /** Implement a simple help system using github wiki
  */
 
-const wiki = "https://github.com/UNC-Project-Open-AAC/OS-DPI/wiki/";
+const wiki = "https://github.com/unc-project-open-aac/os-dpi/wiki/";
 
 document.addEventListener("keydown", (/** @type {KeyboardEvent} */ event) => {
   if (
