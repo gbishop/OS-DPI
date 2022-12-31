@@ -4,7 +4,9 @@
   "description": "",
   "scripts": {
     "start": "vite --port 8080 --host 0.0.0.0",
-    "build": "vite build"
+    "build": "vite build",
+    "deploy": "./deploy.sh",
+    "publish": "./publish.sh"
   },
   "author": "",
   "license": "ISC",
