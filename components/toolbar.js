@@ -333,7 +333,6 @@ function getEditMenuItems() {
     new MenuItem({
       label: "Undo",
       callback: () => {
-        const panel = Globals.designer.currentPanel;
         Globals.designer.currentPanel.undo();
       },
     }),
@@ -454,7 +453,7 @@ export class ToolBar extends TreeBase {
                 type="text"
                 .value=${db.designName}
                 .size=${Math.max(db.designName.length, 12)}
-                onchange=${(event) =>
+                onchange=${(/** @type {InputEventWithTarget} */ event) =>
                   db
                     .renameDesign(event.target.value)
                     .then(() => (window.location.hash = db.designName))}
