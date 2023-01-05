@@ -4,7 +4,7 @@ import { TreeBase, TreeBaseSwitchable } from "components/treebase";
 import { DesignerPanel } from "components/designer";
 import * as Props from "components/props";
 
-import { interpolate, toggleIndicator } from "components/helpers";
+import { toggleIndicator } from "components/helpers";
 import { getColor } from "components/style";
 import defaultCues from "./defaultCues";
 

@@ -457,7 +457,10 @@ export class Code extends Prop {
       selector = selector.replace(
         /#(\w+)/g,
         (_, name) =>
-          `data-${name.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`)}`
+          `data-${name.replace(
+            /[A-Z]/g,
+            (/** @type {string} */ m) => `-${m.toLowerCase()}`
+          )}`
       );
       // prefix the selector so it only applies to the UI
       selector = `#UI ${editSelector(selector)}`;
@@ -514,7 +517,7 @@ export class Code extends Prop {
             this.editCSS();
             this.update();
           }}
-          onkeyup=${(event) => {
+          onkeyup=${(/** @type {{ target: HTMLTextAreaElement; }} */ event) => {
             this.addLineNumbers(event.target);
           }}
           onscroll=${({ target }) => {

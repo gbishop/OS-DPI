@@ -17,10 +17,14 @@ export class Monitor extends TreeBase {
         ${Object.keys(state.values)
           .filter((key) => key.startsWith("$"))
           .map((key) => {
-            const value = state.get(key);
+            const value = state.get(key).toString();
+            let clamped = value.slice(0, 30);
+            if (value.length > clamped.length) {
+              clamped += "...";
+            }
             return html`<tr>
               <td>${key}</td>
-              <td>${value}</td>
+              <td>${clamped}</td>
             </tr>`;
           })}
       </tbody>
