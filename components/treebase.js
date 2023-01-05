@@ -388,6 +388,17 @@ export class TreeBase {
  * A variant of TreeBase that allows replacing a node with one of a similar type
  */
 export class TreeBaseSwitchable extends TreeBase {
+  init() {
+    // find the TypeSelect property and set its value
+    for (const prop of Object.values(this.propsAsProps)) {
+      if (prop instanceof Props.TypeSelect) {
+        if (!prop.value) {
+          prop.set(this.className);
+        }
+      }
+    }
+  }
+
   /** Replace this node with one of a compatible type
    * @param {string} className */
   replace(className) {
