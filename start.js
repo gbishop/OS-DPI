@@ -167,6 +167,11 @@ window.addEventListener("hashchange", () => {
   start();
 });
 
+// watch for window resize and force a redraw
+window.addEventListener("resize", () => {
+  Globals.state.update();
+});
+
 /* Attempt to understand pointer events on page update */
 // import { log } from "./log";
 // let etype = "";
