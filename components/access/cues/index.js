@@ -14,7 +14,7 @@ export class CueList extends DesignerPanel {
   static tableName = "cues";
   static defaultValue = defaultCues;
 
-  allowedChildren = ["CueCss", "CueFill", "CueOverlay", "CueCircle"];
+  allowedChildren = ["CueCss", "CueFill", "CueOverlay", "CueCircle", "Cue"];
   /** @type {Cue[]} */
   children = [];
 
@@ -79,9 +79,9 @@ TreeBase.register(CueList, "CueList");
 
 const CueTypes = new Map([
   ["Cue", "none"],
-  ["CueCss", "css"],
   ["CueOverlay", "overlay"],
   ["CueFill", "fill"],
+  ["CueCss", "css"],
   ["CueCircle", "circle"],
 ]);
 

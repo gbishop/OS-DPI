@@ -76,6 +76,9 @@ class VSD extends TreeBase {
   /** @type {GridFilter[]} */
   children = [];
 
+  /** @type {HTMLDivElement} */
+  markers = null;
+
   get filters() {
     return this.children.map((child) => ({
       field: child.field.value,
@@ -86,32 +89,60 @@ class VSD extends TreeBase {
 
   template() {
     const { data, state, actions } = Globals;
+    const editing = state.get("editing");
     const items = /** @type {VRow[]} */ (
       data.getMatchingRows(this.filters, state)
     );
     const src = items.find((item) => item.image)?.image;
+    let dragging = 0;
+    const coords = [
+      [0, 0], // start x and y
+      [0, 0], // end x and y
+    ];
+    let clip = "";
+
     return html`<div class="vsd flex show" id=${this.id}>
-      <img is="img-db" dbsrc=${src} />
+      <img
+        is="img-db"
+        dbsrc=${src}
+        onload=${() => {
+          this.sizeMarkers(this.markers);
+        }}
+      />
       <div
         class="markers"
         ref=${(/** @type {HTMLDivElement & { observer: any }} */ node) => {
-          const img = /** @type {HTMLImageElement} */ (
-            node.previousElementSibling
-          );
-          if (!node.observer) {
-            /* get a callback when the image changes size so that we
-             * can resize the div containing the markers to match */
-            node.observer = new ResizeObserver(async () => {
-              const rect = await getActualImageSize(img);
-              node.style.position = "absolute";
-              node.style.left = px(rect.left);
-              node.style.top = px(rect.top);
-              node.style.width = px(rect.width);
-              node.style.height = px(rect.height);
-            });
-            node.observer.observe(img);
-          }
+          this.sizeMarkers(node);
         }}
+        onpointermove=${editing &&
+        ((/** @type {PointerEvent} */ event) => {
+          const rect = this.markers.getBoundingClientRect();
+          const div = document.querySelector("span.coords");
+          coords[dragging][0] = Math.round(
+            (100 * (event.pageX - rect.left)) / rect.width
+          );
+          coords[dragging][1] = Math.round(
+            (100 * (event.pageY - rect.top)) / rect.height
+          );
+          clip = `${coords[0][0]}\t${coords[0][1]}`;
+          if (dragging) {
+            clip =
+              clip +
+              `\t${coords[1][0] - coords[0][0]}\t${
+                coords[1][1] - coords[0][1]
+              }`;
+          }
+          div.innerHTML = clip;
+        })}
+        onpointerdown=${editing &&
+        (() => {
+          dragging = 1;
+        })}
+        onpointerup=${editing &&
+        (() => {
+          dragging = 0;
+          navigator.clipboard.writeText(clip);
+        })}
       >
         ${items
           .filter((item) => item.w)
@@ -130,8 +161,21 @@ class VSD extends TreeBase {
               <span>${item.label || ""}</span>
             </button>`
           )}
+        <span class="coords" style="background-color: white"></span>
       </div>
     </div>`;
+  }
+
+  /** @param {HTMLDivElement} node */
+  async sizeMarkers(node) {
+    this.markers = node;
+    const img = /** @type {HTMLImageElement} */ (node.previousElementSibling);
+    const rect = await getActualImageSize(img);
+    node.style.position = "absolute";
+    node.style.left = px(rect.left);
+    node.style.top = px(rect.top);
+    node.style.width = px(rect.width);
+    node.style.height = px(rect.height);
   }
 
   settingsDetails() {
