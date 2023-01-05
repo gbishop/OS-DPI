@@ -23,9 +23,13 @@ import Globals from "app/globals";
 
 class Display extends TreeBase {
   stateName = new Props.String("$Display");
+  Name = new Props.String("");
   background = new Props.Color("white");
   fontSize = new Props.Float(2);
   scale = new Props.Float(1);
+
+  /** @type {HTMLDivElement} */
+  current = null;
 
   static functionsInitialized = false;
 
@@ -62,15 +66,41 @@ class Display extends TreeBase {
         return html`${part}`;
       });
     }
-    return html`<div
-      class="display flex"
-      ref=${this}
-      style=${style}
-      id=${this.id}
-    >
-      ${content}
-    </div>`;
+    return html`<button
+        class="display flex"
+        ref=${this}
+        style=${style}
+        id=${this.id}
+        onpointerup=${this.click}
+        tabindex="-1"
+        ?disabled=${!this.Name.value}
+        .dataset=${{
+          name: this.Name.value,
+          ComponentName: this.Name.value,
+          ComponentType: this.className,
+        }}
+      >
+        ${content}
+      </button>
+      >`;
   }
+
+  /** Attempt to locate the word the user is touching
+   */
+  click = () => {
+    const s = window.getSelection();
+    let word = "";
+    if (s.isCollapsed) {
+      s.modify("move", "forward", "character");
+      s.modify("move", "backward", "word");
+      s.modify("extend", "forward", "word");
+      word = s.toString();
+      s.modify("move", "forward", "character");
+    } else {
+      word = s.toString();
+    }
+    this.current.setAttribute("data--clicked-word", word);
+  };
 
   initFunctions() {
     if (!Display.functionsInitialized) {
