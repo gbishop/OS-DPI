@@ -5,7 +5,6 @@ import { DesignerPanel } from "./designer";
 import "css/actions.css";
 import Globals from "app/globals";
 import { Functions } from "app/eval";
-import { callAfterRender } from "app/render";
 
 export class Actions extends DesignerPanel {
   name = new Props.String("Actions");
