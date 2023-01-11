@@ -249,6 +249,14 @@ class Action extends TreeBase {
   get updates() {
     return this.filterChildren(ActionUpdate);
   }
+
+  init() {
+    if (this.children.length == 0) {
+      // add a condition and update if none are present
+      TreeBase.create(ActionCondition, this, {}).init();
+      TreeBase.create(ActionUpdate, this, {}).init();
+    }
+  }
 }
 TreeBase.register(Action, "Action");
 
