@@ -95,6 +95,11 @@ export class TreeBase {
     return result;
   }
 
+  /**
+   * An opportunity for the component to initialize itself. This is
+   * called in fromObject after the children have been added. If you
+   * call create directly you should call init afterward.
+   */
   init() {}
 
   /**
@@ -123,9 +128,6 @@ export class TreeBase {
       result.parent = parent;
       parent.children.push(result);
     }
-
-    // allow the component to initialize itself
-    result.init();
 
     // remember the relationship between id and component
     TreeBase.idMap.set(result.id, result);
@@ -165,6 +167,9 @@ export class TreeBase {
         TreeBase.fromObject(childObj, result);
       }
     }
+
+    // allow the component to initialize itself
+    result.init();
 
     // Validate the type is what was expected
     if (result instanceof this) return result;
@@ -407,6 +412,7 @@ export class TreeBaseSwitchable extends TreeBase {
     // extract the values of the old props
     const props = this.props;
     const replacement = TreeBase.create(className, null, props);
+    replacement.init();
     const index = this.parent.children.indexOf(this);
     this.parent.children[index] = replacement;
     replacement.parent = this.parent;

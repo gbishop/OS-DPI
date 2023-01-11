@@ -91,9 +91,11 @@ export async function start() {
 
   /* ToolBar */
   const toolbar = ToolBar.create("ToolBar", null);
+  toolbar.init();
 
   /* Monitor */
   const monitor = Monitor.create("Monitor", null);
+  monitor.init();
 
   function renderUI() {
     const startTime = performance.now();
