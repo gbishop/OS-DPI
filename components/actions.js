@@ -137,12 +137,6 @@ export class Actions extends DesignerPanel {
   settings() {
     const { actions } = Globals;
     const rule = this.last.rule;
-    callAfterRender(() =>
-      document
-        .querySelector(".actions tbody[highlight]")
-        // @ts-ignore
-        ?.scrollIntoViewIfNeeded({ behavior: "smooth" })
-    );
     return html`<div class="actions" help="Actions" id=${this.id} tabindex="-1">
       <table>
         <thead>
