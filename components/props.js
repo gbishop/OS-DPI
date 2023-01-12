@@ -366,8 +366,15 @@ export class Expression extends Prop {
       id=${this.id}
       onchange=${({ target }) => {
         this.value = target.value;
-        this.compiled = compileExpression(this.value);
-        this.update();
+        try {
+          this.compiled = compileExpression(this.value);
+          target.setCustomValidity("");
+          target.reportValidity();
+          this.update();
+        } catch (e) {
+          target.setCustomValidity(e.message);
+          target.reportValidity();
+        }
       }}
       title=${this.options.title}
       placeholder=${this.options.placeholder}
@@ -377,7 +384,11 @@ export class Expression extends Prop {
   /** @param {string} value */
   set(value) {
     this.value = value;
-    this.compiled = compileExpression(this.value);
+    try {
+      this.compiled = compileExpression(this.value);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   /** @param {Object} context */

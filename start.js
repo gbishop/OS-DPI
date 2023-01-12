@@ -1,3 +1,4 @@
+import "./components/errors";
 import { html } from "uhtml";
 import { Data } from "./data";
 import { State } from "./state";

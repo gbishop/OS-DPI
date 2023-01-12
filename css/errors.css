@@ -1,0 +1,18 @@
+div#ErrorReport {
+  padding: 1em;
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10000;
+  background: white;
+  opacity: 0.9;
+}
+#ErrorReport h2 {
+  margin-top: 1em;
+}
+#ErrorReport p {
+  margin: 1em;
+  max-width: 40em;
+}
