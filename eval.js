@@ -90,11 +90,16 @@ function access(state, data) {
 
 /** @param {string} expression */
 export function compileExpression(expression) {
-  const te = translate(expression);
-  const exp = expressions.compile(te);
-  /** @param {Object} context */
-  return (context) =>
-    exp({ ...Functions, access: access(Globals.state, context), ...context });
+  try {
+    const te = translate(expression);
+    const exp = expressions.compile(te);
+    /** @param {Object} context */
+    return (context) =>
+      exp({ ...Functions, access: access(Globals.state, context), ...context });
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
 }
 
 /**
@@ -105,7 +110,12 @@ export function compileExpression(expression) {
  * @returns {any} Value returned by the expression
  */
 export function evalInContext(expression, context) {
-  const te = translate(expression);
-  const exp = expressions.compile(te);
-  return exp({ ...context, access: access(context.state, context.data) });
+  try {
+    const te = translate(expression);
+    const exp = expressions.compile(te);
+    return exp({ ...context, access: access(context.state, context.data) });
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
 }
