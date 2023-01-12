@@ -67,6 +67,7 @@ function getComponentMenuItems(component, which = "all", wrapper) {
           label: `${friendlyName(className)}`,
           callback: wrapper(() => {
             const result = TreeBase.create(className, component);
+            result.init();
             return result.id;
           }),
         })

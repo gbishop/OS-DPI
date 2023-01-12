@@ -5,7 +5,6 @@ import { DesignerPanel } from "./designer";
 import "css/actions.css";
 import Globals from "app/globals";
 import { Functions } from "app/eval";
-import { callAfterRender } from "app/render";
 
 export class Actions extends DesignerPanel {
   name = new Props.String("Actions");
@@ -137,12 +136,6 @@ export class Actions extends DesignerPanel {
   settings() {
     const { actions } = Globals;
     const rule = this.last.rule;
-    callAfterRender(() =>
-      document
-        .querySelector(".actions tbody[highlight]")
-        // @ts-ignore
-        ?.scrollIntoViewIfNeeded({ behavior: "smooth" })
-    );
     return html`<div class="actions" help="Actions" id=${this.id} tabindex="-1">
       <table>
         <thead>
@@ -248,6 +241,14 @@ class Action extends TreeBase {
 
   get updates() {
     return this.filterChildren(ActionUpdate);
+  }
+
+  init() {
+    if (this.children.length == 0) {
+      // add a condition and update if none are present
+      TreeBase.create(ActionCondition, this, {}).init();
+      TreeBase.create(ActionUpdate, this, {}).init();
+    }
   }
 }
 TreeBase.register(Action, "Action");

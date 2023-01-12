@@ -110,10 +110,6 @@ export async function saveContent(name, rows, type) {
 export class Content extends DesignerPanel {
   name = new Props.String("Content");
 
-  init() {
-    this.sheetHandle = null;
-    this.sheetMessage = "";
-  }
   settings() {
     const data = Globals.data;
     return html`<div class="content" id=${this.id}>
