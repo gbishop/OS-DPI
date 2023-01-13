@@ -20,11 +20,12 @@ export async function welcome() {
         <div id="head)">
           <div id="logo"></div>
           <div>
-            <h1>Welcome to the Project Open AAC OS-DPI</h1>
+            <h1>Project Open AAC OS-DPI</h1>
             <p>
               With this tool you can create experimental AAC interfaces. Start
               by loading a design from an ".osdpi" file or by creating a new
-              one. Switch between the IDE and the User Interface with the "d"
+              one. Switch between the IDE and the User Interface by pressing the
+              <b>ALT</b> or <b>OPTION</b> key followed by the <b>d</b>
               key.
             </p>
           </div>
