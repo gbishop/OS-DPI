@@ -113,7 +113,8 @@ export async function start() {
     clearAccessChanged();
     safeRender(
       document.body,
-      html`<div id="UI" hint="U" tabindex="-1">
+      html`<div id="ErrorReport"></div>
+        <div id="UI" hint="U" tabindex="-1">
           <div id="timer"></div>
           ${Globals.cues.renderCss()}${Globals.tree.template()}
         </div>

@@ -1,3 +1,7 @@
+div#ErrorReport:empty {
+  display: none;
+}
+
 div#ErrorReport {
   padding: 1em;
   position: fixed;
