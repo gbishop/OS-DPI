@@ -16,6 +16,7 @@ import Globals from "app/globals";
  * @property {string} [group]
  * @property {string} [language]
  * @property {Object<string,string>} [replacements]
+ * @property {any} [valueWhenEmpty]
  */
 
 export class Prop {
@@ -354,6 +355,9 @@ export class UID extends Prop {
 
 export class Expression extends Prop {
   compiled = null;
+  /** @param {string} value
+   * @param {PropOptions} options
+   */
   constructor(value = "", options = {}) {
     super(options);
     this.value = value;
@@ -366,8 +370,15 @@ export class Expression extends Prop {
       id=${this.id}
       onchange=${({ target }) => {
         this.value = target.value;
-        this.compiled = compileExpression(this.value);
-        this.update();
+        try {
+          this.compiled = compileExpression(this.value);
+          target.setCustomValidity("");
+          target.reportValidity();
+          this.update();
+        } catch (e) {
+          target.setCustomValidity(e.message);
+          target.reportValidity();
+        }
       }}
       title=${this.options.title}
       placeholder=${this.options.placeholder}
@@ -377,14 +388,20 @@ export class Expression extends Prop {
   /** @param {string} value */
   set(value) {
     this.value = value;
-    this.compiled = compileExpression(this.value);
+    try {
+      this.compiled = compileExpression(this.value);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   /** @param {Object} context */
   eval(context) {
-    if (this.compiled) {
+    if (this.compiled && this.value) {
       const r = this.compiled(context);
       return r;
+    } else {
+      return this.options["valueWhenEmpty"];
     }
   }
 }

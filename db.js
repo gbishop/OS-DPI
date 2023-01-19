@@ -394,8 +394,10 @@ export class DB {
       extensions: [".osdpi", ".zip"],
       id: "osdpi",
     };
-    await fileSave(blob, options, this.fileHandle);
-    await db.put("saved", { name: this.designName });
+    try {
+      await fileSave(blob, options, this.fileHandle);
+      await db.put("saved", { name: this.designName });
+    } catch {}
   }
 
   /** Unload a design from the database

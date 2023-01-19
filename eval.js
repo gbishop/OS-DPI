@@ -88,18 +88,16 @@ function access(state, data) {
   };
 }
 
-/** @param {string} expression */
+/** @param {string} expression
+ *
+ * This could throw an error which we should catch and report.
+ * */
 export function compileExpression(expression) {
-  try {
-    const te = translate(expression);
-    const exp = expressions.compile(te);
-    /** @param {Object} context */
-    return (context) =>
-      exp({ ...Functions, access: access(Globals.state, context), ...context });
-  } catch (e) {
-    console.error(e);
-    return null;
-  }
+  const te = translate(expression);
+  const exp = expressions.compile(te);
+  /** @param {Object} context */
+  return (context) =>
+    exp({ ...Functions, access: access(Globals.state, context), ...context });
 }
 
 /**

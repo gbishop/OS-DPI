@@ -296,21 +296,23 @@ function getFileMenuItems() {
       label: "Load media",
       title: "Load audio or images into the design",
       callback: async () => {
-        const files = await fileOpen({
-          description: "Media files",
-          mimeTypes: ["image/*", "audio/*"],
-          multiple: true,
-        });
-        for (const file of files) {
-          await db.addMedia(file, file.name);
-          if (file.type.startsWith("image/")) {
-            for (const img of document.querySelectorAll(
-              `img[dbsrc="${file.name}"]`
-            )) {
-              /** @type {ImgDb} */ (img).refresh();
+        try {
+          const files = await fileOpen({
+            description: "Media files",
+            mimeTypes: ["image/*", "audio/*"],
+            multiple: true,
+          });
+          for (const file of files) {
+            await db.addMedia(file, file.name);
+            if (file.type.startsWith("image/")) {
+              for (const img of document.querySelectorAll(
+                `img[dbsrc="${file.name}"]`
+              )) {
+                /** @type {ImgDb} */ (img).refresh();
+              }
             }
           }
-        }
+        } catch {}
         Globals.state.update();
       },
     }),

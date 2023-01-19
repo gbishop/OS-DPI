@@ -1,3 +1,4 @@
+import "./components/errors";
 import { html } from "uhtml";
 import { Data } from "./data";
 import { State } from "./state";
@@ -112,7 +113,8 @@ export async function start() {
     clearAccessChanged();
     safeRender(
       document.body,
-      html`<div id="UI" hint="U" tabindex="-1">
+      html`<div id="ErrorReport"></div>
+        <div id="UI" hint="U" tabindex="-1">
           <div id="timer"></div>
           ${Globals.cues.renderCss()}${Globals.tree.template()}
         </div>

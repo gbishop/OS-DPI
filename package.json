@@ -32,6 +32,7 @@
     "rxjs": "^7.5.6",
     "sheetrock": "^1.2.0",
     "spectre.css": "^0.5.9",
+    "stacktrace-js": "^2.0.2",
     "uhtml": "^3.0.1",
     "umap": "^1.0.2",
     "uparser": "^0.2.1",
