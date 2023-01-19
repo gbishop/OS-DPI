@@ -254,7 +254,10 @@ class Action extends TreeBase {
 TreeBase.register(Action, "Action");
 
 export class ActionCondition extends TreeBase {
-  Condition = new Props.Expression("", { hiddenLabel: true });
+  Condition = new Props.Expression("", {
+    hiddenLabel: true,
+    valueWhenEmpty: true,
+  });
 }
 TreeBase.register(ActionCondition, "ActionCondition");
 

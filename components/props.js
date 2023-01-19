@@ -16,6 +16,7 @@ import Globals from "app/globals";
  * @property {string} [group]
  * @property {string} [language]
  * @property {Object<string,string>} [replacements]
+ * @property {any} [valueWhenEmpty]
  */
 
 export class Prop {
@@ -354,6 +355,9 @@ export class UID extends Prop {
 
 export class Expression extends Prop {
   compiled = null;
+  /** @param {string} value
+   * @param {PropOptions} options
+   */
   constructor(value = "", options = {}) {
     super(options);
     this.value = value;
@@ -393,9 +397,11 @@ export class Expression extends Prop {
 
   /** @param {Object} context */
   eval(context) {
-    if (this.compiled) {
+    if (this.compiled && this.value) {
       const r = this.compiled(context);
       return r;
+    } else {
+      return this.options["valueWhenEmpty"];
     }
   }
 }
