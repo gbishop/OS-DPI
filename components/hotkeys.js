@@ -141,6 +141,7 @@ function HotKeyHandler(event) {
     state = Globals.state.get("editing") ? State.editing : State.user;
   }
   const key = event.key;
+  if (!key) return;
   for (const T of transitions) {
     if (T.state == state) {
       const match = key.match(T.key);
