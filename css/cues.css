@@ -3,13 +3,6 @@ div.Cue {
   flex-wrap: wrap;
 }
 
-.Cue code-input {
-  box-sizing: border-box;
-  width: 100%;
-  flex-basis: 100%;
-  height: 15em;
-}
-
 .Cue details {
   flex-basis: 100%;
   width: 100%;

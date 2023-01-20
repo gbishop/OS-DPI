@@ -4,7 +4,6 @@ import * as Props from "components/props";
 import { html } from "uhtml";
 import * as RxJs from "rxjs";
 import { Method } from "./index";
-import { log } from "app/log";
 
 const timerSignals = new Map([
   ["transitionend", "Transition end"],
@@ -39,7 +38,7 @@ export class TimerHandler extends Handler {
 
   /** @param {RxJs.Subject} stop$ */
   configure(stop$) {
-    log("configure timer");
+    console.log("configure timer");
     const timer = this.nearestParent(Method).timer(this.TimerName.value);
     if (!timer) return;
     const delayTime = 1000 * timer.Interval.valueAsNumber;

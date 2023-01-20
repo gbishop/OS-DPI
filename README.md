@@ -41,3 +41,35 @@ We are formatting code with <a href="https://prettier.io/">Prettier</a> and acce
 
 We are documenting our Javascript with <a href="https://jsdoc.app/">JSDoc</a> and providing a few type hints to the
 <a href="https://www.typescriptlang.org/">TypeScript</a> compiler for static checking of our Javascript code.
+
+## Key files in this folder
+
+- index.html: tiny shell needed to get things started.
+- start.js: the Javascript starts here.
+- state.js: manages the application state using the Meiosis pattern.
+- render.js: handles rendering the app and calling functions afterward.
+- globals.js: global variables we need everywhere. I'm avoiding having to pass them down
+  through so many levels.
+- data.js: abstracts the content as an array of objects.
+- db.js: abtracts the interface to the IndexedDB that persists the design.
+- eval.js: evaluate user entered expressions.
+- rules.js: implements the actions.
+
+## Key folders
+
+- components/: code for all the components and some helpers.
+- css/: style for the site
+- dist/: output of the last build (ignored by git)
+- node_modules: npm manages these
+- thinking/: experiments and general thinking about how things should work.
+- types/: Added types to help the typescript LSP.
+
+### Additional files
+
+deploy.sh: build the design and deploy it on github pages.
+publish.sh: build the production design and deploy it to github pages.
+
+package.json: npm info
+package-lock.json: more npm info
+jsconfig.json: configure LSP for Javascript
+vite.config.js: configuration for the Vite build tool

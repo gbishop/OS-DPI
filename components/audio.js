@@ -1,4 +1,3 @@
-import { log } from "app/log";
 import { strip } from "./display";
 import { TreeBase } from "./treebase";
 import * as Props from "./props";
@@ -14,7 +13,7 @@ class Audio extends TreeBase {
     const { state } = Globals;
     const { stateName } = this.props;
     const fileName = strip(state.get(stateName) || "");
-    log("play audio");
+    console.log("play audio");
     (await db.getAudio(fileName)).play();
   }
 

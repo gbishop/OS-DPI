@@ -3,4 +3,5 @@ package-lock.json
 .~lock.*
 docs/
 dist/
+thinking/wiki
 

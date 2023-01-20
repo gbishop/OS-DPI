@@ -6,7 +6,6 @@ import * as RxJs from "rxjs";
 import { EventWrap } from "../index";
 // make sure the classes are registered
 import defaultMethods from "./defaultMethods";
-import { log } from "app/log";
 import { DesignerPanel } from "components/designer";
 import "css/method.css";
 import { toggleIndicator } from "app/components/helpers";
@@ -176,7 +175,7 @@ class Timer extends TreeBase {
 
   /** @param {Event & { access: {}}} event */
   start(event) {
-    log("start timer");
+    console.log("start timer");
     const fakeEvent = /** @type {Event} */ ({
       type: "timer",
       target: event.target,
@@ -187,7 +186,7 @@ class Timer extends TreeBase {
   }
 
   cancel() {
-    log("cancel timer");
+    console.log("cancel timer");
     const event = EventWrap(new Event("cancel"));
     this.subject$.next(event);
   }

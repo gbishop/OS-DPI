@@ -25,4 +25,3 @@ import "./access/method/pointerHandler";
 import "./access/method/timerHandler";
 import "./access/cues";
 import "./access/pattern";
-// import "./generateDocumentSkeleton";

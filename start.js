@@ -176,27 +176,6 @@ window.addEventListener("resize", () => {
   Globals.state.update();
 });
 
-/* Attempt to understand pointer events on page update */
-// import { log } from "./log";
-// let etype = "";
-// for (const eventName of [
-//   "pointerover",
-//   "pointerout",
-//   "pointermove",
-//   "pointerdown",
-//   "pointerup",
-// ]) {
-//   document.addEventListener(eventName, (event) => {
-//     if (
-//       (event.type != "pointermove" || event.type != etype) &&
-//       event.target instanceof HTMLElement &&
-//       event.target.closest("#UI")
-//     ) {
-//       etype = event.type;
-//       log(event.type, event);
-//     }
-//   });
-// }
 //
 /** @typedef {PointerEvent & { target: HTMLElement }} ClickEvent */
 // I think this code mapped clicks back to the tree but no longer...
