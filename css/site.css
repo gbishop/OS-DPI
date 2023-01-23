@@ -12,7 +12,8 @@ button {
   font-size: inherit;
 }
 
-body.loaded {
+body.loaded,
+body:has(#ErrorReport) {
   opacity: 1;
   /* transition: opacity 0.5s ease-in; */
 }

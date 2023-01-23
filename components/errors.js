@@ -7,7 +7,7 @@ import "css/errors.css";
  * @param {string[]} trace - stack trace
  */
 function report(msg, trace) {
-  const result = html.node`<div>
+  const result = html.node`<div id="ErrorReport">
     <h1>Internal Error</h1>
     <p>
       Your browser has detected an internal error in OS-DPI. It was very likely
@@ -29,7 +29,7 @@ function report(msg, trace) {
       >.
       <button
         onclick=${() => {
-          document.getElementById("ErrorReport").innerHTML = "";
+          document.getElementById("ErrorReport").remove();
         }}
       >
         Dismiss this dialog
@@ -44,7 +44,7 @@ function report(msg, trace) {
       </ul>
     </div>
   </div>`;
-  document.getElementById("ErrorReport").prepend(result);
+  document.body.prepend(result);
 }
 
 window.onerror = async function (msg, _file, _line, _col, error) {
