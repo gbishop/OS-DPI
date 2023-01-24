@@ -97,8 +97,8 @@ export class PointerHandler extends Handler {
         RxJs.groupBy((e) => e.target),
         RxJs.mergeMap(($group) =>
           $group.pipe(
-            RxJs.debounceTime(interval),
-            RxJs.distinctUntilKeyChanged("type")
+            RxJs.debounceTime(interval)
+            // RxJs.distinctUntilKeyChanged("type")
           )
         )
       );
@@ -130,6 +130,7 @@ export class PointerHandler extends Handler {
     let stream$ = null;
     stream$ = pointerOverOut$.pipe(
       RxJs.mergeWith(pointerDownUp$),
+      // RxJs.tap((e) => console.log("b", e.type)),
       RxJs.filter(
         (e) => e.target instanceof HTMLButtonElement && !e.target.disabled
       ),
@@ -139,6 +140,7 @@ export class PointerHandler extends Handler {
         ew.access.eventType = e.type;
         return ew;
       })
+      // RxJs.tap((e) => console.log("a", e.type))
     );
     /* I am killing the "pointerover" event that occurs when a button is replaced
      * on a redraw if the user requests it. This avoids repeats when dwelling
