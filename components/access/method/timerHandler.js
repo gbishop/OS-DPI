@@ -19,7 +19,7 @@ export class TimerHandler extends Handler {
 
   settings() {
     const { conditions, responses, Signal } = this;
-    const timerNames = this.nearestParent(Method).timerNames;
+    const timerNames = this.nearestParent(Method)?.timerNames;
     return html`
       <fieldset class="Handler">
         <legend>Timer Handler</legend>
@@ -39,7 +39,7 @@ export class TimerHandler extends Handler {
   /** @param {RxJs.Subject} stop$ */
   configure(stop$) {
     console.log("configure timer");
-    const timer = this.nearestParent(Method).timer(this.TimerName.value);
+    const timer = this.nearestParent(Method)?.timer(this.TimerName.value);
     if (!timer) return;
     const delayTime = 1000 * timer.Interval.valueAsNumber;
     timer.subject$

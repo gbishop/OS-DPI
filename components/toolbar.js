@@ -93,7 +93,8 @@ function getComponentMenuItems(component, which = "all", wrapper) {
 
   // move
   if (which == "move" || which == "all") {
-    if (component.parent) {
+    const parent = component.parent;
+    if (parent) {
       const index = component.index;
 
       if (index > 0) {
@@ -103,20 +104,20 @@ function getComponentMenuItems(component, which = "all", wrapper) {
             label: `Move up`,
             title: `Move up ${friendlyName(component.className)}`,
             callback: wrapper(() => {
-              component.parent.swap(index, index - 1);
+              parent.swap(index, index - 1);
               return component.id;
             }),
           })
         );
       }
-      if (index < component.parent.children.length - 1) {
+      if (index < parent.children.length - 1) {
         // movedown
         result.push(
           new MenuItem({
             label: `Move down`,
             title: `Move down ${friendlyName(component.className)}`,
             callback: wrapper(() => {
-              component.parent.swap(index, index + 1);
+              parent.swap(index, index + 1);
               return component.id;
             }),
           })
@@ -138,7 +139,7 @@ function getPanelMenuItems(type) {
   const panel = designer.currentPanel;
 
   // Ask that tab which component is focused
-  if (!panel.lastFocused) {
+  if (!panel || !panel.lastFocused) {
     return { child: [], parent: [] };
   }
   const component = TreeBase.componentFromId(panel.lastFocused);
@@ -150,6 +151,7 @@ function getPanelMenuItems(type) {
   function itemCallback(arg) {
     return () => {
       let nextId = arg();
+      if (!panel) return;
       // we're looking for the settings view but we may have the id of the user view
       if (panel.lastFocused.startsWith(nextId)) {
         nextId = panel.lastFocused;
@@ -158,7 +160,7 @@ function getPanelMenuItems(type) {
         nextId = nextId + "-settings";
       }
       panel.lastFocused = nextId;
-      callAfterRender(() => panel.parent.restoreFocus());
+      callAfterRender(() => panel.parent?.restoreFocus());
       panel.update();
     };
   }
@@ -262,7 +264,7 @@ function getFileMenuItems() {
             Globals.state.update();
           }
         } catch (e) {
-          sheet.handle = null;
+          sheet.handle = undefined;
           console.log("cleared sheet.handle");
         }
       },
@@ -273,6 +275,7 @@ function getFileMenuItems() {
       callback:
         sheet.handle && // only offer reload if we have the handle
         (async () => {
+          if (!sheet.handle) return;
           let blob;
           blob = await sheet.handle.getFile();
           if (blob) {
@@ -339,7 +342,7 @@ function getEditMenuItems() {
     new MenuItem({
       label: "Undo",
       callback: () => {
-        Globals.designer.currentPanel.undo();
+        Globals.designer.currentPanel?.undo();
       },
     }),
     new MenuItem({
@@ -359,10 +362,11 @@ function getEditMenuItems() {
       label: "Cut",
       callback: async () => {
         const component = Globals.designer.selectedComponent;
+        if (!component) return;
         const json = JSON.stringify(component.toObject());
         await navigator.clipboard.writeText(json);
         component.remove();
-        Globals.designer.currentPanel.onUpdate();
+        Globals.designer.currentPanel?.onUpdate();
       },
     }),
     new MenuItem({
@@ -374,6 +378,8 @@ function getEditMenuItems() {
         if (!className) return;
         // find a place that can accept it
         const anchor = Globals.designer.selectedComponent;
+        if (!anchor) return;
+        /** @type {TreeBase | null } */
         let current = anchor;
         while (current) {
           if (current.allowedChildren.indexOf(className) >= 0) {
@@ -384,7 +390,7 @@ function getEditMenuItems() {
             ) {
               anchor.moveTo(anchor.index + 1);
             }
-            Globals.designer.currentPanel.onUpdate();
+            Globals.designer.currentPanel?.onUpdate();
             return;
           }
           current = current.parent;
@@ -400,9 +406,9 @@ function getEditMenuItems() {
         if (!className) return;
         // find a place that can accept it
         const current = Globals.designer.selectedComponent;
-        if (current.allowedChildren.indexOf(className) >= 0) {
+        if (current && current.allowedChildren.indexOf(className) >= 0) {
           TreeBase.fromObject(obj, current);
-          Globals.designer.currentPanel.onUpdate();
+          Globals.designer.currentPanel?.onUpdate();
         }
       },
     }),
@@ -427,7 +433,8 @@ function hinted(thing, hint) {
 }
 
 const sheet = {
-  handle: null,
+  /** @type {FileSystemFileHandle | undefined } */
+  handle: undefined,
 };
 
 export class ToolBar extends TreeBase {
@@ -468,13 +475,22 @@ export class ToolBar extends TreeBase {
             )}
           </li>
           <li>
-            ${hinted(this.fileMenu.render(), "F")}
+            ${
+              // @ts-ignore
+              hinted(this.fileMenu.render(), "F")
+            }
           </li>
           <li>
-            ${hinted(this.editMenu.render(), "E")}
+            ${
+              // @ts-ignore
+              hinted(this.editMenu.render(), "E")
+            }
           </li>
           <li>
-            ${hinted(this.addMenu.render(), "A")}
+            ${
+              // @ts-ignore
+              hinted(this.addMenu.render(), "A")
+            }
           </li>
       </div>
     `;

@@ -33,8 +33,9 @@ const pageLoaded = new Promise((resolve) => {
 export async function start() {
   if (window.location.search && !window.location.hash.slice(1)) {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("fetch")) {
-      await pleaseWait(db.readDesignFromURL(params.get("fetch")));
+    const fetch = params.get("fetch");
+    if (fetch) {
+      await pleaseWait(db.readDesignFromURL(fetch));
       window.history.replaceState(
         {},
         document.title,
@@ -121,9 +122,10 @@ export async function start() {
     );
     Globals.method.refresh();
     if (location.host.startsWith("localhost")) {
-      document.getElementById("timer").innerText = (
-        performance.now() - startTime
-      ).toFixed(0);
+      const timer = document.getElementById("timer");
+      if (timer) {
+        timer.innerText = (performance.now() - startTime).toFixed(0);
+      }
     }
   }
   Globals.state.observe(debounce(renderUI));
@@ -139,7 +141,7 @@ channel.onmessage = (event) => {
   if (db.designName == message.name) {
     if (message.action == "update") {
       start();
-    } else if (message.action == "rename") {
+    } else if (message.action == "rename" && message.newName) {
       window.location.hash = message.newName;
     }
   }

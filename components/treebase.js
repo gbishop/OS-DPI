@@ -7,7 +7,7 @@ import WeakValue from "weak-value";
 export class TreeBase {
   /** @type {TreeBase[]} */
   children = [];
-  /** @type {TreeBase} */
+  /** @type {TreeBase | null} */
   parent = null;
   /** @type {string[]} */
   allowedChildren = [];
@@ -27,7 +27,7 @@ export class TreeBase {
   static idMap = new WeakValue();
 
   /** @param {string} id
-   * @returns {TreeBase} */
+   * @returns {TreeBase | null} */
   static componentFromId(id) {
     // strip off any added bits of the id
     const match = id.match(/TreeBase-\d+/);
@@ -106,7 +106,7 @@ export class TreeBase {
    *   Create a TreeBase object
    *   @template {TreeBase} TB
    *   @param {string|(new()=>TB)} constructorOrName
-   *   @param {TreeBase} parent
+   *   @param {TreeBase | null} parent
    *   @param {Object<string,string|number|boolean>} props
    *   @returns {TB}
    *   */
@@ -138,7 +138,7 @@ export class TreeBase {
   /**
    * Instantiate a TreeBase tree from its external representation
    * @param {Object} obj
-   * @param {TreeBase} parent
+   * @param {TreeBase | null} parent
    * @returns {TreeBase} - should be {this} but that isn't supported for some reason
    * */
   static fromObject(obj, parent = null) {
@@ -184,8 +184,8 @@ export class TreeBase {
    * Signal nodes above that something has been updated
    */
   update() {
-    /** @type {TreeBase} */
     let start = this;
+    /** @type {TreeBase | null} */
     let p = start;
     while (p) {
       p.onUpdate(start);
@@ -264,7 +264,7 @@ export class TreeBase {
    * @param {number} i
    */
   moveTo(i) {
-    const peers = this.parent.children;
+    const peers = this.parent?.children || [];
     peers.splice(this.index, 1);
     peers.splice(i, 0, this);
   }
@@ -282,6 +282,7 @@ export class TreeBase {
    *  @returns {string}
    *  */
   remove() {
+    if (!this.parent) return "";
     const peers = this.parent.children;
     const index = peers.indexOf(this);
     const parent = this.parent;
@@ -327,7 +328,7 @@ export class TreeBase {
    * Return the nearest parent of the given type
    * @template T
    * @param {new() => T} type
-   * @returns {T}
+   * @returns {T | null}
    * */
   nearestParent(type) {
     let p = this.parent;
@@ -408,6 +409,7 @@ export class TreeBaseSwitchable extends TreeBase {
    * @param {string} className */
   replace(className) {
     console.log("replacing", this.className, className);
+    if (!this.parent) return;
     if (this.className == className) return;
     // extract the values of the old props
     const props = this.props;

@@ -44,7 +44,7 @@ function clickToolbar(key) {
  */
 function focusUI() {
   clearHints();
-  document.getElementById("UI").focus();
+  document.getElementById("UI")?.focus();
 }
 
 /**
@@ -79,6 +79,7 @@ function focusTabs() {
 function help() {
   const wiki = "https://github.com/unc-project-open-aac/os-dpi/wiki";
   const { designer } = Globals;
+  if (!designer.currentPanel) return;
   const currentId = designer.currentPanel.lastFocused;
   let inputName = "";
   let componentName = "";
@@ -87,7 +88,7 @@ function help() {
       document.querySelector(`label[for="${currentId}"]`)
     );
     inputName = label.innerText;
-    componentName = TreeBase.componentFromId(currentId).className;
+    componentName = TreeBase.componentFromId(currentId)?.className || "";
   }
   const url = `${wiki}/${componentName}#${inputName}`;
   console.log("help", url);
@@ -104,8 +105,8 @@ const State = {
   hints: "hints",
 };
 
-/** @type {State} */
-let state = null;
+/** @type {State | undefined} */
+let state = undefined;
 
 /**
  * State machine transition table

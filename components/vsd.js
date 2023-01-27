@@ -77,7 +77,7 @@ class VSD extends TreeBase {
   children = [];
 
   /** @type {HTMLDivElement} */
-  markers = null;
+  markers;
 
   get filters() {
     return this.children.map((child) => ({
@@ -118,6 +118,7 @@ class VSD extends TreeBase {
         ((/** @type {PointerEvent} */ event) => {
           const rect = this.markers.getBoundingClientRect();
           const div = document.querySelector("span.coords");
+          if (!div) return;
           coords[dragging][0] = Math.round(
             (100 * (event.pageX - rect.left)) / rect.width
           );

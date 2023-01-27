@@ -7,7 +7,9 @@ declare module "uhtml" {
     | boolean
     | number
     | Object
-    | Function;
+    | Function
+    | null
+    | undefined;
 
   export type TemplateFunction<T> = (
     template: TemplateStringsArray,

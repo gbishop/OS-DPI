@@ -24,7 +24,7 @@ export class imgFromDb extends HTMLImageElement {
    * Look again at the db which may have changed
    */
   async refresh() {
-    const url = this.getAttribute("dbsrc");
+    const url = this.getAttribute("dbsrc") || "";
     return this.updateSrcFromDb(url);
   }
 
@@ -34,7 +34,7 @@ export class imgFromDb extends HTMLImageElement {
   async updateSrcFromDb(url) {
     // if it contains a slash treat it like an external url
     // if not, fetch it from the db
-    if (url && url.indexOf("/") < 0) url = await db.getMediaURL(url);
+    if (url.indexOf("/") < 0) url = await db.getMediaURL(url);
     if (url) this.src = url;
   }
 }

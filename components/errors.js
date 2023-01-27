@@ -15,7 +15,8 @@ function report(msg, trace) {
       the information below. Simply click this button
       <button
         onclick=${() => {
-          const html = document.getElementById("ErrorReportBody").innerHTML;
+          const html =
+            document.getElementById("ErrorReportBody")?.innerHTML || "";
           const blob = new Blob([html], { type: "text/html" });
           const data = [new ClipboardItem({ "text/html": blob })];
           navigator.clipboard.write(data);
@@ -29,7 +30,7 @@ function report(msg, trace) {
       >.
       <button
         onclick=${() => {
-          document.getElementById("ErrorReport").remove();
+          document.getElementById("ErrorReport")?.remove();
         }}
       >
         Dismiss this dialog
@@ -48,9 +49,11 @@ function report(msg, trace) {
 }
 
 window.onerror = async function (msg, _file, _line, _col, error) {
-  const frames = await StackTrace.fromError(error);
-  const trace = frames.map((frame) => `${frame.toString()}`);
-  report(msg.toString(), trace);
+  if (error instanceof Error) {
+    const frames = await StackTrace.fromError(error);
+    const trace = frames.map((frame) => `${frame.toString()}`);
+    report(msg.toString(), trace);
+  }
 };
 /** @param {PromiseRejectionEvent} error */
 window.onunhandledrejection = function (error) {

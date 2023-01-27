@@ -20,8 +20,8 @@ export class TabControl extends TreeBase {
   /** @type {TabPanel[]} */
   children = [];
 
-  /** @type {TabPanel} */
-  currentPanel = null;
+  /** @type {TabPanel | undefined} */
+  currentPanel = undefined;
 
   template() {
     const { state } = Globals;
@@ -101,12 +101,16 @@ export class TabControl extends TreeBase {
     Globals.state.update({ [this.props.stateName]: tabName });
   }
 
+  /** @type {function | null} */
   focusin = null;
 
+  /** @type {function | null} */
   panelKeyHandler = null;
 
+  /** @type {function | null} */
   tabButtonKeyHandler = null;
 
+  /** @type {string | null} */
   hint = null;
 
   restoreFocus() {}
@@ -117,7 +121,7 @@ export class TabPanel extends Stack {
   name = new Props.String("");
   label = new Props.String("");
 
-  /** @type {TabControl} */
+  /** @type {TabControl | null} */
   parent = null;
 
   active = false;

@@ -4,6 +4,8 @@ import { html } from "uhtml";
 import "css/props.css";
 import { compileExpression } from "app/eval";
 import Globals from "app/globals";
+import { instrument } from "stacktrace-js";
+import { TreeBaseSwitchable } from "./treebase";
 
 /**
  * @typedef {Object} PropOptions
@@ -28,7 +30,7 @@ export class Prop {
   id = "";
 
   /** @type {import('./treebase').TreeBase} */
-  container = null;
+  container;
 
   /** attach the prop to its containing TreeBase component
    * @param {string} name
@@ -62,8 +64,8 @@ export class Prop {
   /** @param {PropOptions} options */
   constructor(options = {}) {
     this.options = options;
-    if ("label" in options) {
-      this.label = options.label;
+    if (options["label"]) {
+      this.label = options["label"];
     }
   }
   /** @param {Object} _ - The context */
@@ -115,7 +117,7 @@ export class Select extends Prop {
     this.value = "";
   }
 
-  /** @param {Map<string,string>} choices */
+  /** @param {Map<string,string> | null} choices */
   input(choices = null) {
     if (!choices) {
       choices = this.choices;
@@ -149,6 +151,7 @@ export class Select extends Prop {
 }
 
 export class Field extends Select {
+  /** @param {Map<string,string> | null} choices */
   input(choices = null) {
     if (!choices) {
       choices = toMap([...Globals.data.allFields, "#ComponentName"].sort());
@@ -158,6 +161,7 @@ export class Field extends Select {
 }
 
 export class State extends Select {
+  /** @param {Map<string,string> | null} choices */
   input(choices = null) {
     if (!choices) {
       choices = toMap([...Globals.tree.allStates()]);
@@ -167,14 +171,12 @@ export class State extends Select {
 }
 
 export class TypeSelect extends Select {
-  /** @type {import('./treebase').TreeBaseSwitchable} */
-  container = null;
-
   update() {
     /* Magic happens here! The replace method on a TreeBaseSwitchable replaces the
      * node with a new one to allow type switching in place
      * */
-    this.container.replace(this.value);
+    if (this.container instanceof TreeBaseSwitchable)
+      this.container.replace(this.value);
   }
 }
 
@@ -328,7 +330,7 @@ export class OneOfGroup extends Prop {
    * @param {string} name
    */
   clearPeers(name) {
-    const peers = this.container.parent.children;
+    const peers = this.container?.parent?.children || [];
     for (const peer of peers) {
       const props = peer.propsAsProps;
       for (const propName in props) {
@@ -354,6 +356,7 @@ export class UID extends Prop {
 }
 
 export class Expression extends Prop {
+  /** @type {function | null}
   compiled = null;
   /** @param {string} value
    * @param {PropOptions} options
@@ -448,7 +451,7 @@ export class Code extends Prop {
    * @param {string} message - the error message
    */
   addError(offset, message) {
-    const line = this.value.slice(0, offset).match(/$/gm).length;
+    const line = this.value.slice(0, offset).match(/$/gm)?.length || "??";
     this.errors.push(`${line}: ${message}`);
   }
 
@@ -503,7 +506,7 @@ export class Code extends Prop {
           const propRE = /[-\w]+:/g;
           const newProperties = newBody.match(propRE);
           for (const propMatch of body.matchAll(propRE)) {
-            if (newProperties.indexOf(propMatch[0]) < 0) {
+            if (!newProperties || newProperties.indexOf(propMatch[0]) < 0) {
               // the property was invalid
               this.addError(
                 bodyOffset + propMatch.index,

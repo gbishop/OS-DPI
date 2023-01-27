@@ -127,8 +127,7 @@ export class PointerHandler extends Handler {
       .subscribe((e) => e.preventDefault());
 
     /** @type {RxJs.Observable<Event & { access: {} }>} */
-    let stream$ = null;
-    stream$ = pointerOverOut$.pipe(
+    let stream$ = pointerOverOut$.pipe(
       RxJs.mergeWith(pointerDownUp$),
       // RxJs.tap((e) => console.log("b", e.type)),
       RxJs.filter(

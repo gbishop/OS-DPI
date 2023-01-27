@@ -12,8 +12,8 @@ import db from "app/db";
 export class Designer extends TabControl {
   allowDelete = false;
 
-  /** @type {DesignerPanel} */
-  currentPanel = null;
+  /** @type {DesignerPanel | undefined} */
+  currentPanel = undefined;
 
   hint = "T";
 
@@ -35,23 +35,25 @@ export class Designer extends TabControl {
    */
   focusin = (event) => {
     if (!(event.target instanceof HTMLElement)) return;
+    if (!this.currentPanel) return;
     const panel = document.getElementById(this.currentPanel.id);
+    if (!panel) return;
     for (const element of panel.querySelectorAll("[aria-selected]")) {
       element.removeAttribute("aria-selected");
     }
-    const id = event.target.closest("[id]").id;
+    const id = event.target.closest("[id]")?.id || "";
     this.currentPanel.lastFocused = id;
     event.target.setAttribute("aria-selected", "true");
   };
 
-  /** @returns {TreeBase} */
+  /** @returns {TreeBase | null} */
   get selectedComponent() {
     // Figure out which tab is active
     const { designer } = Globals;
     const panel = designer.currentPanel;
 
     // Ask that tab which component is focused
-    if (!panel.lastFocused) {
+    if (!panel?.lastFocused) {
       console.log("no lastFocused");
       return null;
     }
@@ -70,8 +72,11 @@ export class Designer extends TabControl {
         let elem = document.getElementById(targetId);
         if (!elem) {
           // perhaps this one is embeded, look for something that starts with it
-          const prefix = targetId.match(/^TreeBase-\d+/)[0];
-          elem = document.querySelector(`[id^=${prefix}]`);
+          const m = targetId.match(/^TreeBase-\d+/);
+          if (m) {
+            const prefix = m[0];
+            elem = document.querySelector(`[id^=${prefix}]`);
+          }
         }
         // console.log(
         //   "restore focus",
@@ -116,6 +121,7 @@ export class Designer extends TabControl {
     const focusedComponent = document.querySelector(
       '.panels .settings:has([aria-selected="true"]):not(:has(.settings [aria-selected="true"]))'
     );
+    if (!focusedComponent) return;
     // get its index
     const index = components.indexOf(focusedComponent);
     // get the next index
@@ -201,7 +207,7 @@ export class DesignerPanel extends TabPanel {
    *
    * @template {DesignerPanel} T
    * @param {new()=>T} expected
-   * @returns {Promise<T>}
+   * @returns {Promise<T | undefined>}
    */
   static async load(expected) {
     let obj = await db.read(this.tableName, this.defaultValue);
