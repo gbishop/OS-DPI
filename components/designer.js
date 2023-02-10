@@ -207,7 +207,7 @@ export class DesignerPanel extends TabPanel {
    *
    * @template {DesignerPanel} T
    * @param {new()=>T} expected
-   * @returns {Promise<T | undefined>}
+   * @returns {Promise<T>}
    */
   static async load(expected) {
     let obj = await db.read(this.tableName, this.defaultValue);
@@ -217,6 +217,8 @@ export class DesignerPanel extends TabPanel {
       result.configure();
       return result;
     }
+    // I don't think this happens
+    return this.create(expected);
   }
 
   /**
