@@ -50,9 +50,17 @@ function report(msg, trace) {
 
 window.onerror = async function (msg, _file, _line, _col, error) {
   if (error instanceof Error) {
-    const frames = await StackTrace.fromError(error);
-    const trace = frames.map((frame) => `${frame.toString()}`);
-    report(msg.toString(), trace);
+    try {
+      const frames = await StackTrace.fromError(error);
+      const trace = frames.map((frame) => `${frame.toString()}`);
+      report(msg.toString(), trace);
+    } catch (e) {
+      const msg2 = `Caught an error trying to report an error.
+        The original message was "${msg.toString()}".
+        With file=${_file} line=${_line} column=${_col}
+        error=${error.toString()}`;
+      report(msg2, []);
+    }
   }
 };
 /** @param {PromiseRejectionEvent} error */
