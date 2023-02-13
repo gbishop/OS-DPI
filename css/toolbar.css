@@ -3,11 +3,11 @@
   margin: 3px;
   border-radius: 0.5em;
 }
-.toolbar ul {
+.toolbar > ul {
   list-style: none;
   padding-inline-start: 1em;
 }
-.toolbar ul li {
+.toolbar > ul li {
   display: inline;
 }
 .toolbar button {
@@ -40,4 +40,8 @@
 .hints div#UI[hint]::after {
   transform: translate(-50%, -50%);
   font-size: 2rem;
+}
+
+dialog#OpenDialog {
+  margin: auto;
 }

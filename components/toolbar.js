@@ -189,7 +189,8 @@ function getPanelMenuItems(type) {
   return { child: menuItems, parent: parentItems };
 }
 
-function getFileMenuItems() {
+/** @param {ToolBar} bar */
+function getFileMenuItems(bar) {
   return [
     new MenuItem({
       label: "Import",
@@ -223,7 +224,7 @@ function getFileMenuItems() {
     new MenuItem({
       label: "Open",
       callback: () => {
-        window.open("#", "_blank", "noopener=true");
+        bar.designListDialog.open();
       },
     }),
     new MenuItem({
@@ -437,9 +438,37 @@ const sheet = {
   handle: undefined,
 };
 
+/**
+ * Display a list of designs in the db so they can be reopened
+ */
+class DesignListDialog {
+  async open() {
+    const names = await db.names();
+    const list = html.node`<ul>
+      ${names.map(
+        (name) => html`<li>
+          <a href=${"#" + name} target="_blank">${name}</a>
+        </li>`
+      )}
+        </ul>`;
+    const dialog = /** @type {HTMLDialogElement} */ (
+      document.getElementById("OpenDialog")
+    );
+    if (dialog) {
+      dialog.innerHTML = "";
+      dialog.appendChild(list);
+    }
+    dialog.showModal();
+  }
+  render() {
+    return html`<dialog id="OpenDialog"></dialog>`;
+  }
+}
+
 export class ToolBar extends TreeBase {
-  init() {
-    this.fileMenu = new Menu("File", getFileMenuItems);
+  constructor() {
+    super();
+    this.fileMenu = new Menu("File", getFileMenuItems, this);
     this.editMenu = new Menu("Edit", getEditMenuItems);
     this.addMenu = new Menu(
       "Add",
@@ -452,6 +481,7 @@ export class ToolBar extends TreeBase {
       },
       "add"
     );
+    this.designListDialog = new DesignListDialog();
   }
 
   template() {
@@ -492,6 +522,8 @@ export class ToolBar extends TreeBase {
               hinted(this.addMenu.render(), "A")
             }
           </li>
+        </ul>
+        ${this.designListDialog.render()}
       </div>
     `;
   }
