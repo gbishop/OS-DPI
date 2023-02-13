@@ -45,3 +45,7 @@
 dialog#OpenDialog {
   margin: auto;
 }
+
+dialog#OpenDialog button {
+  margin-top: 1em;
+}

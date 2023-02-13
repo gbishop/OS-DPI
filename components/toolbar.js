@@ -445,16 +445,22 @@ const sheet = {
 class DesignListDialog {
   async open() {
     const names = await db.names();
-    const list = html.node`<ul>
-      ${names.map(
-        (name) => html`<li>
-          <a href=${"#" + name} target="_blank">${name}</a>
-        </li>`
-      )}
-        </ul>`;
     const dialog = /** @type {HTMLDialogElement} */ (
       document.getElementById("OpenDialog")
     );
+    const list = html.node`<div
+        onclick=${() => dialog.close()}
+      >
+      <h1>Open one of your designs</h1>
+      <ul>
+        ${names.map(
+          (name) => html`<li>
+            <a href=${"#" + name} target="_blank">${name}</a>
+          </li>`
+        )}
+      </ul>
+      <button>Cancel</button>
+      </div>`;
     if (dialog) {
       dialog.innerHTML = "";
       dialog.appendChild(list);
