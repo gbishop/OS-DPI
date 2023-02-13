@@ -204,7 +204,8 @@ function getFileMenuItems() {
           .then((file) => pleaseWait(local_db.readDesignFromFile(file)))
           .then(() => {
             window.open(`#${local_db.designName}`, "_blank", "noopener=true");
-          });
+          })
+          .catch((e) => console.log(e));
       },
     }),
     new MenuItem({
