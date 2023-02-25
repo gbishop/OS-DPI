@@ -395,6 +395,7 @@ export class Expression extends Prop {
       this.compiled = compileExpression(this.value);
     } catch (e) {
       console.error(e);
+      console.log('value=', value, this);
     }
   }
 
