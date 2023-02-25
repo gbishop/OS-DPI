@@ -76,6 +76,8 @@ class VSD extends TreeBase {
   /** @type {GridFilter[]} */
   children = [];
 
+  allowedChildren = ["GridFilter"];
+
   /** @type {HTMLDivElement} */
   markers;
 
