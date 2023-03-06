@@ -4,59 +4,61 @@ import { TreeBase } from "./treebase";
 import db from "app/db";
 import * as Props from "./props";
 import Globals from "app/globals";
+import { access } from "app/eval";
+import "css/logger.css";
 
 export class Logger extends TreeBase {
-  name = new Props.String("Log");
+  // name = new Props.String("Log");
   stateName = new Props.String("$Log");
+  logUntil = new Props.ADate();
 
-  get type() {
-    return "_" + this.name.value;
+  /**
+   * @param {string} s
+   * @returns {string}
+   */
+  validate(s) {
+    return /^(?:[#$]\w+\s*)*$/.test(s) ? "" : "Invalid input";
   }
 
-  /** @type {Logger[]} */
-  static instances = [];
-
-  init() {
-    Logger.instances.push(this);
-  }
+  // I expect a string like #field1 $state1 $state2 #field3
+  logThese = new Props.TextArea("", { validate: this.validate });
 
   template() {
-    const { state } = Globals;
-    const stateName = this.stateName.value;
-    const type = this.type;
+    const { state, actions } = Globals;
+    const { stateName, logUntil, logThese } = this.props;
+    const logging =
+      !!state.get(stateName) && logUntil && new Date() < new Date(logUntil);
+    const getValue = access(state, actions.last.data);
 
-    if (state.hasBeenUpdated(stateName)) {
-      const value = state.get(stateName);
-      const record = { timestamp: Date.now(), ...this.stringifyInput(value) };
-      db.write(type, record);
+    if (logging) {
+      const names = logThese.split(/\s+/);
+      const DateTime = new Date().toLocaleDateString("en-US", {
+        fractionalSecondDigits: 1,
+        hour12: false,
+        hour: "numeric",
+        minute: "numeric",
+        second: "numeric",
+      });
+      const record = { DateTime };
+      for (const name of names) {
+        const value = getValue(name);
+        if (value) {
+          record[name] = value;
+        }
+      }
+      db.write("log", record);
     }
 
-    return html`<!--empty-->`;
-  }
-
-  /** @param {string[]} arr */
-  stringifyInput(arr) {
-    let output = {};
-
-    for (let i = 0; i < arr.length; i += 2)
-      output[arr[i]] = Globals.state.interpolate(
-        i + 1 < arr.length ? arr[i + 1] : ""
-      );
-
-    return output;
+    return html`<div class="logging-indicator" ?logging=${logging}></div>`;
   }
 }
 TreeBase.register(Logger, "Logger");
 
 export async function SaveLogs() {
-  for (const log of Logger.instances) {
-    const toSave = await db.read(log.type, [{}]);
-    await saveContent(log.name.value, toSave, "xlsx");
-  }
+  const toSave = await db.readAll("log");
+  await saveContent("log", toSave, "xlsx");
 }
 
 export async function ClearLogs() {
-  for (const log of Logger.instances) {
-    await db.clear(log.type);
-  }
+  await db.clear("log");
 }

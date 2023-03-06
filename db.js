@@ -170,6 +170,26 @@ export class DB {
     return defaultValue;
   }
 
+  /**
+   * Read all records of the given type
+   *
+   * @param {string} type
+   * @returns {Promise<Object[]>}
+   */
+  async readAll(type) {
+    const db = await this.dbPromise;
+    const index = db
+      .transaction("store", "readonly")
+      .store.index("by-name-type");
+    const key = [this.designName, type];
+    const result = [];
+    for await (const cursor of index.iterate(key)) {
+      const data = cursor.value.data;
+      result.push(data);
+    }
+    return result;
+  }
+
   /** Add a new record
    * @param {string} type
    * @param {Object} data

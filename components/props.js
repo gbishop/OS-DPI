@@ -4,7 +4,6 @@ import { html } from "uhtml";
 import "css/props.css";
 import { compileExpression } from "app/eval";
 import Globals from "app/globals";
-import { instrument } from "stacktrace-js";
 import { TreeBaseSwitchable } from "./treebase";
 
 /**
@@ -19,6 +18,8 @@ import { TreeBaseSwitchable } from "./treebase";
  * @property {string} [language]
  * @property {Object<string,string>} [replacements]
  * @property {any} [valueWhenEmpty]
+ * @property {string} [pattern]
+ * @property {function(string):string} [validate]
  */
 
 export class Prop {
@@ -193,9 +194,45 @@ export class String extends Prop {
       type="text"
       .value=${this.value}
       id=${this.id}
+      pattern=${this.options.pattern}
       onchange=${({ target }) => {
-        this.value = target.value;
-        this.update();
+        if (target.checkValidity()) {
+          this.value = target.value;
+          this.update();
+        }
+      }}
+      title=${this.options.title}
+      placeholder=${this.options.placeholder}
+    />`);
+  }
+}
+
+export class TextArea extends Prop {
+  value = "";
+
+  constructor(value = "", options = {}) {
+    super(options);
+    this.value = value;
+  }
+
+  input() {
+    return this.labeled(html`<textarea
+      .value=${this.value}
+      id=${this.id}
+      pattern=${this.options.pattern}
+      oninput=${({ target }) => {
+        const validate = this.options.validate;
+        if (validate) {
+          const errorMsg = validate(target.value);
+          console.log({ errorMsg });
+          target.setCustomValidity(errorMsg);
+        }
+      }}
+      onchange=${({ target }) => {
+        if (target.checkValidity()) {
+          this.value = target.value;
+          this.update();
+        }
       }}
       title=${this.options.title}
       placeholder=${this.options.placeholder}
@@ -395,7 +432,7 @@ export class Expression extends Prop {
       this.compiled = compileExpression(this.value);
     } catch (e) {
       console.error(e);
-      console.log('value=', value, this);
+      console.log("value=", value, this);
     }
   }
 
@@ -600,5 +637,26 @@ export class Voice extends Prop {
     >
       <option value="">Default</option>
     </select>`);
+  }
+}
+
+export class ADate extends Prop {
+  value = "";
+
+  constructor(value = "", options = {}) {
+    super(options);
+    this.value = value;
+  }
+
+  input() {
+    return this.labeled(html`<input
+      type="date"
+      .value=${this.value}
+      id=${this.id}
+      onchange=${(/** @type {InputEventWithTarget} */ event) => {
+        this.value = event.target.value;
+        this.update();
+      }}
+    />`);
   }
 }
