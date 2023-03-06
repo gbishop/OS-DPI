@@ -49,7 +49,11 @@ export class Logger extends TreeBase {
       db.write("log", record);
     }
 
-    return html`<div class="logging-indicator" ?logging=${logging}></div>`;
+    return html`<div
+      class="logging-indicator"
+      ?logging=${logging}
+      title="Logging"
+    ></div>`;
   }
 }
 TreeBase.register(Logger, "Logger");
