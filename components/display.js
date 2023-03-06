@@ -28,7 +28,7 @@ class Display extends TreeBase {
   fontSize = new Props.Float(2);
   scale = new Props.Float(1);
 
-  /** @type {HTMLDivElement} */
+  /** @type {HTMLDivElement | null} */
   current = null;
 
   static functionsInitialized = false;
@@ -89,6 +89,7 @@ class Display extends TreeBase {
    */
   click = () => {
     const s = window.getSelection();
+    if (!s) return;
     let word = "";
     if (s.isCollapsed) {
       s.modify("move", "forward", "character");
@@ -99,7 +100,7 @@ class Display extends TreeBase {
     } else {
       word = s.toString();
     }
-    this.current.setAttribute("data--clicked-word", word);
+    this.current?.setAttribute("data--clicked-word", word);
   };
 
   initFunctions() {

@@ -33,8 +33,9 @@ const pageLoaded = new Promise((resolve) => {
 export async function start() {
   if (window.location.search && !window.location.hash.slice(1)) {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("fetch")) {
-      await pleaseWait(db.readDesignFromURL(params.get("fetch")));
+    const fetch = params.get("fetch");
+    if (fetch) {
+      await pleaseWait(db.readDesignFromURL(fetch));
       window.history.replaceState(
         {},
         document.title,
@@ -113,8 +114,7 @@ export async function start() {
     clearAccessChanged();
     safeRender(
       document.body,
-      html`<div id="ErrorReport"></div>
-        <div id="UI" hint="U" tabindex="-1">
+      html`<div id="UI" hint="U" tabindex="-1">
           <div id="timer"></div>
           ${Globals.cues.renderCss()}${Globals.tree.template()}
         </div>
@@ -122,9 +122,10 @@ export async function start() {
     );
     Globals.method.refresh();
     if (location.host.startsWith("localhost")) {
-      document.getElementById("timer").innerText = (
-        performance.now() - startTime
-      ).toFixed(0);
+      const timer = document.getElementById("timer");
+      if (timer) {
+        timer.innerText = (performance.now() - startTime).toFixed(0);
+      }
     }
   }
   Globals.state.observe(debounce(renderUI));
@@ -140,7 +141,7 @@ channel.onmessage = (event) => {
   if (db.designName == message.name) {
     if (message.action == "update") {
       start();
-    } else if (message.action == "rename") {
+    } else if (message.action == "rename" && message.newName) {
       window.location.hash = message.newName;
     }
   }
@@ -176,27 +177,6 @@ window.addEventListener("resize", () => {
   Globals.state.update();
 });
 
-/* Attempt to understand pointer events on page update */
-// import { log } from "./log";
-// let etype = "";
-// for (const eventName of [
-//   "pointerover",
-//   "pointerout",
-//   "pointermove",
-//   "pointerdown",
-//   "pointerup",
-// ]) {
-//   document.addEventListener(eventName, (event) => {
-//     if (
-//       (event.type != "pointermove" || event.type != etype) &&
-//       event.target instanceof HTMLElement &&
-//       event.target.closest("#UI")
-//     ) {
-//       etype = event.type;
-//       log(event.type, event);
-//     }
-//   });
-// }
 //
 /** @typedef {PointerEvent & { target: HTMLElement }} ClickEvent */
 // I think this code mapped clicks back to the tree but no longer...

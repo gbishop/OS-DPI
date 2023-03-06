@@ -9,7 +9,7 @@
     "checkJs": true,
     "target": "ESNext",
     "module": "ESNext",
-    "strictNullChecks": false,
+    "strictNullChecks": true,
     "resolveJsonModule": true
   },
   "exclude": ["node_modules", "docs", "thinking"]

@@ -210,7 +210,7 @@ export class PatternManager extends PatternBase {
   /**
    * Current keeps track of the currently active node or group
    *
-   * @type {Target}
+   * @type {Target | undefined}
    */
   get current() {
     const { group, index } = this.stack[0];
@@ -251,7 +251,7 @@ export class PatternManager extends PatternBase {
       const name = current.dataset.ComponentName;
       // console.log("activate button", current);
       // console.log("applyRules", name, current.access);
-      Globals.actions.applyRules(name, "press", current.dataset);
+      Globals.actions.applyRules(name || "", "press", current.dataset);
     }
     this.cue();
   }
@@ -395,7 +395,7 @@ class OrderBy extends PatternBase {
     } else {
       const key = this.OrderBy.value.slice(1);
       return [.../** @type {HTMLButtonElement[]} */ (input)].sort((a, b) =>
-        comparator.compare(a.dataset[key], b.dataset[key])
+        comparator.compare(a.dataset[key] || "", b.dataset[key] || "")
       );
     }
   }

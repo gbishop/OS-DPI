@@ -1,26 +1,19 @@
-const Globals = {
-  /** @type {State} */
-  state: null,
-  /** @type {import("./data").Data} */
-  data: null,
-  /** @type {import("./components/actions").Actions} */
-  actions: null,
-  /** @type {TreeBase} */
-  tree: null,
-  /** @type {import('./components/access/pattern').PatternList} */
-  patterns: null,
-  /** @type {import('./components/access/method').MethodChooser} */
-  method: null,
-  /** @type {import('./components/access/cues').CueList} */
-  cues: null,
-  /** @type {import('./components/monitor').Monitor} */
-  monitor: null,
-  /** @type {import('./components/toolbar').ToolBar} */
-  toolbar: null,
-  /** @type {import('./components/designer').Designer} */
-  designer: null,
+/** @typedef {Object} GlobalsObject
+ * @property {State} state
+ * @property {import("./data").Data} data
+ * @property {import("./components/actions").Actions} actions
+ * @property {TreeBase} tree
+ * @property {import('./components/access/pattern').PatternList} patterns
+ * @property {import('./components/access/cues').CueList} cues
+ * @property {import('./components/access/method').MethodChooser} method
+ * @property {import('./components/monitor').Monitor} monitor
+ * @property {import('./components/toolbar').ToolBar} toolbar
+ * @property {import('./components/designer').Designer} designer
+ * @property {function():Promise<void>} restart
+ */
 
-  restart: null,
-};
+/** @type {GlobalsObject} */
+// @ts-ignore Object missing properties
+const Globals = {};
 
 export default Globals;

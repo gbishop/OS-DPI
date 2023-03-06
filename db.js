@@ -27,7 +27,7 @@ export class DB {
           objectStore.createIndex("by-name", "name");
           objectStore.createIndex("by-name-type", ["name", "type"]);
         }
-        if (newVersion >= 4) {
+        if (newVersion && newVersion >= 4) {
           db.createObjectStore("media");
         }
         if (oldVersion < 3) {
@@ -154,7 +154,7 @@ export class DB {
    * @param {any} defaultValue
    * @returns {Promise<Object>}
    */
-  async read(type, defaultValue) {
+  async read(type, defaultValue = {}) {
     const db = await this.dbPromise;
     const index = db
       .transaction("store", "readonly")
@@ -168,6 +168,26 @@ export class DB {
       return data;
     }
     return defaultValue;
+  }
+
+  /**
+   * Read all records of the given type
+   *
+   * @param {string} type
+   * @returns {Promise<Object[]>}
+   */
+  async readAll(type) {
+    const db = await this.dbPromise;
+    const index = db
+      .transaction("store", "readonly")
+      .store.index("by-name-type");
+    const key = [this.designName, type];
+    const result = [];
+    for await (const cursor of index.iterate(key)) {
+      const data = cursor.value.data;
+      result.push(data);
+    }
+    return result;
   }
 
   /** Add a new record
@@ -279,7 +299,7 @@ export class DB {
     if (!response.ok) {
       throw new Error(`Fetching the URL (${url}) failed: ${response.status}`);
     }
-    const etag = response.headers.get("ETag");
+    const etag = response.headers.get("ETag") || "";
     await db.put("url", { url, etag });
 
     const urlParts = new URL(url, window.location.origin);
@@ -301,6 +321,7 @@ export class DB {
   /** Read a design from a zip file
    * @param {Blob} blob
    * @param {string} filename
+   * @param {string} etag
    */
   async readDesignFromBlob(blob, filename, etag = "none") {
     const db = await this.dbPromise;

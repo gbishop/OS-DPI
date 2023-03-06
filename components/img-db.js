@@ -24,7 +24,7 @@ export class imgFromDb extends HTMLImageElement {
    * Look again at the db which may have changed
    */
   async refresh() {
-    const url = this.getAttribute("dbsrc");
+    const url = this.getAttribute("dbsrc") || "";
     return this.updateSrcFromDb(url);
   }
 

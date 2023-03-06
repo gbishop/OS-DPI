@@ -7,7 +7,7 @@ import { cueTarget } from "../pattern";
 
 class ResponderNext extends HandlerResponse {
   respond() {
-    this.pattern.next();
+    Globals.patterns.activePattern.next();
   }
 }
 TreeBase.register(ResponderNext, "ResponderNext");
@@ -15,8 +15,8 @@ TreeBase.register(ResponderNext, "ResponderNext");
 class ResponderActivate extends HandlerResponse {
   /** @param {Event} event */
   respond(event) {
-    if (this.pattern.cued) {
-      this.pattern.activate();
+    if (Globals.patterns.activePattern.cued) {
+      Globals.patterns.activePattern.activate();
     } else if (
       (event instanceof PointerEvent || event.type == "timer") &&
       event.target instanceof HTMLButtonElement
@@ -25,7 +25,7 @@ class ResponderActivate extends HandlerResponse {
       const name = button.dataset.ComponentName;
       if (button.hasAttribute("click")) {
         button.click();
-      } else {
+      } else if (name) {
         Globals.actions.applyRules(name, "press", button.dataset);
       }
     }
@@ -77,13 +77,13 @@ class ResponderStartTimer extends HandlerResponse {
   });
 
   subTemplate() {
-    const timerNames = this.nearestParent(Method).timerNames;
+    const timerNames = this.nearestParent(Method)?.timerNames;
     return html`${this.TimerName.input(timerNames)}`;
   }
 
   /** @param {Event & { access: Object }} event */
   respond(event) {
-    const timer = this.nearestParent(Method).timer(this.TimerName.value);
+    const timer = this.nearestParent(Method)?.timer(this.TimerName.value);
     if (!timer) return;
     // hand the interval to Cue CSS for animations
     document.documentElement.style.setProperty(

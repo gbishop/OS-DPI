@@ -73,7 +73,7 @@ export function validateExpression(expression) {
  * @param {Row} data
  * @returns {function(string): any}
  */
-function access(state, data) {
+export function access(state, data) {
   return function (name) {
     if (!name) return "";
     if (state && name.startsWith("$")) {

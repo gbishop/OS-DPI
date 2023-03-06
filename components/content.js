@@ -132,7 +132,8 @@ export class Content extends DesignerPanel {
            */
           db.listMedia().then((names) => {
             const list = names.map((name) => html`<li>${name}</li>`);
-            render(comment.parentNode, html`${comment}${list}`);
+            if (comment.parentNode)
+              render(comment.parentNode, html`${comment}${list}`);
           });
         }}
       </ol>

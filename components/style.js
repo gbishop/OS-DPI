@@ -1,4 +1,3 @@
-import { log } from "app/log";
 import { html, render } from "uhtml";
 import "css/style.css";
 import { ColorNames } from "./color-names";
@@ -105,7 +104,7 @@ class ColorInput extends HTMLElement {
    * @param {string} newValue
    */
   attributeChangedCallback(name, _, newValue) {
-    log("acc", name, newValue);
+    console.log("acc", name, newValue);
     this[name] = newValue;
     this.render();
   }

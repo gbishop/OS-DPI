@@ -12,18 +12,12 @@ export class MenuItem {
   /**
    * @param {Object} obj - argument object
    * @param {string} obj.label
-   * @param {Function} [ obj.callback ]
+   * @param {Function | null} [ obj.callback ]
    * @param {any[]} [ obj.args ]
    * @param {string} [ obj.title ]
    * @param {string} [ obj.divider ]
    */
-  constructor({
-    label,
-    callback = null,
-    args = [],
-    title = null,
-    divider = null,
-  }) {
+  constructor({ label, callback = null, args = [], title = "", divider = "" }) {
     this.label = label;
     this.callback = callback;
     this.args = args;
@@ -33,7 +27,7 @@ export class MenuItem {
 
   apply() {
     console.log("args are", ...this.args);
-    this.callback(...this.args);
+    if (this.callback) this.callback(...this.args);
   }
 }
 
@@ -52,7 +46,7 @@ export class Menu {
   items = []; // cached items returned from the contentCallback
 
   /** @type {HTMLElement} - reference to the outer div */
-  current = null;
+  current;
 
   /**
    * @param {string} label - label on the menu button
@@ -118,7 +112,7 @@ export class Menu {
     </div>`;
   }
 
-  /** @returns {HTMLButtonElement} */
+  /** @returns {HTMLButtonElement | null} */
   get focusedItem() {
     return this.current.querySelector("li > button:focus");
   }
@@ -156,7 +150,7 @@ export class Menu {
       this.expanded = !this.expanded;
       // this trick lets us distinguish between clicking the menu button with the mouse
       // and hitting Enter on the keyboard
-      const mouseClick = event && event.detail !== 0;
+      const mouseClick = event && event["detail"] !== 0;
       if (this.expanded && (!event || !mouseClick)) {
         // focus on the first element when expanding via keyboard
         callAfterRender(() => {
@@ -183,7 +177,7 @@ export class Menu {
       this.toggleExpanded();
     } else if (key == "ArrowUp" || key == "ArrowDown") {
       const focused = this.focusedItem;
-      const index = +focused.getAttribute("index");
+      const index = +(focused?.getAttribute("index") || 0);
       const step = key == "ArrowUp" ? -1 : 1;
       this.setFocus(index + step);
     } else if (key == "Home") {
@@ -195,7 +189,7 @@ export class Menu {
       ((key >= "a" && key <= "z") || (key >= "A" && key <= "Z"))
     ) {
       const focused = this.focusedItem;
-      const index = +focused.getAttribute("index");
+      const index = +(focused?.getAttribute("index") || 0);
       for (let i = 1; i < this.items.length; i++) {
         if (
           this.items[(index + i) % this.items.length].label

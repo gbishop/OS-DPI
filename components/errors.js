@@ -7,7 +7,7 @@ import "css/errors.css";
  * @param {string[]} trace - stack trace
  */
 function report(msg, trace) {
-  const result = html.node`<div>
+  const result = html.node`<div id="ErrorReport">
     <h1>Internal Error</h1>
     <p>
       Your browser has detected an internal error in OS-DPI. It was very likely
@@ -15,7 +15,8 @@ function report(msg, trace) {
       the information below. Simply click this button
       <button
         onclick=${() => {
-          const html = document.getElementById("ErrorReportBody").innerHTML;
+          const html =
+            document.getElementById("ErrorReportBody")?.innerHTML || "";
           const blob = new Blob([html], { type: "text/html" });
           const data = [new ClipboardItem({ "text/html": blob })];
           navigator.clipboard.write(data);
@@ -29,7 +30,7 @@ function report(msg, trace) {
       >.
       <button
         onclick=${() => {
-          document.getElementById("ErrorReport").innerHTML = "";
+          document.getElementById("ErrorReport")?.remove();
         }}
       >
         Dismiss this dialog
@@ -44,13 +45,23 @@ function report(msg, trace) {
       </ul>
     </div>
   </div>`;
-  document.getElementById("ErrorReport").prepend(result);
+  document.body.prepend(result);
 }
 
 window.onerror = async function (msg, _file, _line, _col, error) {
-  const frames = await StackTrace.fromError(error);
-  const trace = frames.map((frame) => `${frame.toString()}`);
-  report(msg.toString(), trace);
+  if (error instanceof Error) {
+    try {
+      const frames = await StackTrace.fromError(error);
+      const trace = frames.map((frame) => `${frame.toString()}`);
+      report(msg.toString(), trace);
+    } catch (e) {
+      const msg2 = `Caught an error trying to report an error.
+        The original message was "${msg.toString()}".
+        With file=${_file} line=${_line} column=${_col}
+        error=${error.toString()}`;
+      report(msg2, []);
+    }
+  }
 };
 /** @param {PromiseRejectionEvent} error */
 window.onunhandledrejection = function (error) {

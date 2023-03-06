@@ -27,7 +27,7 @@ export function safeRender(where, what) {
   }
   while (PostRenderFunctions.length > 0) {
     const PRF = PostRenderFunctions.pop();
-    PRF();
+    if (PRF) PRF();
   }
   return r;
 }

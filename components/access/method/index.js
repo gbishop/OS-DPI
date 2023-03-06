@@ -6,7 +6,6 @@ import * as RxJs from "rxjs";
 import { EventWrap } from "../index";
 // make sure the classes are registered
 import defaultMethods from "./defaultMethods";
-import { log } from "app/log";
 import { DesignerPanel } from "components/designer";
 import "css/method.css";
 import { toggleIndicator } from "app/components/helpers";
@@ -33,7 +32,7 @@ export class MethodChooser extends DesignerPanel {
 
   configure() {
     // tear down the old configuration if any
-    this.stop$.next();
+    this.stop$.next(1);
     for (const method of this.children) {
       method.configure(this.stop$);
     }
@@ -64,14 +63,6 @@ export class Method extends TreeBase {
 
   /** @type {(Handler | Timer)[]} */
   children = [];
-
-  /** Return the Pattern for this method
-   * @returns {import('../pattern/index.js').PatternManager}
-   */
-  get pattern() {
-    const r = Globals.patterns.activePattern;
-    return r;
-  }
 
   /** Return a Map from Timer Key to the Timer
    * @returns {Map<string, Timer>}
@@ -154,7 +145,7 @@ export class Method extends TreeBase {
 
   /** Refresh the pattern and other state on redraw */
   refresh() {
-    this.pattern.refresh();
+    Globals.patterns.activePattern.refresh();
   }
 }
 TreeBase.register(Method, "Method");
@@ -176,7 +167,7 @@ class Timer extends TreeBase {
 
   /** @param {Event & { access: {}}} event */
   start(event) {
-    log("start timer");
+    console.log("start timer");
     const fakeEvent = /** @type {Event} */ ({
       type: "timer",
       target: event.target,
@@ -187,7 +178,7 @@ class Timer extends TreeBase {
   }
 
   cancel() {
-    log("cancel timer");
+    console.log("cancel timer");
     const event = EventWrap(new Event("cancel"));
     this.subject$.next(event);
   }
@@ -222,6 +213,7 @@ export class Handler extends TreeBase {
   respond(event) {
     // console.log("handler respond", event.type, this.responses);
     const method = this.nearestParent(Method);
+    if (!method) return;
     method.cancelTimers();
     for (const response of this.responses) {
       response.respond(event);
@@ -285,11 +277,6 @@ export class HandlerResponse extends TreeBaseSwitchable {
     return html`
       <div class="Response">${this.Response.input()} ${this.subTemplate()}</div>
     `;
-  }
-
-  get pattern() {
-    const method = this.nearestParent(Method);
-    return method.pattern;
   }
 
   subTemplate() {
