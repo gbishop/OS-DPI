@@ -21,7 +21,10 @@ export class Logger extends TreeBase {
   }
 
   // I expect a string like #field1 $state1 $state2 #field3
-  logThese = new Props.TextArea("", { validate: this.validate });
+  logThese = new Props.TextArea("", {
+    validate: this.validate,
+    placeholder: "Enter state and field names to log",
+  });
 
   template() {
     const { state, actions } = Globals;
