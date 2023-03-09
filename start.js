@@ -174,6 +174,7 @@ window.addEventListener("hashchange", () => {
 
 // watch for window resize and force a redraw
 window.addEventListener("resize", () => {
+  if (!Globals.state) return;
   Globals.state.update();
 });
 

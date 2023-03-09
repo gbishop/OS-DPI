@@ -137,6 +137,7 @@ const transitions = [
  *
  * @param {KeyboardEvent} event */
 function HotKeyHandler(event) {
+  if (!Globals.state) return;
   if (!state) {
     // initialize the state on first call
     state = Globals.state.get("editing") ? State.editing : State.user;
