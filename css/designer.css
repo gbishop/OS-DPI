@@ -96,3 +96,11 @@ details summary > * {
 #designer .panels {
   display: block;
 }
+
+.selectedInDesigner {
+  border: 2px dashed red;
+}
+
+#UI [id]:has(.selectedInDesigner) {
+  border: 2px dotted yellow;
+}

@@ -9,6 +9,9 @@ div.empty::before {
 }
 
 div.highlight {
-  border: 1px solid red;
-  box-sizing: border-box;
+  border: 2px dashed red;
+}
+
+div.highlight.highlightParent {
+  border: 2px dashed blue;
 }
