@@ -44,24 +44,6 @@ export class Designer extends TabControl {
     const id = event.target.closest("[id]")?.id || "";
     this.currentPanel.lastFocused = id;
     event.target.setAttribute("aria-selected", "true");
-
-    // clear the highlight
-    for (const element of document.querySelectorAll("#UI .highlight")) {
-      element.classList.remove("highlight");
-      element.classList.remove("highlightParent");
-    }
-    let component = this.selectedComponent;
-    let highlight = ["highlight"];
-    while (component) {
-      const element = document.getElementById(component.id);
-      if (element) {
-        element.classList.add(...highlight);
-        break;
-      }
-      // the selected component is not visible so climb up to its parent
-      component = component.parent;
-      highlight = ["highlight", "highlightParent"];
-    }
   };
 
   /** @returns {TreeBase | null} */

@@ -8,10 +8,6 @@ div.empty::before {
   content: "Empty";
 }
 
-div.highlight {
+.highlight {
   border: 2px dashed red;
-}
-
-div.highlight.highlightParent {
-  border: 2px dashed blue;
 }

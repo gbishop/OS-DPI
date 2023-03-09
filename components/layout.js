@@ -4,6 +4,9 @@ import { DesignerPanel } from "./designer";
 import "css/layout.css";
 import db from "app/db";
 import Globals from "app/globals";
+import { TabPanel } from "./tabcontrol";
+import { callAfterRender } from "app/render";
+import { ModalDialog } from "./modal-dialog";
 
 const emptyPage = {
   className: "Page",
@@ -43,7 +46,18 @@ export class Layout extends DesignerPanel {
   static defaultValue = emptyPage;
 
   settings() {
-    return html`<div class="treebase layout" help="Layout tab" id=${this.id}>
+    return html`<div
+      class="treebase layout"
+      help="Layout tab"
+      id=${this.id}
+      onkeydown=${(event) => {
+        const { key, ctrlKey } = event;
+        if ((key == "H" || key == "h") && ctrlKey) {
+          event.preventDefault();
+          this.highlight();
+        }
+      }}
+    >
       ${this.children[0].settings()}
     </div>`;
   }
@@ -98,6 +112,40 @@ export class Layout extends DesignerPanel {
   onUpdate() {
     db.write("layout", this.children[0].toObject());
     Globals.state.update();
+  }
+
+  /** Allow highlighting the current component in the UI
+   */
+  highlight() {
+    // clear the highlight
+    for (const element of document.querySelectorAll("#UI .highlight")) {
+      element.classList.remove("highlight");
+    }
+    let component = Globals.designer.selectedComponent;
+    if (component) {
+      const element = document.getElementById(component.id);
+      if (element) {
+        element.classList.add("highlight");
+        return;
+      }
+      // the component is not currently visible. Try to make it visible so we can highlight it.
+      component = component.parent;
+      while (component) {
+        if (
+          component instanceof TabPanel &&
+          component.parent &&
+          component.parent.currentPanel != component
+        ) {
+          component.parent.switchTab(component.name.value);
+          callAfterRender(() => this.highlight());
+        } else if (component instanceof ModalDialog) {
+          component.open.set(true);
+          Globals.state.update();
+          callAfterRender(() => this.highlight());
+        }
+        component = component.parent;
+      }
+    }
   }
 }
 TreeBase.register(Layout, "Layout");

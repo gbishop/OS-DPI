@@ -10,6 +10,7 @@ export class Page extends Stack {
       "Speech",
       "Audio",
       "Logger",
+      "ModalDialog",
       "Customize"
     );
   }

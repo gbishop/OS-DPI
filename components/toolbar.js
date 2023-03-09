@@ -26,6 +26,7 @@ const friendlyNamesMap = {
   CueFill: "Cue Fill",
   CueCircle: "Cue Circle",
   CueOverlay: "Cue Overlay",
+  ModalDialog: "Modal Dialog",
   PatternManager: "Pattern",
   PatternGroup: "Group",
   PatternSelector: "Selector",
