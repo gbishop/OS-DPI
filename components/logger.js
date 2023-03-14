@@ -32,11 +32,9 @@ export class Logger extends TreeBase {
     const logging =
       !!state.get(stateName) && logUntil && new Date() < new Date(logUntil);
     const getValue = access(state, actions.last.data);
-    console.log({ logging, logUntil, c: new Date() < new Date(logUntil) });
 
     if (logging) {
       const names = logThese.split(/\s+/);
-      console.log({ names, logThese });
       const DateTime = new Date().toLocaleDateString("en-US", {
         fractionalSecondDigits: 1,
         hour12: false,
