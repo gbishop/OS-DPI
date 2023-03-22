@@ -65,6 +65,9 @@ export async function SaveLogs() {
   let toSave = await db.readAll("log");
   if (toSave.length > 0) {
     await saveContent("log", toSave, "xlsx");
+  } else {
+    Globals.error.report("No log records to be saved.");
+    Globals.state.update();
   }
 }
 

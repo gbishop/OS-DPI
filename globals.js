@@ -9,6 +9,7 @@
  * @property {import('./components/monitor').Monitor} monitor
  * @property {import('./components/toolbar').ToolBar} toolbar
  * @property {import('./components/designer').Designer} designer
+ * @property {import('./components/errors').Messages} error
  * @property {function():Promise<void>} restart
  */
 

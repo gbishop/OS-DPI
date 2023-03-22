@@ -222,7 +222,7 @@ class Grid extends TreeBase {
         <tbody>
           ${this.children.map(
             (filter, index) => html`
-              <tr>
+              <tr id=${filter.id + "-settings"}>
                 <td>${index + 1}</td>
                 <td>${filter.field.input()}</td>
                 <td>${filter.operator.input()}</td>

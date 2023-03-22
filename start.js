@@ -1,4 +1,4 @@
-import "./components/errors";
+import { Messages } from "./components/errors";
 import { html } from "uhtml";
 import { Data } from "./data";
 import { State } from "./state";
@@ -60,6 +60,7 @@ export async function start() {
   Globals.patterns = await PatternList.load(PatternList);
   Globals.method = await MethodChooser.load(MethodChooser);
   Globals.restart = start;
+  Globals.error = new Messages();
 
   /** @param {() => void} f */
   function debounce(f) {
@@ -103,11 +104,11 @@ export async function start() {
     const startTime = performance.now();
     let IDE = html`<!--empty-->`;
     if (Globals.state.get("editing")) {
-      IDE = html`
-        ${toolbar.template()}
-        <div id="designer" hint="P">${Globals.designer.template()}</div>
-        <div id="monitor">${monitor.template()}</div>
-      `;
+      IDE = html`<div id="designer">
+          ${toolbar.template()} ${Globals.error.template()}
+          <div id="tabs" hint="P">${Globals.designer.template()}</div>
+        </div>
+        <div id="monitor">${monitor.template()}</div> `;
     }
     document.body.classList.toggle("designing", Globals.state.get("editing"));
     // clear the changed flag, TODO there must be a better way!

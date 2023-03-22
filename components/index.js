@@ -11,7 +11,6 @@ import "./button";
 import "./monitor";
 import "./speech";
 import "./audio";
-import "./help";
 import "./logger";
 import "./content";
 import "./layout";

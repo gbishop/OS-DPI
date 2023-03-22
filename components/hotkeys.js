@@ -81,6 +81,7 @@ function help() {
   const { designer } = Globals;
   if (!designer.currentPanel) return;
   const currentId = designer.currentPanel.lastFocused;
+  console.log({ currentId });
   let inputName = "";
   let componentName = "";
   if (currentId) {
@@ -93,6 +94,7 @@ function help() {
   const url = `${wiki}/${componentName}#${inputName}`;
   console.log("help", url);
   window.open(url, "help");
+  clearHints();
 }
 
 /** Implement a state machine for managing the hotkeys

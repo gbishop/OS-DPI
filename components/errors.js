@@ -1,12 +1,36 @@
 import * as StackTrace from "stacktrace-js";
 import { html } from "uhtml";
 import "css/errors.css";
+import { TreeBase } from "./treebase";
+
+export class Messages extends TreeBase {
+  /** @type {string[]} */
+  messages = [];
+
+  template() {
+    console.log("messages", this.messages);
+    if (this.messages.length) {
+      const result = html`<div id="messages">
+        ${this.messages.map((message) => html`<p>${message}</p>`)}
+      </div> `;
+      this.messages = [];
+      return result;
+    } else {
+      return html`<!--empty-->`;
+    }
+  }
+
+  report(message = "") {
+    console.log({ message });
+    this.messages.push(message);
+  }
+}
 
 /** Display an error message for user feedback
  * @param {string} msg - the error message
  * @param {string[]} trace - stack trace
  */
-function report(msg, trace) {
+function reportInternalError(msg, trace) {
   const result = html.node`<div id="ErrorReport">
     <h1>Internal Error</h1>
     <p>
@@ -53,17 +77,17 @@ window.onerror = async function (msg, _file, _line, _col, error) {
     try {
       const frames = await StackTrace.fromError(error);
       const trace = frames.map((frame) => `${frame.toString()}`);
-      report(msg.toString(), trace);
+      reportInternalError(msg.toString(), trace);
     } catch (e) {
       const msg2 = `Caught an error trying to report an error.
         The original message was "${msg.toString()}".
         With file=${_file} line=${_line} column=${_col}
         error=${error.toString()}`;
-      report(msg2, []);
+      reportInternalError(msg2, []);
     }
   }
 };
 /** @param {PromiseRejectionEvent} error */
 window.onunhandledrejection = function (error) {
-  report(error.reason.message, error.reason.stack.split("\n"));
+  reportInternalError(error.reason.message, error.reason.stack.split("\n"));
 };
