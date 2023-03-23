@@ -34,6 +34,7 @@ export class Designer extends TabControl {
    * @param {FocusEvent} event
    */
   focusin = (event) => {
+    console.log({ event });
     if (!(event.target instanceof HTMLElement)) return;
     if (!this.currentPanel) return;
     const panel = document.getElementById(this.currentPanel.id);
@@ -42,8 +43,13 @@ export class Designer extends TabControl {
       element.removeAttribute("aria-selected");
     }
     const id = event.target.closest("[id]")?.id || "";
+    console.log({ id });
     this.currentPanel.lastFocused = id;
     event.target.setAttribute("aria-selected", "true");
+
+    if (this.currentPanel.name.value == "Layout") {
+      this.currentPanel.highlight();
+    }
   };
 
   /** @returns {TreeBase | null} */

@@ -5,6 +5,7 @@ import { styleString } from "./style";
 import "css/tabcontrol.css";
 import Globals from "app/globals";
 import { TreeBase } from "./treebase";
+import { callAfterRender } from "app/render";
 
 export class TabControl extends TreeBase {
   stateName = new Props.String("$tabControl");
@@ -128,5 +129,26 @@ export class TabPanel extends Stack {
   tabName = "";
   tabLabel = "";
   lastFocused = "";
+
+  /**
+   *  * Render the details of a components settings
+   *  * @returns {Hole}
+   *  */
+  settingsDetails() {
+    const caption = this.active ? "Active" : "Activate";
+    return html`${super.settingsDetails()}<button
+        id=${this.id + "-activate"}
+        ?active=${this.active}
+        onclick=${() => {
+          if (this.parent) {
+            this.parent.switchTab(this.name.value);
+          }
+        }}
+      >
+        ${caption}
+      </button>`;
+  }
+
+  highlight() {}
 }
 TreeBase.register(TabPanel, "TabPanel");

@@ -118,33 +118,53 @@ export class Layout extends DesignerPanel {
    */
   highlight() {
     // clear the highlight
-    for (const element of document.querySelectorAll("#UI .highlight")) {
-      element.classList.remove("highlight");
+    for (const element of document.querySelectorAll("#UI [highlight]")) {
+      element.removeAttribute("highlight");
     }
     let component = Globals.designer.selectedComponent;
     if (component) {
       const element = document.getElementById(component.id);
       if (element) {
-        element.classList.add("highlight");
+        element.setAttribute("highlight", "component");
         return;
       }
-      // the component is not currently visible. Try to make it visible so we can highlight it.
+      // the component is not currently visible. Find its nearest visible parent
       component = component.parent;
+      while (component) {
+        const element = document.getElementById(component.id);
+        if (element) {
+          element.setAttribute("highlight", "parent");
+          return;
+        }
+        component = component.parent;
+      }
+    }
+  }
+
+  makeVisible() {
+    let component = Globals.designer.selectedComponent;
+    if (component) {
+      const element = document.getElementById(component.id);
+      if (element) {
+        return; // already visible
+      }
+      // climb the tree scheduling updates to parent to make this component visible
+      component = component.parent;
+      let patch = {};
       while (component) {
         if (
           component instanceof TabPanel &&
           component.parent &&
           component.parent.currentPanel != component
         ) {
-          component.parent.switchTab(component.name.value);
-          callAfterRender(() => this.highlight());
+          patch[component.parent.stateName.value] = component.name.value;
         } else if (component instanceof ModalDialog) {
-          component.open.set(true);
-          Globals.state.update();
-          callAfterRender(() => this.highlight());
+          patch[component.stateName.value] = 1;
         }
         component = component.parent;
       }
+      callAfterRender(() => this.highlight());
+      Globals.state.update(patch);
     }
   }
 }

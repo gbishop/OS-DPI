@@ -8,6 +8,10 @@ div.empty::before {
   content: "Empty";
 }
 
-.highlight {
+#UI [highlight="component"] {
   border: 2px dashed red;
+}
+
+#UI [highlight="parent"] {
+  border: 2px dotted red;
 }
