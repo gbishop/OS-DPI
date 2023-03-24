@@ -31,11 +31,11 @@ export class Designer extends TabControl {
 
   /**
    * capture focusin events so we can remember what was focused last
-   * @param {FocusEvent} event
+   * @param {FocusEvent|MouseEvent} event
    */
   focusin = (event) => {
-    console.log({ event });
     if (!(event.target instanceof HTMLElement)) return;
+    if (event.target.hasAttribute("aria-selected")) return;
     if (!this.currentPanel) return;
     const panel = document.getElementById(this.currentPanel.id);
     if (!panel) return;
@@ -43,7 +43,6 @@ export class Designer extends TabControl {
       element.removeAttribute("aria-selected");
     }
     const id = event.target.closest("[id]")?.id || "";
-    console.log({ id });
     this.currentPanel.lastFocused = id;
     event.target.setAttribute("aria-selected", "true");
 
@@ -154,7 +153,6 @@ export class Designer extends TabControl {
    * @param {KeyboardEvent} event
    */
   tabButtonKeyHandler = ({ key }) => {
-    console.log({ key });
     const tabButtons = /** @type {HTMLButtonElement[]} */ ([
       ...document.querySelectorAll("#designer .tabcontrol .buttons button"),
     ]);
@@ -241,7 +239,6 @@ export class DesignerPanel extends TabPanel {
   onUpdate() {
     const tableName = this.staticTableName;
     if (tableName) {
-      console.log("update", tableName);
       db.write(tableName, this.toObject());
       Globals.state.update();
     }
@@ -249,7 +246,6 @@ export class DesignerPanel extends TabPanel {
 
   async undo() {
     const tableName = this.staticTableName;
-    console.log("undo", tableName);
     if (tableName) {
       await db.undo(tableName);
       Globals.restart();

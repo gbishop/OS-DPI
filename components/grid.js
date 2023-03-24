@@ -200,9 +200,7 @@ class Grid extends TreeBase {
 
     style.gridTemplate = `repeat(${rows}, calc(100% / ${rows})) / repeat(${columns}, 1fr)`;
 
-    return html`<div class="grid" id=${this.id} style=${styleString(style)}>
-      ${result}
-    </div>`;
+    return this.component({ style }, html`${result}`);
   }
 
   settingsDetails() {

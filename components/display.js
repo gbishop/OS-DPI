@@ -35,10 +35,6 @@ class Display extends TreeBase {
 
   template() {
     this.initFunctions();
-    const style = styleString({
-      backgroundColor: this.props.background,
-      fontSize: this.props.fontSize + "rem",
-    });
     const { state } = Globals;
     /** @type {Hole[]} */
     let content = [];
@@ -66,11 +62,15 @@ class Display extends TreeBase {
         return html`${part}`;
       });
     }
-    return html`<button
-        class="display flex"
+    return this.component(
+      {
+        style: {
+          backgroundColor: this.props.background,
+          fontSize: this.props.fontSize + "rem",
+        },
+      },
+      html`<button
         ref=${this}
-        style=${style}
-        id=${this.id}
         onpointerup=${this.click}
         tabindex="-1"
         ?disabled=${!this.Name.value}
@@ -81,8 +81,8 @@ class Display extends TreeBase {
         }}
       >
         ${content}
-      </button>
-      >`;
+      </button>`
+    );
   }
 
   /** Attempt to locate the word the user is touching

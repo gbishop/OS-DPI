@@ -103,70 +103,71 @@ class VSD extends TreeBase {
     ];
     let clip = "";
 
-    return html`<div class="vsd flex show" id=${this.id}>
-      <img
-        is="img-db"
-        dbsrc=${src}
-        onload=${() => {
-          this.sizeMarkers(this.markers);
-        }}
-      />
-      <div
-        class="markers"
-        ref=${(/** @type {HTMLDivElement & { observer: any }} */ node) => {
-          this.sizeMarkers(node);
-        }}
-        onpointermove=${editing &&
-        ((/** @type {PointerEvent} */ event) => {
-          const rect = this.markers.getBoundingClientRect();
-          const div = document.querySelector("span.coords");
-          if (!div) return;
-          coords[dragging][0] = Math.round(
-            (100 * (event.pageX - rect.left)) / rect.width
-          );
-          coords[dragging][1] = Math.round(
-            (100 * (event.pageY - rect.top)) / rect.height
-          );
-          clip = `${coords[0][0]}\t${coords[0][1]}`;
-          if (dragging) {
-            clip =
-              clip +
-              `\t${coords[1][0] - coords[0][0]}\t${
-                coords[1][1] - coords[0][1]
-              }`;
-          }
-          div.innerHTML = clip;
-        })}
-        onpointerdown=${editing &&
-        (() => {
-          dragging = 1;
-        })}
-        onpointerup=${editing &&
-        (() => {
-          dragging = 0;
-          navigator.clipboard.writeText(clip);
-        })}
-      >
-        ${items
-          .filter((item) => item.w)
-          .map(
-            (item) => html`<button
-              style=${styleString({
-                left: pct(item.x),
-                top: pct(item.y),
-                width: pct(item.w),
-                height: pct(item.h),
-                position: "absolute",
-              })}
-              ?invisible=${item.invisible}
-              onClick=${actions.handler(this.name.value, item, "press")}
-            >
-              <span>${item.label || ""}</span>
-            </button>`
-          )}
-        <span class="coords" style="background-color: white"></span>
-      </div>
-    </div>`;
+    return this.component(
+      { classes: ["show"] },
+      html`<img
+          is="img-db"
+          dbsrc=${src}
+          onload=${() => {
+            this.sizeMarkers(this.markers);
+          }}
+        />
+        <div
+          class="markers"
+          ref=${(/** @type {HTMLDivElement & { observer: any }} */ node) => {
+            this.sizeMarkers(node);
+          }}
+          onpointermove=${editing &&
+          ((/** @type {PointerEvent} */ event) => {
+            const rect = this.markers.getBoundingClientRect();
+            const div = document.querySelector("span.coords");
+            if (!div) return;
+            coords[dragging][0] = Math.round(
+              (100 * (event.pageX - rect.left)) / rect.width
+            );
+            coords[dragging][1] = Math.round(
+              (100 * (event.pageY - rect.top)) / rect.height
+            );
+            clip = `${coords[0][0]}\t${coords[0][1]}`;
+            if (dragging) {
+              clip =
+                clip +
+                `\t${coords[1][0] - coords[0][0]}\t${
+                  coords[1][1] - coords[0][1]
+                }`;
+            }
+            div.innerHTML = clip;
+          })}
+          onpointerdown=${editing &&
+          (() => {
+            dragging = 1;
+          })}
+          onpointerup=${editing &&
+          (() => {
+            dragging = 0;
+            navigator.clipboard.writeText(clip);
+          })}
+        >
+          ${items
+            .filter((item) => item.w)
+            .map(
+              (item) => html`<button
+                style=${styleString({
+                  left: pct(item.x),
+                  top: pct(item.y),
+                  width: pct(item.w),
+                  height: pct(item.h),
+                  position: "absolute",
+                })}
+                ?invisible=${item.invisible}
+                onClick=${actions.handler(this.name.value, item, "press")}
+              >
+                <span>${item.label || ""}</span>
+              </button>`
+            )}
+          <span class="coords" style="background-color: white"></span>
+        </div>`
+    );
   }
 
   /** @param {HTMLDivElement} node */

@@ -167,7 +167,6 @@ class Timer extends TreeBase {
 
   /** @param {Event & { access: {}}} event */
   start(event) {
-    console.log("start timer");
     const fakeEvent = /** @type {Event} */ ({
       type: "timer",
       target: event.target,
@@ -178,7 +177,6 @@ class Timer extends TreeBase {
   }
 
   cancel() {
-    console.log("cancel timer");
     const event = EventWrap(new Event("cancel"));
     this.subject$.next(event);
   }

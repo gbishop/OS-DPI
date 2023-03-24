@@ -14,11 +14,12 @@ export class ModalDialog extends TreeBase {
   template() {
     const state = Globals.state;
     const { stateName } = this.props;
-    const open = !!state.get(stateName) || this.open.value;
+    const open = !!state.get(stateName) || this.open.value ? "open" : "";
     if (open) {
-      return html`<div class="modal" id=${this.id} ?open=${open}>
-        <div>${this.children.map((child) => child.template())}</div>
-      </div>`;
+      return this.component(
+        { classes: [open] },
+        html`<div>${this.children.map((child) => child.template())}</div>`
+      );
     } else {
       return html`<!--empty-->`;
     }

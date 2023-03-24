@@ -3,6 +3,7 @@ import * as Props from "./props";
 import "css/treebase.css";
 import { fromCamelCase } from "./helpers";
 import WeakValue from "weak-value";
+import { styleString } from "./style";
 
 export class TreeBase {
   /** @type {TreeBase[]} */
@@ -207,6 +208,7 @@ export class TreeBase {
     return html`<div class="settings">
       <details
         class=${this.className}
+        id=${this.id + "-details"}
         ?open=${this.persisted.settingsDetailsOpen}
         ontoggle=${({ target }) =>
           (this.persisted.settingsDetailsOpen = target.open)}
@@ -247,6 +249,33 @@ export class TreeBase {
    */
   template() {
     return html`<!--empty-->`;
+  }
+
+  /** @typedef {Object} ComponentAttrs
+   * @property {string[]} [classes]
+   * @property {Object} [style]
+   */
+
+  /**
+   * Wrap the body of a component
+   *
+   * @param {ComponentAttrs} attrs
+   * @param {Hole} body
+   * @returns {Hole}
+   */
+  component(attrs, body) {
+    attrs = { style: {}, ...attrs };
+    let classes = [this.className.toLowerCase()];
+    if ("classes" in attrs) {
+      classes = classes.concat(attrs.classes);
+    }
+    return html`<div
+      class=${classes.join(" ")}
+      id=${this.id}
+      style=${styleString(attrs.style)}
+    >
+      ${body}
+    </div>`;
   }
 
   /**
@@ -408,7 +437,6 @@ export class TreeBaseSwitchable extends TreeBase {
   /** Replace this node with one of a compatible type
    * @param {string} className */
   replace(className) {
-    console.log("replacing", this.className, className);
     if (!this.parent) return;
     if (this.className == className) return;
     // extract the values of the old props

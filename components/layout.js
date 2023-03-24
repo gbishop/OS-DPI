@@ -117,11 +117,18 @@ export class Layout extends DesignerPanel {
   /** Allow highlighting the current component in the UI
    */
   highlight() {
-    // clear the highlight
+    // clear any existing highlight
     for (const element of document.querySelectorAll("#UI [highlight]")) {
       element.removeAttribute("highlight");
     }
-    let component = Globals.designer.selectedComponent;
+    // find the selection in the panel
+    let selected = document.querySelector("[aria-selected]");
+    if (!selected) return;
+    selected = selected.closest("[id]");
+    if (!selected) return;
+    const id = selected.id;
+    if (!id) return;
+    let component = TreeBase.componentFromId(id);
     if (component) {
       const element = document.getElementById(component.id);
       if (element) {

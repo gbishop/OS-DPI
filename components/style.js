@@ -104,7 +104,6 @@ class ColorInput extends HTMLElement {
    * @param {string} newValue
    */
   attributeChangedCallback(name, _, newValue) {
-    console.log("acc", name, newValue);
     this[name] = newValue;
     this.render();
   }

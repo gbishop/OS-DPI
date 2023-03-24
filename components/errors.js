@@ -8,7 +8,6 @@ export class Messages extends TreeBase {
   messages = [];
 
   template() {
-    console.log("messages", this.messages);
     if (this.messages.length) {
       const result = html`<div id="messages">
         ${this.messages.map((message) => html`<p>${message}</p>`)}

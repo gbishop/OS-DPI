@@ -268,7 +268,6 @@ function getFileMenuItems(bar) {
           }
         } catch (e) {
           sheet.handle = undefined;
-          console.log("cleared sheet.handle");
         }
       },
     }),

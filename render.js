@@ -18,7 +18,7 @@ export function safeRender(where, what) {
     try {
       r = render(where, what);
     } catch (error) {
-      console.log("crash", error);
+      console.error("crash", error);
       window.location.reload();
       return;
     }

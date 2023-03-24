@@ -52,6 +52,7 @@ export async function start() {
   await pageLoaded;
 
   const layout = await Layout.load(Layout);
+  Globals.layout = layout;
   Globals.tree = layout.children[0];
   Globals.state = new State(`UIState`);
   Globals.actions = await Actions.load(Actions);
@@ -102,14 +103,6 @@ export async function start() {
 
   function renderUI() {
     const startTime = performance.now();
-    let IDE = html`<!--empty-->`;
-    if (Globals.state.get("editing")) {
-      IDE = html`<div id="designer">
-          ${toolbar.template()} ${Globals.error.template()}
-          <div id="tabs" hint="P">${Globals.designer.template()}</div>
-        </div>
-        <div id="monitor">${monitor.template()}</div> `;
-    }
     document.body.classList.toggle("designing", Globals.state.get("editing"));
     // clear the changed flag, TODO there must be a better way!
     clearAccessChanged();
@@ -119,7 +112,13 @@ export async function start() {
           <div id="timer"></div>
           ${Globals.cues.renderCss()}${Globals.tree.template()}
         </div>
-        ${IDE}`
+        ${Globals.state.get("editing")
+          ? html`<div id="designer">
+                ${toolbar.template()} ${Globals.error.template()}
+                <div id="tabs" hint="P">${Globals.designer.template()}</div>
+              </div>
+              <div id="monitor">${monitor.template()}</div> `
+          : html`<!--empty-->`}`
     );
     Globals.method.refresh();
     if (location.host.startsWith("localhost")) {

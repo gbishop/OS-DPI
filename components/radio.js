@@ -97,13 +97,14 @@ class Radio extends TreeBase {
       </button>`;
     });
 
-    return html`<div class="radio flex" id=${this.id}>
-      <fieldset class="flex">
+    return this.component(
+      {},
+      html` <fieldset class="flex">
         ${(this.props.label && html`<legend>${this.props.label}</legend>`) ||
         html`<!--empty-->`}
         ${choices}
-      </fieldset>
-    </div>`;
+      </fieldset>`
+    );
   }
 
   get name() {

@@ -84,6 +84,7 @@ export class TabControl extends TreeBase {
       <div
         class="panels flex"
         onfocusin=${this.focusin}
+        onmouseup=${this.focusin}
         onkeydown=${this.panelKeyHandler}
       >
         ${panel}
@@ -136,17 +137,28 @@ export class TabPanel extends Stack {
    *  */
   settingsDetails() {
     const caption = this.active ? "Active" : "Activate";
-    return html`${super.settingsDetails()}<button
+    return html`${super.settingsDetails()}
+      <button
         id=${this.id + "-activate"}
         ?active=${this.active}
         onclick=${() => {
+          console.log("here", this.parent);
           if (this.parent) {
-            this.parent.switchTab(this.name.value);
+            const parent = this.parent;
+            callAfterRender(() => {
+              console.log("delayed call to highlight", parent);
+              Globals.layout.highlight();
+            });
+            parent.switchTab(this.name.value);
           }
         }}
       >
         ${caption}
       </button>`;
+  }
+
+  template() {
+    return super.template();
   }
 
   highlight() {}

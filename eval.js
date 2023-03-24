@@ -60,7 +60,7 @@ export function validateExpression(expression) {
     const exp = translate(expression);
     expressions.compile(exp);
   } catch (error) {
-    console.log("validate", error);
+    console.error("validate", error);
     return false;
   }
   return true;

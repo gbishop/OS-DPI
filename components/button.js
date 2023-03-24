@@ -13,20 +13,22 @@ class Button extends TreeBase {
   template() {
     const style = styleString({ backgroundColor: this.props.background });
     const { name, label } = this.props;
-    return html`<button
-      class="button"
-      name=${name}
-      style=${style}
-      id=${this.id}
-      .dataset=${{
-        name: name,
-        label: label,
-        ComponentName: this.props.name,
-        ComponentType: this.constructor.name,
-      }}
-    >
-      ${label}
-    </button>`;
+    return this.component(
+      {},
+      html`<button
+        class="button"
+        name=${name}
+        style=${style}
+        .dataset=${{
+          name: name,
+          label: label,
+          ComponentName: this.props.name,
+          ComponentType: this.constructor.name,
+        }}
+      >
+        ${label}
+      </button>`
+    );
   }
 
   getChildren() {

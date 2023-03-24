@@ -2,6 +2,7 @@ import { TreeBase } from "./treebase";
 import * as Props from "./props";
 import { html } from "uhtml";
 import { styleString } from "./style";
+import "css/stack.css";
 
 export class Stack extends TreeBase {
   direction = new Props.Select(["row", "column"], { defaultValue: "column" });
@@ -20,9 +21,6 @@ export class Stack extends TreeBase {
   ];
 
   template() {
-    const style = styleString({
-      backgroundColor: this.props.background,
-    });
     /** return the scale of the child making sure it isn't zero or undefined.
      * @param {TreeBase} child
      * @returns {number}
@@ -41,12 +39,14 @@ export class Stack extends TreeBase {
       0
     );
     const dimension = this.props.direction == "row" ? "width" : "height";
-    return html`<div
-      id=${this.id}
-      class=${`stack flex ${this.props.direction} ${empty}`}
-      style=${style}
-    >
-      ${this.children.map(
+    return this.component(
+      {
+        classes: [this.props.direction, empty],
+        style: {
+          backgroundColor: this.props.background,
+        },
+      },
+      html`${this.children.map(
         (child) =>
           html`<div
             style=${styleString({
@@ -55,8 +55,8 @@ export class Stack extends TreeBase {
           >
             ${child.template()}
           </div>`
-      )}
-    </div>`;
+      )} `
+    );
   }
 }
 TreeBase.register(Stack, "Stack");

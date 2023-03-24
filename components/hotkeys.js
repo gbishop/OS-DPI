@@ -13,7 +13,6 @@ function clearHints() {
 }
 
 function editMode() {
-  console.log("editMode");
   Globals.state.update({ editing: true });
 }
 
@@ -81,7 +80,6 @@ function help() {
   const { designer } = Globals;
   if (!designer.currentPanel) return;
   const currentId = designer.currentPanel.lastFocused;
-  console.log({ currentId });
   let inputName = "";
   let componentName = "";
   if (currentId) {
@@ -92,7 +90,6 @@ function help() {
     componentName = TreeBase.componentFromId(currentId)?.className || "";
   }
   const url = `${wiki}/${componentName}#${inputName}`;
-  console.log("help", url);
   window.open(url, "help");
   clearHints();
 }
