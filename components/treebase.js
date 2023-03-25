@@ -4,6 +4,8 @@ import "css/treebase.css";
 import { fromCamelCase } from "./helpers";
 import WeakValue from "weak-value";
 import { styleString } from "./style";
+import Globals from "app/globals";
+import { session } from "./persist";
 
 export class TreeBase {
   /** @type {TreeBase[]} */
@@ -14,15 +16,14 @@ export class TreeBase {
   allowedChildren = [];
   allowDelete = true;
 
-  // values here are persisted in the db but not in exports
-  persisted = {
-    // remember the state of the details element below
-    settingsDetailsOpen: false,
-  };
-
   // every component has a unique id
   static treeBaseCounter = 0;
   id = `TreeBase-${TreeBase.treeBaseCounter++}`;
+
+  // values here are stored in sessionStorage
+  persisted = session(this.id, {
+    settingsDetailsOpen: false,
+  });
 
   // map from id to the component
   static idMap = new WeakValue();
@@ -82,17 +83,14 @@ export class TreeBase {
    * Prepare a TreeBase tree for external storage by converting to simple objects and arrays
    * @returns {Object}
    * */
-  toObject(persist = true) {
+  toObject() {
     const props = this.props;
-    const children = this.children.map((child) => child.toObject(persist));
+    const children = this.children.map((child) => child.toObject());
     const result = {
       className: this.className,
       props,
       children,
     };
-    if (persist) {
-      result["persisted"] = this.persisted;
-    }
     return result;
   }
 
@@ -154,10 +152,6 @@ export class TreeBase {
 
     // Create the object and link it to its parent
     const result = this.create(constructor, parent, obj.props);
-
-    if ("persisted" in obj) {
-      result.persisted = { ...result.persisted, ...obj["persisted"] };
-    }
 
     // Link in the children
     for (const childObj of obj.children) {
@@ -269,10 +263,12 @@ export class TreeBase {
     if ("classes" in attrs) {
       classes = classes.concat(attrs.classes);
     }
+    const highlight = Globals.layout.highlight(this);
     return html`<div
       class=${classes.join(" ")}
       id=${this.id}
       style=${styleString(attrs.style)}
+      highlight=${highlight}
     >
       ${body}
     </div>`;
