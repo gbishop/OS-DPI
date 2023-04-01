@@ -70,26 +70,26 @@ export class TabControl extends TreeBase {
     }
     this.currentPanel = panels.find((panel) => panel.active);
     const panel = this.panelTemplate();
-    return html`<div
-      class=${["tabcontrol", "flex", this.props.tabEdge].join(" ")}
-      id=${this.id}
-    >
-      <ul
-        class="buttons"
-        onkeydown=${this.tabButtonKeyHandler}
-        hint=${this.hint}
-      >
-        ${buttons}
-      </ul>
-      <div
-        class="panels flex"
-        onfocusin=${this.focusin}
-        onmouseup=${this.focusin}
-        onkeydown=${this.panelKeyHandler}
-      >
-        ${panel}
-      </div>
-    </div>`;
+    return this.component(
+      { classes: [this.props.tabEdge] },
+      html`
+        <ul
+          class="buttons"
+          onkeydown=${this.tabButtonKeyHandler}
+          hint=${this.hint}
+        >
+          ${buttons}
+        </ul>
+        <div
+          class="panels flex"
+          onfocusin=${this.focusin}
+          onmouseup=${this.focusin}
+          onkeydown=${this.panelKeyHandler}
+        >
+          ${panel}
+        </div>
+      `
+    );
   }
 
   panelTemplate() {

@@ -263,12 +263,10 @@ export class TreeBase {
     if ("classes" in attrs) {
       classes = classes.concat(attrs.classes);
     }
-    const highlight = Globals.layout.highlight(this);
     return html`<div
       class=${classes.join(" ")}
       id=${this.id}
       style=${styleString(attrs.style)}
-      highlight=${highlight}
     >
       ${body}
     </div>`;

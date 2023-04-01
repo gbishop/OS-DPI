@@ -1,3 +1,8 @@
+.tabcontrol {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
 .tabcontrol .buttons button:focus {
   background-color: var(--surface2);
 }

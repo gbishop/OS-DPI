@@ -103,8 +103,8 @@ export class Layout extends DesignerPanel {
     };
   }
 
-  toObject(persist = true) {
-    return this.children[0].toObject(persist);
+  toObject() {
+    return this.children[0].toObject();
   }
 
   /** Update the state

@@ -22,6 +22,21 @@ export class Designer extends TabControl {
   }
 
   /**
+   * Wrap the body of a component
+   * Include the tabcontrol class so we inherit its properties
+   *
+   * @param {Object} attrs
+   * @param {Hole} body
+   * @returns {Hole}
+   */
+  component(attrs, body) {
+    const { classes } = attrs;
+    classes.push("tabcontrol");
+    attrs = { ...attrs, classes };
+    return super.component(attrs, body);
+  }
+
+  /**
    * @param {string} tabName
    */
   switchTab(tabName) {
