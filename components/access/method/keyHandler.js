@@ -67,8 +67,12 @@ export class KeyHandler extends Handler {
       keyDown$.pipe(
         // merge with the key up stream
         RxJs.mergeWith(keyUp$),
+        // ignore events from the designer
+        RxJs.filter((e) => notDesigner(e)),
+        // prevent default actions
+        RxJs.tap((e) => e.preventDefault()),
         // remove any repeats
-        RxJs.filter((e) => !e.repeat && notDesigner(e)),
+        RxJs.filter((e) => !e.repeat),
         // group by the key
         RxJs.groupBy((e) => e.key),
         // process each group and merge the results

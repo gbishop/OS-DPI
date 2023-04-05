@@ -65,7 +65,9 @@ TreeBase.register(ResponderClearCue, "ResponderClearCue");
 class ResponderEmit extends HandlerResponse {
   /** @param {Event & { access: Object }} event */
   respond(event) {
-    Globals.actions.applyRules(event.access.type, "press", event.access);
+    const method = this.nearestParent(Method);
+    if (!method) return;
+    Globals.actions.applyRules(method.Name.value, "press", event.access);
   }
 }
 TreeBase.register(ResponderEmit, "ResponderEmit");

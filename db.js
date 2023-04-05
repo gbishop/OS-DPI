@@ -162,7 +162,10 @@ export class DB {
     const cursor = await index.openCursor([this.designName, type], "prev");
     if (cursor) {
       const data = cursor.value.data;
-      if (typeof data == "string") {
+      if (
+        (Array.isArray(defaultValue) && !Array.isArray(data)) ||
+        typeof data != typeof defaultValue
+      ) {
         return defaultValue;
       }
       return data;
@@ -376,12 +379,12 @@ export class DB {
     const db = await this.dbPromise;
 
     // collect the parts of the design
-    const layout = Globals.tree.toObject(false);
-    const actions = Globals.actions.toObject(false);
+    const layout = Globals.tree.toObject();
+    const actions = Globals.actions.toObject();
     const content = await this.read("content");
-    const method = Globals.method.toObject(false);
-    const pattern = Globals.patterns.toObject(false);
-    const cues = Globals.cues.toObject(false);
+    const method = Globals.method.toObject();
+    const pattern = Globals.patterns.toObject();
+    const cues = Globals.cues.toObject();
 
     const zipargs = {
       "layout.json": strToU8(JSON.stringify(layout)),
