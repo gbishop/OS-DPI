@@ -86,7 +86,7 @@ function help() {
     const label = /** @type {HTMLLabelElement} */ (
       document.querySelector(`label[for="${currentId}"]`)
     );
-    inputName = label.innerText;
+    inputName = (label && label.innerText) || "";
     componentName = TreeBase.componentFromId(currentId)?.className || "";
   }
   const url = `${wiki}/${componentName}#${inputName}`;
