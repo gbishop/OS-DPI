@@ -128,7 +128,7 @@ const transitions = [
   { state: State.hints,   key: /u/i,      next: State.editing, call: focusUI      },
   { state: State.hints,   key: /p/i,      next: State.editing, call: focusPanel   },
   { state: State.hints,   key: /shift/i,  next: State.hints                       },
-  { state: State.hints,   key: /[?/]/,    next: State.editing, call: help         },
+  { state: State.hints,   key: /[?/¿]/,   next: State.editing, call: help         },
   { state: State.hints,   key: /.*/i,     next: State.editing, call: clearHints   },
 ];
 
