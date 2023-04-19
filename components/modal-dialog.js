@@ -18,7 +18,7 @@ export class ModalDialog extends TreeBase {
     if (open) {
       return this.component(
         { classes: [open] },
-        html`<div>${this.children.map((child) => child.template())}</div>`
+        html`<div>${this.children.map((child) => child.safeTemplate())}</div>`
       );
     } else {
       return html`<!--empty-->`;

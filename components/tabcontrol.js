@@ -93,7 +93,7 @@ export class TabControl extends TreeBase {
   }
 
   panelTemplate() {
-    return this.currentPanel?.template() || html`<!--empty-->`;
+    return this.currentPanel?.safeTemplate() || html`<!--empty-->`;
   }
 
   /**

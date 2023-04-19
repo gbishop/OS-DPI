@@ -6,6 +6,7 @@ import WeakValue from "weak-value";
 import { styleString } from "./style";
 import Globals from "app/globals";
 import { session } from "./persist";
+import { errorHandler } from "./errors";
 
 export class TreeBase {
   /** @type {TreeBase[]} */
@@ -243,6 +244,21 @@ export class TreeBase {
    */
   template() {
     return html`<!--empty-->`;
+  }
+
+  /**
+   * Render the user interface catching errors and return the resulting Hole
+   * @returns {Hole}
+   */
+  safeTemplate() {
+    try {
+      return this.template();
+    } catch (error) {
+      errorHandler(error);
+      let classes = [this.className.toLowerCase()];
+      classes.push("error");
+      return html`<div class=${classes.join(" ")} id=${this.id}>ERROR</div>`;
+    }
   }
 
   /** @typedef {Object} ComponentAttrs

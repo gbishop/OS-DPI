@@ -29,3 +29,10 @@ div#messages {
   color: var(--failure);
   padding: 0.5em;
 }
+
+.error {
+  background-color: var(--failure);
+  color: var(--text1);
+  justify-content: center;
+  align-items: center;
+}

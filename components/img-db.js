@@ -14,7 +14,7 @@ export class imgFromDb extends HTMLImageElement {
    * @param {string} name
    * @param {string} _
    * @param {string} newValue */
-  async attributeChangedCallback(name, _, newValue) {
+  attributeChangedCallback(name, _, newValue) {
     if (name === "dbsrc" && newValue) {
       this.updateSrcFromDb(newValue);
     }

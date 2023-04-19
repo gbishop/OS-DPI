@@ -72,6 +72,7 @@ function reportInternalError(msg, trace) {
 }
 
 window.onerror = async function (msg, _file, _line, _col, error) {
+  console.error("onerror", msg, error);
   if (error instanceof Error) {
     try {
       const frames = await StackTrace.fromError(error);
@@ -86,7 +87,22 @@ window.onerror = async function (msg, _file, _line, _col, error) {
     }
   }
 };
+
+/** @param {Error} error */
+export function errorHandler(error) {
+  console.error("errorHandler", error);
+  let stack = [];
+  let cause = error.name;
+  if (error.stack) {
+    const errorLines = error.stack.split("\n");
+    stack = errorLines.slice(1);
+    cause = errorLines[0];
+  }
+  reportInternalError(cause, stack);
+}
 /** @param {PromiseRejectionEvent} error */
 window.onunhandledrejection = function (error) {
+  console.error("onunhandlederror", error);
+  error.preventDefault();
   reportInternalError(error.reason.message, error.reason.stack.split("\n"));
 };

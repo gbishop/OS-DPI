@@ -1,5 +1,4 @@
 import { Messages } from "./components/errors";
-import { html } from "uhtml";
 import { Data } from "./data";
 import { State } from "./state";
 import "./components";
@@ -17,7 +16,7 @@ import { MethodChooser } from "./components/access/method";
 import { CueList } from "./components/access/cues";
 import { Actions } from "./components/actions";
 import { welcome } from "./components/welcome";
-import { callAfterRender, safeRender } from "./render";
+import { callAfterRender, safeRender, postRender } from "./render";
 import { Designer } from "components/designer";
 
 /** let me wait for the page to load */
@@ -106,20 +105,13 @@ export async function start() {
     document.body.classList.toggle("designing", Globals.state.get("editing"));
     // clear the changed flag, TODO there must be a better way!
     clearAccessChanged();
-    safeRender(
-      document.body,
-      html`<div id="UI" hint="U" tabindex="-1">
-          <div id="timer"></div>
-          ${Globals.cues.renderCss()}${Globals.tree.template()}
-        </div>
-        ${Globals.state.get("editing")
-          ? html`<div id="designer">
-                ${toolbar.template()} ${Globals.error.template()}
-                <div id="tabs" hint="P">${Globals.designer.template()}</div>
-              </div>
-              <div id="monitor">${monitor.template()}</div> `
-          : html`<!--empty-->`}`
-    );
+    safeRender("cues", Globals.cues);
+    safeRender("UI", Globals.tree);
+    safeRender("toolbar", toolbar);
+    safeRender("tabs", Globals.designer);
+    safeRender("monitor", monitor);
+    safeRender("errors", Globals.error);
+    postRender();
     Globals.method.refresh();
     if (location.host.startsWith("localhost")) {
       const timer = document.getElementById("timer");

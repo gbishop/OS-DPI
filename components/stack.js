@@ -53,7 +53,7 @@ export class Stack extends TreeBase {
               [dimension]: `${(100 * getScale(child)) / scaleSum}%`,
             })}
           >
-            ${child.template()}
+            ${child.safeTemplate()}
           </div>`
       )} `
     );
