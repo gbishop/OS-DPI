@@ -207,22 +207,28 @@ export class DB {
     const store = tx.objectStore("store");
     await store.put({ name: this.designName, type, data });
 
-    // only keep one of the content
-    const [n_max, n_save] =
-      type == "content" ? [1, 1] : [N_RECORDS_MAX, N_RECORDS_SAVE];
+    let n_max = N_RECORDS_MAX; // zero to prevent limiting
+    let n_save = N_RECORDS_SAVE;
+    if (type == "content") {
+      n_max = n_save = 1; // only save 1 content record
+    } else if (type == "log") {
+      n_max = n_save = 0; // don't limit log records
+    }
 
     /* Only keep the last few records per type */
     const index = store.index("by-name-type");
     const key = [this.designName, type];
-    // count how many we have
-    let count = await index.count(key);
-    if (count > n_max) {
-      // get the number to delete
-      let toDelete = count - n_save;
-      // we're getting them in order so this will delete the oldest ones
-      for await (const cursor of index.iterate(key)) {
-        if (--toDelete <= 0) break;
-        cursor.delete();
+    if (n_max > 0) {
+      // count how many we have
+      let count = await index.count(key);
+      if (count > n_max) {
+        // get the number to delete
+        let toDelete = count - n_save;
+        // we're getting them in order so this will delete the oldest ones
+        for await (const cursor of index.iterate(key)) {
+          if (--toDelete <= 0) break;
+          cursor.delete();
+        }
       }
     }
     await tx.done;
