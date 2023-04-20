@@ -447,7 +447,7 @@ export class DB {
       Object.values(pair).includes(this.designName)
     );
 
-    // add the encoded image to the zipargs
+    // delete the media
     for (const key of mediaKeys) {
       txm.store.delete(key);
     }
