@@ -441,6 +441,17 @@ export class DB {
       cursor.delete();
     }
     await tx.done;
+    // delete media
+    const txm = db.transaction("media", "readwrite");
+    const mediaKeys = (await txm.store.getAllKeys()).filter((pair) =>
+      Object.values(pair).includes(this.designName)
+    );
+
+    // add the encoded image to the zipargs
+    for (const key of mediaKeys) {
+      txm.store.delete(key);
+    }
+    await txm.done;
     await db.delete("saved", name);
   }
 
