@@ -21,7 +21,8 @@ div.vsd button[invisible] {
   border: none;
 }
 
-div.vsd img {
+div.vsd img,
+div.vsd video {
   flex: 1 1 0;
   object-fit: contain;
   width: 100%;

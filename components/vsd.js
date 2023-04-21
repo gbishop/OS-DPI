@@ -3,9 +3,8 @@ import { TreeBase } from "./treebase";
 import * as Props from "./props";
 import { styleString } from "./style";
 import "css/vsd.css";
-import "./img-db";
 import Globals from "app/globals";
-import { GridFilter } from "./grid";
+import { GridFilter, imageOrVideo } from "./grid";
 
 /** Allow await'ing for a short time
  * @param {number} ms */
@@ -95,7 +94,7 @@ class VSD extends TreeBase {
     const items = /** @type {VRow[]} */ (
       data.getMatchingRows(this.filters, state)
     );
-    const src = items.find((item) => item.image)?.image;
+    const src = items.find((item) => item.image)?.image || "";
     let dragging = 0;
     const coords = [
       [0, 0], // start x and y
@@ -105,13 +104,7 @@ class VSD extends TreeBase {
 
     return this.component(
       { classes: ["show"] },
-      html`<img
-          is="img-db"
-          dbsrc=${src}
-          onload=${() => {
-            this.sizeMarkers(this.markers);
-          }}
-        />
+      html`${imageOrVideo(src, "", () => this.sizeMarkers(this.markers))}
         <div
           class="markers"
           ref=${(/** @type {HTMLDivElement & { observer: any }} */ node) => {

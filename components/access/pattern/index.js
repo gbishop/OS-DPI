@@ -14,8 +14,23 @@ import { toggleIndicator } from "app/components/helpers";
 export function cueTarget(target, value) {
   if (target instanceof HTMLButtonElement) {
     target.setAttribute("cue", value);
+    const video = target.querySelector("video");
+    if (video && !video.hasAttribute("autoplay")) {
+      video.play();
+    }
   } else {
     target.cue(value);
+  }
+}
+
+export function clearCues() {
+  for (const element of document.querySelectorAll("[cue]")) {
+    element.removeAttribute("cue");
+    const video = element.querySelector("video");
+    if (video && !video.hasAttribute("autoplay")) {
+      video.pause();
+      video.currentTime = 0;
+    }
   }
 }
 
@@ -258,9 +273,7 @@ export class PatternManager extends PatternBase {
 
   clearCue() {
     this.cued = false;
-    for (const element of document.querySelectorAll("[cue]")) {
-      element.removeAttribute("cue");
-    }
+    clearCues();
   }
 
   cue() {

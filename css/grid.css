@@ -29,13 +29,15 @@
   margin-inline-end: 0;
   justify-content: center;
 }
-body:not(.designing) img[dbsrc]:not([src]) {
+body:not(.designing) img[dbsrc]:not([src]),
+body:not(.designing) video[dbsrc]:not([src]) {
   display: none;
 }
 .grid button figure figcaption {
   width: 100%;
 }
-.grid button figure img {
+.grid button figure img,
+.grid button figure video {
   object-fit: contain;
   width: 100%;
   height: 100%;
