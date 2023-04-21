@@ -304,7 +304,7 @@ function getFileMenuItems(bar) {
         try {
           const files = await fileOpen({
             description: "Media files",
-            mimeTypes: ["image/*", "audio/*"],
+            mimeTypes: ["image/*", "audio/*", "video/mp4"],
             multiple: true,
           });
           for (const file of files) {
@@ -312,6 +312,13 @@ function getFileMenuItems(bar) {
             if (file.type.startsWith("image/")) {
               for (const img of document.querySelectorAll(
                 `img[dbsrc="${file.name}"]`
+              )) {
+                /** @type {ImgDb} */ (img).refresh();
+              }
+            }
+            if (file.type.startsWith("video/")) {
+              for (const img of document.querySelectorAll(
+                `video[dbsrc="${file.name}"]`
               )) {
                 /** @type {ImgDb} */ (img).refresh();
               }
