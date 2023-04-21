@@ -16,7 +16,14 @@ export function cueTarget(target, value) {
     target.setAttribute("cue", value);
     const video = target.querySelector("video");
     if (video && !video.hasAttribute("autoplay")) {
-      video.play();
+      const promise = video.play();
+      if (promise !== undefined) {
+        promise
+          .then((_) => {})
+          .catch((error) => {
+            console.log("autoplay prevented", error);
+          });
+      }
     }
   } else {
     target.cue(value);
