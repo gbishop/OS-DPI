@@ -16,6 +16,7 @@ export function cueTarget(target, value) {
     target.setAttribute("cue", value);
     const video = target.querySelector("video");
     if (video && !video.hasAttribute("autoplay")) {
+      if (video.hasAttribute("muted")) video.muted = true;
       const promise = video.play();
       if (promise !== undefined) {
         promise
