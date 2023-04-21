@@ -104,5 +104,8 @@ export function errorHandler(error) {
 window.onunhandledrejection = function (error) {
   console.error("onunhandlederror", error);
   error.preventDefault();
-  reportInternalError(error.reason.message, error.reason.stack.split("\n"));
+  reportInternalError(
+    error.reason.message,
+    error.reason.stack?.split("\n") || ["no stack"]
+  );
 };
