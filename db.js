@@ -360,7 +360,11 @@ export class DB {
         }
         const type = fname.split(".")[0];
         await this.write(type, obj);
-      } else if (mimetype.startsWith("image") || mimetype.startsWith("audio")) {
+      } else if (
+        mimetype.startsWith("image") ||
+        mimetype.startsWith("audio") ||
+        mimetype.startsWith("video")
+      ) {
         const blob = new Blob([unzipped[fname]], {
           type: mimetype,
         });
@@ -563,6 +567,7 @@ const mimetypes = {
   ".oga": "audio/ogg",
   ".wav": "audio/wav",
   ".weba": "audio/webm",
+  ".webm": "video/webm",
   ".avif": "image/avif",
   ".bmp": "image/bmp",
   ".gif": "image/gif",

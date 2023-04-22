@@ -17,7 +17,7 @@ import "css/grid.css";
  */
 export function imageOrVideo(src, title, onload = null) {
   const parts = src.split(" ");
-  if (parts[0].endsWith(".mp4")) {
+  if (/\.(webm|mp4)$/i.test(parts[0])) {
     // video
     const options = parts.slice(1);
     return html`<video

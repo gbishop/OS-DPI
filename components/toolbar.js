@@ -304,7 +304,7 @@ function getFileMenuItems(bar) {
         try {
           const files = await fileOpen({
             description: "Media files",
-            mimeTypes: ["image/*", "audio/*", "video/mp4"],
+            mimeTypes: ["image/*", "audio/*", "video/mp4", "video/webm"],
             multiple: true,
           });
           for (const file of files) {
