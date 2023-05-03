@@ -59,7 +59,11 @@ export async function start() {
   Globals.cues = await CueList.load(CueList);
   Globals.patterns = await PatternList.load(PatternList);
   Globals.method = await MethodChooser.load(MethodChooser);
-  Globals.restart = start;
+  Globals.restart = async () => {
+    // tear down any existing event handlers before restarting
+    Globals.method.stop();
+    start();
+  };
   Globals.error = new Messages();
 
   /** @param {() => void} f */

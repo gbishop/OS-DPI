@@ -32,10 +32,14 @@ export class MethodChooser extends DesignerPanel {
 
   configure() {
     // tear down the old configuration if any
-    this.stop$.next(1);
+    this.stop();
     for (const method of this.children) {
       method.configure(this.stop$);
     }
+  }
+
+  stop() {
+    this.stop$.next(1);
   }
 
   settings() {
