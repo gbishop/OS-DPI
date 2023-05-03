@@ -4,7 +4,6 @@ import "css/treebase.css";
 import { fromCamelCase } from "./helpers";
 import WeakValue from "weak-value";
 import { styleString } from "./style";
-import Globals from "app/globals";
 import { session } from "./persist";
 import { errorHandler } from "./errors";
 
