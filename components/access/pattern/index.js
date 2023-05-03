@@ -338,7 +338,7 @@ PatternBase.register(PatternGroup, "PatternGroup");
 class PatternSelector extends PatternBase {
   allowedChildren = ["Filter", "GroupBy", "OrderBy"];
   settings() {
-    return html`<fieldset class=${this.className}>
+    return html`<fieldset class=${this.className} tabindex="0" id=${this.id}>
       <legend>Selector</legend>
       ${this.unorderedChildren()}
     </fieldset>`;
