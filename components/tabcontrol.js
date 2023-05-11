@@ -52,7 +52,7 @@ export class TabControl extends TreeBase {
               ?active=${panel.active}
               style=${styleString(buttonStyle)}
               .dataset=${{
-                name: this.name,
+                name: this.name.value,
                 label: panel.tabLabel,
                 component: this.constructor.name,
                 id: panel.id,

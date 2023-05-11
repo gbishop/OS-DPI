@@ -2,6 +2,7 @@
 
 import Globals from "app/globals";
 import "css/hotkeys.css";
+import { friendlyNamesMap } from "./toolbar";
 import { TreeBase } from "./treebase";
 
 function showHints() {
@@ -78,8 +79,13 @@ function focusTabs() {
 function help() {
   const wiki = "https://github.com/unc-project-open-aac/os-dpi/wiki";
   const { designer } = Globals;
+  console.info({ cp: designer.currentPanel });
   if (!designer.currentPanel) return;
-  const currentId = designer.currentPanel.lastFocused;
+
+  const currentId =
+    designer.currentPanel.children.length > 0
+      ? designer.currentPanel.lastFocused
+      : designer.currentPanel.id;
   let inputName = "";
   let componentName = "";
   if (currentId) {
@@ -88,6 +94,9 @@ function help() {
     );
     inputName = (label && label.innerText) || "";
     componentName = TreeBase.componentFromId(currentId)?.className || "";
+    if (componentName in friendlyNamesMap) {
+      componentName = friendlyNamesMap[componentName].replace(" ", "-");
+    }
   }
   const url = `${wiki}/${componentName}#${inputName}`;
   window.open(url, "help");

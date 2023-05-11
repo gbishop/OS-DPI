@@ -17,28 +17,37 @@ import { readSheetFromBlob, saveContent } from "./content";
 import { Data } from "app/data";
 import { SaveLogs, ClearLogs } from "./logger";
 
-const friendlyNamesMap = {
+export const friendlyNamesMap = {
   ActionCondition: "Condition",
   ActionUpdate: "Update",
-  TabControl: "Tab Control",
-  Cue: "No Cue",
+  CueCircle: "Cue Circle",
   CueCss: "Cue CSS",
   CueFill: "Cue Fill",
-  CueCircle: "Cue Circle",
+  CueList: "Cues",
   CueOverlay: "Cue Overlay",
-  ModalDialog: "Modal Dialog",
-  PatternManager: "Pattern",
-  PatternGroup: "Group",
-  PatternSelector: "Selector",
-  GroupBy: "Group by",
-  OrderBy: "Order by",
-  TimerHandler: "Timer handler",
-  PointerHandler: "Pointer Handler",
-  KeyHandler: "Key Handler",
-  HandlerCondition: "Condition",
-  HandlerResponse: "Response",
   GridFilter: "Filter",
+  GroupBy: "Group By",
+  HandlerCondition: "Condition",
+  HandlerKeyCondition: "Key",
+  HandlerResponse: "Response",
+  KeyHandler: "Key Handler",
+  MethodChooser: "Methods",
+  ModalDialog: "Modal Dialog",
+  OrderBy: "Order By",
+  PatternGroup: "Group",
+  PatternList: "Patterns",
+  PatternManager: "Pattern",
+  PatternSelector: "Selector",
+  PointerHandler: "Pointer Handler",
+  ResponderActivate: "Responder Activate",
+  ResponderClearCue: "Responder Clear Cue",
+  ResponderCue: "Responder Cue",
+  ResponderEmit: "Responder Emit",
+  ResponderNext: "Responder Next",
+  ResponderStartTimer: "Responder Start Timer",
+  TabControl: "Tab Control",
   TabPanel: "Tab Panel",
+  TimerHandler: "Timer handler",
 };
 
 /** Return a list of available Menu items on this component
@@ -51,6 +60,7 @@ const friendlyNamesMap = {
 function getComponentMenuItems(component, which = "all", wrapper) {
   /** @type {MenuItem[]} */
   const result = [];
+  console.log({ component, which });
 
   /** Get a name for the menu
    * @param {string} name
@@ -135,16 +145,19 @@ function getComponentMenuItems(component, which = "all", wrapper) {
  * @return {{ child: MenuItem[], parent: MenuItem[]}}
  * */
 function getPanelMenuItems(type) {
+  console.info({ type });
   // Figure out which tab is active
   const { designer } = Globals;
   const panel = designer.currentPanel;
 
   // Ask that tab which component is focused
-  if (!panel || !panel.lastFocused) {
+  if (!panel) {
+    console.log("no panel");
     return { child: [], parent: [] };
   }
-  const component = TreeBase.componentFromId(panel.lastFocused);
+  const component = TreeBase.componentFromId(panel.lastFocused || panel.id);
   if (!component) {
+    console.log("no component");
     return { child: [], parent: [] };
   }
 
