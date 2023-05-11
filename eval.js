@@ -25,7 +25,14 @@ export const Functions = {
   increment: updateNumber((old, value) => old + value),
   add_word: updateString((old, value) => old + value + " "),
   add_letter: updateString((old, value) => old + value),
-  replace_last: updateString((old, value) => old.replace(/\w+\s*$/, value)),
+  complete: updateString((old, value) => {
+    if (old.length == 0 || old.endsWith(" ")) {
+      return old + value;
+    } else {
+      return old.replace(/\w+$/, value);
+    }
+  }),
+  replace_last: updateString((old, value) => old.replace(/\w*\s*$/, value)),
   replace_last_letter: updateString((old, value) => old.slice(0, -1) + value),
   random: (arg) => {
     let args = arg.split(",");
@@ -60,7 +67,7 @@ export function validateExpression(expression) {
     const exp = translate(expression);
     expressions.compile(exp);
   } catch (error) {
-    console.log("validate", error);
+    console.error("validate", error);
     return false;
   }
   return true;

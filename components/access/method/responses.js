@@ -3,7 +3,7 @@ import { TreeBase } from "components/treebase";
 import Globals from "app/globals";
 import * as Props from "components/props";
 import { Method, HandlerResponse } from "./index";
-import { cueTarget } from "../pattern";
+import { cueTarget, clearCues } from "../pattern";
 
 class ResponderNext extends HandlerResponse {
   respond() {
@@ -43,9 +43,7 @@ class ResponderCue extends HandlerResponse {
   /** @param {Event & { access: Object }} event */
   respond(event) {
     if (event.target instanceof HTMLButtonElement) {
-      for (const element of document.querySelectorAll("[cue]")) {
-        element.removeAttribute("cue");
-      }
+      clearCues();
       const button = event.target;
       cueTarget(button, this.Cue.value);
     }
@@ -55,9 +53,7 @@ TreeBase.register(ResponderCue, "ResponderCue");
 
 class ResponderClearCue extends HandlerResponse {
   respond() {
-    for (const element of document.querySelectorAll("[cue]")) {
-      element.removeAttribute("cue");
-    }
+    clearCues();
   }
 }
 TreeBase.register(ResponderClearCue, "ResponderClearCue");
@@ -65,7 +61,9 @@ TreeBase.register(ResponderClearCue, "ResponderClearCue");
 class ResponderEmit extends HandlerResponse {
   /** @param {Event & { access: Object }} event */
   respond(event) {
-    Globals.actions.applyRules(event.access.type, "press", event.access);
+    const method = this.nearestParent(Method);
+    if (!method) return;
+    Globals.actions.applyRules(method.Name.value, "press", event.access);
   }
 }
 TreeBase.register(ResponderEmit, "ResponderEmit");

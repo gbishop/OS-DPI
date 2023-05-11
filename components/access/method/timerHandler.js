@@ -38,7 +38,6 @@ export class TimerHandler extends Handler {
 
   /** @param {RxJs.Subject} stop$ */
   configure(stop$) {
-    console.log("configure timer");
     const timer = this.nearestParent(Method)?.timer(this.TimerName.value);
     if (!timer) return;
     const delayTime = 1000 * timer.Interval.valueAsNumber;

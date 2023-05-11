@@ -7,21 +7,19 @@ import Globals from "app/globals";
 
 export class ModalDialog extends TreeBase {
   stateName = new Props.String("$modalOpen");
+  open = new Props.Boolean(false);
 
   allowedChildren = ["Stack"];
 
   template() {
     const state = Globals.state;
     const { stateName } = this.props;
-    const open = !!state.get(stateName);
+    const open = !!state.get(stateName) || this.open.value ? "open" : "";
     if (open) {
-      return html`<div
-        class="modal"
-        id=${this.id}
-        ?open=${!!state.get(stateName)}
-      >
-        <div>${this.children.map((child) => child.template())}</div>
-      </div>`;
+      return this.component(
+        { classes: [open] },
+        html`<div>${this.children.map((child) => child.safeTemplate())}</div>`
+      );
     } else {
       return html`<!--empty-->`;
     }

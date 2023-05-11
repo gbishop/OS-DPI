@@ -26,7 +26,6 @@ export class MenuItem {
   }
 
   apply() {
-    console.log("args are", ...this.args);
     if (this.callback) this.callback(...this.args);
   }
 }
@@ -172,7 +171,6 @@ export class Menu {
    * @param {KeyboardEvent} event
    * */
   menuKeyHandler = ({ key }) => {
-    console.log({ key });
     if (key == "Escape" && this.expanded) {
       this.toggleExpanded();
     } else if (key == "ArrowUp" || key == "ArrowDown") {

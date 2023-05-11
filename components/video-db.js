@@ -1,9 +1,9 @@
 import db from "app/db";
 
 /**
- * An image that is extracted from the database
+ * A video that is extracted from the database
  */
-export class imgFromDb extends HTMLImageElement {
+export class videoFromDb extends HTMLVideoElement {
   // watch for changes in dbsrc
   static get observedAttributes() {
     return ["dbsrc", "refresh"];
@@ -38,4 +38,4 @@ export class imgFromDb extends HTMLImageElement {
     if (url) this.src = url;
   }
 }
-customElements.define("img-db", imgFromDb, { extends: "img" });
+customElements.define("video-db", videoFromDb, { extends: "video" });

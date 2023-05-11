@@ -3,6 +3,9 @@ import * as Props from "./props";
 import "css/treebase.css";
 import { fromCamelCase } from "./helpers";
 import WeakValue from "weak-value";
+import { styleString } from "./style";
+import { session } from "./persist";
+import { errorHandler } from "./errors";
 
 export class TreeBase {
   /** @type {TreeBase[]} */
@@ -13,15 +16,14 @@ export class TreeBase {
   allowedChildren = [];
   allowDelete = true;
 
-  // values here are persisted in the db but not in exports
-  persisted = {
-    // remember the state of the details element below
-    settingsDetailsOpen: false,
-  };
-
   // every component has a unique id
   static treeBaseCounter = 0;
   id = `TreeBase-${TreeBase.treeBaseCounter++}`;
+
+  // values here are stored in sessionStorage
+  persisted = session(this.id, {
+    settingsDetailsOpen: false,
+  });
 
   // map from id to the component
   static idMap = new WeakValue();
@@ -81,17 +83,14 @@ export class TreeBase {
    * Prepare a TreeBase tree for external storage by converting to simple objects and arrays
    * @returns {Object}
    * */
-  toObject(persist = true) {
+  toObject() {
     const props = this.props;
-    const children = this.children.map((child) => child.toObject(persist));
+    const children = this.children.map((child) => child.toObject());
     const result = {
       className: this.className,
       props,
       children,
     };
-    if (persist) {
-      result["persisted"] = this.persisted;
-    }
     return result;
   }
 
@@ -154,10 +153,6 @@ export class TreeBase {
     // Create the object and link it to its parent
     const result = this.create(constructor, parent, obj.props);
 
-    if ("persisted" in obj) {
-      result.persisted = { ...result.persisted, ...obj["persisted"] };
-    }
-
     // Link in the children
     for (const childObj of obj.children) {
       if (childObj instanceof TreeBase) {
@@ -207,6 +202,7 @@ export class TreeBase {
     return html`<div class="settings">
       <details
         class=${this.className}
+        id=${this.id + "-details"}
         ?open=${this.persisted.settingsDetailsOpen}
         ontoggle=${({ target }) =>
           (this.persisted.settingsDetailsOpen = target.open)}
@@ -247,6 +243,48 @@ export class TreeBase {
    */
   template() {
     return html`<!--empty-->`;
+  }
+
+  /**
+   * Render the user interface catching errors and return the resulting Hole
+   * @returns {Hole}
+   */
+  safeTemplate() {
+    try {
+      return this.template();
+    } catch (error) {
+      errorHandler(error);
+      let classes = [this.className.toLowerCase()];
+      classes.push("error");
+      return html`<div class=${classes.join(" ")} id=${this.id}>ERROR</div>`;
+    }
+  }
+
+  /** @typedef {Object} ComponentAttrs
+   * @property {string[]} [classes]
+   * @property {Object} [style]
+   */
+
+  /**
+   * Wrap the body of a component
+   *
+   * @param {ComponentAttrs} attrs
+   * @param {Hole} body
+   * @returns {Hole}
+   */
+  component(attrs, body) {
+    attrs = { style: {}, ...attrs };
+    let classes = [this.className.toLowerCase()];
+    if ("classes" in attrs) {
+      classes = classes.concat(attrs.classes);
+    }
+    return html`<div
+      class=${classes.join(" ")}
+      id=${this.id}
+      style=${styleString(attrs.style)}
+    >
+      ${body}
+    </div>`;
   }
 
   /**
@@ -408,7 +446,6 @@ export class TreeBaseSwitchable extends TreeBase {
   /** Replace this node with one of a compatible type
    * @param {string} className */
   replace(className) {
-    console.log("replacing", this.className, className);
     if (!this.parent) return;
     if (this.className == className) return;
     // extract the values of the old props

@@ -5,6 +5,7 @@ import { styleString } from "./style";
 import "css/tabcontrol.css";
 import Globals from "app/globals";
 import { TreeBase } from "./treebase";
+import { callAfterRender } from "app/render";
 
 export class TabControl extends TreeBase {
   stateName = new Props.String("$tabControl");
@@ -51,7 +52,7 @@ export class TabControl extends TreeBase {
               ?active=${panel.active}
               style=${styleString(buttonStyle)}
               .dataset=${{
-                name: this.name,
+                name: this.name.value,
                 label: panel.tabLabel,
                 component: this.constructor.name,
                 id: panel.id,
@@ -69,29 +70,30 @@ export class TabControl extends TreeBase {
     }
     this.currentPanel = panels.find((panel) => panel.active);
     const panel = this.panelTemplate();
-    return html`<div
-      class=${["tabcontrol", "flex", this.props.tabEdge].join(" ")}
-      id=${this.id}
-    >
-      <ul
-        class="buttons"
-        onkeydown=${this.tabButtonKeyHandler}
-        hint=${this.hint}
-      >
-        ${buttons}
-      </ul>
-      <div
-        class="panels flex"
-        onfocusin=${this.focusin}
-        onkeydown=${this.panelKeyHandler}
-      >
-        ${panel}
-      </div>
-    </div>`;
+    return this.component(
+      { classes: [this.props.tabEdge] },
+      html`
+        <ul
+          class="buttons"
+          onkeydown=${this.tabButtonKeyHandler}
+          hint=${this.hint}
+        >
+          ${buttons}
+        </ul>
+        <div
+          class="panels flex"
+          onfocusin=${this.focusin}
+          onmouseup=${this.focusin}
+          onkeydown=${this.panelKeyHandler}
+        >
+          ${panel}
+        </div>
+      `
+    );
   }
 
   panelTemplate() {
-    return this.currentPanel?.template() || html`<!--empty-->`;
+    return this.currentPanel?.safeTemplate() || html`<!--empty-->`;
   }
 
   /**
@@ -128,5 +130,37 @@ export class TabPanel extends Stack {
   tabName = "";
   tabLabel = "";
   lastFocused = "";
+
+  /**
+   *  * Render the details of a components settings
+   *  * @returns {Hole}
+   *  */
+  settingsDetails() {
+    const caption = this.active ? "Active" : "Activate";
+    return html`${super.settingsDetails()}
+      <button
+        id=${this.id + "-activate"}
+        ?active=${this.active}
+        onclick=${() => {
+          console.log("here", this.parent);
+          if (this.parent) {
+            const parent = this.parent;
+            callAfterRender(() => {
+              console.log("delayed call to highlight", parent);
+              Globals.layout.highlight();
+            });
+            parent.switchTab(this.name.value);
+          }
+        }}
+      >
+        ${caption}
+      </button>`;
+  }
+
+  template() {
+    return super.template();
+  }
+
+  highlight() {}
 }
 TreeBase.register(TabPanel, "TabPanel");

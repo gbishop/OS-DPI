@@ -26,7 +26,7 @@ export class CueList extends DesignerPanel {
     </div>`;
   }
 
-  renderCss() {
+  template() {
     const result = this.children.map(
       (child) =>
         html`<style>
@@ -45,7 +45,7 @@ export class CueList extends DesignerPanel {
         </style>`
       );
     }
-    return result;
+    return html`${result}`;
   }
 
   get cueMap() {

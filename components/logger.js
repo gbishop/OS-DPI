@@ -21,7 +21,10 @@ export class Logger extends TreeBase {
   }
 
   // I expect a string like #field1 $state1 $state2 #field3
-  logThese = new Props.TextArea("", { validate: this.validate });
+  logThese = new Props.TextArea("", {
+    validate: this.validate,
+    placeholder: "Enter state and field names to log",
+  });
 
   template() {
     const { state, actions } = Globals;
@@ -49,14 +52,23 @@ export class Logger extends TreeBase {
       db.write("log", record);
     }
 
-    return html`<div class="logging-indicator" ?logging=${logging}></div>`;
+    return html`<div
+      class="logging-indicator"
+      ?logging=${logging}
+      title="Logging"
+    ></div>`;
   }
 }
 TreeBase.register(Logger, "Logger");
 
 export async function SaveLogs() {
-  const toSave = await db.readAll("log");
-  await saveContent("log", toSave, "xlsx");
+  let toSave = await db.readAll("log");
+  if (toSave.length > 0) {
+    await saveContent("log", toSave, "xlsx");
+  } else {
+    Globals.error.report("No log records to be saved.");
+    Globals.state.update();
+  }
 }
 
 export async function ClearLogs() {

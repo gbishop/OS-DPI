@@ -32,10 +32,14 @@ export class MethodChooser extends DesignerPanel {
 
   configure() {
     // tear down the old configuration if any
-    this.stop$.next(1);
+    this.stop();
     for (const method of this.children) {
       method.configure(this.stop$);
     }
+  }
+
+  stop() {
+    this.stop$.next(1);
   }
 
   settings() {
@@ -167,7 +171,6 @@ class Timer extends TreeBase {
 
   /** @param {Event & { access: {}}} event */
   start(event) {
-    console.log("start timer");
     const fakeEvent = /** @type {Event} */ ({
       type: "timer",
       target: event.target,
@@ -178,7 +181,6 @@ class Timer extends TreeBase {
   }
 
   cancel() {
-    console.log("cancel timer");
     const event = EventWrap(new Event("cancel"));
     this.subject$.next(event);
   }

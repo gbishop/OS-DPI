@@ -13,7 +13,6 @@ class Audio extends TreeBase {
     const { state } = Globals;
     const { stateName } = this.props;
     const fileName = strip(state.get(stateName) || "");
-    console.log("play audio");
     (await db.getAudio(fileName)).play();
   }
 

@@ -1,5 +1,8 @@
 div.vsd {
   position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
 }
 
 div.vsd button {
@@ -18,7 +21,8 @@ div.vsd button[invisible] {
   border: none;
 }
 
-div.vsd img {
+div.vsd img,
+div.vsd video {
   flex: 1 1 0;
   object-fit: contain;
   width: 100%;

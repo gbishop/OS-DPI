@@ -4,6 +4,9 @@ import { DesignerPanel } from "./designer";
 import "css/layout.css";
 import db from "app/db";
 import Globals from "app/globals";
+import { TabPanel } from "./tabcontrol";
+import { callAfterRender } from "app/render";
+import { ModalDialog } from "./modal-dialog";
 
 const emptyPage = {
   className: "Page",
@@ -43,7 +46,18 @@ export class Layout extends DesignerPanel {
   static defaultValue = emptyPage;
 
   settings() {
-    return html`<div class="treebase layout" help="Layout tab" id=${this.id}>
+    return html`<div
+      class="treebase layout"
+      help="Layout tab"
+      id=${this.id}
+      onkeydown=${(event) => {
+        const { key, ctrlKey } = event;
+        if ((key == "H" || key == "h") && ctrlKey) {
+          event.preventDefault();
+          this.highlight();
+        }
+      }}
+    >
       ${this.children[0].settings()}
     </div>`;
   }
@@ -89,8 +103,8 @@ export class Layout extends DesignerPanel {
     };
   }
 
-  toObject(persist = true) {
-    return this.children[0].toObject(persist);
+  toObject() {
+    return this.children[0].toObject();
   }
 
   /** Update the state
@@ -98,6 +112,67 @@ export class Layout extends DesignerPanel {
   onUpdate() {
     db.write("layout", this.children[0].toObject());
     Globals.state.update();
+  }
+
+  /** Allow highlighting the current component in the UI
+   */
+  highlight() {
+    // clear any existing highlight
+    for (const element of document.querySelectorAll("#UI [highlight]")) {
+      element.removeAttribute("highlight");
+    }
+    // find the selection in the panel
+    let selected = document.querySelector("[aria-selected]");
+    if (!selected) return;
+    selected = selected.closest("[id]");
+    if (!selected) return;
+    const id = selected.id;
+    if (!id) return;
+    let component = TreeBase.componentFromId(id);
+    if (component) {
+      const element = document.getElementById(component.id);
+      if (element) {
+        element.setAttribute("highlight", "component");
+        return;
+      }
+      // the component is not currently visible. Find its nearest visible parent
+      component = component.parent;
+      while (component) {
+        const element = document.getElementById(component.id);
+        if (element) {
+          element.setAttribute("highlight", "parent");
+          return;
+        }
+        component = component.parent;
+      }
+    }
+  }
+
+  makeVisible() {
+    let component = Globals.designer.selectedComponent;
+    if (component) {
+      const element = document.getElementById(component.id);
+      if (element) {
+        return; // already visible
+      }
+      // climb the tree scheduling updates to parent to make this component visible
+      component = component.parent;
+      let patch = {};
+      while (component) {
+        if (
+          component instanceof TabPanel &&
+          component.parent &&
+          component.parent.currentPanel != component
+        ) {
+          patch[component.parent.stateName.value] = component.name.value;
+        } else if (component instanceof ModalDialog) {
+          patch[component.stateName.value] = 1;
+        }
+        component = component.parent;
+      }
+      callAfterRender(() => this.highlight());
+      Globals.state.update(patch);
+    }
   }
 }
 TreeBase.register(Layout, "Layout");

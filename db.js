@@ -162,7 +162,10 @@ export class DB {
     const cursor = await index.openCursor([this.designName, type], "prev");
     if (cursor) {
       const data = cursor.value.data;
-      if (typeof data == "string") {
+      if (
+        (Array.isArray(defaultValue) && !Array.isArray(data)) ||
+        typeof data != typeof defaultValue
+      ) {
         return defaultValue;
       }
       return data;
@@ -204,22 +207,28 @@ export class DB {
     const store = tx.objectStore("store");
     await store.put({ name: this.designName, type, data });
 
-    // only keep one of the content
-    const [n_max, n_save] =
-      type == "content" ? [1, 1] : [N_RECORDS_MAX, N_RECORDS_SAVE];
+    let n_max = N_RECORDS_MAX; // zero to prevent limiting
+    let n_save = N_RECORDS_SAVE;
+    if (type == "content") {
+      n_max = n_save = 1; // only save 1 content record
+    } else if (type == "log") {
+      n_max = n_save = 0; // don't limit log records
+    }
 
     /* Only keep the last few records per type */
     const index = store.index("by-name-type");
     const key = [this.designName, type];
-    // count how many we have
-    let count = await index.count(key);
-    if (count > n_max) {
-      // get the number to delete
-      let toDelete = count - n_save;
-      // we're getting them in order so this will delete the oldest ones
-      for await (const cursor of index.iterate(key)) {
-        if (--toDelete <= 0) break;
-        cursor.delete();
+    if (n_max > 0) {
+      // count how many we have
+      let count = await index.count(key);
+      if (count > n_max) {
+        // get the number to delete
+        let toDelete = count - n_save;
+        // we're getting them in order so this will delete the oldest ones
+        for await (const cursor of index.iterate(key)) {
+          if (--toDelete <= 0) break;
+          cursor.delete();
+        }
       }
     }
     await tx.done;
@@ -351,7 +360,11 @@ export class DB {
         }
         const type = fname.split(".")[0];
         await this.write(type, obj);
-      } else if (mimetype.startsWith("image") || mimetype.startsWith("audio")) {
+      } else if (
+        mimetype.startsWith("image") ||
+        mimetype.startsWith("audio") ||
+        mimetype.startsWith("video")
+      ) {
         const blob = new Blob([unzipped[fname]], {
           type: mimetype,
         });
@@ -376,12 +389,12 @@ export class DB {
     const db = await this.dbPromise;
 
     // collect the parts of the design
-    const layout = Globals.tree.toObject(false);
-    const actions = Globals.actions.toObject(false);
+    const layout = Globals.tree.toObject();
+    const actions = Globals.actions.toObject();
     const content = await this.read("content");
-    const method = Globals.method.toObject(false);
-    const pattern = Globals.patterns.toObject(false);
-    const cues = Globals.cues.toObject(false);
+    const method = Globals.method.toObject();
+    const pattern = Globals.patterns.toObject();
+    const cues = Globals.cues.toObject();
 
     const zipargs = {
       "layout.json": strToU8(JSON.stringify(layout)),
@@ -432,6 +445,17 @@ export class DB {
       cursor.delete();
     }
     await tx.done;
+    // delete media
+    const txm = db.transaction("media", "readwrite");
+    const mediaKeys = (await txm.store.getAllKeys()).filter((pair) =>
+      Object.values(pair).includes(this.designName)
+    );
+
+    // delete the media
+    for (const key of mediaKeys) {
+      txm.store.delete(key);
+    }
+    await txm.done;
     await db.delete("saved", name);
   }
 
@@ -543,6 +567,7 @@ const mimetypes = {
   ".oga": "audio/ogg",
   ".wav": "audio/wav",
   ".weba": "audio/webm",
+  ".webm": "video/webm",
   ".avif": "image/avif",
   ".bmp": "image/bmp",
   ".gif": "image/gif",

@@ -213,20 +213,17 @@ export class TextArea extends Prop {
   constructor(value = "", options = {}) {
     super(options);
     this.value = value;
+    this.validate = this.options.validate || ((_) => "");
   }
 
   input() {
     return this.labeled(html`<textarea
       .value=${this.value}
       id=${this.id}
-      pattern=${this.options.pattern}
+      ?invalid=${!!this.validate(this.value)}
       oninput=${({ target }) => {
-        const validate = this.options.validate;
-        if (validate) {
-          const errorMsg = validate(target.value);
-          console.log({ errorMsg });
-          target.setCustomValidity(errorMsg);
-        }
+        const errorMsg = this.validate(target.value);
+        target.setCustomValidity(errorMsg);
       }}
       onchange=${({ target }) => {
         if (target.checkValidity()) {

@@ -15,7 +15,7 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
-    minify: true,
+    minify: false,
     target: "esnext",
     rollupOptions: {
       output: {

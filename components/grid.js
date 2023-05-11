@@ -3,10 +3,37 @@ import * as Props from "./props";
 import { TreeBase } from "./treebase";
 import { styleString } from "./style";
 import { formatSlottedString } from "./helpers";
-import "./img-db";
 import Globals from "app/globals";
 import { comparators } from "app/data";
 import "css/grid.css";
+
+/**
+ * Return an image or video element given the name + parameters
+ * like "foo.mp4 autoplay loop".
+ * @param {string} src
+ * @param {string} title
+ * @param {null|function():void} onload
+ * @returns {Hole}
+ */
+export function imageOrVideo(src, title, onload = null) {
+  const parts = src.split(" ");
+  if (/\.(webm|mp4)$/i.test(parts[0])) {
+    // video
+    const options = parts.slice(1);
+    return html`<video
+      is="video-db"
+      dbsrc=${parts[0]}
+      title=${title}
+      ?loop=${options.indexOf("loop") >= 0}
+      ?autoplay=${options.indexOf("autoplay") >= 0}
+      ?muted=${options.indexOf("muted") >= 0}
+      onload=${onload}
+    />`;
+  } else {
+    // image
+    return html`<img is="img-db" dbsrc=${parts[0]} title=${title} />`;
+  }
+}
 
 class Grid extends TreeBase {
   fillItems = new Props.Boolean(false);
@@ -45,7 +72,7 @@ class Grid extends TreeBase {
     if (item.symbol) {
       content = html`<div>
         <figure>
-          <img is="img-db" dbsrc=${item.symbol} title=${item.label || ""} />
+          ${imageOrVideo(item.symbol, item.label || "")}
           <figcaption>${msg}</figcaption>
         </figure>
       </div>`;
@@ -200,9 +227,7 @@ class Grid extends TreeBase {
 
     style.gridTemplate = `repeat(${rows}, calc(100% / ${rows})) / repeat(${columns}, 1fr)`;
 
-    return html`<div class="grid" id=${this.id} style=${styleString(style)}>
-      ${result}
-    </div>`;
+    return this.component({ style }, html`${result}`);
   }
 
   settingsDetails() {
@@ -222,7 +247,7 @@ class Grid extends TreeBase {
         <tbody>
           ${this.children.map(
             (filter, index) => html`
-              <tr>
+              <tr id=${filter.id + "-settings"}>
                 <td>${index + 1}</td>
                 <td>${filter.field.input()}</td>
                 <td>${filter.operator.input()}</td>

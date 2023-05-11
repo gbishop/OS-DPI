@@ -1,5 +1,4 @@
-import "./components/errors";
-import { html } from "uhtml";
+import { Messages } from "./components/errors";
 import { Data } from "./data";
 import { State } from "./state";
 import "./components";
@@ -17,7 +16,7 @@ import { MethodChooser } from "./components/access/method";
 import { CueList } from "./components/access/cues";
 import { Actions } from "./components/actions";
 import { welcome } from "./components/welcome";
-import { callAfterRender, safeRender } from "./render";
+import { callAfterRender, safeRender, postRender } from "./render";
 import { Designer } from "components/designer";
 
 /** let me wait for the page to load */
@@ -52,6 +51,7 @@ export async function start() {
   await pageLoaded;
 
   const layout = await Layout.load(Layout);
+  Globals.layout = layout;
   Globals.tree = layout.children[0];
   Globals.state = new State(`UIState`);
   Globals.actions = await Actions.load(Actions);
@@ -59,7 +59,12 @@ export async function start() {
   Globals.cues = await CueList.load(CueList);
   Globals.patterns = await PatternList.load(PatternList);
   Globals.method = await MethodChooser.load(MethodChooser);
-  Globals.restart = start;
+  Globals.restart = async () => {
+    // tear down any existing event handlers before restarting
+    Globals.method.stop();
+    start();
+  };
+  Globals.error = new Messages();
 
   /** @param {() => void} f */
   function debounce(f) {
@@ -101,25 +106,16 @@ export async function start() {
 
   function renderUI() {
     const startTime = performance.now();
-    let IDE = html`<!--empty-->`;
-    if (Globals.state.get("editing")) {
-      IDE = html`
-        ${toolbar.template()}
-        <div id="designer" hint="P">${Globals.designer.template()}</div>
-        <div id="monitor">${monitor.template()}</div>
-      `;
-    }
     document.body.classList.toggle("designing", Globals.state.get("editing"));
     // clear the changed flag, TODO there must be a better way!
     clearAccessChanged();
-    safeRender(
-      document.body,
-      html`<div id="UI" hint="U" tabindex="-1">
-          <div id="timer"></div>
-          ${Globals.cues.renderCss()}${Globals.tree.template()}
-        </div>
-        ${IDE}`
-    );
+    safeRender("cues", Globals.cues);
+    safeRender("UI", Globals.tree);
+    safeRender("toolbar", toolbar);
+    safeRender("tabs", Globals.designer);
+    safeRender("monitor", monitor);
+    safeRender("errors", Globals.error);
+    postRender();
     Globals.method.refresh();
     if (location.host.startsWith("localhost")) {
       const timer = document.getElementById("timer");
@@ -174,6 +170,7 @@ window.addEventListener("hashchange", () => {
 
 // watch for window resize and force a redraw
 window.addEventListener("resize", () => {
+  if (!Globals.state) return;
   Globals.state.update();
 });
 

@@ -13,13 +13,21 @@ div#designer {
   display: none;
 }
 
-body.designing div#designer {
-  display: block;
+div#tabs {
+  width: 100%;
   overflow-y: auto;
+  overflow-x: hidden;
   flex: 1 1 0;
-  grid-row-start: 2;
+}
+
+body.designing div#designer {
+  display: flex;
+  grid-row-start: 1;
   grid-row-end: 4;
   grid-column-start: 2;
+  overflow: hidden;
+  height: 100vh;
+  flex-direction: column;
 }
 body.designing #UI {
   grid-row-start: 1;
@@ -30,10 +38,6 @@ body.designing #UI {
 body.designing #monitor {
   grid-row-start: 3;
   grid-column-start: 1;
-}
-body.designing #toolbar {
-  grid-row-start: 1;
-  grid-column-start: 2;
 }
 
 #designer ol,
@@ -95,4 +99,12 @@ details summary > * {
 
 #designer .panels {
   display: block;
+}
+
+.selectedInDesigner {
+  border: 2px dashed red;
+}
+
+#UI [id]:has(.selectedInDesigner) {
+  border: 2px dotted yellow;
 }

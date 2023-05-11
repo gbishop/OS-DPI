@@ -26,7 +26,8 @@ input[inputmode="numeric"]:invalid {
   border-color: red;
 }
 input:invalid,
-textarea:invalid {
+textarea:invalid,
+textarea[invalid] {
   border-color: red;
   background-color: var(--warning);
 }
