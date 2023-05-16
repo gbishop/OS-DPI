@@ -79,7 +79,6 @@ function focusTabs() {
 function help() {
   const wiki = "https://github.com/unc-project-open-aac/os-dpi/wiki";
   const { designer } = Globals;
-  console.info({ cp: designer.currentPanel });
   if (!designer.currentPanel) return;
 
   const currentId =
@@ -132,7 +131,7 @@ const transitions = [
   { state: State.userA,   key: /d/i,      next: State.editing, call: editMode     },
   { state: State.editing, key: /alt/i,    next: State.hints,   call: showHints    },
   { state: State.hints,   key: /d/i,      next: State.user,    call: userMode     },
-  { state: State.hints,   key: /[nfea]/i, next: State.editing, call: clickToolbar },
+  { state: State.hints,   key: /[nfeah]/i,next: State.editing, call: clickToolbar },
   { state: State.hints,   key: /t/i,      next: State.editing, call: focusTabs    },
   { state: State.hints,   key: /u/i,      next: State.editing, call: focusUI      },
   { state: State.hints,   key: /p/i,      next: State.editing, call: focusPanel   },

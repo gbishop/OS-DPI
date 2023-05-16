@@ -446,6 +446,50 @@ function getEditMenuItems() {
   return items;
 }
 
+/** Open Wiki documentation in another tab
+ * @param {string} componentName
+ * @param {string} inputName
+ */
+function openHelpURL(componentName, inputName = "") {
+  const wiki = "https://github.com/unc-project-open-aac/os-dpi/wiki";
+
+  componentName = componentName.replace(" ", "-");
+  const url = `${wiki}/${componentName}#${inputName}`;
+
+  window.open(url, "help");
+}
+
+function getHelpMenuItems() {
+  /** @type {MenuItem[]} */
+  const items = [];
+  const names = new Set();
+  let component = Globals.designer.selectedComponent;
+  while (component && component.parent) {
+    let componentName = component.className;
+    if (componentName in friendlyNamesMap)
+      componentName = friendlyNamesMap[componentName];
+    if (!names.has(componentName)) {
+      items.push(
+        new MenuItem({
+          label: componentName,
+          callback: openHelpURL,
+          args: [componentName],
+        })
+      );
+      names.add(componentName);
+    }
+    component = component.parent;
+  }
+  items.push(
+    new MenuItem({
+      label: "About",
+      callback: openHelpURL,
+      args: ["About Project Open"],
+    })
+  );
+  return items;
+}
+
 /**
  * @param {Hole} thing
  * @param {string} hint
@@ -508,6 +552,7 @@ export class ToolBar extends TreeBase {
       },
       "add"
     );
+    this.helpMenu = new Menu("Help", getHelpMenuItems, this);
     this.designListDialog = new DesignListDialog();
   }
 
@@ -547,6 +592,12 @@ export class ToolBar extends TreeBase {
             ${
               // @ts-ignore
               hinted(this.addMenu.render(), "A")
+            }
+          </li>
+          <li>
+            ${
+              // @ts-ignore
+              hinted(this.helpMenu.render(), "H")
             }
           </li>
         </ul>
