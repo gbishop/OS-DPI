@@ -482,7 +482,7 @@ function getHelpMenuItems() {
   }
   items.push(
     new MenuItem({
-      label: "About",
+      label: "About OS-DPI",
       callback: openHelpURL,
       args: ["About Project Open"],
     })
