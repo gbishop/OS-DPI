@@ -33,11 +33,11 @@ export class Stack extends TreeBase {
       }
       return scale;
     }
-    const empty = this.children.length ? "" : "empty";
     const scaleSum = this.children.reduce(
       (sum, child) => sum + getScale(child),
       0
     );
+    const empty = this.children.length && scaleSum ? "" : "empty";
     const dimension = this.props.direction == "row" ? "width" : "height";
     return this.component(
       {

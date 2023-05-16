@@ -15,7 +15,6 @@ import { PatternList } from "./components/access/pattern";
 import { MethodChooser } from "./components/access/method";
 import { CueList } from "./components/access/cues";
 import { Actions } from "./components/actions";
-import { welcome } from "./components/welcome";
 import { callAfterRender, safeRender, postRender } from "./render";
 import { Designer } from "components/designer";
 
@@ -42,9 +41,10 @@ export async function start() {
       );
     }
   }
-  const name = window.location.hash.slice(1);
+  let name = window.location.hash.slice(1);
   if (!name) {
-    return welcome();
+    name = await db.uniqueName("new");
+    window.location.hash = `#${name}`;
   }
   db.setDesignName(name);
   const dataArray = await db.read("content", []);

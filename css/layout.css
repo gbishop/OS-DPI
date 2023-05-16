@@ -4,6 +4,11 @@ div.empty {
   align-items: center;
 }
 
+div.page.empty::before {
+  font-size: 2em;
+  content: "To learn about OS-DPI use the Help menu on the right.";
+}
+
 div.empty::before {
   content: "Empty";
 }
