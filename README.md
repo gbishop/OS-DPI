@@ -14,7 +14,7 @@ You can see a few simple and rough demos of the current capabilities by followin
 - <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/updated/text_tabs_ex_1.osdpi">Text-based example</a>
 - <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/updated/VSD_ex_1.osdpi">Visual Scene Display</a>
 - <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/updated/utterance_Contact.osdpi">Contact-like utterance-based system</a>
-- <a href="https://unc-project-open-aac.github.io/OS-DPI/#new">Start a new design</a>
+- <a href="https://unc-project-open-aac.github.io/OS-DPI/">Start a new design</a>
 
 **These demos are known to not work in Safari.** Please use Google Chrome or one if its variants.
 
