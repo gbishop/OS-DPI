@@ -16,13 +16,15 @@ import "css/grid.css";
  * @returns {Hole}
  */
 export function imageOrVideo(src, title, onload = null) {
-  const parts = src.split(" ");
-  if (/\.(webm|mp4)$/i.test(parts[0])) {
+  const match = /(?<src>.*\.(?:mp4|webm))(?<options>.*$)/.exec(src);
+
+  if (match && match.groups) {
     // video
-    const options = parts.slice(1);
+    const options = match.groups.options;
+    const vsrc = match.groups.src;
     return html`<video
       is="video-db"
-      dbsrc=${parts[0]}
+      dbsrc=${vsrc}
       title=${title}
       ?loop=${options.indexOf("loop") >= 0}
       ?autoplay=${options.indexOf("autoplay") >= 0}
@@ -31,7 +33,7 @@ export function imageOrVideo(src, title, onload = null) {
     />`;
   } else {
     // image
-    return html`<img is="img-db" dbsrc=${parts[0]} title=${title} />`;
+    return html`<img is="img-db" dbsrc=${src} title=${title} />`;
   }
 }
 
