@@ -14,14 +14,14 @@ export class CueList extends DesignerPanel {
   static tableName = "cues";
   static defaultValue = defaultCues;
 
-  allowedChildren = ["CueCss", "CueFill", "CueOverlay", "CueCircle", "Cue"];
+  allowedChildren = ["CueCss", "CueFill", "CueOverlay", "CueCircle"];
   /** @type {Cue[]} */
   children = [];
 
   allowDelete = false;
 
   settings() {
-    return html`<div class="CueList" id=${this.id} tabindex="-1">
+    return html`<div class="CueList" id=${this.id}>
       ${this.unorderedChildren()}
     </div>`;
   }
