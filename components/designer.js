@@ -46,7 +46,7 @@ export class Designer extends TabControl {
 
   /**
    * capture focusin events so we can remember what was focused last
-   * @param {FocusEvent|MouseEvent} event
+   * @param {FocusEvent} event
    */
   focusin = (event) => {
     if (!(event.target instanceof HTMLElement)) return;

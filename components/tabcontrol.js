@@ -83,7 +83,6 @@ export class TabControl extends TreeBase {
         <div
           class="panels flex"
           onfocusin=${this.focusin}
-          onmouseup=${this.focusin}
           onkeydown=${this.panelKeyHandler}
         >
           ${panel}
