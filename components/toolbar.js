@@ -60,7 +60,6 @@ export const friendlyNamesMap = {
 function getComponentMenuItems(component, which = "all", wrapper) {
   /** @type {MenuItem[]} */
   const result = [];
-  console.log({ component, which });
 
   /** Get a name for the menu
    * @param {string} name
@@ -145,7 +144,6 @@ function getComponentMenuItems(component, which = "all", wrapper) {
  * @return {{ child: MenuItem[], parent: MenuItem[]}}
  * */
 function getPanelMenuItems(type) {
-  console.info({ type });
   // Figure out which tab is active
   const { designer } = Globals;
   const panel = designer.currentPanel;
@@ -155,7 +153,7 @@ function getPanelMenuItems(type) {
     console.log("no panel");
     return { child: [], parent: [] };
   }
-  const component = TreeBase.componentFromId(panel.lastFocused || panel.id);
+  const component = TreeBase.componentFromId(panel.lastFocused);
   if (!component) {
     console.log("no component");
     return { child: [], parent: [] };
