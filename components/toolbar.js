@@ -17,38 +17,78 @@ import { readSheetFromBlob, saveContent } from "./content";
 import { Data } from "app/data";
 import { SaveLogs, ClearLogs } from "./logger";
 
-export const friendlyNamesMap = {
-  ActionCondition: "Condition",
-  ActionUpdate: "Update",
-  CueCircle: "Cue Circle",
-  CueCss: "Cue CSS",
-  CueFill: "Cue Fill",
-  CueList: "Cues",
-  CueOverlay: "Cue Overlay",
-  GridFilter: "Filter",
-  GroupBy: "Group By",
-  HandlerCondition: "Condition",
-  HandlerKeyCondition: "Key",
-  HandlerResponse: "Response",
-  KeyHandler: "Key Handler",
-  MethodChooser: "Methods",
-  ModalDialog: "Modal Dialog",
-  OrderBy: "Order By",
-  PatternGroup: "Group",
-  PatternList: "Patterns",
-  PatternManager: "Pattern",
-  PatternSelector: "Selector",
-  PointerHandler: "Pointer Handler",
-  ResponderActivate: "Responder Activate",
-  ResponderClearCue: "Responder Clear Cue",
-  ResponderCue: "Responder Cue",
-  ResponderEmit: "Responder Emit",
-  ResponderNext: "Responder Next",
-  ResponderStartTimer: "Responder Start Timer",
-  TabControl: "Tab Control",
-  TabPanel: "Tab Panel",
-  TimerHandler: "Timer handler",
+/**
+ * Map the classname into the Menu name and the Help Wiki page name
+ */
+const namesMap = {
+  Action: ["Action", "Actions"],
+  ActionCondition: ["Condition", "Actions#Condition"],
+  Actions: ["Actions", "Actions"],
+  ActionUpdate: ["Update", "Actions#Update"],
+  Audio: ["Audio", "Audio"],
+  Button: ["Button", "Button"],
+  Content: ["Content", "Content"],
+  CueCircle: ["Circle", "Cues"],
+  CueCss: ["CSS", "Cues#CSS"],
+  CueFill: ["Fill", "Cues#Fill"],
+  CueList: ["Cues", "Cues"],
+  CueOverlay: ["Overlay", "Cues#Overlay"],
+  Customize: ["Customize", "Customize"],
+  Designer: ["Designer", "Designer"],
+  Display: ["Display", "Display"],
+  Filter: ["Filter", "Patterns#Filter"],
+  Gap: ["Gap", "Gap"],
+  Grid: ["Grid", "Grid"],
+  GridFilter: ["Filter", "Grid#Filter"],
+  GroupBy: ["Group By", "Patterns#Group By"],
+  HandlerCondition: ["Condition", "Methods#Condition"],
+  HandlerKeyCondition: ["Key Condition", "Methods#Key Condition"],
+  HandlerResponse: ["Response", "Methods#Response"],
+  KeyHandler: ["Key Handler", "Methods#Key Handler"],
+  Layout: ["Layout", "Layout"],
+  Logger: ["Logger", "Logger"],
+  Method: ["Method", "Methods"],
+  MethodChooser: ["Methods", "Methods"],
+  ModalDialog: ["Modal Dialog", "Modal Dialog"],
+  Option: ["Option", "Radio#Option"],
+  OrderBy: ["Order By", "Patterns#Order By"],
+  Page: ["Page", "Page"],
+  PatternGroup: ["Group", "Patterns"],
+  PatternList: ["Patterns", "Patterns"],
+  PatternManager: ["Pattern", "Patterns"],
+  PatternSelector: ["Selector", "Patterns"],
+  PointerHandler: ["Pointer Handler", "Methods#Pointer Handler"],
+  Radio: ["Radio", "Radio"],
+  ResponderActivate: ["Activate", "Methods#Activate"],
+  ResponderCue: ["Cue", "Methods#Cue"],
+  ResponderClearCue: ["Clear Cue", "Methods#Clear Cue"],
+  ResponderEmit: ["Emit", "Methods#Emit"],
+  ResponderNext: ["Next", "Methods#Next"],
+  ResponderStartTimer: ["Start Timer", "Methods"],
+  Speech: ["Speech", "Speech"],
+  Stack: ["Stack", "Stack"],
+  TabControl: ["Tab Control", "Tab Control"],
+  TabPanel: ["Tab Panel", "Tab Panel"],
+  Timer: ["Timer", "Methods#Timer"],
+  TimerHandler: ["Timer Handler", "Methods#Timer Handler"],
+  VSD: ["VSD", "VSD"],
 };
+
+/**
+ * Get the name for a menu item from the class name
+ * @param {string} className
+ */
+function friendlyName(className) {
+  return namesMap[className][0];
+}
+
+/**
+ * Get the Wiki name from the class name
+ * @param {string} className
+ */
+function wikiName(className) {
+  return namesMap[className][1].replace(" ", "-");
+}
 
 /** Return a list of available Menu items on this component
  *
@@ -60,14 +100,6 @@ export const friendlyNamesMap = {
 function getComponentMenuItems(component, which = "all", wrapper) {
   /** @type {MenuItem[]} */
   const result = [];
-
-  /** Get a name for the menu
-   * @param {string} name
-   * @returns {string}
-   */
-  function friendlyName(name) {
-    return friendlyNamesMap[name] || name;
-  }
 
   // add actions
   if (which == "add" || which == "all") {
@@ -153,7 +185,7 @@ function getPanelMenuItems(type) {
     console.log("no panel");
     return { child: [], parent: [] };
   }
-  const component = TreeBase.componentFromId(panel.lastFocused);
+  const component = TreeBase.componentFromId(panel.lastFocused) || panel;
   if (!component) {
     console.log("no component");
     return { child: [], parent: [] };
@@ -445,14 +477,12 @@ function getEditMenuItems() {
 }
 
 /** Open Wiki documentation in another tab
- * @param {string} componentName
- * @param {string} inputName
+ * @param {string} name
  */
-function openHelpURL(componentName, inputName = "") {
+function openHelpURL(name) {
   const wiki = "https://github.com/unc-project-open-aac/os-dpi/wiki";
 
-  componentName = componentName.replace(" ", "-");
-  const url = `${wiki}/${componentName}#${inputName}`;
+  const url = `${wiki}/${name}`;
 
   window.open(url, "help");
 }
@@ -461,20 +491,20 @@ function getHelpMenuItems() {
   /** @type {MenuItem[]} */
   const items = [];
   const names = new Set();
-  let component = Globals.designer.selectedComponent;
+  let component =
+    Globals.designer.selectedComponent || Globals.designer.currentPanel;
   while (component && component.parent) {
-    let componentName = component.className;
-    if (componentName in friendlyNamesMap)
-      componentName = friendlyNamesMap[componentName];
-    if (!names.has(componentName)) {
+    const className = component.className;
+    const menuName = friendlyName(className);
+    if (!names.has(menuName)) {
       items.push(
         new MenuItem({
-          label: componentName,
+          label: menuName,
           callback: openHelpURL,
-          args: [componentName],
+          args: [wikiName(className)],
         })
       );
-      names.add(componentName);
+      names.add(menuName);
     }
     component = component.parent;
   }
@@ -482,7 +512,7 @@ function getHelpMenuItems() {
     new MenuItem({
       label: "About OS-DPI",
       callback: openHelpURL,
-      args: ["About Project Open"],
+      args: ["About-Project-Open"],
     })
   );
   return items;
