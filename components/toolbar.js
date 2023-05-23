@@ -425,7 +425,16 @@ function getEditMenuItems() {
       label: "Paste",
       callback: async () => {
         const json = await navigator.clipboard.readText();
-        const obj = JSON.parse(json);
+        // we can't trust this input from the clipboard, catch and report errors
+
+        try {
+          var obj = JSON.parse(json);
+        } catch (e) {
+          Globals.error.report("Invalid input to Paste");
+          Globals.error.report(json);
+          Globals.state.update();
+          return;
+        }
         const className = obj.className;
         if (!className) return;
         // find a place that can accept it
@@ -453,7 +462,14 @@ function getEditMenuItems() {
       label: "Paste Into",
       callback: async () => {
         const json = await navigator.clipboard.readText();
-        const obj = JSON.parse(json);
+        try {
+          var obj = JSON.parse(json);
+        } catch (e) {
+          Globals.error.report("Invalid input to Paste Into");
+          Globals.error.report(json);
+          Globals.state.update();
+          return;
+        }
         const className = obj.className;
         if (!className) return;
         // find a place that can accept it
