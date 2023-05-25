@@ -1,11 +1,11 @@
 import { html } from "uhtml";
 import * as Props from "./props";
 import "css/treebase.css";
-import { fromCamelCase } from "./helpers";
 import WeakValue from "weak-value";
 import { styleString } from "./style";
 import { session } from "./persist";
 import { errorHandler } from "./errors";
+import { friendlyName } from "./names";
 
 export class TreeBase {
   /** @type {TreeBase[]} */
@@ -220,7 +220,7 @@ export class TreeBase {
    *  */
   settingsSummary() {
     const name = this.hasOwnProperty("name") ? this["name"].value : "";
-    return html`<h3>${fromCamelCase(this.className)} ${name}</h3>`;
+    return html`<h3>${friendlyName(this.className)} ${name}</h3>`;
   }
 
   /**
