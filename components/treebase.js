@@ -253,7 +253,7 @@ export class TreeBase {
     try {
       return this.template();
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, ` safeTemplate ${this.className}`);
       let classes = [this.className.toLowerCase()];
       classes.push("error");
       return html`<div class=${classes.join(" ")} id=${this.id}>ERROR</div>`;

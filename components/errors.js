@@ -89,14 +89,13 @@ window.onerror = async function (msg, _file, _line, _col, error) {
 };
 
 /** @param {Error} error */
-export function errorHandler(error) {
-  console.error("errorHandler", error);
+export function errorHandler(error, extra = "") {
   let stack = [];
-  let cause = error.name;
+  let cause = `${error.name}${extra}`;
   if (error.stack) {
     const errorLines = error.stack.split("\n");
     stack = errorLines.slice(1);
-    cause = errorLines[0];
+    cause = errorLines[0] + extra;
   }
   reportInternalError(cause, stack);
 }

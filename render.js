@@ -32,7 +32,7 @@ export function safeRender(id, component) {
       r = render(where, what);
     } catch (error) {
       if (error instanceof Error) {
-        errorHandler(error);
+        errorHandler(error, ` rendering ${component.className} ${id}`);
       } else {
         console.error("crash", error);
       }
