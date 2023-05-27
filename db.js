@@ -10,7 +10,7 @@ export class DB {
   constructor() {
     this.dbPromise = openDB("os-dpi", 4, {
       upgrade(db, oldVersion, newVersion) {
-        if (oldVersion < 3) {
+        if (oldVersion && oldVersion < 3) {
           for (const name of ["store", "media", "saved", "url"]) {
             try {
               db.deleteObjectStore(name);

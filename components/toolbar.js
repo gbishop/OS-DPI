@@ -36,6 +36,7 @@ function getComponentMenuItems(component, which = "all", wrapper) {
         new MenuItem({
           label: `${friendlyName(className)}`,
           callback: wrapper(() => {
+            console.log("add", className, component.className);
             const result = TreeBase.create(className, component);
             result.init();
             return result.id;
@@ -53,6 +54,7 @@ function getComponentMenuItems(component, which = "all", wrapper) {
           title: `Delete ${friendlyName(component.className)}`,
           callback: wrapper(() => {
             // remove returns the id of the nearest neighbor or the parent
+            console.log("delete", component.className, component.id);
             const nextId = component.remove();
             return nextId;
           }),
@@ -74,6 +76,15 @@ function getComponentMenuItems(component, which = "all", wrapper) {
             label: `Move up`,
             title: `Move up ${friendlyName(component.className)}`,
             callback: wrapper(() => {
+              if (component.parent)
+                console.log(
+                  "move up",
+                  component.parent.className,
+                  component.parent.children[index].id,
+                  component.parent.children[index].className,
+                  component.parent.children[index - 1].id,
+                  component.parent.children[index - 1].className
+                );
               parent.swap(index, index - 1);
               return component.id;
             }),
@@ -113,7 +124,8 @@ function getPanelMenuItems(type) {
     console.log("no panel");
     return { child: [], parent: [] };
   }
-  const component = TreeBase.componentFromId(panel.lastFocused) || panel;
+  const component =
+    TreeBase.componentFromId(panel.lastFocused) || panel.children[0];
   if (!component) {
     console.log("no component");
     return { child: [], parent: [] };
