@@ -141,11 +141,9 @@ export class TabPanel extends Stack {
         id=${this.id + "-activate"}
         ?active=${this.active}
         onclick=${() => {
-          console.log("here", this.parent);
           if (this.parent) {
             const parent = this.parent;
             callAfterRender(() => {
-              console.log("delayed call to highlight", parent);
               Globals.layout.highlight();
             });
             parent.switchTab(this.name.value);
