@@ -125,7 +125,7 @@ function getPanelMenuItems(type) {
     return { child: [], parent: [] };
   }
   const component =
-    TreeBase.componentFromId(panel.lastFocused) || panel.children[0];
+    TreeBase.componentFromId(panel.lastFocused) || panel.children[0] || panel;
   if (!component) {
     console.log("no component");
     return { child: [], parent: [] };
