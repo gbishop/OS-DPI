@@ -176,7 +176,7 @@ export class PatternManager extends PatternBase {
   }
 
   settingsChildren() {
-    return html`<!--empty-->`;
+    return this.empty;
   }
 
   /**

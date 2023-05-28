@@ -21,7 +21,7 @@ export class ModalDialog extends TreeBase {
         html`<div>${this.children.map((child) => child.safeTemplate())}</div>`
       );
     } else {
-      return html`<!--empty-->`;
+      return this.empty;
     }
   }
 }

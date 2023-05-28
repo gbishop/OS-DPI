@@ -207,7 +207,7 @@ class VSD extends TreeBase {
   }
 
   settingsChildren() {
-    return html``;
+    return this.empty;
   }
 }
 TreeBase.register(VSD, "VSD");

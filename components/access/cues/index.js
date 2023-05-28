@@ -106,7 +106,7 @@ class Cue extends TreeBaseSwitchable {
   }
 
   subTemplate() {
-    return html`<!--empty-->`;
+    return this.empty;
   }
 
   get css() {

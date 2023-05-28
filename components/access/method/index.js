@@ -124,7 +124,7 @@ export class Method extends TreeBase {
             <legend>Timers</legend>
             ${this.unorderedChildren(timers)}
           </fieldset>`
-        : html`<!--empty-->`}
+        : this.empty}
       <fieldset>
         <legend>Handlers</legend>
         ${this.orderedChildren(this.handlers)}
@@ -133,7 +133,7 @@ export class Method extends TreeBase {
   }
 
   settingsChildren() {
-    return html`<!--empty-->`;
+    return this.empty;
   }
 
   /** Configure the rxjs pipelines to implement this method */
@@ -282,7 +282,7 @@ export class HandlerResponse extends TreeBaseSwitchable {
   }
 
   subTemplate() {
-    return html`<!--empty-->`;
+    return this.empty;
   }
 }
 TreeBase.register(HandlerResponse, "HandlerResponse");

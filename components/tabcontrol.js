@@ -38,7 +38,7 @@ export class TabControl extends TreeBase {
       }
       panel.active = activeTabName == panel.tabName || panels.length === 1;
     });
-    let buttons = [html`<!--empty-->`];
+    let buttons = [this.empty];
     if (this.props.tabEdge != "none") {
       buttons = panels
         .filter((panel) => panel.props.label != "UNLABELED")
@@ -92,7 +92,7 @@ export class TabControl extends TreeBase {
   }
 
   panelTemplate() {
-    return this.currentPanel?.safeTemplate() || html`<!--empty-->`;
+    return this.currentPanel?.safeTemplate() || this.empty;
   }
 
   /**

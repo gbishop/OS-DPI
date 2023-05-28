@@ -242,7 +242,7 @@ export class TreeBase {
    * @returns {Hole|Hole[]}
    */
   template() {
-    return html`<!--empty-->`;
+    return this.empty;
   }
 
   /**
@@ -425,6 +425,10 @@ export class TreeBase {
   /** @returns {Set<string>} */
   allStates() {
     return this.all(/\$\w+/g);
+  }
+
+  get empty() {
+    return html`<!--empty-->`;
   }
 }
 

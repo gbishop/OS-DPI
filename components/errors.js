@@ -15,7 +15,7 @@ export class Messages extends TreeBase {
       this.messages = [];
       return result;
     } else {
-      return html`<!--empty-->`;
+      return this.empty;
     }
   }
 

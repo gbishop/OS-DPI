@@ -1,4 +1,3 @@
-import { html } from "uhtml";
 import "css/tabcontrol.css";
 import Globals from "app/globals";
 import { callAfterRender } from "app/render";
@@ -18,7 +17,7 @@ export class Designer extends TabControl {
   hint = "T";
 
   panelTemplate() {
-    return this.currentPanel?.settings() || html`<!--empty-->`;
+    return this.currentPanel?.settings() || this.empty;
   }
 
   /**

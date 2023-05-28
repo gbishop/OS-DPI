@@ -229,7 +229,7 @@ class Grid extends TreeBase {
 
     style.gridTemplate = `repeat(${rows}, calc(100% / ${rows})) / repeat(${columns}, 1fr)`;
 
-    return this.component({ style }, html`${result}`);
+    return this.component({ style }, result);
   }
 
   /** @returns {Hole|Hole[]} */
@@ -265,7 +265,7 @@ class Grid extends TreeBase {
   }
 
   settingsChildren() {
-    return html`<!--empty-->`;
+    return this.empty;
   }
 }
 TreeBase.register(Grid, "Grid");
