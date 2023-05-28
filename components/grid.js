@@ -232,6 +232,7 @@ class Grid extends TreeBase {
     return this.component({ style }, html`${result}`);
   }
 
+  /** @returns {Hole|Hole[]} */
   settingsDetails() {
     const props = this.propsAsProps;
     const inputs = Object.values(props).map((prop) => prop.input());
@@ -264,7 +265,7 @@ class Grid extends TreeBase {
   }
 
   settingsChildren() {
-    return html``;
+    return html`<!--empty-->`;
   }
 }
 TreeBase.register(Grid, "Grid");

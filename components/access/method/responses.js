@@ -1,4 +1,3 @@
-import { html } from "uhtml";
 import { TreeBase } from "components/treebase";
 import Globals from "app/globals";
 import * as Props from "components/props";
@@ -76,7 +75,7 @@ class ResponderStartTimer extends HandlerResponse {
 
   subTemplate() {
     const timerNames = this.nearestParent(Method)?.timerNames;
-    return html`${this.TimerName.input(timerNames)}`;
+    return this.TimerName.input(timerNames);
   }
 
   /** @param {Event & { access: Object }} event */

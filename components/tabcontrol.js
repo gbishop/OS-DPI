@@ -131,9 +131,8 @@ export class TabPanel extends Stack {
   lastFocused = "";
 
   /**
-   *  * Render the details of a components settings
-   *  * @returns {Hole}
-   *  */
+   * Render the details of a components settings
+   */
   settingsDetails() {
     const caption = this.active ? "Active" : "Activate";
     return html`${super.settingsDetails()}
@@ -152,10 +151,6 @@ export class TabPanel extends Stack {
       >
         ${caption}
       </button>`;
-  }
-
-  template() {
-    return super.template();
   }
 
   highlight() {}

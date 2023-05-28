@@ -26,6 +26,7 @@ export class CueList extends DesignerPanel {
     </div>`;
   }
 
+  /** @returns {Hole|Hole[]} */
   template() {
     const result = this.children.map(
       (child) =>
@@ -45,7 +46,7 @@ export class CueList extends DesignerPanel {
         </style>`
       );
     }
-    return html`${result}`;
+    return result;
   }
 
   get cueMap() {

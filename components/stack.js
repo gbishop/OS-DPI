@@ -20,6 +20,7 @@ export class Stack extends TreeBase {
     "Button",
   ];
 
+  /** @returns {Hole|Hole[]} */
   template() {
     /** return the scale of the child making sure it isn't zero or undefined.
      * @param {TreeBase} child
@@ -39,20 +40,6 @@ export class Stack extends TreeBase {
     );
     const empty = this.children.length && scaleSum ? "" : "empty";
     const dimension = this.props.direction == "row" ? "width" : "height";
-    let children = html`${this.children.map(
-      (child, index) =>
-        html`<div
-          index=${this.id + "-" + index}
-          style=${styleString({
-            [dimension]: `${(100 * getScale(child)) / scaleSum}%`,
-          })}
-        >
-          ${child.safeTemplate()}
-        </div>`
-    )}`;
-    if (this.children.length == 0) {
-      children = html`<!--empty-->`;
-    }
 
     return this.component(
       {
@@ -61,7 +48,16 @@ export class Stack extends TreeBase {
           backgroundColor: this.props.background,
         },
       },
-      children
+      this.children.map(
+        (child) =>
+          html`<div
+            style=${styleString({
+              [dimension]: `${(100 * getScale(child)) / scaleSum}%`,
+            })}
+          >
+            ${child.safeTemplate()}
+          </div>`
+      )
     );
   }
 }
