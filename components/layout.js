@@ -50,7 +50,7 @@ export class Layout extends DesignerPanel {
       class="treebase layout"
       help="Layout tab"
       id=${this.id}
-      onkeydown=${(event) => {
+      onkeydown=${(/** @type {KeyboardEvent} */ event) => {
         const { key, ctrlKey } = event;
         if ((key == "H" || key == "h") && ctrlKey) {
           event.preventDefault();
@@ -70,12 +70,15 @@ export class Layout extends DesignerPanel {
    * @returns {Object}
    */
   static upgrade(obj) {
+    /** @param {Object} obj */
     function oldToNew(obj) {
       if ("type" in obj) {
         // console.log("upgrade", obj);
         // convert to new representation
         const newObj = {
-          children: obj.children.map((child) => oldToNew(child)),
+          children: obj.children.map((/** @type {Object} */ child) =>
+            oldToNew(child)
+          ),
         };
         if ("filters" in obj.props) {
           for (const filter of obj.props.filters) {

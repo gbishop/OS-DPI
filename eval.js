@@ -34,11 +34,10 @@ export const Functions = {
   }),
   replace_last: updateString((old, value) => old.replace(/\w*\s*$/, value)),
   replace_last_letter: updateString((old, value) => old.slice(0, -1) + value),
-  random: (arg) => {
+  random: (/** @type {string} */ arg) => {
     let args = arg.split(",");
     return args[Math.floor(Math.random() * args.length)];
   },
-  log: (...args) => args,
 };
 
 /**
