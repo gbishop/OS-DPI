@@ -146,22 +146,6 @@ db.addUpdateListener((message) => {
   channel.postMessage(message);
 });
 
-// open and close the ide with the d key
-/** @param {KeyboardEvent} event */
-// document.addEventListener("keydown", (event) => {
-//   if (event.key == "d") {
-//     const target = /** @type {HTMLElement} */ (event.target);
-//     if (target && target.tagName != "INPUT" && target.tagName != "TEXTAREA") {
-//       event.preventDefault();
-//       event.stopPropagation();
-//       if (Globals.state) {
-//         document.body.classList.toggle("designing");
-//         Globals.state.update({ editing: !Globals.state.get("editing") });
-//       }
-//     }
-//   }
-// });
-//
 // watch for changes to the hash such as using the browser back button
 window.addEventListener("hashchange", () => {
   sessionStorage.clear();
@@ -173,25 +157,5 @@ window.addEventListener("resize", () => {
   if (!Globals.state) return;
   Globals.state.update();
 });
-
-//
-/** @typedef {PointerEvent & { target: HTMLElement }} ClickEvent */
-// I think this code mapped clicks back to the tree but no longer...
-// document.addEventListener("click", (/** @type {ClickEvent} */ event) => {
-//   const target = event.target;
-//   let text = "";
-//   for (let n = target; n.parentElement && !text; n = n.parentElement) {
-//     text = n.textContent || "";
-//   }
-//   let id = "none";
-//   if (target instanceof HTMLButtonElement && target.dataset.id) {
-//     id = target.dataset.id;
-//   } else {
-//     const div = target.closest('div[id^="osdpi"]');
-//     if (div) {
-//       id = div.id;
-//     }
-//   }
-// });
 
 start();
