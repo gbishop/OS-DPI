@@ -547,7 +547,7 @@ export class ToolBar extends TreeBase {
           <li>
             <label for="designName">Name: </label>
             ${hinted(
-              html` <input
+              html`<input
                 id="designName"
                 type="text"
                 .value=${db.designName}

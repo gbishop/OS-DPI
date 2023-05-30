@@ -135,8 +135,10 @@ export class TabPanel extends Stack {
    */
   settingsDetails() {
     const caption = this.active ? "Active" : "Activate";
-    return html`${super.settingsDetails()}
-      <button
+    let details = super.settingsDetails();
+    if (!Array.isArray(details)) details = [details];
+    return [...details,
+      html`<button
         id=${this.id + "-activate"}
         ?active=${this.active}
         onclick=${() => {
@@ -150,7 +152,7 @@ export class TabPanel extends Stack {
         }}
       >
         ${caption}
-      </button>`;
+      </button>`];
   }
 
   highlight() {}

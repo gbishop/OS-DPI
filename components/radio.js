@@ -99,7 +99,7 @@ class Radio extends TreeBase {
 
     return this.component(
       {},
-      html` <fieldset class="flex">
+      html`<fieldset class="flex">
         ${(this.props.label && html`<legend>${this.props.label}</legend>`) ||
         this.empty}
         ${choices}

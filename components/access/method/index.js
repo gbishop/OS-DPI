@@ -163,10 +163,12 @@ class Timer extends TreeBase {
   subject$ = new RxJs.Subject();
 
   settings() {
-    return html`${this.Name.input()} ${this.Interval.input()}
+    return html`<div class="settings">
+      ${this.Name.input()} ${this.Interval.input()}
       <style>
         ${`:root { --${this.Key.value}: ${this.Interval.value}s}`}
-      </style> `;
+      </style>
+    </div>`;
   }
 
   /** @param {Event & { access: {}}} event */
@@ -228,7 +230,7 @@ export class HandlerCondition extends TreeBase {
 
   settings() {
     const { Condition } = this;
-    return html` <div class="Condition">${Condition.input()}</div> `;
+    return html`<div class="Condition">${Condition.input()}</div>`;
   }
 
   /** @param {Object} context */
@@ -252,7 +254,7 @@ export class HandlerKeyCondition extends TreeBase {
 
   settings() {
     const { Key } = this;
-    return html` <div class="Key">${Key.input()}</div> `;
+    return html`<div class="Key">${Key.input()}</div>`;
   }
 }
 TreeBase.register(HandlerKeyCondition, "HandlerKeyCondition");
@@ -276,9 +278,9 @@ export class HandlerResponse extends TreeBaseSwitchable {
   }
 
   settings() {
-    return html`
-      <div class="Response">${this.Response.input()} ${this.subTemplate()}</div>
-    `;
+    return html`<div class="Response">
+      ${this.Response.input()} ${this.subTemplate()}
+    </div>`;
   }
 
   subTemplate() {
