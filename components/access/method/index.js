@@ -163,7 +163,7 @@ class Timer extends TreeBase {
   subject$ = new RxJs.Subject();
 
   settings() {
-    return html`<div class="settings">
+    return html`<div>
       ${this.Name.input()} ${this.Interval.input()}
       <style>
         ${`:root { --${this.Key.value}: ${this.Interval.value}s}`}
