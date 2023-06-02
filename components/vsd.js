@@ -104,8 +104,8 @@ class VSD extends TreeBase {
 
     return this.component(
       { classes: ["show"] },
-      [ imageOrVideo(src, "", () => this.sizeMarkers(this.markers)),
-        html`<div
+      html`<div>${imageOrVideo(src, "", () => this.sizeMarkers(this.markers))}
+        <div
           class="markers"
           ref=${(/** @type {HTMLDivElement & { observer: any }} */ node) => {
             this.sizeMarkers(node);
@@ -159,7 +159,7 @@ class VSD extends TreeBase {
               </button>`
             )}
           <span class="coords" style="background-color: white"></span>
-        </div>`]
+        </div></div>`
     );
   }
 
