@@ -61,7 +61,13 @@ export class Method extends TreeBase {
   Key = new Props.UID();
   Active = new Props.Boolean(false);
 
-  allowedChildren = ["Timer", "KeyHandler", "PointerHandler", "TimerHandler"];
+  allowedChildren = [
+    "Timer",
+    "KeyHandler",
+    "PointerHandler",
+    "TimerHandler",
+    "SocketHandler",
+  ];
 
   open = false;
 

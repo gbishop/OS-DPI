@@ -23,6 +23,7 @@ import "./access/method";
 import "./access/method/responses";
 import "./access/method/keyHandler";
 import "./access/method/pointerHandler";
+import "./access/method/socketHandler";
 import "./access/method/timerHandler";
 import "./access/cues";
 import "./access/pattern";

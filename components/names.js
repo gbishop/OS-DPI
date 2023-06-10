@@ -50,6 +50,7 @@ const namesMap = {
   ResponderEmit: ["Emit", "Methods#Emit"],
   ResponderNext: ["Next", "Methods#Next"],
   ResponderStartTimer: ["Start Timer", "Methods"],
+  SocketHandler: ["Socket Handler", "Methods#Socket Handler"],
   Speech: ["Speech", "Speech"],
   Stack: ["Stack", "Stack"],
   TabControl: ["Tab Control", "Tab Control"],
@@ -64,7 +65,8 @@ const namesMap = {
  * @param {string} className
  */
 export function friendlyName(className) {
-  return namesMap[className][0];
+  console.info({ className });
+  return className in namesMap ? namesMap[className][0] : className;
 }
 
 /**
