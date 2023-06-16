@@ -65,7 +65,6 @@ const namesMap = {
  * @param {string} className
  */
 export function friendlyName(className) {
-  console.info({ className });
   return className in namesMap ? namesMap[className][0] : className;
 }
 
