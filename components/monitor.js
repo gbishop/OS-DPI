@@ -30,7 +30,7 @@ export class Monitor extends TreeBase {
       </tbody>
     </table>`;
 
-    const row = rules.last.data;
+    const row = rules.last.data || {};
     const f = html`<table class="fields">
       <thead>
         <tr>
