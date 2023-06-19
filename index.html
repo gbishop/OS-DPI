@@ -4,7 +4,11 @@
     <meta charset="UTF-8" />
     <title>OS-DPI</title>
     <link rel="stylesheet" href="./css/site.css" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
   </head>
+
   <body>
     <div id="timer"></div>
     <div id="cues"></div>
@@ -16,5 +20,10 @@
     </div>
     <div id="monitor"></div>
     <script type="module" src="start.js"></script>
+    <script>
+      if (navigator.serviceWorker) {
+        navigator.serviceWorker.register("sw.js", { scope: "/OS-DPI/" });
+      }
+    </script>
   </body>
 </html>

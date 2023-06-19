@@ -15,5 +15,12 @@ export default defineConfig({
     sourcemap: true,
     minify: false,
     target: "esnext",
+    rollupOptions: {
+      output: {
+        entryFileNames: `[name].js`,
+        chunkFileNames: `[name].js`,
+        assetFileNames: `[name].[ext]`,
+      },
+    },
   },
 });
