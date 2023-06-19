@@ -20,6 +20,7 @@ export class Stack extends TreeBase {
     "Button",
   ];
 
+  /** @returns {Hole|Hole[]} */
   template() {
     /** return the scale of the child making sure it isn't zero or undefined.
      * @param {TreeBase} child
@@ -33,12 +34,13 @@ export class Stack extends TreeBase {
       }
       return scale;
     }
-    const empty = this.children.length ? "" : "empty";
     const scaleSum = this.children.reduce(
       (sum, child) => sum + getScale(child),
       0
     );
+    const empty = this.children.length && scaleSum ? "" : "empty";
     const dimension = this.props.direction == "row" ? "width" : "height";
+
     return this.component(
       {
         classes: [this.props.direction, empty],
@@ -46,7 +48,7 @@ export class Stack extends TreeBase {
           backgroundColor: this.props.background,
         },
       },
-      html`${this.children.map(
+      this.children.map(
         (child) =>
           html`<div
             style=${styleString({
@@ -55,7 +57,7 @@ export class Stack extends TreeBase {
           >
             ${child.safeTemplate()}
           </div>`
-      )} `
+      )
     );
   }
 }

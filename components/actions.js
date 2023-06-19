@@ -136,7 +136,7 @@ export class Actions extends DesignerPanel {
   settings() {
     const { actions } = Globals;
     const rule = this.last.rule;
-    return html`<div class="actions" help="Actions" id=${this.id} tabindex="-1">
+    return html`<div class="actions" help="Actions" id=${this.id}>
       <table>
         <thead>
           <tr>

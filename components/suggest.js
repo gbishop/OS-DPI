@@ -90,10 +90,11 @@ function drawMenu(element) {
   const menu = element.nextElementSibling;
   if (!menu) return;
 
+  /** @param {MouseEvent} event */
   function mouseEnter(event) {
-    const li = event.target;
+    const li = /** @type {HTMLLIElement} */ (event.target);
 
-    if (!element.suggest) return;
+    if (!element.suggest || !li.parentNode) return;
 
     let index = Array.from(li.parentNode.children).indexOf(li);
     if (index != -1) {
@@ -102,7 +103,7 @@ function drawMenu(element) {
     }
   }
 
-  function mouseDown(event) {
+  function mouseDown() {
     insertWord(element);
   }
 

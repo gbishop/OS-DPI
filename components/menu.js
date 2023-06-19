@@ -119,11 +119,12 @@ export class Menu {
   /** @param {number} index */
   setFocus(index) {
     // make it a circular buffer
+    if (!this.items.length) return;
     index = (index + this.items.length) % this.items.length;
     const item = /** @type {HTMLElement} */ (
       this.current.querySelector(`button[index="${index}"]`)
     );
-    item.focus();
+    if (item) item.focus();
   }
 
   /* Close the menu when it loses focus */

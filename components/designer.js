@@ -1,4 +1,3 @@
-import { html } from "uhtml";
 import "css/tabcontrol.css";
 import Globals from "app/globals";
 import { callAfterRender } from "app/render";
@@ -18,7 +17,7 @@ export class Designer extends TabControl {
   hint = "T";
 
   panelTemplate() {
-    return this.currentPanel?.settings() || html`<!--empty-->`;
+    return this.currentPanel?.settings() || this.empty;
   }
 
   /**
@@ -46,7 +45,7 @@ export class Designer extends TabControl {
 
   /**
    * capture focusin events so we can remember what was focused last
-   * @param {FocusEvent|MouseEvent} event
+   * @param {FocusEvent} event
    */
   focusin = (event) => {
     if (!(event.target instanceof HTMLElement)) return;

@@ -110,6 +110,8 @@ export async function saveContent(name, rows, type) {
 export class Content extends DesignerPanel {
   name = new Props.String("Content");
 
+  lastFocused = this.id;
+
   settings() {
     const data = Globals.data;
     return html`<div class="content" id=${this.id}>

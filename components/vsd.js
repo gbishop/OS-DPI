@@ -13,7 +13,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 /** Wait for a condition to be satisfied
  * @param {() => boolean} test
  * @param {number} delay */
-async function waitFor(test, delay = 1) {
+async function waitFor(test, delay = 100) {
   while (!test()) await sleep(delay);
 }
 
@@ -104,7 +104,7 @@ class VSD extends TreeBase {
 
     return this.component(
       { classes: ["show"] },
-      html`${imageOrVideo(src, "", () => this.sizeMarkers(this.markers))}
+      html`<div>${imageOrVideo(src, "", () => this.sizeMarkers(this.markers))}
         <div
           class="markers"
           ref=${(/** @type {HTMLDivElement & { observer: any }} */ node) => {
@@ -159,7 +159,7 @@ class VSD extends TreeBase {
               </button>`
             )}
           <span class="coords" style="background-color: white"></span>
-        </div>`
+        </div></div>`
     );
   }
 
@@ -207,7 +207,7 @@ class VSD extends TreeBase {
   }
 
   settingsChildren() {
-    return html``;
+    return this.empty;
   }
 }
 TreeBase.register(VSD, "VSD");

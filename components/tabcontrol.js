@@ -38,7 +38,7 @@ export class TabControl extends TreeBase {
       }
       panel.active = activeTabName == panel.tabName || panels.length === 1;
     });
-    let buttons = [html`<!--empty-->`];
+    let buttons = [this.empty];
     if (this.props.tabEdge != "none") {
       buttons = panels
         .filter((panel) => panel.props.label != "UNLABELED")
@@ -83,7 +83,6 @@ export class TabControl extends TreeBase {
         <div
           class="panels flex"
           onfocusin=${this.focusin}
-          onmouseup=${this.focusin}
           onkeydown=${this.panelKeyHandler}
         >
           ${panel}
@@ -93,7 +92,7 @@ export class TabControl extends TreeBase {
   }
 
   panelTemplate() {
-    return this.currentPanel?.safeTemplate() || html`<!--empty-->`;
+    return this.currentPanel?.safeTemplate() || this.empty;
   }
 
   /**
@@ -132,21 +131,20 @@ export class TabPanel extends Stack {
   lastFocused = "";
 
   /**
-   *  * Render the details of a components settings
-   *  * @returns {Hole}
-   *  */
+   * Render the details of a components settings
+   */
   settingsDetails() {
     const caption = this.active ? "Active" : "Activate";
-    return html`${super.settingsDetails()}
-      <button
+    let details = super.settingsDetails();
+    if (!Array.isArray(details)) details = [details];
+    return [...details,
+      html`<button
         id=${this.id + "-activate"}
         ?active=${this.active}
         onclick=${() => {
-          console.log("here", this.parent);
           if (this.parent) {
             const parent = this.parent;
             callAfterRender(() => {
-              console.log("delayed call to highlight", parent);
               Globals.layout.highlight();
             });
             parent.switchTab(this.name.value);
@@ -154,11 +152,7 @@ export class TabPanel extends Stack {
         }}
       >
         ${caption}
-      </button>`;
-  }
-
-  template() {
-    return super.template();
+      </button>`];
   }
 
   highlight() {}

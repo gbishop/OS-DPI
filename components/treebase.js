@@ -1,11 +1,11 @@
 import { html } from "uhtml";
 import * as Props from "./props";
 import "css/treebase.css";
-import { fromCamelCase } from "./helpers";
 import WeakValue from "weak-value";
 import { styleString } from "./style";
 import { session } from "./persist";
 import { errorHandler } from "./errors";
+import { friendlyName } from "./names";
 
 export class TreeBase {
   /** @type {TreeBase[]} */
@@ -215,22 +215,22 @@ export class TreeBase {
   }
 
   /**
-   *  * Render the summary of a components settings
-   *  * @returns {Hole}
-   *  */
+   * Render the summary of a components settings
+   * @returns {Hole}
+   */
   settingsSummary() {
     const name = this.hasOwnProperty("name") ? this["name"].value : "";
-    return html`<h3>${fromCamelCase(this.className)} ${name}</h3>`;
+    return html`<h3>${friendlyName(this.className)} ${name}</h3>`;
   }
 
   /**
-   *  * Render the details of a components settings
-   *  * @returns {Hole}
-   *  */
+   * Render the details of a components settings
+   * @returns {Hole|Hole[]}
+   */
   settingsDetails() {
     const props = this.propsAsProps;
     const inputs = Object.values(props).map((prop) => prop.input());
-    return html`${inputs}`;
+    return inputs;
   }
 
   settingsChildren() {
@@ -239,21 +239,21 @@ export class TreeBase {
 
   /**
    * Render the user interface and return the resulting Hole
-   * @returns {Hole}
+   * @returns {Hole|Hole[]}
    */
   template() {
-    return html`<!--empty-->`;
+    return this.empty;
   }
 
   /**
    * Render the user interface catching errors and return the resulting Hole
-   * @returns {Hole}
+   * @returns {Hole|Hole[]}
    */
   safeTemplate() {
     try {
       return this.template();
     } catch (error) {
-      errorHandler(error);
+      errorHandler(error, ` safeTemplate ${this.className}`);
       let classes = [this.className.toLowerCase()];
       classes.push("error");
       return html`<div class=${classes.join(" ")} id=${this.id}>ERROR</div>`;
@@ -269,7 +269,7 @@ export class TreeBase {
    * Wrap the body of a component
    *
    * @param {ComponentAttrs} attrs
-   * @param {Hole} body
+   * @param {Hole|Hole[]} body
    * @returns {Hole}
    */
   component(attrs, body) {
@@ -425,6 +425,10 @@ export class TreeBase {
   /** @returns {Set<string>} */
   allStates() {
     return this.all(/\$\w+/g);
+  }
+
+  get empty() {
+    return html`<!--empty-->`;
   }
 }
 

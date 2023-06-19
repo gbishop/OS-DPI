@@ -1,4 +1,4 @@
-import { render } from "uhtml";
+import { render, html } from "uhtml";
 import { errorHandler } from "./components/errors";
 
 /** @type {Function[]} */
@@ -28,18 +28,20 @@ export function safeRender(id, component) {
   let r;
   if (safe) {
     try {
-      const what = component.safeTemplate();
+      let what = component.safeTemplate();
+      if (Array.isArray(what)) what = html`${what}`;
       r = render(where, what);
     } catch (error) {
       if (error instanceof Error) {
-        errorHandler(error);
+        errorHandler(error, ` rendering ${component.className} ${id}`);
       } else {
         console.error("crash", error);
       }
       return;
     }
   } else {
-    const what = component.safeTemplate();
+    let what = component.safeTemplate();
+    if (Array.isArray(what)) what = html`${what}`;
     r = render(where, what);
   }
   return r;

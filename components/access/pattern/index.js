@@ -139,7 +139,7 @@ export class PatternManager extends PatternBase {
 
   // props
   Cycles = new Props.Integer(2, { min: 1 });
-  Cue = new Props.Select();
+  Cue = new Props.Select([], { defaultValue: "DefaultCue" });
   Name = new Props.String("a pattern");
   Key = new Props.UID();
   Active = new Props.OneOfGroup(false, { name: "pattern-active" });
@@ -176,7 +176,7 @@ export class PatternManager extends PatternBase {
   }
 
   settingsChildren() {
-    return html`<!--empty-->`;
+    return this.empty;
   }
 
   /**
@@ -299,7 +299,7 @@ export class PatternGroup extends PatternBase {
   // props
   Name = new Props.String("");
   Cycles = new Props.Integer(2, { min: 1 });
-  Cue = new Props.Select();
+  Cue = new Props.Select([], { defaultValue: "DefaultCue" });
 
   allowedChildren = ["PatternGroup", "PatternSelector"];
 
@@ -426,7 +426,7 @@ PatternBase.register(OrderBy, "OrderBy");
 class GroupBy extends PatternBase {
   GroupBy = new Props.Field();
   Name = new Props.String("");
-  Cue = new Props.Select();
+  Cue = new Props.Select([], { defaultValue: "DefaultCue" });
   Cycles = new Props.Integer(2);
   settings() {
     const { GroupBy, Name, Cue, Cycles } = this;

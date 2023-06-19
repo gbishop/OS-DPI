@@ -14,18 +14,19 @@ export class CueList extends DesignerPanel {
   static tableName = "cues";
   static defaultValue = defaultCues;
 
-  allowedChildren = ["CueCss", "CueFill", "CueOverlay", "CueCircle", "Cue"];
+  allowedChildren = ["CueCss", "CueFill", "CueOverlay", "CueCircle"];
   /** @type {Cue[]} */
   children = [];
 
   allowDelete = false;
 
   settings() {
-    return html`<div class="CueList" id=${this.id} tabindex="-1">
+    return html`<div class="CueList" id=${this.id}>
       ${this.unorderedChildren()}
     </div>`;
   }
 
+  /** @returns {Hole|Hole[]} */
   template() {
     const result = this.children.map(
       (child) =>
@@ -45,7 +46,7 @@ export class CueList extends DesignerPanel {
         </style>`
       );
     }
-    return html`${result}`;
+    return result;
   }
 
   get cueMap() {
@@ -104,8 +105,9 @@ class Cue extends TreeBaseSwitchable {
     </div>`;
   }
 
+  /** @returns {Hole[]} */
   subTemplate() {
-    return html`<!--empty-->`;
+    return [this.empty];
   }
 
   get css() {
@@ -121,7 +123,7 @@ class CueCss extends Cue {
   });
 
   subTemplate() {
-    return this.Code.input();
+    return [this.Code.input()];
   }
 
   get css() {
@@ -143,11 +145,11 @@ class CueOverlay extends Cue {
   Opacity = new Props.Float(0.3);
 
   subTemplate() {
-    return html`${this.Color.input()} ${this.Opacity.input()}
-      <details>
+    return [this.Color.input(), this.Opacity.input(),
+      html`<details>
         <summary>generated CSS</summary>
         <pre><code>${this.css.replaceAll(this.Key.value, "$Key")}</code></pre>
-      </details>`;
+      </details>`];
   }
 
   get css() {
@@ -186,12 +188,12 @@ class CueFill extends Cue {
   Repeat = new Props.Boolean(false);
 
   subTemplate() {
-    return html`${this.Color.input()} ${this.Opacity.input()}
-      ${this.Direction.input()} ${this.Repeat.input()}
-      <details>
+    return [this.Color.input(), this.Opacity.input(),
+      this.Direction.input(), this.Repeat.input(),
+      html`<details>
         <summary>generated CSS</summary>
         <pre><code>${this.css.replaceAll(this.Key.value, "$Key")}</code></pre>
-      </details> `;
+      </details>`];
   }
 
   get css() {
@@ -231,11 +233,11 @@ class CueCircle extends Cue {
   Opacity = new Props.Float(0.3);
 
   subTemplate() {
-    return html`${this.Color.input()} ${this.Opacity.input()}
-      <details>
+    return [this.Color.input(), this.Opacity.input(),
+      html`<details>
         <summary>generated CSS</summary>
         <pre><code>${this.css.replaceAll(this.Key.value, "$Key")}</code></pre>
-      </details> `;
+      </details>`];
   }
 
   get css() {

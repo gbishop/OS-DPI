@@ -36,7 +36,7 @@ class Speech extends TreeBase {
     if (state.hasBeenUpdated(stateName)) {
       this.speak();
     }
-    return html`<!--empty-->`;
+    return this.empty;
   }
 
   // settings() {

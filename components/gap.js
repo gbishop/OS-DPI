@@ -1,4 +1,3 @@
-import { html } from "uhtml";
 import { TreeBase } from "./treebase";
 import * as Props from "./props";
 import { styleString } from "./style";
@@ -15,7 +14,7 @@ class Gap extends TreeBase {
           backgroundColor: this.props.background,
         }),
       },
-      html`<!--empty-->`
+      this.empty
     );
   }
 }

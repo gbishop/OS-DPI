@@ -61,7 +61,13 @@ export class Method extends TreeBase {
   Key = new Props.UID();
   Active = new Props.Boolean(false);
 
-  allowedChildren = ["Timer", "KeyHandler", "PointerHandler", "TimerHandler"];
+  allowedChildren = [
+    "Timer",
+    "KeyHandler",
+    "PointerHandler",
+    "TimerHandler",
+    "SocketHandler",
+  ];
 
   open = false;
 
@@ -124,7 +130,7 @@ export class Method extends TreeBase {
             <legend>Timers</legend>
             ${this.unorderedChildren(timers)}
           </fieldset>`
-        : html`<!--empty-->`}
+        : this.empty}
       <fieldset>
         <legend>Handlers</legend>
         ${this.orderedChildren(this.handlers)}
@@ -133,7 +139,7 @@ export class Method extends TreeBase {
   }
 
   settingsChildren() {
-    return html`<!--empty-->`;
+    return this.empty;
   }
 
   /** Configure the rxjs pipelines to implement this method */
@@ -163,10 +169,12 @@ class Timer extends TreeBase {
   subject$ = new RxJs.Subject();
 
   settings() {
-    return html`${this.Name.input()} ${this.Interval.input()}
+    return html`<div>
+      ${this.Name.input()} ${this.Interval.input()}
       <style>
         ${`:root { --${this.Key.value}: ${this.Interval.value}s}`}
-      </style> `;
+      </style>
+    </div>`;
   }
 
   /** @param {Event & { access: {}}} event */
@@ -228,7 +236,7 @@ export class HandlerCondition extends TreeBase {
 
   settings() {
     const { Condition } = this;
-    return html` <div class="Condition">${Condition.input()}</div> `;
+    return html`<div class="Condition">${Condition.input()}</div>`;
   }
 
   /** @param {Object} context */
@@ -252,7 +260,7 @@ export class HandlerKeyCondition extends TreeBase {
 
   settings() {
     const { Key } = this;
-    return html` <div class="Key">${Key.input()}</div> `;
+    return html`<div class="Key">${Key.input()}</div>`;
   }
 }
 TreeBase.register(HandlerKeyCondition, "HandlerKeyCondition");
@@ -276,13 +284,13 @@ export class HandlerResponse extends TreeBaseSwitchable {
   }
 
   settings() {
-    return html`
-      <div class="Response">${this.Response.input()} ${this.subTemplate()}</div>
-    `;
+    return html`<div class="Response">
+      ${this.Response.input()} ${this.subTemplate()}
+    </div>`;
   }
 
   subTemplate() {
-    return html`<!--empty-->`;
+    return this.empty;
   }
 }
 TreeBase.register(HandlerResponse, "HandlerResponse");

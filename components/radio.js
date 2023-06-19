@@ -99,9 +99,9 @@ class Radio extends TreeBase {
 
     return this.component(
       {},
-      html` <fieldset class="flex">
+      html`<fieldset class="flex">
         ${(this.props.label && html`<legend>${this.props.label}</legend>`) ||
-        html`<!--empty-->`}
+        this.empty}
         ${choices}
       </fieldset>`
     );
@@ -116,7 +116,7 @@ class Radio extends TreeBase {
     const inputs = Object.values(props).map((prop) => prop.input());
     const filters = this.filterChildren(GridFilter);
     const editFilters = !filters.length
-      ? html`<!--empty-->`
+      ? this.empty
       : html`<fieldset>
           <legend>Filters</legend>
           <table>
@@ -170,7 +170,7 @@ class Radio extends TreeBase {
   }
 
   settingsChildren() {
-    return html``;
+    return this.empty;
   }
 }
 TreeBase.register(Radio, "Radio");

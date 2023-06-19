@@ -16,39 +16,7 @@ import { Designer } from "./designer";
 import { readSheetFromBlob, saveContent } from "./content";
 import { Data } from "app/data";
 import { SaveLogs, ClearLogs } from "./logger";
-
-export const friendlyNamesMap = {
-  ActionCondition: "Condition",
-  ActionUpdate: "Update",
-  CueCircle: "Cue Circle",
-  CueCss: "Cue CSS",
-  CueFill: "Cue Fill",
-  CueList: "Cues",
-  CueOverlay: "Cue Overlay",
-  GridFilter: "Filter",
-  GroupBy: "Group By",
-  HandlerCondition: "Condition",
-  HandlerKeyCondition: "Key",
-  HandlerResponse: "Response",
-  KeyHandler: "Key Handler",
-  MethodChooser: "Methods",
-  ModalDialog: "Modal Dialog",
-  OrderBy: "Order By",
-  PatternGroup: "Group",
-  PatternList: "Patterns",
-  PatternManager: "Pattern",
-  PatternSelector: "Selector",
-  PointerHandler: "Pointer Handler",
-  ResponderActivate: "Responder Activate",
-  ResponderClearCue: "Responder Clear Cue",
-  ResponderCue: "Responder Cue",
-  ResponderEmit: "Responder Emit",
-  ResponderNext: "Responder Next",
-  ResponderStartTimer: "Responder Start Timer",
-  TabControl: "Tab Control",
-  TabPanel: "Tab Panel",
-  TimerHandler: "Timer handler",
-};
+import { friendlyName, wikiName } from "./names";
 
 /** Return a list of available Menu items on this component
  *
@@ -60,15 +28,6 @@ export const friendlyNamesMap = {
 function getComponentMenuItems(component, which = "all", wrapper) {
   /** @type {MenuItem[]} */
   const result = [];
-  console.log({ component, which });
-
-  /** Get a name for the menu
-   * @param {string} name
-   * @returns {string}
-   */
-  function friendlyName(name) {
-    return friendlyNamesMap[name] || name;
-  }
 
   // add actions
   if (which == "add" || which == "all") {
@@ -77,6 +36,7 @@ function getComponentMenuItems(component, which = "all", wrapper) {
         new MenuItem({
           label: `${friendlyName(className)}`,
           callback: wrapper(() => {
+            console.log("add", className, component.className);
             const result = TreeBase.create(className, component);
             result.init();
             return result.id;
@@ -94,6 +54,7 @@ function getComponentMenuItems(component, which = "all", wrapper) {
           title: `Delete ${friendlyName(component.className)}`,
           callback: wrapper(() => {
             // remove returns the id of the nearest neighbor or the parent
+            console.log("delete", component.className, component.id);
             const nextId = component.remove();
             return nextId;
           }),
@@ -115,6 +76,15 @@ function getComponentMenuItems(component, which = "all", wrapper) {
             label: `Move up`,
             title: `Move up ${friendlyName(component.className)}`,
             callback: wrapper(() => {
+              if (component.parent)
+                console.log(
+                  "move up",
+                  component.parent.className,
+                  component.parent.children[index].id,
+                  component.parent.children[index].className,
+                  component.parent.children[index - 1].id,
+                  component.parent.children[index - 1].className
+                );
               parent.swap(index, index - 1);
               return component.id;
             }),
@@ -145,7 +115,6 @@ function getComponentMenuItems(component, which = "all", wrapper) {
  * @return {{ child: MenuItem[], parent: MenuItem[]}}
  * */
 function getPanelMenuItems(type) {
-  console.info({ type });
   // Figure out which tab is active
   const { designer } = Globals;
   const panel = designer.currentPanel;
@@ -155,7 +124,8 @@ function getPanelMenuItems(type) {
     console.log("no panel");
     return { child: [], parent: [] };
   }
-  const component = TreeBase.componentFromId(panel.lastFocused || panel.id);
+  const component =
+    TreeBase.componentFromId(panel.lastFocused) || panel.children[0] || panel;
   if (!component) {
     console.log("no component");
     return { child: [], parent: [] };
@@ -395,7 +365,16 @@ function getEditMenuItems() {
       label: "Paste",
       callback: async () => {
         const json = await navigator.clipboard.readText();
-        const obj = JSON.parse(json);
+        // we can't trust this input from the clipboard, catch and report errors
+
+        try {
+          var obj = JSON.parse(json);
+        } catch (e) {
+          Globals.error.report("Invalid input to Paste");
+          Globals.error.report(json);
+          Globals.state.update();
+          return;
+        }
         const className = obj.className;
         if (!className) return;
         // find a place that can accept it
@@ -423,7 +402,14 @@ function getEditMenuItems() {
       label: "Paste Into",
       callback: async () => {
         const json = await navigator.clipboard.readText();
-        const obj = JSON.parse(json);
+        try {
+          var obj = JSON.parse(json);
+        } catch (e) {
+          Globals.error.report("Invalid input to Paste Into");
+          Globals.error.report(json);
+          Globals.state.update();
+          return;
+        }
         const className = obj.className;
         if (!className) return;
         // find a place that can accept it
@@ -443,6 +429,48 @@ function getEditMenuItems() {
     parentItems[0].divider = "Parent";
     items = items.concat(parentItems);
   }
+  return items;
+}
+
+/** Open Wiki documentation in another tab
+ * @param {string} name
+ */
+function openHelpURL(name) {
+  const wiki = "https://github.com/unc-project-open-aac/os-dpi/wiki";
+
+  const url = `${wiki}/${name}`;
+
+  window.open(url, "help");
+}
+
+function getHelpMenuItems() {
+  /** @type {MenuItem[]} */
+  const items = [];
+  const names = new Set();
+  let component =
+    Globals.designer.selectedComponent || Globals.designer.currentPanel;
+  while (component && component.parent) {
+    const className = component.className;
+    const menuName = friendlyName(className);
+    if (!names.has(menuName)) {
+      items.push(
+        new MenuItem({
+          label: menuName,
+          callback: openHelpURL,
+          args: [wikiName(className)],
+        })
+      );
+      names.add(menuName);
+    }
+    component = component.parent;
+  }
+  items.push(
+    new MenuItem({
+      label: "About OS-DPI",
+      callback: openHelpURL,
+      args: ["About-Project-Open"],
+    })
+  );
   return items;
 }
 
@@ -508,6 +536,7 @@ export class ToolBar extends TreeBase {
       },
       "add"
     );
+    this.helpMenu = new Menu("Help", getHelpMenuItems, this);
     this.designListDialog = new DesignListDialog();
   }
 
@@ -518,7 +547,7 @@ export class ToolBar extends TreeBase {
           <li>
             <label for="designName">Name: </label>
             ${hinted(
-              html` <input
+              html`<input
                 id="designName"
                 type="text"
                 .value=${db.designName}
@@ -547,6 +576,12 @@ export class ToolBar extends TreeBase {
             ${
               // @ts-ignore
               hinted(this.addMenu.render(), "A")
+            }
+          </li>
+          <li>
+            ${
+              // @ts-ignore
+              hinted(this.helpMenu.render(), "H")
             }
           </li>
         </ul>

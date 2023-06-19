@@ -1,7 +1,6 @@
 import { html } from "uhtml";
 import { TreeBase } from "./treebase";
 import * as Props from "./props";
-import { styleString } from "./style";
 import { Functions } from "app/eval";
 import merge from "mergerino";
 import "css/display.css";

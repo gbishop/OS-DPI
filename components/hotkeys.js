@@ -2,8 +2,6 @@
 
 import Globals from "app/globals";
 import "css/hotkeys.css";
-import { friendlyNamesMap } from "./toolbar";
-import { TreeBase } from "./treebase";
 
 function showHints() {
   document.body.classList.add("hints");
@@ -72,37 +70,6 @@ function focusTabs() {
   tabs[0].focus();
 }
 
-/**
- * Bring up help for the current control
- * @returns {void}
- */
-function help() {
-  const wiki = "https://github.com/unc-project-open-aac/os-dpi/wiki";
-  const { designer } = Globals;
-  console.info({ cp: designer.currentPanel });
-  if (!designer.currentPanel) return;
-
-  const currentId =
-    designer.currentPanel.children.length > 0
-      ? designer.currentPanel.lastFocused
-      : designer.currentPanel.id;
-  let inputName = "";
-  let componentName = "";
-  if (currentId) {
-    const label = /** @type {HTMLLabelElement} */ (
-      document.querySelector(`label[for="${currentId}"]`)
-    );
-    inputName = (label && label.innerText) || "";
-    componentName = TreeBase.componentFromId(currentId)?.className || "";
-    if (componentName in friendlyNamesMap) {
-      componentName = friendlyNamesMap[componentName].replace(" ", "-");
-    }
-  }
-  const url = `${wiki}/${componentName}#${inputName}`;
-  window.open(url, "help");
-  clearHints();
-}
-
 /** Implement a state machine for managing the hotkeys
  * @enum {string}
  */
@@ -132,12 +99,11 @@ const transitions = [
   { state: State.userA,   key: /d/i,      next: State.editing, call: editMode     },
   { state: State.editing, key: /alt/i,    next: State.hints,   call: showHints    },
   { state: State.hints,   key: /d/i,      next: State.user,    call: userMode     },
-  { state: State.hints,   key: /[nfea]/i, next: State.editing, call: clickToolbar },
+  { state: State.hints,   key: /[nfeah]/i,next: State.editing, call: clickToolbar },
   { state: State.hints,   key: /t/i,      next: State.editing, call: focusTabs    },
   { state: State.hints,   key: /u/i,      next: State.editing, call: focusUI      },
   { state: State.hints,   key: /p/i,      next: State.editing, call: focusPanel   },
   { state: State.hints,   key: /shift/i,  next: State.hints                       },
-  { state: State.hints,   key: /[?/¿]/,   next: State.editing, call: help         },
   { state: State.hints,   key: /.*/i,     next: State.editing, call: clearHints   },
 ];
 
