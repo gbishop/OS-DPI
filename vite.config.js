@@ -2,8 +2,6 @@
 import { defineConfig } from "vite";
 import path from "path";
 
-const version = new Date().toJSON().replace(/[:-]/g, "").replace(/\..*$/, "");
-
 export default defineConfig({
   base: "/OS-DPI/",
   resolve: {
@@ -17,13 +15,5 @@ export default defineConfig({
     sourcemap: true,
     minify: false,
     target: "esnext",
-    rollupOptions: {
-      output: {
-        entryFileNames: `[name].${version}.js`,
-        chunkFileNames: `[name].${version}.js`,
-        assetFileNames: `[name].${version}.[ext]`,
-      },
-      // plugins: [analyze()],
-    },
   },
 });
