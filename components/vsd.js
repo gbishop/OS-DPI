@@ -104,7 +104,8 @@ class VSD extends TreeBase {
 
     return this.component(
       { classes: ["show"] },
-      html`<div>${imageOrVideo(src, "", () => this.sizeMarkers(this.markers))}
+      html`<div>
+        ${imageOrVideo(src, "", () => this.sizeMarkers(this.markers))}
         <div
           class="markers"
           ref=${(/** @type {HTMLDivElement & { observer: any }} */ node) => {
@@ -153,13 +154,19 @@ class VSD extends TreeBase {
                   position: "absolute",
                 })}
                 ?invisible=${item.invisible}
+                .dataset=${{
+                  ComponentName: this.name.value,
+                  ComponentType: this.constructor.name,
+                  ...item,
+                }}
                 onClick=${actions.handler(this.name.value, item, "press")}
               >
                 <span>${item.label || ""}</span>
               </button>`
             )}
           <span class="coords" style="background-color: white"></span>
-        </div></div>`
+        </div>
+      </div>`
     );
   }
 
