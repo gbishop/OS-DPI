@@ -10,7 +10,8 @@
     "target": "ESNext",
     "module": "ESNext",
     "strictNullChecks": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "lib": ["esnext", "webworker"]
   },
   "exclude": ["node_modules", "docs", "thinking"]
 }

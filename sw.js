@@ -1,17 +1,16 @@
-var GHPATH = "/OS-DPI/dist";
+var GHPATH = "/OS-DPI";
 var APP_PREFIX = "osdpi_";
-var VERSION = "version_000";
+var VERSION = "version_004";
 var URLS = [
   `${GHPATH}/`,
   `${GHPATH}/index.html`,
   `${GHPATH}/index.css`,
   `${GHPATH}/index.js`,
   `${GHPATH}/xlsx.js`,
-  `${GHPATH}/icon.png`,
 ];
 
 var CACHE_NAME = APP_PREFIX + VERSION;
-self.addEventListener("fetch", function (e) {
+self.addEventListener("fetch", function (/** @type {FetchEvent} */ e) {
   console.log("Fetch request : " + e.request.url);
   e.respondWith(
     caches.match(e.request).then(function (request) {
@@ -26,7 +25,7 @@ self.addEventListener("fetch", function (e) {
   );
 });
 
-self.addEventListener("install", function (e) {
+self.addEventListener("install", function (/** @type {ExtendableEvent} */ e) {
   e.waitUntil(
     caches.open(CACHE_NAME).then(function (cache) {
       console.log("Installing cache : " + CACHE_NAME);
@@ -35,7 +34,7 @@ self.addEventListener("install", function (e) {
   );
 });
 
-self.addEventListener("activate", function (e) {
+self.addEventListener("activate", function (/** @type {ExtendableEvent} */ e) {
   e.waitUntil(
     caches.keys().then(function (keyList) {
       var cacheWhitelist = keyList.filter(function (key) {
