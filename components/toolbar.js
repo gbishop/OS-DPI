@@ -18,6 +18,8 @@ import { Data } from "app/data";
 import { SaveLogs, ClearLogs } from "./logger";
 import { friendlyName, wikiName } from "./names";
 
+import { workerUpdateButton } from "components/serviceWorker";
+
 /** Return a list of available Menu items on this component
  *
  * @param {TreeBase} component
@@ -188,7 +190,7 @@ function getFileMenuItems(bar) {
         })
           .then((file) => pleaseWait(local_db.readDesignFromFile(file)))
           .then(() => {
-            window.open(`#${local_db.designName}`, "_blank", "noopener=true");
+            window.open(`#${local_db.designName}`, "_blank", `noopener=true`);
           })
           .catch((e) => console.log(e));
       },
@@ -203,7 +205,7 @@ function getFileMenuItems(bar) {
       label: "New",
       callback: async () => {
         const name = await db.uniqueName("new");
-        window.open(`#${name}`, "_blank", "noopener=true");
+        window.open(`#${name}`, "_blank", `noopener=true`);
       },
     }),
     new MenuItem({
@@ -584,6 +586,7 @@ export class ToolBar extends TreeBase {
               hinted(this.helpMenu.render(), "H")
             }
           </li>
+          <li>${workerUpdateButton()}</li>
         </ul>
         ${this.designListDialog.render()}
       </div>

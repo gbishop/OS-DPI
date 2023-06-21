@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="./css/site.css" />
     <meta name="theme-color" content="#ffffff" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="shortcut icon" type="image/png" href="favicon.ico" />
   </head>
 
   <body>
@@ -19,10 +20,5 @@
     </div>
     <div id="monitor"></div>
     <script type="module" src="start.js"></script>
-    <script>
-      if (navigator.serviceWorker) {
-        navigator.serviceWorker.register("sw.js", { scope: "/OS-DPI/" });
-      }
-    </script>
   </body>
 </html>

@@ -17,6 +17,7 @@ import { CueList } from "./components/access/cues";
 import { Actions } from "./components/actions";
 import { callAfterRender, safeRender, postRender } from "./render";
 import { Designer } from "components/designer";
+import { workerCheckForUpdate } from "components/serviceWorker";
 
 /** let me wait for the page to load */
 const pageLoaded = new Promise((resolve) => {
@@ -123,6 +124,7 @@ export async function start() {
         timer.innerText = (performance.now() - startTime).toFixed(0);
       }
     }
+    workerCheckForUpdate();
   }
   Globals.state.observe(debounce(renderUI));
   callAfterRender(() => Globals.designer.restoreFocus());
