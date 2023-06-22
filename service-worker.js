@@ -58,6 +58,8 @@ self.addEventListener("activate", function (/** @type {ExtendableEvent} */ e) {
 
 self.addEventListener("message", (/** @type {MessageEvent} */ event) => {
   if (event.data === "SKIP_WAITING") {
+    // I'm missing something in my config to cause the following error
+    // @ts-ignore
     self.skipWaiting();
   }
 });
