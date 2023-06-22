@@ -505,9 +505,11 @@ export class Code extends Prop {
     const ruleRE = /([\s\S]*?)({\s*[\s\S]*?}\s*)/dg;
     for (const ruleMatch of value.matchAll(ruleRE)) {
       let selector = ruleMatch[1];
-      const selectorOffset = ruleMatch["indices"][1][0];
+      const indices = ruleMatch.indices;
+      if (!indices) continue;
+      const selectorOffset = indices[1][0];
       const body = ruleMatch[2];
-      const bodyOffset = ruleMatch["indices"][2][0];
+      const bodyOffset = indices[2][0];
       // replace field names in the selector
       selector = selector.replace(
         /#(\w+)/g,
@@ -544,7 +546,7 @@ export class Code extends Prop {
             if (!newProperties || newProperties.indexOf(propMatch[0]) < 0) {
               // the property was invalid
               this.addError(
-                bodyOffset + propMatch.index,
+                bodyOffset + (propMatch.index || 0),
                 `property ${propMatch[0]} is invalid`
               );
             }
