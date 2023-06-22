@@ -329,6 +329,24 @@ function getFileMenuItems(bar) {
   ];
 }
 
+async function copyComponent(cut = false) {
+  const component = Globals.designer.selectedComponent;
+  if (component) {
+    const parent = component.parent;
+    if (!(component instanceof Page) && !(parent instanceof Designer)) {
+      const json = JSON.stringify(
+        // don't include UID or OneOfGroup props in the copy
+        component.toObject({ omittedProps: ["UID", "OneOfGroup"] })
+      );
+      await navigator.clipboard.writeText(json);
+      if (cut) {
+        component.remove();
+        Globals.designer.currentPanel?.onUpdate();
+      }
+    }
+  }
+}
+
 function getEditMenuItems() {
   let items = [
     new MenuItem({
@@ -339,26 +357,12 @@ function getEditMenuItems() {
     }),
     new MenuItem({
       label: "Copy",
-      callback: async () => {
-        const component = Globals.designer.selectedComponent;
-        if (component) {
-          const parent = component.parent;
-          if (!(component instanceof Page) && !(parent instanceof Designer)) {
-            const json = JSON.stringify(component.toObject());
-            navigator.clipboard.writeText(json);
-          }
-        }
-      },
+      callback: copyComponent,
     }),
     new MenuItem({
       label: "Cut",
       callback: async () => {
-        const component = Globals.designer.selectedComponent;
-        if (!component) return;
-        const json = JSON.stringify(component.toObject());
-        await navigator.clipboard.writeText(json);
-        component.remove();
-        Globals.designer.currentPanel?.onUpdate();
+        copyComponent(true);
       },
     }),
     new MenuItem({
