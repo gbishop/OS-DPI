@@ -329,6 +329,9 @@ function getFileMenuItems(bar) {
   ];
 }
 
+/** Copy (or cut) a component to the clipboard
+ * @param {boolean} cut - true to cut
+ */
 async function copyComponent(cut = false) {
   const component = Globals.designer.selectedComponent;
   if (component) {
