@@ -18,6 +18,8 @@ import { Actions } from "./components/actions";
 import { callAfterRender, safeRender, postRender } from "./render";
 import { Designer } from "components/designer";
 import { workerCheckForUpdate } from "components/serviceWorker";
+import { TrackyMouse } from "tracky-mouse";
+import "css/tracky-mouse.css";
 
 /** let me wait for the page to load */
 const pageLoaded = new Promise((resolve) => {
@@ -162,7 +164,7 @@ window.addEventListener("resize", () => {
 
 start();
 
-TrackyMouse.dependenciesRoot = "./node_modules/tracky-mouse";
+TrackyMouse.dependenciesRoot = "./tracky-mouse";
 TrackyMouse.loadDependencies().then(function () {
   TrackyMouse.init();
   TrackyMouse.useCamera();

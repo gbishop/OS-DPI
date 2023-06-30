@@ -14,6 +14,9 @@ export default defineConfig({
       css: path.resolve("./css"),
     },
   },
+  optimizeDeps: {
+    include: ["tracky-mouse"],
+  },
   build: {
     sourcemap: true,
     minify: false,
