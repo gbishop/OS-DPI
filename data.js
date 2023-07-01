@@ -45,6 +45,9 @@ export class Data {
         ),
       []
     );
+    this.clearFields = Object.fromEntries(
+      this.allFields.map((field) => [field.slice(1), null])
+    );
     this.loadTime = new Date();
   }
 
@@ -75,9 +78,9 @@ export class Data {
       }
       cache.key = newKey;
     }
-    const result = this.allrows.filter((row) =>
-      boundFilters.every((filter) => match(filter, row))
-    );
+    const result = this.allrows
+      .filter((row) => boundFilters.every((filter) => match(filter, row)))
+      .map((row) => ({ ...this.clearFields, ...row }));
     if (cache) {
       cache.rows = result;
       cache.updated = true;
