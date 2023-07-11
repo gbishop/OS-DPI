@@ -20,6 +20,7 @@ async def answer(websocket):
             print(message)
             event = json.loads(message)
             action = event.get("$socket", "none")
+            await asyncio.sleep(5)  # sleep for a bit to simulate waiting on some service
             if action == 'time':
                 now = datetime.datetime.now()
                 message = f'You said "{event["$Again"]}" at {now:%I:%M%p}'
