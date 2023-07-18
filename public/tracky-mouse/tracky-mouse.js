@@ -39,7 +39,6 @@ TrackyMouse.init = function (div) {
   uiContainer.innerHTML = `
 		<div class="tracky-mouse-controls">
 			<button id="use-camera">Use my camera</button>
-			<button id="use-demo">Use demo footage</button>
 			<br>
 			<br>
 			<label><span class="label-text">Horizontal Sensitivity</span> <input type="range" min="0" max="100" value="25" id="sensitivity-x"></label>
@@ -61,7 +60,6 @@ TrackyMouse.init = function (div) {
   var sensitivityYSlider = uiContainer.querySelector("#sensitivity-y");
   var accelerationSlider = uiContainer.querySelector("#acceleration");
   var useCameraButton = uiContainer.querySelector("#use-camera");
-  var useDemoFootageButton = uiContainer.querySelector("#use-demo");
 
   var canvas = uiContainer.querySelector("#tracky-mouse-canvas");
   var ctx = canvas.getContext("2d");
@@ -109,7 +107,7 @@ TrackyMouse.init = function (div) {
   var showDebugText = false;
   var mirror;
 
-  var useClmTracking = true;
+  var useClmTracking = false;
   var showClmTracking = useClmTracking;
   var useFacemesh = true;
   var facemeshOptions = {
@@ -264,12 +262,12 @@ TrackyMouse.init = function (div) {
         }
       );
   };
-  useDemoFootageButton.onclick = TrackyMouse.useDemoFootage = () => {
-    reset();
-    cameraVideo.srcObject = null;
-    cameraVideo.src = `${TrackyMouse.dependenciesRoot}/private/demo-input-footage.webm`;
-    cameraVideo.loop = true;
-  };
+  // useDemoFootageButton.onclick = TrackyMouse.useDemoFootage = () => {
+  //   reset();
+  //   cameraVideo.srcObject = null;
+  //   cameraVideo.src = `${TrackyMouse.dependenciesRoot}/private/demo-input-footage.webm`;
+  //   cameraVideo.loop = true;
+  // };
 
   if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
     console.log("getUserMedia not supported in this browser");
@@ -1059,13 +1057,7 @@ TrackyMouse.init = function (div) {
     setInterval(draw, 200);
   }
 
-  let autoDemo = false;
-  try {
-    autoDemo = localStorage.trackyMouseAutoDemo === "true";
-  } catch (error) {}
-  if (autoDemo) {
-    useDemoFootage();
-  } else if (window.moveMouse) {
+  if (window.moveMouse) {
     useCamera();
   }
 
