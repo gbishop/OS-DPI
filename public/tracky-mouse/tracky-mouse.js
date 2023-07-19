@@ -38,8 +38,7 @@ TrackyMouse.init = function (div) {
   uiContainer.classList.add("tracky-mouse-ui");
   uiContainer.innerHTML = `
 		<div class="tracky-mouse-controls">
-			<button id="use-camera">Use my camera</button>
-			<br>
+        <button id="tracky-mouse-close">Close</button>
 			<br>
 			<label><span class="label-text">Horizontal Sensitivity</span> <input type="range" min="0" max="100" value="25" id="sensitivity-x"></label>
 			<label><span class="label-text">Vertical Sensitivity</span> <input type="range" min="0" max="100" value="50" id="sensitivity-y"></label>
@@ -59,7 +58,12 @@ TrackyMouse.init = function (div) {
   var sensitivityXSlider = uiContainer.querySelector("#sensitivity-x");
   var sensitivityYSlider = uiContainer.querySelector("#sensitivity-y");
   var accelerationSlider = uiContainer.querySelector("#acceleration");
-  var useCameraButton = uiContainer.querySelector("#use-camera");
+  var closeButton = uiContainer.querySelector("#tracky-mouse-close");
+
+  closeButton.addEventListener("click", () => {
+    console.log("click");
+    TrackyMouse.showUI(false);
+  });
 
   var canvas = uiContainer.querySelector("#tracky-mouse-canvas");
   var ctx = canvas.getContext("2d");
@@ -72,12 +76,12 @@ TrackyMouse.init = function (div) {
   // required to work in iOS 11 & up:
   cameraVideo.setAttribute("playsinline", "");
 
-  var stats = new Stats();
-  stats.domElement.style.position = "absolute";
-  stats.domElement.style.top = "0px";
-  stats.domElement.style.right = "0px";
-  stats.domElement.style.left = "";
-  document.body.appendChild(stats.domElement);
+  // var stats = new Stats();
+  // stats.domElement.style.position = "absolute";
+  // stats.domElement.style.top = "0px";
+  // stats.domElement.style.right = "0px";
+  // stats.domElement.style.left = "";
+  // document.body.appendChild(stats.domElement);
 
   var defaultWidth = 640;
   var defaultHeight = 480;
@@ -234,7 +238,7 @@ TrackyMouse.init = function (div) {
     faceConvergence = 0;
   };
 
-  useCameraButton.onclick = TrackyMouse.useCamera = () => {
+  TrackyMouse.useCamera = () => {
     navigator.mediaDevices
       .getUserMedia({
         audio: false,
@@ -261,6 +265,19 @@ TrackyMouse.init = function (div) {
           console.log(error);
         }
       );
+    paused = false;
+  };
+
+  TrackyMouse.pauseCamera = () => {
+    cameraVideo.srcObject &&
+      cameraVideo.srcObject.getTracks().forEach((track) => track.stop());
+    paused = true;
+  };
+
+  TrackyMouse.showUI = (show) => {
+    document
+      .querySelector("div.tracky-mouse-ui")
+      .classList.toggle("show", show);
   };
   // useDemoFootageButton.onclick = TrackyMouse.useDemoFootage = () => {
   //   reset();
@@ -542,7 +559,8 @@ TrackyMouse.init = function (div) {
 
   function animate() {
     requestAnimationFrame(animate);
-    draw(!SLOWMO && (!paused || document.visibilityState === "visible"));
+    if (!paused)
+      draw(!SLOWMO && (!paused || document.visibilityState === "visible"));
   }
 
   function draw(update = true) {
@@ -1043,7 +1061,7 @@ TrackyMouse.init = function (div) {
       ctx.fillRect(0, 0, faceScore * canvas.width, 5);
       ctx.restore();
     }
-    stats.update();
+    // stats.update();
   }
 
   function circle(ctx, x, y, r) {

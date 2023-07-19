@@ -27,3 +27,4 @@ import "./access/method/socketHandler";
 import "./access/method/timerHandler";
 import "./access/cues";
 import "./access/pattern";
+import "./head-mouse";
