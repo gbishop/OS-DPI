@@ -32,10 +32,16 @@ function match(filter, row) {
 }
 
 export class Data {
-  /** @param {Rows} rows */
+  /** @param {Rows} rows - rows coming from the spreadsheet */
   constructor(rows) {
-    this.allrows = (Array.isArray(rows) && rows) || [];
-    this.allFields = rows.reduce(
+    this.contentRows = (Array.isArray(rows) && rows) || [];
+    this.allrows = this.contentRows;
+    this.updateAllFields();
+    this.loadTime = new Date();
+  }
+
+  updateAllFields() {
+    this.allFields = this.contentRows.reduce(
       (previous, current) =>
         Array.from(
           new Set([
@@ -48,7 +54,6 @@ export class Data {
     this.clearFields = Object.fromEntries(
       this.allFields.map((field) => [field.slice(1), null])
     );
-    this.loadTime = new Date();
   }
 
   /**
@@ -125,5 +130,16 @@ export class Data {
       cache.loadTime = this.loadTime;
     }
     return result;
+  }
+
+  /**
+   * Add rows from the socket interface
+   * @param {Rows} rows
+   */
+  setDynamicRows(rows) {
+    if (!Array.isArray(rows)) return;
+    this.allrows = rows.concat(this.contentRows);
+    this.updateAllFields();
+    this.loadTime = new Date();
   }
 }

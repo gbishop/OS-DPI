@@ -100,6 +100,28 @@ export class SocketHandler extends Handler {
     this.live = true;
     this.socket$.subscribe({
       next: (e) => {
+        /* Incoming data arrives here in the .access property. This code will filter any arrays of objects and
+         * include them in the dynamic data
+         */
+        let dynamicRows = [];
+        const fields = [];
+        for (const [key, value] of Object.entries(e.access)) {
+          console.log(key, value);
+          if (
+            Array.isArray(value) &&
+            value.length > 0 &&
+            typeof value[0] === "object" &&
+            value[0] !== null
+          ) {
+            dynamicRows = dynamicRows.concat(value);
+          } else {
+            fields.push([key, value]);
+          }
+        }
+        e.access = Object.fromEntries(fields);
+        if (dynamicRows.length > 0) {
+          Globals.data.setDynamicRows(dynamicRows);
+        }
         // pass incoming messages to the response
         this.respond(e);
       },
