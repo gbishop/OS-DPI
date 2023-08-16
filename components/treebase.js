@@ -81,11 +81,21 @@ export class TreeBase {
   }
   /**
    * Prepare a TreeBase tree for external storage by converting to simple objects and arrays
+   * @param {Object} [options]
+   * @param {string[]} options.omittedProps - class names of props to omit
    * @returns {Object}
    * */
-  toObject() {
-    const props = this.props;
-    const children = this.children.map((child) => child.toObject());
+  toObject(options = { omittedProps: [] }) {
+    const props = Object.fromEntries(
+      Object.entries(this)
+        .filter(
+          ([_, prop]) =>
+            prop instanceof Props.Prop &&
+            !options.omittedProps.includes(prop.constructor.name)
+        )
+        .map(([name, prop]) => [name, prop.value])
+    );
+    const children = this.children.map((child) => child.toObject(options));
     const result = {
       className: this.className,
       props,

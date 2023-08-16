@@ -573,6 +573,7 @@ const mimetypes = {
   ".gif": "image/gif",
   ".jpeg": "image/jpeg",
   ".jpg": "image/jpeg",
+  ".jfif": "image/jpeg",
   ".png": "image/png",
   ".svg": "image/svg+xml",
   ".tif": "image/tiff",

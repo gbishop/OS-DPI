@@ -18,6 +18,8 @@ import { Data } from "app/data";
 import { SaveLogs, ClearLogs } from "./logger";
 import { friendlyName, wikiName } from "./names";
 
+import { workerUpdateButton } from "components/serviceWorker";
+
 /** Return a list of available Menu items on this component
  *
  * @param {TreeBase} component
@@ -188,7 +190,7 @@ function getFileMenuItems(bar) {
         })
           .then((file) => pleaseWait(local_db.readDesignFromFile(file)))
           .then(() => {
-            window.open(`#${local_db.designName}`, "_blank", "noopener=true");
+            window.open(`#${local_db.designName}`, "_blank", `noopener=true`);
           })
           .catch((e) => console.log(e));
       },
@@ -203,7 +205,7 @@ function getFileMenuItems(bar) {
       label: "New",
       callback: async () => {
         const name = await db.uniqueName("new");
-        window.open(`#${name}`, "_blank", "noopener=true");
+        window.open(`#${name}`, "_blank", `noopener=true`);
       },
     }),
     new MenuItem({
@@ -329,6 +331,27 @@ function getFileMenuItems(bar) {
   ];
 }
 
+/** Copy (or cut) a component to the clipboard
+ * @param {boolean} cut - true to cut
+ */
+async function copyComponent(cut = false) {
+  const component = Globals.designer.selectedComponent;
+  if (component) {
+    const parent = component.parent;
+    if (!(component instanceof Page) && !(parent instanceof Designer)) {
+      const json = JSON.stringify(
+        // don't include UID or OneOfGroup props in the copy
+        component.toObject({ omittedProps: ["UID", "OneOfGroup"] })
+      );
+      await navigator.clipboard.writeText(json);
+      if (cut) {
+        component.remove();
+        Globals.designer.currentPanel?.onUpdate();
+      }
+    }
+  }
+}
+
 function getEditMenuItems() {
   let items = [
     new MenuItem({
@@ -339,26 +362,12 @@ function getEditMenuItems() {
     }),
     new MenuItem({
       label: "Copy",
-      callback: async () => {
-        const component = Globals.designer.selectedComponent;
-        if (component) {
-          const parent = component.parent;
-          if (!(component instanceof Page) && !(parent instanceof Designer)) {
-            const json = JSON.stringify(component.toObject());
-            navigator.clipboard.writeText(json);
-          }
-        }
-      },
+      callback: copyComponent,
     }),
     new MenuItem({
       label: "Cut",
       callback: async () => {
-        const component = Globals.designer.selectedComponent;
-        if (!component) return;
-        const json = JSON.stringify(component.toObject());
-        await navigator.clipboard.writeText(json);
-        component.remove();
-        Globals.designer.currentPanel?.onUpdate();
+        copyComponent(true);
       },
     }),
     new MenuItem({
@@ -584,6 +593,7 @@ export class ToolBar extends TreeBase {
               hinted(this.helpMenu.render(), "H")
             }
           </li>
+          <li>${workerUpdateButton()}</li>
         </ul>
         ${this.designListDialog.render()}
       </div>

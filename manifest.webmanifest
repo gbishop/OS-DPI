@@ -1,0 +1,18 @@
+{
+  "name": "OS-DPI",
+  "short_name": "OSDPI",
+  "description": "Open Source AAC",
+  "scope": "/OS-DPI/",
+  "start_url": "./",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "display": "fullscreen",
+  "icons": [
+    {
+      "src": "./icon.png",
+      "type": "image/png",
+      "sizes": "400x400",
+      "purpose": "any maskable"
+    }
+  ]
+}
