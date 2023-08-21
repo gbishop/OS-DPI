@@ -530,6 +530,29 @@ export class DB {
     return result;
   }
 
+  /** delete media files
+   * @param {string[]} names
+   */
+  async deleteMedia(...names) {
+    const db = await this.dbPromise;
+    const tx = db.transaction(["media", "saved"], "readwrite");
+    const mst = tx.objectStore("media");
+    for await (const cursor of mst.iterate()) {
+      if (
+        cursor &&
+        cursor.key[0] == this.designName &&
+        names.includes(cursor.key[1])
+      ) {
+        cursor.delete();
+      }
+    }
+    const cursor = await tx.objectStore("saved").openCursor(this.designName);
+    if (cursor) {
+      cursor.delete();
+    }
+    await tx.done;
+  }
+
   /** Listen for database update
    * @param {(message: UpdateNotification) =>void} callback
    */
