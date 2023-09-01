@@ -383,9 +383,9 @@ export class DB {
     return;
   }
 
-  /** Save a design into a zip file
+  /** Convert the design to a blob asynchronously so we can feed to fileSave
    */
-  async saveDesign() {
+  async convertDesignToBlob() {
     const db = await this.dbPromise;
 
     // collect the parts of the design
@@ -423,13 +423,24 @@ export class DB {
     const zip = zipSync(zipargs);
     // create a blob from the zipped result
     const blob = new Blob([zip], { type: "application/octet-stream" });
+    return blob;
+  }
+
+  /** Save the design to a file.
+   * I'm forced to use the version of this call that accepts a Promise to
+   * avoid DomException that occurs if it takes too long to create the
+   * blob.
+   */
+  async saveDesign() {
     const options = {
       fileName: this.fileName || this.designName + ".osdpi",
       extensions: [".osdpi", ".zip"],
       id: "osdpi",
     };
+    const blobPromise = this.convertDesignToBlob();
     try {
-      await fileSave(blob, options, this.fileHandle);
+      await fileSave(blobPromise, options, this.fileHandle);
+      const db = await this.dbPromise;
       await db.put("saved", { name: this.designName });
     } catch {}
   }
