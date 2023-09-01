@@ -429,7 +429,7 @@ export class DB {
       id: "osdpi",
     };
     try {
-      await fileSave(blob, options, this.fileHandle);
+      await fileSave(blob, options); // , this.fileHandle);
       await db.put("saved", { name: this.designName });
     } catch (error) {
       console.error("Export failed");
