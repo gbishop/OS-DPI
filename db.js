@@ -437,6 +437,15 @@ export class DB {
     }
   }
 
+  async dummy() {
+    const blob = new Blob(["This is a test\n"], { type: "text/plain" });
+    await fileSave(blob, {
+      fileName: "foo.txt",
+      extensions: [".txt"],
+      id: "foo",
+    });
+  }
+
   /** Unload a design from the database
    * @param {string} name - the name of the design to delete
    */
