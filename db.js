@@ -442,7 +442,10 @@ export class DB {
       await fileSave(blobPromise, options, this.fileHandle);
       const db = await this.dbPromise;
       await db.put("saved", { name: this.designName });
-    } catch {}
+    } catch (error) {
+      console.error("export failed");
+      console.error(error);
+    }
   }
 
   /** Unload a design from the database
