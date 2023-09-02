@@ -383,11 +383,9 @@ export class DB {
     return;
   }
 
-  /** Save a design into a zip file
-   */
-  async saveDesign() {
+  // do this part async to avoid file picker timeout
+  async convertDesignToBlob() {
     const db = await this.dbPromise;
-
     // collect the parts of the design
     const layout = Globals.tree.toObject();
     const actions = Globals.actions.toObject();
@@ -423,27 +421,26 @@ export class DB {
     const zip = zipSync(zipargs);
     // create a blob from the zipped result
     const blob = new Blob([zip], { type: "application/octet-stream" });
+    return blob;
+  }
+
+  /** Save a design into a zip file
+   */
+  async saveDesign() {
+    const db = await this.dbPromise;
+
     const options = {
       fileName: this.fileName || this.designName + ".osdpi",
       extensions: [".osdpi", ".zip"],
       id: "osdpi",
     };
     try {
-      await fileSave(blob, options); // , this.fileHandle);
+      await fileSave(this.convertDesignToBlob(), options, this.fileHandle);
       await db.put("saved", { name: this.designName });
     } catch (error) {
       console.error("Export failed");
       console.error(error);
     }
-  }
-
-  async dummy() {
-    const blob = new Blob(["This is a test\n"], { type: "text/plain" });
-    await fileSave(blob, {
-      fileName: "foo.txt",
-      extensions: [".txt"],
-      id: "foo",
-    });
   }
 
   /** Unload a design from the database
