@@ -383,11 +383,9 @@ export class DB {
     return;
   }
 
-  /** Save a design into a zip file
-   */
-  async saveDesign() {
+  // do this part async to avoid file picker timeout
+  async convertDesignToBlob() {
     const db = await this.dbPromise;
-
     // collect the parts of the design
     const layout = Globals.tree.toObject();
     const actions = Globals.actions.toObject();
@@ -423,15 +421,26 @@ export class DB {
     const zip = zipSync(zipargs);
     // create a blob from the zipped result
     const blob = new Blob([zip], { type: "application/octet-stream" });
+    return blob;
+  }
+
+  /** Save a design into a zip file
+   */
+  async saveDesign() {
+    const db = await this.dbPromise;
+
     const options = {
       fileName: this.fileName || this.designName + ".osdpi",
       extensions: [".osdpi", ".zip"],
       id: "osdpi",
     };
     try {
-      await fileSave(blob, options, this.fileHandle);
+      await fileSave(this.convertDesignToBlob(), options, this.fileHandle);
       await db.put("saved", { name: this.designName });
-    } catch {}
+    } catch (error) {
+      console.error("Export failed");
+      console.error(error);
+    }
   }
 
   /** Unload a design from the database
@@ -528,6 +537,29 @@ export class DB {
       result.push(key[1].toString());
     }
     return result;
+  }
+
+  /** delete media files
+   * @param {string[]} names
+   */
+  async deleteMedia(...names) {
+    const db = await this.dbPromise;
+    const tx = db.transaction(["media", "saved"], "readwrite");
+    const mst = tx.objectStore("media");
+    for await (const cursor of mst.iterate()) {
+      if (
+        cursor &&
+        cursor.key[0] == this.designName &&
+        names.includes(cursor.key[1])
+      ) {
+        cursor.delete();
+      }
+    }
+    const cursor = await tx.objectStore("saved").openCursor(this.designName);
+    if (cursor) {
+      cursor.delete();
+    }
+    await tx.done;
   }
 
   /** Listen for database update

@@ -36,21 +36,26 @@ export class TimerHandler extends Handler {
     `;
   }
 
-  /** @param {RxJs.Subject} stop$ */
-  configure(stop$) {
-    const timer = this.nearestParent(Method)?.timer(this.TimerName.value);
+  /** @param {RxJs.Subject} _stop$ */
+  configure(_stop$) {
+    const method = this.method;
+    const timerName = this.TimerName.value;
+    // there could be multiple timers active at once
+    const streamName = `timer-${timerName}`;
+    // only create it once
+    if (method.streams[streamName]) return;
+
+    const timer = method.timer(timerName);
     if (!timer) return;
+
     const delayTime = 1000 * timer.Interval.valueAsNumber;
-    timer.subject$
-      .pipe(
-        RxJs.switchMap((event) =>
-          event.type == "cancel"
-            ? RxJs.EMPTY
-            : RxJs.of(event).pipe(RxJs.delay(delayTime))
-        ),
-        RxJs.takeUntil(stop$)
+    method.streams[streamName] = timer.subject$.pipe(
+      RxJs.switchMap((event) =>
+        event.type == "cancel"
+          ? RxJs.EMPTY
+          : RxJs.of(event).pipe(RxJs.delay(delayTime))
       )
-      .subscribe((e) => this.respond(e));
+    );
   }
 }
 TreeBase.register(TimerHandler, "TimerHandler");

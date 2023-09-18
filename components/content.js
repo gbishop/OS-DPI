@@ -112,6 +112,39 @@ export class Content extends DesignerPanel {
 
   lastFocused = this.id;
 
+  /** Delete the media files that are checked */
+  async deleteSelected() {
+    // list the names that are checked
+    const toDelete = [
+      ...document.querySelectorAll(
+        "#ContentMedia input[type=checkbox]:checked"
+      ),
+    ].map((element) => {
+      // clear the checks as we go
+      const checkbox = /** @type{HTMLInputElement} */ (element);
+      checkbox.checked = false;
+      return checkbox.name;
+    });
+    const selectAll = /** @type {HTMLInputElement} */ (
+      document.getElementById("ContentSelectAll")
+    );
+    if (selectAll) selectAll.checked = false;
+    // delete them
+    await pleaseWait(db.deleteMedia(...toDelete));
+    // refresh the page
+    Globals.state.update();
+  }
+
+  /** Check or uncheck all the media file checkboxes */
+  selectAll({ target }) {
+    for (const element of document.querySelectorAll(
+      '#ContentMedia input[type="checkbox"]'
+    )) {
+      const checkbox = /** @type {HTMLInputElement} */ (element);
+      checkbox.checked = target.checked;
+    }
+  }
+
   settings() {
     const data = Globals.data;
     return html`<div class="content" id=${this.id}>
@@ -121,7 +154,16 @@ export class Content extends DesignerPanel {
         ${String(data.allFields).replaceAll(",", ", ")}
       </p>
       <h2>Media files</h2>
-      <ol style="column-count: 3">
+      <button onclick=${this.deleteSelected}>Delete checked</button>
+      <label
+        ><input
+          type="checkbox"
+          name="Select all"
+          id="ContentSelectAll"
+          oninput=${this.selectAll}
+        />Select All</label
+      >
+      <ol id="ContentMedia" style="column-count: 3">
         ${(/** @type {HTMLElement} */ comment) => {
           /* I'm experimenting here. db.listImages() is asynchronous but I don't want
            * to convert this entire application to the async version of uhtml. Can I
@@ -133,7 +175,12 @@ export class Content extends DesignerPanel {
            * the comment node in the output. It seems to work, is it safe?
            */
           db.listMedia().then((names) => {
-            const list = names.map((name) => html`<li>${name}</li>`);
+            const list = names.map(
+              (name) =>
+                html`<li>
+                  <label><input type="checkbox" name=${name} />${name}</label>
+                </li>`
+            );
             if (comment.parentNode)
               render(comment.parentNode, html`${comment}${list}`);
           });

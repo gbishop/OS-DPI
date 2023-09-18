@@ -7,13 +7,11 @@ import defaultPatterns from "./defaultPatterns";
 import { DesignerPanel } from "components/designer";
 import { toggleIndicator } from "app/components/helpers";
 
-/** @typedef {HTMLButtonElement | Group} Target */
-
 /** @param {Target} target
- * @param {string} value */
-export function cueTarget(target, value) {
+ * @param {string} defaultValue */
+export function cueTarget(target, defaultValue) {
   if (target instanceof HTMLButtonElement) {
-    target.setAttribute("cue", value);
+    target.setAttribute("cue", defaultValue);
     const video = target.querySelector("video");
     if (video && !video.hasAttribute("autoplay")) {
       if (video.hasAttribute("muted")) video.muted = true;
@@ -26,8 +24,8 @@ export function cueTarget(target, value) {
           });
       }
     }
-  } else {
-    target.cue(value);
+  } else if (target instanceof Group) {
+    target.cue();
   }
 }
 
@@ -54,11 +52,11 @@ export class Group {
   constructor(members, props) {
     /** @type {Target[]} */
     this.members = members;
-    this.groupProps = props;
+    this.access = props;
   }
 
   get length() {
-    return this.members.length * +this.groupProps.Cycles;
+    return this.members.length * +this.access.Cycles;
   }
 
   /** @param {Number} index */
@@ -70,12 +68,32 @@ export class Group {
     }
   }
 
-  /** @param {string} _ */
-  cue(_) {
-    // console.log("cue group", this.members);
-    for (const member of this.members) {
-      cueTarget(member, this.groupProps.Cue);
+  /** @param {string} value */
+  cue(value = "") {
+    if (!value) {
+      value = this.access.Cue;
     }
+    //    console.log("cue group", this);
+    for (const member of this.members) {
+      if (member instanceof HTMLButtonElement) cueTarget(member, value);
+      else if (member instanceof Group) member.cue(value);
+    }
+  }
+
+  /** Test if this group contains a button return the top-level index if so, -1 if not
+   * @param {HTMLButtonElement} button
+   * @returns {number}
+   */
+  contains(button) {
+    for (let i = 0; i < this.members.length; i++) {
+      const member = this.members[i];
+      if (
+        member === button ||
+        (member instanceof Group && member.contains(button) >= 0)
+      )
+        return i;
+    }
+    return -1;
   }
 }
 
@@ -117,6 +135,33 @@ export class PatternList extends DesignerPanel {
       this.children.find((child) => child.Active.value) || this.children[0]
     );
   }
+
+  get patternMap() {
+    /** @type {[string,string][]} */
+    const entries = this.children.map((child) => [
+      child.Key.value,
+      child.Name.value,
+    ]);
+    entries.unshift(["DefaultPattern", "Default Pattern"]);
+    entries.unshift(["NullPattern", "No Pattern"]);
+    return new Map(entries);
+  }
+
+  /**
+   * return the pattern given its key
+   * @param {string} key
+   */
+  patternFromKey(key) {
+    let result;
+    if (key === "NullPattern") {
+      return nullPatternManager;
+    }
+    result = this.children.find((pattern) => pattern.Key.value == key);
+    if (!result) {
+      result = this.activePattern;
+    }
+    return result;
+  }
 }
 TreeBase.register(PatternList, "PatternList");
 
@@ -139,24 +184,13 @@ export class PatternManager extends PatternBase {
 
   // props
   Cycles = new Props.Integer(2, { min: 1 });
-  Cue = new Props.Select([], { defaultValue: "DefaultCue" });
+  Cue = new Props.Cue({ defaultValue: "DefaultCue" });
   Name = new Props.String("a pattern");
   Key = new Props.UID();
-  Active = new Props.OneOfGroup(false, { name: "pattern-active" });
-
-  // settings() {
-  //   const { Cycles, Cue, Name } = this;
-  //   return html`
-  //     <fieldset class=${this.className}>
-  //       <legend>${Name.value}</legend>
-  //       ${Name.input()} ${Cycles.input()} ${Cue.input(Globals.cues.cueMap)}
-  //       <details>
-  //         <summary>Details</summary>
-  //         ${this.orderedChildren()}
-  //       </details>
-  //     </fieldset>
-  //   `;
-  // }
+  Active = new Props.OneOfGroup(false, {
+    name: "pattern-active",
+    label: "Default",
+  });
 
   settingsSummary() {
     const { Name, Active } = this;
@@ -169,8 +203,8 @@ export class PatternManager extends PatternBase {
     const { Cycles, Cue, Name, Active } = this;
     return html`
       <div>
-        ${Name.input()} ${Active.input()} ${Cycles.input()}
-        ${Cue.input(Globals.cues.cueMap)} ${this.orderedChildren()}
+        ${Name.input()} ${Active.input()} ${Cycles.input()} ${Cue.input()}
+        ${this.orderedChildren()}
       </div>
     `;
   }
@@ -225,9 +259,9 @@ export class PatternManager extends PatternBase {
       members = buttons;
     }
     this.targets = new Group(members, this.props);
+    // console.log("refresh", this.targets);
     this.stack = [{ group: this.targets, index: -1 }];
     this.cue();
-    // console.log("refresh", this);
   }
 
   /**
@@ -257,8 +291,31 @@ export class PatternManager extends PatternBase {
     this.cue();
   }
 
-  activate() {
-    // console.log("activate");
+  /** @param {EventLike} event */
+  activate(event) {
+    const target = event.target;
+    // console.log("activate", event);
+    if (target) {
+      // adjust the stack to accomodate the target
+      while (true) {
+        const top = this.stack[0];
+        const newIndex = top.group.members.indexOf(target);
+        if (newIndex >= 0) {
+          top.index = newIndex;
+          // console.log("set index", top.index);
+          break;
+        }
+        if (this.stack.length == 1) {
+          top.index = 0;
+          // console.log("not found");
+          break;
+        } else {
+          this.stack.shift();
+          // console.log("pop stack");
+        }
+      }
+    }
+    //    console.log("stack", this.stack);
     let current = this.current;
     if (!current) return;
     if (current instanceof Group) {
@@ -266,15 +323,18 @@ export class PatternManager extends PatternBase {
       while (current.length == 1 && current.members[0] instanceof Group) {
         current = current.members[0];
       }
-      this.stack.unshift({ group: current, index: 0 });
+      // I need to work out the index here. Should be the group under the pointer
+      this.stack.unshift({ group: current, index: event?.groupIndex || 0 });
       // console.log("push stack", this.current, this.stack);
-    } else if (current.hasAttribute("click")) {
-      current.click();
-    } else {
-      const name = current.dataset.ComponentName;
-      // console.log("activate button", current);
-      // console.log("applyRules", name, current.access);
-      Globals.actions.applyRules(name || "", "press", current.dataset);
+    } else if (current instanceof HTMLButtonElement) {
+      if (current.hasAttribute("click")) {
+        current.click();
+      } else {
+        const name = current.dataset.ComponentName;
+        // console.log("activate button", current);
+        // console.log("applyRules", name, current.access);
+        Globals.actions.applyRules(name || "", "press", current.dataset);
+      }
     }
     this.cue();
   }
@@ -287,19 +347,90 @@ export class PatternManager extends PatternBase {
   cue() {
     this.clearCue();
     const current = this.current;
-    // console.log("cue current", current);
+    //    console.log("cue current", current);
     if (!current) return;
     this.cued = true;
     cueTarget(current, this.Cue.value);
   }
+
+  /** Return the access info for current
+   */
+  getCurrentAccess() {
+    const current = this.current;
+    if (!current) return {};
+    if (current instanceof HTMLButtonElement) {
+      return current.dataset;
+    } else if (current instanceof Group) {
+      return { ...current.access };
+    }
+    return {};
+  }
+
+  /** Map the event target to a group
+   * @param {EventLike} event
+   * @returns {EventLike}
+   */
+  remapEventTarget(event) {
+    event = {
+      type: event.type,
+      target: event.target,
+      timeStamp: event.timeStamp,
+    };
+    if (event.target instanceof HTMLButtonElement) {
+      event.access = event.target.dataset;
+    }
+    if (!event.target) return event;
+    // console.log("ret", this.stack);
+    event.originalTarget = event.target;
+    for (let level = 0; level < this.stack.length; level++) {
+      const group = this.stack[level].group;
+      const members = group.members;
+      // first scan to see if the element is top level in this group
+      let index = members.indexOf(event.target);
+      if (index >= 0) {
+        if (level === 0) {
+          // console.log("A", event);
+          return event;
+        } else {
+          // console.log("B", index);
+          return {
+            ...event,
+            target: group,
+            groupIndex: index,
+            access: { ...event.access, ...group.access },
+          };
+        }
+      } else if (event.target instanceof HTMLButtonElement) {
+        // otherwise check to see if any group members contain it
+        for (index = 0; index < members.length; index++) {
+          const member = members[index];
+          if (member instanceof Group) {
+            let i = member.contains(event.target);
+            if (i >= 0) {
+              // console.log("C", i);
+              return {
+                ...event,
+                target: member,
+                groupIndex: i,
+                access: { ...event.access, ...member.access },
+              };
+            }
+          }
+        }
+      }
+    }
+    return event;
+  }
 }
 PatternBase.register(PatternManager, "PatternManager");
+
+const nullPatternManager = TreeBase.create(PatternManager);
 
 export class PatternGroup extends PatternBase {
   // props
   Name = new Props.String("");
   Cycles = new Props.Integer(2, { min: 1 });
-  Cue = new Props.Select([], { defaultValue: "DefaultCue" });
+  Cue = new Props.Cue({ defaultValue: "DefaultCue" });
 
   allowedChildren = ["PatternGroup", "PatternSelector"];
 
@@ -307,8 +438,7 @@ export class PatternGroup extends PatternBase {
     const { Name, Cycles, Cue } = this;
     return html`<fieldset class=${this.className}>
       <legend>Group: ${Name.value}</legend>
-      ${Name.input()} ${Cycles.input()} ${Cue.input(Globals.cues.cueMap)}
-      ${this.orderedChildren()}
+      ${Name.input()} ${Cycles.input()} ${Cue.input()} ${this.orderedChildren()}
     </fieldset>`;
   }
 
@@ -353,7 +483,7 @@ class PatternSelector extends PatternBase {
   apply(input) {
     return this.children.reduce(
       (previous, operator) => operator.apply(previous),
-      input
+      input,
     );
   }
 }
@@ -376,12 +506,12 @@ class Filter extends PatternBase {
       return input
         .map(
           (/** @type {Group} */ group) =>
-            new Group(this.apply(group.members), group.groupProps)
+            new Group(this.apply(group.members), group.access),
         )
         .filter((target) => target.length > 0);
     } else {
       return input.filter((/** @type {HTMLButtonElement} */ button) =>
-        this.Filter.eval(button.dataset)
+        this.Filter.eval(button.dataset),
       );
     }
   }
@@ -410,13 +540,13 @@ class OrderBy extends PatternBase {
       return input
         .map(
           (/** @type {Group} */ group) =>
-            new Group(this.apply(group.members), group.groupProps)
+            new Group(this.apply(group.members), group.access),
         )
         .filter((target) => target.length > 0);
     } else {
       const key = this.OrderBy.value.slice(1);
       return [.../** @type {HTMLButtonElement[]} */ (input)].sort((a, b) =>
-        comparator.compare(a.dataset[key] || "", b.dataset[key] || "")
+        comparator.compare(a.dataset[key] || "", b.dataset[key] || ""),
       );
     }
   }
@@ -426,7 +556,7 @@ PatternBase.register(OrderBy, "OrderBy");
 class GroupBy extends PatternBase {
   GroupBy = new Props.Field();
   Name = new Props.String("");
-  Cue = new Props.Select([], { defaultValue: "DefaultCue" });
+  Cue = new Props.Cue({ defaultValue: "DefaultCue" });
   Cycles = new Props.Integer(2);
   settings() {
     const { GroupBy, Name, Cue, Cycles } = this;
@@ -439,8 +569,7 @@ class GroupBy extends PatternBase {
       ]),
     ]);
     return html`<div class=${this.className}>
-      ${GroupBy.input(fields)} ${Name.input()} ${Cue.input(Globals.cues.cueMap)}
-      ${Cycles.input()}
+      ${GroupBy.input(fields)} ${Name.input()} ${Cue.input()} ${Cycles.input()}
     </div>`;
   }
   /**
@@ -454,11 +583,11 @@ class GroupBy extends PatternBase {
       return input
         .map(
           (/** @type {Group} */ group) =>
-            new Group(this.apply(group.members), group.groupProps)
+            new Group(this.apply(group.members), group.access),
         )
         .filter((target) => target.length > 0);
     } else {
-      const { GroupBy, ...props } = this.props;
+      const { GroupBy, Name, ...props } = this.props;
       const key = GroupBy.slice(1);
       const result = [];
       const groupMap = new Map();
@@ -470,7 +599,11 @@ class GroupBy extends PatternBase {
         let group = groupMap.get(k);
         if (!group) {
           // no group, create one and add it to the map and the result
-          group = new Group([button], props);
+          group = new Group([button], {
+            GroupName: Name.replace(GroupBy, k),
+            [key]: k,
+            ...props,
+          });
           groupMap.set(k, group);
           result.push(group);
         } else {
