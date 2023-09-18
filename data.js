@@ -36,6 +36,8 @@ export class Data {
   constructor(rows) {
     this.contentRows = (Array.isArray(rows) && rows) || [];
     this.allrows = this.contentRows;
+    /** @type {string[]} */
+    this.allFields = [];
     this.updateAllFields();
     this.loadTime = new Date();
   }
