@@ -7,13 +7,16 @@ export default {
       props: {
         Name: "2 switch",
         Key: "idl6e14meiwzjdcquhgk9",
+        KeyDebounce: 0.1,
+        PointerEnterDebounce: 0,
+        PointerDownDebounce: 0,
         Active: "false",
-        Pattern: "idl83jjo4z0ibii6748fx",
+        Pattern: "DefaultPattern",
       },
       children: [
         {
           className: "KeyHandler",
-          props: { Signal: "keyup", Debounce: "0.1" },
+          props: { Signal: "keyup" },
           children: [
             {
               className: "HandlerKeyCondition",
@@ -34,7 +37,7 @@ export default {
         },
         {
           className: "KeyHandler",
-          props: { Signal: "keyup", Debounce: "0.1" },
+          props: { Signal: "keyup" },
           children: [
             {
               className: "HandlerKeyCondition",
@@ -60,13 +63,16 @@ export default {
       props: {
         Name: "Pointer dwell",
         Key: "idl6wcdmjjkb48xmbxscn",
+        KeyDebounce: 0,
+        PointerEnterDebounce: 0.1,
+        PointerDownDebounce: 0.1,
         Active: "false",
-        Pattern: "idl84lw7z6km7dgni3tn",
+        Pattern: "idl83jg7qtj9wmyggtxf",
       },
       children: [
         {
           className: "PointerHandler",
-          props: { Signal: "pointerover", Debounce: "0.1" },
+          props: { Signal: "pointerover" },
           children: [
             {
               className: "ResponderCue",
@@ -85,7 +91,7 @@ export default {
         },
         {
           className: "PointerHandler",
-          props: { Signal: "pointerout", Debounce: "0.1" },
+          props: { Signal: "pointerout" },
           children: [
             {
               className: "ResponderClearCue",
@@ -96,7 +102,7 @@ export default {
         },
         {
           className: "PointerHandler",
-          props: { Signal: "pointerdown", Debounce: "0.1" },
+          props: { Signal: "pointerdown" },
           children: [
             {
               className: "ResponderActivate",
@@ -131,6 +137,9 @@ export default {
       className: "Method",
       props: {
         Name: "Mouse",
+        KeyDebounce: 0,
+        PointerEnterDebounce: 0,
+        PointerDownDebounce: 0,
         Key: "idl84ljjeoebyl94sow87",
         Active: "true",
         Pattern: "idl83jg7qtj9wmyggtxf",
@@ -138,7 +147,7 @@ export default {
       children: [
         {
           className: "PointerHandler",
-          props: { Signal: "pointerdown", Debounce: "0.01" },
+          props: { Signal: "pointerdown" },
           children: [
             {
               className: "ResponderActivate",
@@ -149,7 +158,7 @@ export default {
         },
         {
           className: "PointerHandler",
-          props: { Signal: "pointerover", Debounce: "0.1" },
+          props: { Signal: "pointerover" },
           children: [
             {
               className: "ResponderCue",
@@ -160,7 +169,7 @@ export default {
         },
         {
           className: "PointerHandler",
-          props: { Signal: "pointerout", Debounce: "0.1" },
+          props: { Signal: "pointerout" },
           children: [
             {
               className: "ResponderClearCue",

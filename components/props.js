@@ -96,10 +96,13 @@ export class Prop {
   }
 }
 
-/** @param {string[] | Map<string,string>} arrayOrMap
+/** @param {string[] | Map<string,string> | function():Map<string,string>} arrayOrMap
  * @returns Map<string, string>
  */
 export function toMap(arrayOrMap) {
+  if (arrayOrMap instanceof Function) {
+    return arrayOrMap();
+  }
   if (Array.isArray(arrayOrMap)) {
     return new Map(arrayOrMap.map((item) => [item, item]));
   }
@@ -108,20 +111,19 @@ export function toMap(arrayOrMap) {
 
 export class Select extends Prop {
   /**
-   * @param {string[] | Map<string, string>} choices
+   * @param {string[] | Map<string, string> | function():Map<string,string>} choices
    * @param {PropOptions} options
    */
   constructor(choices = [], options = {}) {
     super(options);
-    /** @type {Map<string, string>} */
-    this.choices = toMap(choices);
+    this.choices = choices;
     this.value = "";
   }
 
   /** @param {Map<string,string> | null} choices */
   input(choices = null) {
     if (!choices) {
-      choices = this.choices;
+      choices = toMap(this.choices);
     }
     this.value = this.value || this.options.defaultValue || "";
     return this.labeled(html`<select
@@ -152,22 +154,41 @@ export class Select extends Prop {
 }
 
 export class Field extends Select {
-  /** @param {Map<string,string> | null} choices */
-  input(choices = null) {
-    if (!choices) {
-      choices = toMap([...Globals.data.allFields, "#ComponentName"].sort());
-    }
-    return super.input(choices);
+  /**
+   * @param {PropOptions} options
+   */
+  constructor(options = {}) {
+    super(
+      () => toMap([...Globals.data.allFields, "#ComponentName"].sort()),
+      options
+    );
   }
 }
 
 export class State extends Select {
-  /** @param {Map<string,string> | null} choices */
-  input(choices = null) {
-    if (!choices) {
-      choices = toMap([...Globals.tree.allStates()]);
-    }
-    return super.input(choices);
+  /**
+   * @param {PropOptions} options
+   */
+  constructor(options = {}) {
+    super(() => toMap([...Globals.tree.allStates()]), options);
+  }
+}
+
+export class Cue extends Select {
+  /**
+   * @param {PropOptions} options
+   */
+  constructor(options = {}) {
+    super(() => Globals.cues.cueMap, options);
+  }
+}
+
+export class Pattern extends Select {
+  /**
+   * @param {PropOptions} options
+   */
+  constructor(options = {}) {
+    super(() => Globals.patterns.patternMap, options);
   }
 }
 

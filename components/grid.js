@@ -271,7 +271,7 @@ class Grid extends TreeBase {
 TreeBase.register(Grid, "Grid");
 
 export class GridFilter extends TreeBase {
-  field = new Props.Field([], { hiddenLabel: true });
+  field = new Props.Field({ hiddenLabel: true });
   operator = new Props.Select(Object.keys(comparators), { hiddenLabel: true });
   value = new Props.String("", { hiddenLabel: true });
 }

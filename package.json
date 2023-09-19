@@ -6,7 +6,8 @@
     "start": "vite --port 8080 --host 0.0.0.0",
     "build": "vite build",
     "deploy": "./deploy.sh",
-    "publish": "./publish.sh"
+    "publish": "./publish.sh",
+    "preview": "vite preview"
   },
   "author": "",
   "license": "ISC",
@@ -19,7 +20,6 @@
     "fflate": "^0.8.0",
     "idb": "^7.0.2",
     "mergerino": "^0.4.0",
-    "proxy-pants": "^0.8.3",
     "rxjs": "^7.5.6",
     "sheetrock": "^1.2.0",
     "stacktrace-js": "^2.0.2",

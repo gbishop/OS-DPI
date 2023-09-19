@@ -122,3 +122,19 @@
 /** @typedef {import("components/img-db.js").imgFromDb} ImgDb */
 
 /** @typedef {Event & {access: Object}} WrappedEvent */
+
+/**
+ * @typedef {EventTarget | import("components/access/pattern/index.js").Group | null} Target
+ */
+
+/** @typedef {{target: Target, index: number}} TargetWithIndex */
+
+/**
+ * @typedef {Object} EventLike
+ * @property {string} type
+ * @property {Target} target
+ * @property {number} timeStamp
+ * @property {Object} [access]
+ * @property {Object} [originalTarget]
+ * @property {number} [groupIndex]
+ */

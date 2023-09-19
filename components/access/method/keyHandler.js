@@ -1,8 +1,7 @@
 import { TreeBase } from "components/treebase";
 import * as Props from "components/props";
 import { html } from "uhtml";
-import { EventWrap } from "../index";
-import { Handler } from "./index";
+import { Handler, HandlerKeyCondition } from "./index";
 import * as RxJs from "rxjs";
 
 const keySignals = new Map([
@@ -18,22 +17,23 @@ export class KeyHandler extends Handler {
   ];
 
   Signal = new Props.Select(keySignals);
-  Debounce = new Props.Float(0.1);
 
   settings() {
     const { conditions, responses, keys } = this;
-    const { Signal, Debounce } = this;
+    const { Signal } = this;
     return html`
       <fieldset class="Handler">
         <legend>Key Handler</legend>
-        ${Signal.input()} ${Debounce.input()}
+        ${Signal.input()}
         <fieldset class="Keys">
           <legend>Keys</legend>
           ${this.unorderedChildren(keys)}
         </fieldset>
         <fieldset class="Conditions">
           <legend>Conditions</legend>
-          ${this.unorderedChildren(conditions)}
+          ${this.unorderedChildren(
+            conditions.filter((c) => !(c instanceof HandlerKeyCondition))
+          )}
         </fieldset>
         <fieldset class="Responses">
           <legend>Responses</legend>
@@ -43,10 +43,16 @@ export class KeyHandler extends Handler {
     `;
   }
 
-  /** @param {RxJs.Subject} stop$ */
-  configure(stop$) {
+  /** @param {RxJs.Subject} _stop$ */
+  configure(_stop$) {
+    const method = this.method;
+    const streamName = "key";
+
+    // only create it once
+    if (method.streams[streamName]) return;
+
     // construct debounced key event stream
-    const debounceInterval = this.Debounce.valueAsNumber * 1000;
+    const debounceInterval = method.KeyDebounce.valueAsNumber * 1000;
     const keyDown$ = /** @type RxJs.Observable<KeyboardEvent> */ (
       RxJs.fromEvent(document, "keydown")
     );
@@ -85,37 +91,50 @@ export class KeyHandler extends Handler {
             // only output when the type changes
             RxJs.distinctUntilKeyChanged("type")
           )
-        )
+        ),
+        RxJs.map((e) => {
+          // add context info to event for use in the conditions and response
+          /** @type {EventLike} */
+          let kw = {
+            type: e.type,
+            target: null,
+            timeStamp: e.timeStamp,
+            access: {
+              key: e.key,
+              altKey: e.altKey,
+              ctrlKey: e.ctrlKey,
+              metaKey: e.metaKey,
+              shiftKey: e.shiftKey,
+              eventType: e.type,
+              ...method.pattern.getCurrentAccess(),
+            },
+          };
+          return kw;
+        })
       )
     );
-    let stream$;
-    const keys = this.keys.map((key) => key.Key.value);
-    stream$ = keyEvents$.pipe(
-      RxJs.filter(
-        (e) =>
-          e.type == this.Signal.value &&
-          (keys.length == 0 || keys.indexOf(e.key) >= 0)
-      ),
-      RxJs.map((e) => {
-        // add context info to event for use in the conditions and response
-        const kw = EventWrap(e);
-        kw.access = {
-          key: e.key,
-          altKey: e.altKey,
-          ctrlKey: e.ctrlKey,
-          metaKey: e.metaKey,
-          shiftKey: e.shiftKey,
-          eventType: e.type,
-        };
-        return kw;
-      })
+    method.streams[streamName] = keyEvents$;
+  }
+
+  /**
+   * Test the conditions for this handler
+   * @param {EventLike} event
+   * @returns {boolean}
+   */
+  test(event) {
+    const signal = this.Signal.value;
+
+    // key conditions are OR'ed together
+    // Other conditions are AND'ed
+    const keys = this.keys;
+    const conditions = this.conditions.filter(
+      (condition) => !(condition instanceof HandlerKeyCondition)
     );
-    for (const condition of this.conditions) {
-      stream$ = stream$.pipe(
-        RxJs.filter((e) => condition.Condition.eval(e.access))
-      );
-    }
-    stream$.pipe(RxJs.takeUntil(stop$)).subscribe((e) => this.respond(e));
+    return (
+      event.type == signal &&
+      (keys.length == 0 || keys.some((key) => key.eval(event.access))) &&
+      conditions.every((condition) => condition.eval(event.access))
+    );
   }
 }
 TreeBase.register(KeyHandler, "KeyHandler");

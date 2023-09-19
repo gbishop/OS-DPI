@@ -376,7 +376,7 @@ export class TreeBase {
    * Return the nearest parent of the given type
    * @template T
    * @param {new() => T} type
-   * @returns {T | null}
+   * @returns {T}
    * */
   nearestParent(type) {
     let p = this.parent;
@@ -386,7 +386,7 @@ export class TreeBase {
       }
       p = p.parent;
     }
-    return null;
+    throw new Error("No such parent");
   }
 
   /**

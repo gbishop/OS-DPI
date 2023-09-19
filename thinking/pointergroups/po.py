@@ -1,9 +1,11 @@
 # experiment with the PO truthtable algorithm
+# failed
 
 from collections import namedtuple
 
-Input = namedtuple('Input', ['into', 'delayed'])
-State = namedtuple('State', ['on', 'pin', 'pout', 'emit'])
+Input = namedtuple("Input", ["into", "delayed"])
+State = namedtuple("State", ["on", "pin", "pout", "emit"])
+
 
 def step(inp, old):
     on, pin, pout, emit = old
@@ -11,7 +13,7 @@ def step(inp, old):
     if inp.into and not inp.delayed and not old.on:
         pin = True
         pout = False
-        
+
     if not inp.into and not inp.delayed and old.on:
         pout = True
         pin = False
@@ -33,4 +35,3 @@ def step(inp, old):
         pout = False
 
     return State(on, pin, pout, emit)
-

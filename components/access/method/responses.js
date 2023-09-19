@@ -6,46 +6,34 @@ import { cueTarget, clearCues } from "../pattern";
 
 class ResponderNext extends HandlerResponse {
   respond() {
-    Globals.patterns.activePattern.next();
+    const method = this.nearestParent(Method);
+    if (!method) return;
+    method.pattern.next();
   }
 }
 TreeBase.register(ResponderNext, "ResponderNext");
 
 class ResponderActivate extends HandlerResponse {
-  /** @param {Event} event */
+  /** @param {EventLike} event */
   respond(event) {
-    if (Globals.patterns.activePattern.cued) {
-      Globals.patterns.activePattern.activate();
-    } else if (
-      (event instanceof PointerEvent || event.type == "timer") &&
-      event.target instanceof HTMLButtonElement
-    ) {
-      const button = event.target;
-      const name = button.dataset.ComponentName;
-      if (button.hasAttribute("click")) {
-        button.click();
-      } else if (name) {
-        Globals.actions.applyRules(name, "press", button.dataset);
-      }
-    }
+    const method = this.nearestParent(Method);
+    if (!method) return;
+    method.pattern.activate(event);
   }
 }
 TreeBase.register(ResponderActivate, "ResponderActivate");
 
 class ResponderCue extends HandlerResponse {
-  Cue = new Props.Select();
+  Cue = new Props.Cue();
 
   subTemplate() {
-    return this.Cue.input(Globals.cues.cueMap);
+    return this.Cue.input();
   }
 
-  /** @param {Event & { access: Object }} event */
+  /** @param {EventLike} event */
   respond(event) {
-    if (event.target instanceof HTMLButtonElement) {
-      clearCues();
-      const button = event.target;
-      cueTarget(button, this.Cue.value);
-    }
+    //    console.log("cue", event);
+    cueTarget(event.target, this.Cue.value);
   }
 }
 TreeBase.register(ResponderCue, "ResponderCue");
@@ -58,7 +46,7 @@ class ResponderClearCue extends HandlerResponse {
 TreeBase.register(ResponderClearCue, "ResponderClearCue");
 
 class ResponderEmit extends HandlerResponse {
-  /** @param {Event & { access: Object }} event */
+  /** @param {EventLike} event */
   respond(event) {
     const method = this.nearestParent(Method);
     if (!method) return;
@@ -68,17 +56,16 @@ class ResponderEmit extends HandlerResponse {
 TreeBase.register(ResponderEmit, "ResponderEmit");
 
 class ResponderStartTimer extends HandlerResponse {
-  TimerName = new Props.Select([], {
+  TimerName = new Props.Select(() => this.nearestParent(Method).timerNames, {
     placeholder: "Choose a timer",
     hiddenLabel: true,
   });
 
   subTemplate() {
-    const timerNames = this.nearestParent(Method)?.timerNames;
-    return this.TimerName.input(timerNames);
+    return this.TimerName.input();
   }
 
-  /** @param {Event & { access: Object }} event */
+  /** @param {EventLike} event */
   respond(event) {
     const timer = this.nearestParent(Method)?.timer(this.TimerName.value);
     if (!timer) return;

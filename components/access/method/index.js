@@ -3,7 +3,6 @@ import { TreeBase, TreeBaseSwitchable } from "components/treebase";
 import * as Props from "components/props";
 import Globals from "app/globals";
 import * as RxJs from "rxjs";
-import { EventWrap } from "../index";
 // make sure the classes are registered
 import defaultMethods from "./defaultMethods";
 import { DesignerPanel } from "components/designer";
@@ -53,11 +52,71 @@ export class MethodChooser extends DesignerPanel {
       .filter((child) => child.Active.value)
       .forEach((child) => child.refresh());
   }
+
+  /**
+   * Upgrade Methods
+   * @param {any} obj
+   * @returns {Object}
+   */
+  static upgrade(obj) {
+    // Debounce moves up to the method from the individual handlers
+    // Take the maximum of all times for each category
+    if (obj.className != "MethodChooser") return obj;
+
+    for (const method of obj.children) {
+      if (method.className != "Method") {
+        throw new Error("Invalid Method upgrade");
+      }
+      if (!("KeyDebounce" in method.props)) {
+        let keyDebounce = 0;
+        let enterDebounce = 0;
+        let downDebounce = 0;
+        for (const handler of method.children) {
+          if (["PointerHandler", "KeyHandler"].includes(handler.className)) {
+            const debounce = parseFloat(handler.props.Debounce || "0");
+            const signal = handler.props.Signal;
+            if (signal.startsWith("key")) {
+              keyDebounce = Math.max(keyDebounce, debounce);
+            } else if (["pointerover", "pointerout"].includes(signal)) {
+              enterDebounce = Math.max(enterDebounce, debounce);
+            } else if (["pointerdown", "pointerup"].includes(signal)) {
+              downDebounce = Math.max(downDebounce, debounce);
+            }
+          }
+        }
+        method.props.KeyDebounce = keyDebounce.toString();
+        method.props.PointerEnterDebounce = enterDebounce.toString();
+        method.props.PointerDownDebounce = downDebounce.toString();
+      }
+      if (!("Pattern" in method.props)) {
+        /* guess the best pattern to use
+         * Prior to this upgrade PointerHandlers ignored the pattern. Now they don't.
+         * To avoid breaking Methods that using PointerHandlers I'm defaulting them
+         * to the NullPattern. This won't fix everything for sure but it shoudl help.
+         */
+        let pattern = "DefaultPattern";
+        if (
+          method.children.some(
+            (/** @type {Object} */ handler) =>
+              handler.className == "PointerHandler",
+          )
+        ) {
+          pattern = "NullPattern";
+        }
+        method.props.Pattern = pattern;
+      }
+    }
+    return obj;
+  }
 }
 TreeBase.register(MethodChooser, "MethodChooser");
 
 export class Method extends TreeBase {
   Name = new Props.String("New method");
+  Pattern = new Props.Pattern({ defaultValue: "DefaultPattern" });
+  KeyDebounce = new Props.Float(0, { label: "Key down/up" });
+  PointerEnterDebounce = new Props.Float(0, { label: "Pointer enter/leave" });
+  PointerDownDebounce = new Props.Float(0, { label: "Pointer down/up" });
   Key = new Props.UID();
   Active = new Props.Boolean(false);
 
@@ -71,6 +130,17 @@ export class Method extends TreeBase {
 
   open = false;
 
+  // Event streams from the devices
+  /** @type {Object<string, RxJs.Observable<EventLike>>} */
+  streams = {};
+
+  /** clear the pointerStream on any changes from below
+   * @param {TreeBase} _start
+   */
+  onUpdate(_start) {
+    super.onUpdate(_start);
+  }
+
   /** @type {(Handler | Timer)[]} */
   children = [];
 
@@ -79,7 +149,7 @@ export class Method extends TreeBase {
    * */
   get timers() {
     return new Map(
-      this.filterChildren(Timer).map((child) => [child.Key.value, child])
+      this.filterChildren(Timer).map((child) => [child.Key.value, child]),
     );
   }
 
@@ -89,7 +159,7 @@ export class Method extends TreeBase {
       this.filterChildren(Timer).map((timer) => [
         timer.Key.value,
         timer.Name.value,
-      ])
+      ]),
     );
   }
 
@@ -121,10 +191,31 @@ export class Method extends TreeBase {
   }
 
   settingsDetails() {
-    const { Name, Active } = this;
+    const {
+      Name,
+      Pattern,
+      Active,
+      KeyDebounce,
+      PointerEnterDebounce,
+      PointerDownDebounce,
+    } = this;
     const timers = [...this.timers.values()];
+    // determine which debounce controls we should display
+    const handlerClasses = new Set(
+      this.handlers.map((handler) => handler.className),
+    );
+    const keyDebounce = handlerClasses.has("KeyHandler")
+      ? [KeyDebounce.input()]
+      : [];
+    const pointerDebounce = handlerClasses.has("PointerHandler")
+      ? [PointerDownDebounce.input(), PointerEnterDebounce.input()]
+      : [];
     return html`<div>
-      ${Name.input()} ${Active.input()}
+      ${Name.input()} ${Active.input()} ${Pattern.input()}
+      <fieldset>
+        <legend>Debounce</legend>
+        ${keyDebounce} ${pointerDebounce}
+      </fieldset>
       ${timers.length > 0
         ? html`<fieldset>
             <legend>Timers</legend>
@@ -147,15 +238,32 @@ export class Method extends TreeBase {
    * */
   configure(stop$) {
     if (this.Active.value) {
+      this.streams = {};
       for (const child of this.handlers) {
         child.configure(stop$);
+      }
+      const streams = Object.values(this.streams);
+      if (streams.length > 0) {
+        const stream$ = RxJs.merge(...streams).pipe(RxJs.takeUntil(stop$));
+        stream$.subscribe((e) => {
+          for (const handler of this.handlers) {
+            if (handler.test(e)) {
+              handler.respond(e);
+              return;
+            }
+          }
+        });
       }
     }
   }
 
+  get pattern() {
+    return Globals.patterns.patternFromKey(this.Pattern.value);
+  }
+
   /** Refresh the pattern and other state on redraw */
   refresh() {
-    Globals.patterns.activePattern.refresh();
+    this.pattern.refresh();
   }
 }
 TreeBase.register(Method, "Method");
@@ -165,7 +273,7 @@ class Timer extends TreeBase {
   Name = new Props.String("timer", { hiddenLabel: true });
   Key = new Props.UID();
 
-  /** @type {RxJs.Subject<WrappedEvent>} */
+  /** @type {RxJs.Subject<EventLike>} */
   subject$ = new RxJs.Subject();
 
   settings() {
@@ -177,19 +285,18 @@ class Timer extends TreeBase {
     </div>`;
   }
 
-  /** @param {Event & { access: {}}} event */
+  /** @param {EventLike} event */
   start(event) {
-    const fakeEvent = /** @type {Event} */ ({
+    const fakeEvent = /** @type {EventLike} */ ({
       type: "timer",
       target: event.target,
+      access: event.access,
     });
-    const tevent = EventWrap(fakeEvent);
-    tevent.access = event.access;
-    this.subject$.next(tevent);
+    this.subject$.next(fakeEvent);
   }
 
   cancel() {
-    const event = EventWrap(new Event("cancel"));
+    const event = { type: "cancel", target: null, timeStamp: 0 };
     this.subject$.next(event);
   }
 }
@@ -199,6 +306,14 @@ TreeBase.register(Timer, "Timer");
 export class Handler extends TreeBase {
   /** @type {(HandlerCondition | HandlerKeyCondition | HandlerResponse)[]} */
   children = [];
+
+  /** Return the method containing this Handler */
+  get method() {
+    return /** @type {Method} */ (this.parent);
+  }
+
+  // overridden in the derived classes
+  Signal = new Props.Select();
 
   get conditions() {
     return this.filterChildren(HandlerCondition);
@@ -213,13 +328,25 @@ export class Handler extends TreeBase {
   }
 
   /**
+   * Test the conditions for this handler
+   * @param {EventLike} event
+   * @returns {boolean}
+   */
+  test(event) {
+    return (
+      this.Signal.value == event.type &&
+      this.conditions.every((condition) => condition.eval(event.access))
+    );
+  }
+
+  /**
    * @param {RxJs.Subject} _stop$
    * */
   configure(_stop$) {
     throw new TypeError("Must override configure");
   }
 
-  /** @param {WrappedEvent} event */
+  /** @param {EventLike} event */
   respond(event) {
     // console.log("handler respond", event.type, this.responses);
     const method = this.nearestParent(Method);
@@ -255,12 +382,17 @@ const allKeys = new Map([
   ["ArrowDown", "Down Arrow"],
 ]);
 
-export class HandlerKeyCondition extends TreeBase {
+export class HandlerKeyCondition extends HandlerCondition {
   Key = new Props.Select(allKeys, { hiddenLabel: true });
 
   settings() {
     const { Key } = this;
     return html`<div class="Key">${Key.input()}</div>`;
+  }
+
+  /** @param {Object} context */
+  eval(context) {
+    return this.Key.value == context.key;
   }
 }
 TreeBase.register(HandlerKeyCondition, "HandlerKeyCondition");
@@ -278,7 +410,7 @@ const ResponderTypeMap = new Map([
 export class HandlerResponse extends TreeBaseSwitchable {
   Response = new Props.TypeSelect(ResponderTypeMap, { hiddenLabel: true });
 
-  /** @param {Event & { access: Object }} event */
+  /** @param {EventLike} event */
   respond(event) {
     console.log("no response for", event);
   }
