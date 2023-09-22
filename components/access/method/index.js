@@ -9,6 +9,9 @@ import { DesignerPanel } from "components/designer";
 import "css/method.css";
 import { toggleIndicator } from "app/components/helpers";
 
+// allow tearing down handlers when changing configurations
+const stop$ = new RxJs.Subject();
+
 export class MethodChooser extends DesignerPanel {
   name = new Props.String("Methods");
 
@@ -17,9 +20,6 @@ export class MethodChooser extends DesignerPanel {
   children = [];
 
   allowDelete = false;
-
-  // allow tearing down handlers when changing configurations
-  stop$ = new RxJs.Subject();
 
   static tableName = "method";
   static defaultValue = defaultMethods;
@@ -33,12 +33,12 @@ export class MethodChooser extends DesignerPanel {
     // tear down the old configuration if any
     this.stop();
     for (const method of this.children) {
-      method.configure(this.stop$);
+      method.configure(stop$);
     }
   }
 
   stop() {
-    this.stop$.next(1);
+    stop$.next(1);
   }
 
   settings() {
