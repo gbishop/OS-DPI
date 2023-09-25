@@ -370,6 +370,13 @@ export class HandlerCondition extends TreeBase {
   eval(context) {
     return this.Condition.eval(context);
   }
+
+  /** move my parent instead of me.
+   * @param {boolean} up
+   */
+  moveUpDown(up) {
+    this.parent?.moveUpDown(up);
+  }
 }
 TreeBase.register(HandlerCondition, "HandlerCondition");
 
@@ -423,6 +430,13 @@ export class HandlerResponse extends TreeBaseSwitchable {
 
   subTemplate() {
     return this.empty;
+  }
+
+  /** move my parent instead of me.
+   * @param {boolean} up
+   */
+  moveUpDown(up) {
+    this.parent?.moveUpDown(up);
   }
 }
 TreeBase.register(HandlerResponse, "HandlerResponse");

@@ -256,7 +256,7 @@ class Grid extends TreeBase {
                 <td>${filter.operator.input()}</td>
                 <td>${filter.value.input()}</td>
               </tr>
-            `
+            `,
           )}
         </tbody>
       </table>
@@ -274,5 +274,12 @@ export class GridFilter extends TreeBase {
   field = new Props.Field({ hiddenLabel: true });
   operator = new Props.Select(Object.keys(comparators), { hiddenLabel: true });
   value = new Props.String("", { hiddenLabel: true });
+
+  /** move my parent instead of me.
+   * @param {boolean} up
+   */
+  moveUpDown(up) {
+    this.parent?.moveUpDown(up);
+  }
 }
 TreeBase.register(GridFilter, "GridFilter");
