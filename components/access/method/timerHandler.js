@@ -21,7 +21,7 @@ export class TimerHandler extends Handler {
     const { conditions, responses, Signal } = this;
     const timerNames = this.nearestParent(Method)?.timerNames;
     return html`
-      <fieldset class="Handler">
+      <fieldset class="Handler" tabindex="0" id=${this.id}>
         <legend>Timer Handler</legend>
         ${Signal.input()} ${this.TimerName.input(timerNames)}
         <fieldset class="Conditions">
@@ -53,8 +53,8 @@ export class TimerHandler extends Handler {
       RxJs.switchMap((event) =>
         event.type == "cancel"
           ? RxJs.EMPTY
-          : RxJs.of(event).pipe(RxJs.delay(delayTime))
-      )
+          : RxJs.of(event).pipe(RxJs.delay(delayTime)),
+      ),
     );
   }
 }

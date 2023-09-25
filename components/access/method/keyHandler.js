@@ -22,7 +22,7 @@ export class KeyHandler extends Handler {
     const { conditions, responses, keys } = this;
     const { Signal } = this;
     return html`
-      <fieldset class="Handler">
+      <fieldset class="Handler" tabindex="0" id=${this.id}>
         <legend>Key Handler</legend>
         ${Signal.input()}
         <fieldset class="Keys">
@@ -32,7 +32,7 @@ export class KeyHandler extends Handler {
         <fieldset class="Conditions">
           <legend>Conditions</legend>
           ${this.unorderedChildren(
-            conditions.filter((c) => !(c instanceof HandlerKeyCondition))
+            conditions.filter((c) => !(c instanceof HandlerKeyCondition)),
           )}
         </fieldset>
         <fieldset class="Responses">
@@ -89,8 +89,8 @@ export class KeyHandler extends Handler {
             // wait for a key down
             RxJs.skipWhile((e) => e.type != "keydown"),
             // only output when the type changes
-            RxJs.distinctUntilKeyChanged("type")
-          )
+            RxJs.distinctUntilKeyChanged("type"),
+          ),
         ),
         RxJs.map((e) => {
           // add context info to event for use in the conditions and response
@@ -110,7 +110,7 @@ export class KeyHandler extends Handler {
             },
           };
           return kw;
-        })
+        }),
       )
     );
     method.streams[streamName] = keyEvents$;
@@ -128,7 +128,7 @@ export class KeyHandler extends Handler {
     // Other conditions are AND'ed
     const keys = this.keys;
     const conditions = this.conditions.filter(
-      (condition) => !(condition instanceof HandlerKeyCondition)
+      (condition) => !(condition instanceof HandlerKeyCondition),
     );
     return (
       event.type == signal &&

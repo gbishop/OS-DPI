@@ -342,7 +342,8 @@ html {
 }
 
 .rad-shadow {
-  box-shadow: 0 2.8px 2.2px
+  box-shadow:
+    0 2.8px 2.2px
       hsl(var(--surface-shadow) / calc(var(--shadow-strength) + 0.03)),
     0 6.7px 5.3px
       hsl(var(--surface-shadow) / calc(var(--shadow-strength) + 0.01)),
@@ -355,6 +356,6 @@ html {
     0 100px 80px hsl(var(--surface-shadow) / var(--shadow-strength));
 }
 
-:focus-visible {
+:focus {
   outline: var(--text2) 4px dashed;
 }

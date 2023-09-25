@@ -66,7 +66,7 @@ export class TreeBase {
     return Object.fromEntries(
       Object.entries(this)
         .filter(([_, prop]) => prop instanceof Props.Prop)
-        .map(([name, prop]) => [name, prop.value])
+        .map(([name, prop]) => [name, prop.value]),
     );
   }
 
@@ -76,7 +76,7 @@ export class TreeBase {
    */
   get propsAsProps() {
     return Object.fromEntries(
-      Object.entries(this).filter(([_, prop]) => prop instanceof Props.Prop)
+      Object.entries(this).filter(([_, prop]) => prop instanceof Props.Prop),
     );
   }
   /**
@@ -91,9 +91,9 @@ export class TreeBase {
         .filter(
           ([_, prop]) =>
             prop instanceof Props.Prop &&
-            !options.omittedProps.includes(prop.constructor.name)
+            !options.omittedProps.includes(prop.constructor.name),
         )
-        .map(([name, prop]) => [name, prop.value])
+        .map(([name, prop]) => [name, prop.value]),
     );
     const children = this.children.map((child) => child.toObject(options));
     const result = {
@@ -318,6 +318,23 @@ export class TreeBase {
   }
 
   /**
+   * Move me up or down by 1 position if possible
+   * @param {boolean} up
+   */
+  moveUpDown(up) {
+    const parent = this.parent;
+    if (!parent) return;
+    const peers = parent.children;
+    if (peers.length > 1) {
+      const index = this.index;
+      const step = up ? -1 : 1;
+      if ((up && index > 0) || (!up && index < peers.length - 1)) {
+        parent.swap(index, index + step);
+      }
+    }
+  }
+
+  /**
    * Get the index of this component in its parent
    * @returns {number}
    */
@@ -350,7 +367,7 @@ export class TreeBase {
    */
   listChildren(children = this.children) {
     return children.map(
-      (child) => html.for(child)`<li>${child.settings()}</li>`
+      (child) => html.for(child)`<li>${child.settings()}</li>`,
     );
   }
 

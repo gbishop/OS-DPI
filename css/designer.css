@@ -48,6 +48,12 @@ body.designing #monitor {
   border-left: 1px solid #d0d0d0;
 }
 
+#designer .panels ol li:not(:last-of-type),
+#designer .panels ul li:not(:last-of-type) {
+  border-bottom: 1px solid #d0d0d0;
+  margin-bottom: 5px;
+}
+
 #designer details summary {
   cursor: pointer;
 }

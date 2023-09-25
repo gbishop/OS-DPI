@@ -112,7 +112,7 @@ export class Designer extends TabControl {
             panelNode.querySelector(
               "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), " +
                 'textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled]), ' +
-                "summary:not(:disabled)"
+                "summary:not(:disabled)",
             )
           );
 
@@ -133,32 +133,41 @@ export class Designer extends TabControl {
   panelKeyHandler = (event) => {
     if (event.target instanceof HTMLTextAreaElement) return;
     if (event.key != "ArrowDown" && event.key != "ArrowUp") return;
-    // get the components on this panel
-    // todo expand this to all components
-    const components = [...document.querySelectorAll(".panels .settings")];
-    // determine which one contains the focus
-    const focusedComponent = document.querySelector(
-      '.panels .settings:has([aria-selected="true"]):not(:has(.settings [aria-selected="true"]))'
-    );
-    if (!focusedComponent) return;
-    // get its index
-    const index = components.indexOf(focusedComponent);
-    // get the next index
-    const nextIndex = Math.min(
-      components.length - 1,
-      Math.max(0, index + (event.key == "ArrowUp" ? -1 : 1))
-    );
-    if (nextIndex != index) {
-      // focus on the first focusable in the next component
-      const focusable = /** @type {HTMLElement} */ (
-        components[nextIndex].querySelector(
-          "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), " +
-            'textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled]), ' +
-            "summary:not(:disabled)"
-        )
+    if (event.shiftKey) {
+      // move the component
+      const component = Globals.designer.selectedComponent;
+      if (!component) return;
+      component.moveUpDown(event.key == "ArrowUp");
+      callAfterRender(() => Globals.designer.restoreFocus());
+      Globals.state.update();
+    } else {
+      // get the components on this panel
+      // todo expand this to all components
+      const components = [...document.querySelectorAll(".panels .settings")];
+      // determine which one contains the focus
+      const focusedComponent = document.querySelector(
+        '.panels .settings:has([aria-selected="true"]):not(:has(.settings [aria-selected="true"]))',
       );
-      if (focusable) {
-        focusable.focus();
+      if (!focusedComponent) return;
+      // get its index
+      const index = components.indexOf(focusedComponent);
+      // get the next index
+      const nextIndex = Math.min(
+        components.length - 1,
+        Math.max(0, index + (event.key == "ArrowUp" ? -1 : 1)),
+      );
+      if (nextIndex != index) {
+        // focus on the first focusable in the next component
+        const focusable = /** @type {HTMLElement} */ (
+          components[nextIndex].querySelector(
+            "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), " +
+              'textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled]), ' +
+              "summary:not(:disabled)",
+          )
+        );
+        if (focusable) {
+          focusable.focus();
+        }
       }
     }
   };

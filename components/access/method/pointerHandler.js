@@ -31,7 +31,7 @@ export class PointerHandler extends Handler {
         ? this.SkipOnRedraw.input()
         : this.empty;
     return html`
-      <fieldset class="Handler">
+      <fieldset class="Handler" tabindex="0" id="${this.id}">
         <legend>Pointer Handler</legend>
         ${Signal.input()} ${skip}
         <fieldset class="Conditions">
@@ -76,13 +76,13 @@ export class PointerHandler extends Handler {
         (x) =>
           x.target instanceof Element &&
           x.target.hasPointerCapture(x.pointerId) &&
-          x.target.releasePointerCapture(x.pointerId)
+          x.target.releasePointerCapture(x.pointerId),
       ),
-      RxJs.throttleTime(upDownThreshold)
+      RxJs.throttleTime(upDownThreshold),
     );
 
     const pointerUp$ = fromPointerEvent("pointerup").pipe(
-      RxJs.throttleTime(upDownThreshold)
+      RxJs.throttleTime(upDownThreshold),
     );
 
     /** @type {EventLike} */
@@ -108,7 +108,7 @@ export class PointerHandler extends Handler {
      */
     function stateMachine(
       { current, over, timeStamp, accumulators, emittedEvents },
-      event
+      event,
     ) {
       // whenever we emit an event the pattern might get changed in the response
       // check here to see if the target is still the same
@@ -190,14 +190,14 @@ export class PointerHandler extends Handler {
         pointerUp$,
         fromPointerEvent("pointerover"),
         fromPointerEvent("pointerout"),
-        fromPointerEvent("contextmenu")
+        fromPointerEvent("contextmenu"),
       ),
       // keep only events related to buttons within the UI
       RxJs.filter(
         (e) =>
           e.target instanceof HTMLButtonElement &&
           e.target.closest("div#UI") !== null &&
-          !e.target.disabled
+          !e.target.disabled,
       ),
       // kill contextmenu events
       RxJs.tap((e) => e.type === "contextmenu" && e.preventDefault()),
@@ -205,7 +205,7 @@ export class PointerHandler extends Handler {
       // Add the timer events
       RxJs.mergeWith(
         // I pulled 10ms out of my ear, would 20 or even 50 do?
-        RxJs.timer(10, 10).pipe(RxJs.map(() => new PointerEvent("tick")))
+        RxJs.timer(10, 10).pipe(RxJs.map(() => new PointerEvent("tick"))),
       ),
       // run the state machine
       RxJs.scan(stateMachine, {
@@ -228,11 +228,11 @@ export class PointerHandler extends Handler {
             };
             w.access.eventType = event.type;
             return w;
-          })
-        )
+          }),
+        ),
       ),
       // multicast the stream
-      RxJs.share()
+      RxJs.share(),
     );
 
     method.streams[streamName] = pointerStream$;
