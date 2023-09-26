@@ -225,6 +225,12 @@ function getFileMenuItems(bar) {
       },
     }),
     new MenuItem({
+      label: "Unload...",
+      callback: () => {
+        bar.designListDialog.unload();
+      },
+    }),
+    new MenuItem({
       label: "Load Sheet",
       title: "Load a spreadsheet of content",
       divider: "Content",
@@ -488,9 +494,10 @@ const sheet = {
 };
 
 /**
- * Display a list of designs in the db so they can be reopened
+ * Display a list of designs in the db so they can be reopened or unloaded
  */
 class DesignListDialog {
+  /** Show imported designs so they can be reopened */
   async open() {
     const names = await db.names();
     const dialog = /** @type {HTMLDialogElement} */ (
@@ -509,6 +516,49 @@ class DesignListDialog {
         )}
       </ul>
       <button>Cancel</button>
+      </div>`;
+    if (dialog) {
+      dialog.innerHTML = "";
+      dialog.appendChild(list);
+    }
+    dialog.showModal();
+  }
+  /** Show imported designs so they can be unloaded */
+  async unload() {
+    const names = await db.names();
+    const saved = await db.saved();
+    const dialog = /** @type {HTMLDialogElement} */ (
+      document.getElementById("OpenDialog")
+    );
+    /** Unload the checked designs */
+    async function unloadChecked() {
+      const checkboxes = /** @type {HTMLInputElement[]} */ ([
+        ...dialog.querySelectorAll('input[type="checkbox"]'),
+      ]);
+      for (const checkbox of checkboxes) {
+        if (checkbox.checked) {
+          await db.unload(checkbox.name);
+        }
+      }
+      dialog.close();
+    }
+    const list = html.node`<div>
+      <h1>Check the designs you want to unload</h1>
+      <ul>
+        ${names.map((name) => {
+          let label;
+          if (saved.includes(name)) {
+            label = html`${name}`;
+          } else {
+            label = html`<b>${name}</b> <b class="warning">Not saved</b>`;
+          }
+          return html`<li>
+            <label><input type="checkbox" name=${name} /> ${label}</label>
+          </li>`;
+        })}
+      </ul>
+      <button onclick=${unloadChecked}>Unload</button>
+      <button onclick=${() => dialog.close()}>Cancel</button>
       </div>`;
     if (dialog) {
       dialog.innerHTML = "";

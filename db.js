@@ -457,16 +457,17 @@ export class DB {
     await tx.done;
     // delete media
     const txm = db.transaction("media", "readwrite");
-    const mediaKeys = (await txm.store.getAllKeys()).filter((pair) =>
-      Object.values(pair).includes(this.designName),
+    const mediaKeys = (await txm.store.getAllKeys()).filter(
+      (pair) => Object.values(pair)[0] == name,
     );
 
     // delete the media
     for (const key of mediaKeys) {
-      txm.store.delete(key);
+      await txm.store.delete(key);
     }
     await txm.done;
     await db.delete("saved", name);
+    this.notify({ action: "unload", name });
   }
 
   /** Return an image from the database
