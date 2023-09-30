@@ -209,15 +209,25 @@ export class TreeBase {
    * @returns {Hole}
    */
   settings() {
+    const detailsId = this.id + "-details";
+    const settingsId = this.id + "-settings";
     return html`<div class="settings">
       <details
         class=${this.className}
-        id=${this.id + "-details"}
+        id=${detailsId}
         ?open=${this.persisted.settingsDetailsOpen}
         ontoggle=${({ target }) =>
           (this.persisted.settingsDetailsOpen = target.open)}
+        onclick=${(/** @type {PointerEvent} */ event) =>
+          /* tweak the focus behavior */
+          (event.target instanceof HTMLDivElement ||
+            event.target instanceof HTMLFieldSetElement) &&
+          !document
+            .getElementById(detailsId)
+            ?.contains(document.activeElement) &&
+          document.getElementById(settingsId)?.focus()}
       >
-        <summary id=${this.id + "-settings"}>${this.settingsSummary()}</summary>
+        <summary id=${settingsId}>${this.settingsSummary()}</summary>
         ${this.settingsDetails()}
       </details>
       ${this.settingsChildren()}

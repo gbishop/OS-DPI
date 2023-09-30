@@ -87,16 +87,21 @@ details summary > * {
   box-shadow: none;
 }
 
-#designer .settings:has([aria-selected="true"]) {
+#designer .settings:has([aria-selected="true"]),
+#designer .settings[aria-selected="true"] {
   background-color: var(--surface1);
   color: var(--text1);
-  border: 2px solid var(--brand);
+  border: 4px dashed var(--brand);
 }
 #designer .settings:has(.settings [aria-selected="true"]) {
   background-color: var(--surface2);
   color: var(--text2);
   border: 0px;
   box-shadow: none;
+}
+
+#designer :focus {
+  outline: var(--text2) 4px dashed;
 }
 
 #designer .indicator {
