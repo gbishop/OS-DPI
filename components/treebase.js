@@ -218,14 +218,6 @@ export class TreeBase {
         ?open=${this.persisted.settingsDetailsOpen}
         ontoggle=${({ target }) =>
           (this.persisted.settingsDetailsOpen = target.open)}
-        onclick=${(/** @type {PointerEvent} */ event) =>
-          /* tweak the focus behavior */
-          (event.target instanceof HTMLDivElement ||
-            event.target instanceof HTMLFieldSetElement) &&
-          !document
-            .getElementById(detailsId)
-            ?.contains(document.activeElement) &&
-          document.getElementById(settingsId)?.focus()}
       >
         <summary id=${settingsId}>${this.settingsSummary()}</summary>
         ${this.settingsDetails()}

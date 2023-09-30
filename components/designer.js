@@ -148,6 +148,7 @@ export class Designer extends TabControl {
       const focusedComponent = document.querySelector(
         '.panels .settings:has([aria-selected="true"]):not(:has(.settings [aria-selected="true"]))',
       );
+      console.log({ event, focusedComponent });
       if (!focusedComponent) return;
       // get its index
       const index = components.indexOf(focusedComponent);
@@ -275,3 +276,27 @@ export class DesignerPanel extends TabPanel {
     }
   }
 }
+
+/** Tweak the focus behavior in the designer */
+document.addEventListener("click", (/** @type {PointerEvent} */ event) => {
+  if (
+    event.target instanceof HTMLDivElement ||
+    event.target instanceof HTMLFieldSetElement ||
+    event.target instanceof HTMLTableRowElement ||
+    event.target instanceof HTMLTableCellElement ||
+    event.target instanceof HTMLDetailsElement
+  ) {
+    const panel = event.target.closest("#designer #tabs div.panels");
+    if (!panel) return;
+    const settings = event.target.closest(".settings");
+    if (!settings || settings.contains(document.activeElement)) return;
+    const focusable = /** @type {HTMLElement} */ (
+      settings.querySelector(
+        "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), " +
+          'textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled]), ' +
+          "summary:not(:disabled)",
+      )
+    );
+    if (focusable) focusable.focus();
+  }
+});
