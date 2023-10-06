@@ -73,20 +73,10 @@ export class TabControl extends TreeBase {
     return this.component(
       { classes: [this.props.tabEdge] },
       html`
-        <ul
-          class="buttons"
-          onkeydown=${this.tabButtonKeyHandler}
-          hint=${this.hint}
-        >
+        <ul class="buttons" hint=${this.hint}>
           ${buttons}
         </ul>
-        <div
-          class="panels flex"
-          onfocusin=${this.focusin}
-          onkeydown=${this.panelKeyHandler}
-        >
-          ${panel}
-        </div>
+        <div class="panels flex">${panel}</div>
       `,
     );
   }
@@ -101,15 +91,6 @@ export class TabControl extends TreeBase {
   switchTab(tabName) {
     Globals.state.update({ [this.props.stateName]: tabName });
   }
-
-  /** @type {function | null} */
-  focusin = null;
-
-  /** @type {function | null} */
-  panelKeyHandler = null;
-
-  /** @type {function | null} */
-  tabButtonKeyHandler = null;
 
   /** @type {string | null} */
   hint = null;

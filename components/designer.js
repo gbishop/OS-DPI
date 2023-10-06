@@ -1,4 +1,5 @@
 import "css/tabcontrol.css";
+import { html } from "uhtml";
 import Globals from "app/globals";
 import { callAfterRender } from "app/render";
 import { TreeBase } from "./treebase";
@@ -18,6 +19,16 @@ export class Designer extends TabControl {
 
   panelTemplate() {
     return this.currentPanel?.settings() || this.empty;
+  }
+
+  template() {
+    return html`<div
+      onkeydown=${this.keyHandler}
+      onfocusin=${this.focusin}
+      onclick=${this.designerClick}
+    >
+      ${super.template()}
+    </div>`;
   }
 
   /**
@@ -127,10 +138,32 @@ export class Designer extends TabControl {
       }
     }
   }
+
   /**
    * @param {KeyboardEvent} event
    */
-  panelKeyHandler = (event) => {
+  keyHandler = (event) => {
+    if (!this.currentPanel) return;
+    if (
+      event.target instanceof HTMLButtonElement &&
+      event.target.matches("#designer .tabcontrol .buttons button")
+    ) {
+      this.tabButtonKeyHandler(event);
+    } else {
+      const panel = document.getElementById(this.currentPanel.id);
+      if (
+        panel &&
+        event.target instanceof HTMLElement &&
+        panel.contains(event.target)
+      ) {
+        this.panelKeyHandler(event);
+      }
+    }
+  };
+  /**
+   * @param {KeyboardEvent} event
+   */
+  panelKeyHandler(event) {
     if (event.target instanceof HTMLTextAreaElement) return;
     if (event.key != "ArrowDown" && event.key != "ArrowUp") return;
     if (event.shiftKey) {
@@ -171,12 +204,12 @@ export class Designer extends TabControl {
         }
       }
     }
-  };
+  }
 
   /**
    * @param {KeyboardEvent} event
    */
-  tabButtonKeyHandler = ({ key }) => {
+  tabButtonKeyHandler({ key }) {
     const tabButtons = /** @type {HTMLButtonElement[]} */ ([
       ...document.querySelectorAll("#designer .tabcontrol .buttons button"),
     ]);
@@ -205,6 +238,48 @@ export class Designer extends TabControl {
           tabButtons[j].focus();
           break;
         }
+      }
+    }
+  }
+
+  /** Tweak the focus behavior in the designer
+   * I want clicking on blank space to focus the nearest focusable element
+
+   * @param {KeyboardEvent} event
+   */
+  designerClick = (event) => {
+    // return if target is not an HTMLElement
+    if (!(event.target instanceof HTMLElement)) return;
+
+    const panel = document.querySelector("#designer .designer div.panels");
+    // return if not in designer
+    if (!panel) return;
+    // return if click is not inside the panel
+    if (!panel.contains(event.target)) return;
+    // check for background elements
+    if (
+      event.target instanceof HTMLDivElement ||
+      event.target instanceof HTMLFieldSetElement ||
+      event.target instanceof HTMLTableRowElement ||
+      event.target instanceof HTMLTableCellElement ||
+      event.target instanceof HTMLDetailsElement
+    ) {
+      if (event.target.matches('[tabindex="0"]')) return;
+      /** @type {HTMLElement | null} */
+      let target = event.target;
+      while (target) {
+        const focusable = /** @type {HTMLElement} */ (
+          target.querySelector(
+            "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), " +
+              'textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled]), ' +
+              "summary:not(:disabled)",
+          )
+        );
+        if (focusable) {
+          focusable.focus();
+          break;
+        }
+        target = target.parentElement;
       }
     }
   };
@@ -276,27 +351,3 @@ export class DesignerPanel extends TabPanel {
     }
   }
 }
-
-/** Tweak the focus behavior in the designer */
-document.addEventListener("click", (/** @type {PointerEvent} */ event) => {
-  if (
-    event.target instanceof HTMLDivElement ||
-    event.target instanceof HTMLFieldSetElement ||
-    event.target instanceof HTMLTableRowElement ||
-    event.target instanceof HTMLTableCellElement ||
-    event.target instanceof HTMLDetailsElement
-  ) {
-    const panel = event.target.closest("#designer #tabs div.panels");
-    if (!panel) return;
-    const settings = event.target.closest(".settings");
-    if (!settings || settings.contains(document.activeElement)) return;
-    const focusable = /** @type {HTMLElement} */ (
-      settings.querySelector(
-        "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), " +
-          'textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled]), ' +
-          "summary:not(:disabled)",
-      )
-    );
-    if (focusable) focusable.focus();
-  }
-});
