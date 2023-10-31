@@ -31,8 +31,8 @@ export class SocketHandler extends Handler {
           <legend>Responses</legend>
           ${this.unorderedChildren(responses)}
         </fieldset>
+        ${GridFilter.FilterSettings(this.filters)}
       </fieldset>
-      ${GridFilter.FilterSettings(this.filters)}
     `;
   }
 
