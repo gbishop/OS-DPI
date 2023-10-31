@@ -4,7 +4,7 @@ import * as Props from "./props";
 import { styleString } from "./style";
 import "css/radio.css";
 import Globals from "app/globals";
-import { GridFilter } from "./grid";
+import { GridFilter } from "./gridFilter";
 
 class Option extends TreeBase {
   name = new Props.String("");
@@ -50,7 +50,7 @@ class Radio extends TreeBase {
       data.hasMatchingRows(
         filters,
         state.clone({ [this.props.stateName]: option.props.value }),
-        option.cache
+        option.cache,
       )
     );
   }
@@ -103,7 +103,7 @@ class Radio extends TreeBase {
         ${(this.props.label && html`<legend>${this.props.label}</legend>`) ||
         this.empty}
         ${choices}
-      </fieldset>`
+      </fieldset>`,
     );
   }
 
@@ -117,31 +117,7 @@ class Radio extends TreeBase {
     const filters = this.filterChildren(GridFilter);
     const editFilters = !filters.length
       ? this.empty
-      : html`<fieldset>
-          <legend>Filters</legend>
-          <table>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Field</th>
-                <th>Operator</th>
-                <th>Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${filters.map(
-                (filter, index) => html`
-                  <tr>
-                    <td>${index + 1}</td>
-                    <td>${filter.field.input()}</td>
-                    <td>${filter.operator.input()}</td>
-                    <td>${filter.value.input()}</td>
-                  </tr>
-                `
-              )}
-            </tbody>
-          </table>
-        </fieldset>`;
+      : GridFilter.FilterSettings(filters);
     const options = this.filterChildren(Option);
     const editOptions = html`<fieldset>
       <legend>Options</legend>
@@ -161,7 +137,7 @@ class Radio extends TreeBase {
                 <td>${option.name.input()}</td>
                 <td>${option.value.input()}</td>
               </tr>
-            `
+            `,
           )}
         </tbody>
       </table>
