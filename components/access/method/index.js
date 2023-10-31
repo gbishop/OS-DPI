@@ -210,12 +210,17 @@ export class Method extends TreeBase {
     const pointerDebounce = handlerClasses.has("PointerHandler")
       ? [PointerDownDebounce.input(), PointerEnterDebounce.input()]
       : [];
+    const Debounce =
+      handlerClasses.has("KeyHandler") || handlerClasses.has("PointerHandler")
+        ? [
+            html`<fieldset>
+              <legend>Debounce</legend>
+              ${keyDebounce} ${pointerDebounce}
+            </fieldset> `,
+          ]
+        : [];
     return html`<div>
-      ${Name.input()} ${Active.input()} ${Pattern.input()}
-      <fieldset>
-        <legend>Debounce</legend>
-        ${keyDebounce} ${pointerDebounce}
-      </fieldset>
+      ${Debounce} ${Name.input()} ${Active.input()} ${Pattern.input()}
       ${timers.length > 0
         ? html`<fieldset>
             <legend>Timers</legend>
