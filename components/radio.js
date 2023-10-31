@@ -25,14 +25,6 @@ class Radio extends TreeBase {
   /** @type {(Option | GridFilter)[]} */
   children = [];
 
-  get filters() {
-    return this.filterChildren(GridFilter).map((child) => ({
-      field: child.field.value,
-      operator: child.operator.value,
-      value: child.value.value,
-    }));
-  }
-
   get options() {
     return this.filterChildren(Option);
   }
@@ -44,7 +36,9 @@ class Radio extends TreeBase {
    */
   valid(option) {
     const { data, state } = Globals;
-    const filters = this.filters;
+    const filters = GridFilter.toContentFilters(
+      this.filterChildren(GridFilter),
+    );
     return (
       !filters.length ||
       data.hasMatchingRows(

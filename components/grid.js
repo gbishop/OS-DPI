@@ -50,14 +50,6 @@ class Grid extends TreeBase {
   /** @type {GridFilter[]} */
   children = [];
 
-  get filters() {
-    return this.children.map((child) => ({
-      field: child.field.value,
-      operator: child.operator.value,
-      value: child.value.value,
-    }));
-  }
-
   page = 1;
   pageBoundaries = { 0: 0 }; //track starting indices of pages
   /**
@@ -151,7 +143,11 @@ class Grid extends TreeBase {
     const { data, state } = Globals;
     let { rows, columns, fillItems } = this.props;
     /** @type {Rows} */
-    let items = data.getMatchingRows(this.filters, state, this.cache);
+    let items = data.getMatchingRows(
+      GridFilter.toContentFilters(this.children),
+      state,
+      this.cache,
+    );
     // reset the page when the key changes
     if (this.cache.updated) {
       this.page = 1;

@@ -81,19 +81,11 @@ class VSD extends TreeBase {
   /** @type {HTMLDivElement} */
   markers;
 
-  get filters() {
-    return this.children.map((child) => ({
-      field: child.field.value,
-      operator: child.operator.value,
-      value: child.value.value,
-    }));
-  }
-
   template() {
     const { data, state, actions } = Globals;
     const editing = state.get("editing");
     const items = /** @type {VRow[]} */ (
-      data.getMatchingRows(this.filters, state)
+      data.getMatchingRows(GridFilter.toContentFilters(this.children), state)
     );
     const src = items.find((item) => item.image)?.image || "";
     let dragging = 0;
