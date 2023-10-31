@@ -5,12 +5,17 @@ import { html } from "uhtml";
 import * as RxJs from "rxjs";
 import { webSocket } from "rxjs/webSocket";
 import Globals from "app/globals";
+import { GridFilter } from "components/gridFilter";
 
 export class SocketHandler extends Handler {
-  allowedChildren = ["HandlerCondition", "HandlerResponse"];
+  allowedChildren = ["HandlerCondition", "HandlerResponse", "GridFilter"];
 
   StateName = new Props.String("$socket");
   URL = new Props.String("ws://localhost:5678/");
+
+  get filters() {
+    return this.filterChildren(GridFilter);
+  }
 
   settings() {
     const { conditions, responses, StateName, URL } = this;
@@ -27,6 +32,7 @@ export class SocketHandler extends Handler {
           ${this.unorderedChildren(responses)}
         </fieldset>
       </fieldset>
+      ${GridFilter.FilterSettings(this.filters)}
     `;
   }
 
@@ -43,8 +49,7 @@ export class SocketHandler extends Handler {
           console.error("socket is not active");
           return;
         }
-        // send the data over the websocket
-        this.socket.next(Globals.state.values);
+        this.sendData();
       }
     });
   }
@@ -81,7 +86,7 @@ export class SocketHandler extends Handler {
         };
         return wrapped;
       }),
-      RxJs.tap((e) => console.log("socket", e))
+      RxJs.tap((e) => console.log("socket", e)),
     );
     method.streams[streamName] = this.socket$;
   }
@@ -114,6 +119,30 @@ export class SocketHandler extends Handler {
     }
     // pass incoming messages to the response
     super.respond(event);
+  }
+
+  sendData() {
+    if (!this.socket) return;
+
+    // send the data over the websocket
+    const name = this.method.Name.value;
+    const message = {
+      method: name,
+      stateName: this.StateName.value,
+      URL: this.URL.value,
+      state: Globals.state.values,
+    };
+    const filters = GridFilter.toContentFilters(this.filters);
+    if (filters.length > 0) {
+      const content = Globals.data.getMatchingRows(
+        filters,
+        Globals.state,
+        undefined, // no cache for now
+        false, // do not pass NULL for the undefined fields
+      );
+      message["content"] = content;
+    }
+    this.socket.next(message);
   }
 }
 TreeBase.register(SocketHandler, "SocketHandler");
