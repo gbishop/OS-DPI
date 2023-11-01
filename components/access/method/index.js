@@ -220,7 +220,7 @@ export class Method extends TreeBase {
           ]
         : [];
     return html`<div>
-      ${Debounce} ${Name.input()} ${Active.input()} ${Pattern.input()}
+      ${Name.input()} ${Active.input()} ${Pattern.input()} ${Debounce}
       ${timers.length > 0
         ? html`<fieldset>
             <legend>Timers</legend>
