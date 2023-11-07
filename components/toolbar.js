@@ -43,7 +43,7 @@ function getComponentMenuItems(component, which = "all", wrapper) {
             result.init();
             return result.id;
           }),
-        })
+        }),
       );
     }
   }
@@ -60,7 +60,7 @@ function getComponentMenuItems(component, which = "all", wrapper) {
             const nextId = component.remove();
             return nextId;
           }),
-        })
+        }),
       );
     }
   }
@@ -78,19 +78,10 @@ function getComponentMenuItems(component, which = "all", wrapper) {
             label: `Move up`,
             title: `Move up ${friendlyName(component.className)}`,
             callback: wrapper(() => {
-              if (component.parent)
-                console.log(
-                  "move up",
-                  component.parent.className,
-                  component.parent.children[index].id,
-                  component.parent.children[index].className,
-                  component.parent.children[index - 1].id,
-                  component.parent.children[index - 1].className
-                );
-              parent.swap(index, index - 1);
+              component.moveUpDown(true);
               return component.id;
             }),
-          })
+          }),
         );
       }
       if (index < parent.children.length - 1) {
@@ -100,10 +91,10 @@ function getComponentMenuItems(component, which = "all", wrapper) {
             label: `Move down`,
             title: `Move down ${friendlyName(component.className)}`,
             callback: wrapper(() => {
-              parent.swap(index, index + 1);
+              component.moveUpDown(false);
               return component.id;
             }),
-          })
+          }),
         );
       }
     }
@@ -234,6 +225,12 @@ function getFileMenuItems(bar) {
       },
     }),
     new MenuItem({
+      label: "Unload...",
+      callback: () => {
+        bar.designListDialog.unload();
+      },
+    }),
+    new MenuItem({
       label: "Load Sheet",
       title: "Load a spreadsheet of content",
       divider: "Content",
@@ -296,14 +293,14 @@ function getFileMenuItems(bar) {
             await db.addMedia(file, file.name);
             if (file.type.startsWith("image/")) {
               for (const img of document.querySelectorAll(
-                `img[dbsrc="${file.name}"]`
+                `img[dbsrc="${file.name}"]`,
               )) {
                 /** @type {ImgDb} */ (img).refresh();
               }
             }
             if (file.type.startsWith("video/")) {
               for (const img of document.querySelectorAll(
-                `video[dbsrc="${file.name}"]`
+                `video[dbsrc="${file.name}"]`,
               )) {
                 /** @type {ImgDb} */ (img).refresh();
               }
@@ -341,7 +338,7 @@ async function copyComponent(cut = false) {
     if (!(component instanceof Page) && !(parent instanceof Designer)) {
       const json = JSON.stringify(
         // don't include UID or OneOfGroup props in the copy
-        component.toObject({ omittedProps: ["UID", "OneOfGroup"] })
+        component.toObject({ omittedProps: ["UID", "OneOfGroup"] }),
       );
       await navigator.clipboard.writeText(json);
       if (cut) {
@@ -467,7 +464,7 @@ function getHelpMenuItems() {
           label: menuName,
           callback: openHelpURL,
           args: [wikiName(className)],
-        })
+        }),
       );
       names.add(menuName);
     }
@@ -478,7 +475,7 @@ function getHelpMenuItems() {
       label: "About OS-DPI",
       callback: openHelpURL,
       args: ["About-Project-Open"],
-    })
+    }),
   );
   return items;
 }
@@ -497,9 +494,10 @@ const sheet = {
 };
 
 /**
- * Display a list of designs in the db so they can be reopened
+ * Display a list of designs in the db so they can be reopened or unloaded
  */
 class DesignListDialog {
+  /** Show imported designs so they can be reopened */
   async open() {
     const names = await db.names();
     const dialog = /** @type {HTMLDialogElement} */ (
@@ -511,12 +509,56 @@ class DesignListDialog {
       <h1>Open one of your designs</h1>
       <ul>
         ${names.map(
-          (name) => html`<li>
-            <a href=${"#" + name} target="_blank">${name}</a>
-          </li>`
+          (name) =>
+            html`<li>
+              <a href=${"#" + name} target="_blank">${name}</a>
+            </li>`,
         )}
       </ul>
       <button>Cancel</button>
+      </div>`;
+    if (dialog) {
+      dialog.innerHTML = "";
+      dialog.appendChild(list);
+    }
+    dialog.showModal();
+  }
+  /** Show imported designs so they can be unloaded */
+  async unload() {
+    const names = await db.names();
+    const saved = await db.saved();
+    const dialog = /** @type {HTMLDialogElement} */ (
+      document.getElementById("OpenDialog")
+    );
+    /** Unload the checked designs */
+    async function unloadChecked() {
+      const checkboxes = /** @type {HTMLInputElement[]} */ ([
+        ...dialog.querySelectorAll('input[type="checkbox"]'),
+      ]);
+      for (const checkbox of checkboxes) {
+        if (checkbox.checked) {
+          await db.unload(checkbox.name);
+        }
+      }
+      dialog.close();
+    }
+    const list = html.node`<div>
+      <h1>Check the designs you want to unload</h1>
+      <ul>
+        ${names.map((name) => {
+          let label;
+          if (saved.includes(name)) {
+            label = html`${name}`;
+          } else {
+            label = html`<b>${name}</b> <b class="warning">Not saved</b>`;
+          }
+          return html`<li>
+            <label><input type="checkbox" name=${name} /> ${label}</label>
+          </li>`;
+        })}
+      </ul>
+      <button onclick=${unloadChecked}>Unload</button>
+      <button onclick=${() => dialog.close()}>Cancel</button>
       </div>`;
     if (dialog) {
       dialog.innerHTML = "";
@@ -543,7 +585,7 @@ export class ToolBar extends TreeBase {
         }
         return child.concat(parent);
       },
-      "add"
+      "add",
     );
     this.helpMenu = new Menu("Help", getHelpMenuItems, this);
     this.designListDialog = new DesignListDialog();
@@ -566,7 +608,7 @@ export class ToolBar extends TreeBase {
                     .renameDesign(event.target.value)
                     .then(() => (window.location.hash = db.designName))}
               />`,
-              "N"
+              "N",
             )}
           </li>
           <li>

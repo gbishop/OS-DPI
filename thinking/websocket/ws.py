@@ -3,10 +3,18 @@
 """
 An example of a trivial websocket server for use with OS-DPI.
 
-Incoming messages are the OS-DPI state json encoded. Reply with a json encoded
-message that will trigger the socket handler.
+Incoming messages are json encoded.
+{
+  state: the current state,
+  method: name of the method sending the message
+  stateName: the state variable that triggered it
+  URL: the associated URL
+  content: optional rows from the content
+}
 
-Gary Bishop June 2023
+Reply with a json encoded message that will trigger the socket handler.
+
+Gary Bishop June 2023, updated October 2023
 """
 
 import asyncio
@@ -20,13 +28,14 @@ async def answer(websocket):
         async for message in websocket:
             print(message)
             event = json.loads(message)
-            action = event.get("$socket", "none")
+            state = event["state"]
+            action = state.get("$socket", "none")
             await asyncio.sleep(
                 5
             )  # sleep for a bit to simulate waiting on some service
             if action == "time":
                 now = datetime.datetime.now()
-                message = f'You said "{event["$Again"]}" at {now:%I:%M%p}'
+                message = f'You said "{state["$Again"]}" at {now:%I:%M%p}'
             else:
                 message = f'invalid action "{action}"'
             await websocket.send(

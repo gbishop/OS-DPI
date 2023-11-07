@@ -56,6 +56,7 @@ export class DB {
    */
   setDesignName(name) {
     this.designName = name;
+    document.title = name;
   }
 
   /** rename the design
@@ -374,7 +375,7 @@ export class DB {
             name: fname,
             content: blob,
           },
-          [name, fname]
+          [name, fname],
         );
       }
     }
@@ -404,7 +405,7 @@ export class DB {
     };
 
     const mediaKeys = (await db.getAllKeys("media")).filter((pair) =>
-      Object.values(pair).includes(this.designName)
+      Object.values(pair).includes(this.designName),
     );
 
     // add the encoded image to the zipargs
@@ -456,16 +457,17 @@ export class DB {
     await tx.done;
     // delete media
     const txm = db.transaction("media", "readwrite");
-    const mediaKeys = (await txm.store.getAllKeys()).filter((pair) =>
-      Object.values(pair).includes(this.designName)
+    const mediaKeys = (await txm.store.getAllKeys()).filter(
+      (pair) => Object.values(pair)[0] == name,
     );
 
     // delete the media
     for (const key of mediaKeys) {
-      txm.store.delete(key);
+      await txm.store.delete(key);
     }
     await txm.done;
     await db.delete("saved", name);
+    this.notify({ action: "unload", name });
   }
 
   /** Return an image from the database
@@ -520,7 +522,7 @@ export class DB {
         name: name,
         content: blob,
       },
-      [this.designName, name]
+      [this.designName, name],
     );
   }
 
@@ -530,7 +532,7 @@ export class DB {
   async listMedia() {
     const db = await this.dbPromise;
     const keys = (await db.getAllKeys("media")).filter(
-      (key) => key[0] == this.designName //only show resources from this design
+      (key) => key[0] == this.designName, //only show resources from this design
     );
     const result = [];
     for (const key of keys) {

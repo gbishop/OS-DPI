@@ -38,7 +38,7 @@ export async function start() {
       window.history.replaceState(
         {},
         document.title,
-        window.location.origin + window.location.pathname + "#" + db.designName
+        window.location.origin + window.location.pathname + "#" + db.designName,
       );
     }
   }
@@ -141,6 +141,11 @@ channel.onmessage = (event) => {
       start();
     } else if (message.action == "rename" && message.newName) {
       window.location.hash = message.newName;
+    } else if (message.action == "unload") {
+      window.close();
+      if (!window.closed) {
+        window.location.hash = "new";
+      }
     }
   }
 };

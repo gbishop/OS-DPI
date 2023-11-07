@@ -1,10 +1,10 @@
 import { html } from "uhtml";
 import * as Props from "./props";
 import { TreeBase } from "./treebase";
+import { GridFilter } from "./gridFilter";
 import { styleString } from "./style";
 import { formatSlottedString } from "./helpers";
 import Globals from "app/globals";
-import { comparators } from "app/data";
 import "css/grid.css";
 
 /**
@@ -49,14 +49,6 @@ class Grid extends TreeBase {
 
   /** @type {GridFilter[]} */
   children = [];
-
-  get filters() {
-    return this.children.map((child) => ({
-      field: child.field.value,
-      operator: child.operator.value,
-      value: child.value.value,
-    }));
-  }
 
   page = 1;
   pageBoundaries = { 0: 0 }; //track starting indices of pages
@@ -151,7 +143,11 @@ class Grid extends TreeBase {
     const { data, state } = Globals;
     let { rows, columns, fillItems } = this.props;
     /** @type {Rows} */
-    let items = data.getMatchingRows(this.filters, state, this.cache);
+    let items = data.getMatchingRows(
+      GridFilter.toContentFilters(this.children),
+      state,
+      this.cache,
+    );
     // reset the page when the key changes
     if (this.cache.updated) {
       this.page = 1;
@@ -236,31 +232,7 @@ class Grid extends TreeBase {
   settingsDetails() {
     const props = this.propsAsProps;
     const inputs = Object.values(props).map((prop) => prop.input());
-    const filters = html`<fieldset>
-      <legend>Filters</legend>
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Field</th>
-            <th>Operator</th>
-            <th>Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${this.children.map(
-            (filter, index) => html`
-              <tr id=${filter.id + "-settings"}>
-                <td>${index + 1}</td>
-                <td>${filter.field.input()}</td>
-                <td>${filter.operator.input()}</td>
-                <td>${filter.value.input()}</td>
-              </tr>
-            `
-          )}
-        </tbody>
-      </table>
-    </fieldset>`;
+    const filters = GridFilter.FilterSettings(this.children);
     return html`<div>${filters}${inputs}</div>`;
   }
 
@@ -269,10 +241,3 @@ class Grid extends TreeBase {
   }
 }
 TreeBase.register(Grid, "Grid");
-
-export class GridFilter extends TreeBase {
-  field = new Props.Field({ hiddenLabel: true });
-  operator = new Props.Select(Object.keys(comparators), { hiddenLabel: true });
-  value = new Props.String("", { hiddenLabel: true });
-}
-TreeBase.register(GridFilter, "GridFilter");

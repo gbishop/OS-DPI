@@ -72,7 +72,7 @@ export class Actions extends DesignerPanel {
           continue;
         }
         const result = rule.conditions.every((restriction) =>
-          restriction.Condition.eval(context)
+          restriction.Condition.eval(context),
         );
         if (result) {
           this.last.rule = rule;
@@ -80,7 +80,7 @@ export class Actions extends DesignerPanel {
             rule.updates.map((update) => [
               update.props.stateName,
               update.newValue.eval(context),
-            ])
+            ]),
           );
           Globals.state.update(patch);
           break;
@@ -169,7 +169,7 @@ export class Actions extends DesignerPanel {
                     (condition) =>
                       html`<div class="condition">
                         ${condition.Condition.input()}
-                      </div>`
+                      </div>`,
                   )}
                 </div>
               </td>
@@ -182,7 +182,7 @@ export class Actions extends DesignerPanel {
               (update) =>
                 html`<tr ?used=${used}>
                   ${showUpdate(update)}
-                </tr>`
+                </tr>`,
             )}
           </tbody>`;
         })}
@@ -258,11 +258,25 @@ export class ActionCondition extends TreeBase {
     hiddenLabel: true,
     valueWhenEmpty: true,
   });
+
+  /** move my parent instead of me.
+   * @param {boolean} up
+   */
+  moveUpDown(up) {
+    this.parent?.moveUpDown(up);
+  }
 }
 TreeBase.register(ActionCondition, "ActionCondition");
 
 export class ActionUpdate extends TreeBase {
   stateName = new Props.String("", { hiddenLabel: true });
   newValue = new Props.Expression("", { hiddenLabel: true });
+
+  /** move my parent instead of me.
+   * @param {boolean} up
+   */
+  moveUpDown(up) {
+    this.parent?.moveUpDown(up);
+  }
 }
 TreeBase.register(ActionUpdate, "ActionUpdate");

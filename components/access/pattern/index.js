@@ -436,7 +436,7 @@ export class PatternGroup extends PatternBase {
 
   settings() {
     const { Name, Cycles, Cue } = this;
-    return html`<fieldset class=${this.className}>
+    return html`<fieldset class=${this.className} tabindex="0" id=${this.id}>
       <legend>Group: ${Name.value}</legend>
       ${Name.input()} ${Cycles.input()} ${Cue.input()} ${this.orderedChildren()}
     </fieldset>`;
@@ -493,7 +493,9 @@ class Filter extends PatternBase {
   Filter = new Props.Expression();
   settings() {
     const { Filter } = this;
-    return html`<div class=${this.className}>${Filter.input()}</div>`;
+    return html`<div class=${this.className} tabindex="0" id=${this.id}>
+      ${Filter.input()}
+    </div>`;
   }
   /**
    * Select buttons from the input
@@ -527,7 +529,9 @@ class OrderBy extends PatternBase {
   OrderBy = new Props.Field();
   settings() {
     const { OrderBy } = this;
-    return html`<div class=${this.className}>${OrderBy.input()}</div>`;
+    return html`<div class=${this.className} tabindex="0" id=${this.id}>
+      ${OrderBy.input()}
+    </div>`;
   }
   /**
    * Select buttons from the input
@@ -568,7 +572,7 @@ class GroupBy extends PatternBase {
         "#column",
       ]),
     ]);
-    return html`<div class=${this.className}>
+    return html`<div class=${this.className} tabindex="0" id=${this.id}>
       ${GroupBy.input(fields)} ${Name.input()} ${Cue.input()} ${Cycles.input()}
     </div>`;
   }

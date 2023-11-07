@@ -49,12 +49,12 @@ export class Data {
           new Set([
             ...previous,
             ...Object.keys(current).map((field) => "#" + field),
-          ])
+          ]),
         ),
-      []
+      [],
     );
     this.clearFields = Object.fromEntries(
-      this.allFields.map((field) => [field.slice(1), null])
+      this.allFields.map((field) => [field.slice(1), null]),
     );
   }
 
@@ -64,14 +64,15 @@ export class Data {
    * @param {ContentFilter[]} filters - each filter must return true
    * @param {State} state
    * @param {RowCache} [cache]
+   * @param {boolean} [clearFields] - return null for undefined fields
    * @return {Rows} Rows that pass the filters
    */
-  getMatchingRows(filters, state, cache) {
+  getMatchingRows(filters, state, cache, clearFields = true) {
     // all the filters must match the row
     const boundFilters = filters.map((filter) =>
       Object.assign({}, filter, {
         value: evalInContext(filter.value, { state }),
-      })
+      }),
     );
     if (cache) {
       const newKey = JSON.stringify(boundFilters);
@@ -85,9 +86,11 @@ export class Data {
       }
       cache.key = newKey;
     }
-    const result = this.allrows
-      .filter((row) => boundFilters.every((filter) => match(filter, row)))
-      .map((row) => ({ ...this.clearFields, ...row }));
+    let result = this.allrows.filter((row) =>
+      boundFilters.every((filter) => match(filter, row)),
+    );
+    if (clearFields)
+      result = result.map((row) => ({ ...this.clearFields, ...row }));
     if (cache) {
       cache.rows = result;
       cache.updated = true;
@@ -109,7 +112,7 @@ export class Data {
     const boundFilters = filters.map((filter) =>
       Object.assign({}, filter, {
         value: evalInContext(filter.value, { state }),
-      })
+      }),
     );
     if (cache) {
       const newKey = JSON.stringify(boundFilters);
@@ -124,7 +127,7 @@ export class Data {
       cache.key = newKey;
     }
     const result = this.allrows.some((row) =>
-      boundFilters.every((filter) => match(filter, row))
+      boundFilters.every((filter) => match(filter, row)),
     );
     if (cache) {
       cache.result = result;

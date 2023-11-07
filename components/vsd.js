@@ -4,7 +4,8 @@ import * as Props from "./props";
 import { styleString } from "./style";
 import "css/vsd.css";
 import Globals from "app/globals";
-import { GridFilter, imageOrVideo } from "./grid";
+import { GridFilter } from "./gridFilter";
+import { imageOrVideo } from "./grid";
 
 /** Allow await'ing for a short time
  * @param {number} ms */
@@ -80,19 +81,11 @@ class VSD extends TreeBase {
   /** @type {HTMLDivElement} */
   markers;
 
-  get filters() {
-    return this.children.map((child) => ({
-      field: child.field.value,
-      operator: child.operator.value,
-      value: child.value.value,
-    }));
-  }
-
   template() {
     const { data, state, actions } = Globals;
     const editing = state.get("editing");
     const items = /** @type {VRow[]} */ (
-      data.getMatchingRows(this.filters, state)
+      data.getMatchingRows(GridFilter.toContentFilters(this.children), state)
     );
     const src = items.find((item) => item.image)?.image || "";
     let dragging = 0;
@@ -117,10 +110,10 @@ class VSD extends TreeBase {
             const div = document.querySelector("span.coords");
             if (!div) return;
             coords[dragging][0] = Math.round(
-              (100 * (event.pageX - rect.left)) / rect.width
+              (100 * (event.pageX - rect.left)) / rect.width,
             );
             coords[dragging][1] = Math.round(
-              (100 * (event.pageY - rect.top)) / rect.height
+              (100 * (event.pageY - rect.top)) / rect.height,
             );
             clip = `${coords[0][0]}\t${coords[0][1]}`;
             if (dragging) {
@@ -145,28 +138,29 @@ class VSD extends TreeBase {
           ${items
             .filter((item) => item.w)
             .map(
-              (item) => html`<button
-                style=${styleString({
-                  left: pct(item.x),
-                  top: pct(item.y),
-                  width: pct(item.w),
-                  height: pct(item.h),
-                  position: "absolute",
-                })}
-                ?invisible=${item.invisible}
-                .dataset=${{
-                  ComponentName: this.name.value,
-                  ComponentType: this.constructor.name,
-                  ...item,
-                }}
-                onClick=${actions.handler(this.name.value, item, "press")}
-              >
-                <span>${item.label || ""}</span>
-              </button>`
+              (item) =>
+                html`<button
+                  style=${styleString({
+                    left: pct(item.x),
+                    top: pct(item.y),
+                    width: pct(item.w),
+                    height: pct(item.h),
+                    position: "absolute",
+                  })}
+                  ?invisible=${item.invisible}
+                  .dataset=${{
+                    ComponentName: this.name.value,
+                    ComponentType: this.constructor.name,
+                    ...item,
+                  }}
+                  onClick=${actions.handler(this.name.value, item, "press")}
+                >
+                  <span>${item.label || ""}</span>
+                </button>`,
             )}
           <span class="coords" style="background-color: white"></span>
         </div>
-      </div>`
+      </div>`,
     );
   }
 
@@ -185,31 +179,7 @@ class VSD extends TreeBase {
   settingsDetails() {
     const props = this.propsAsProps;
     const inputs = Object.values(props).map((prop) => prop.input());
-    const filters = html`<fieldset>
-      <legend>Filters</legend>
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Field</th>
-            <th>Operator</th>
-            <th>Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${this.children.map(
-            (filter, index) => html`
-              <tr>
-                <td>${index + 1}</td>
-                <td>${filter.field.input()}</td>
-                <td>${filter.operator.input()}</td>
-                <td>${filter.value.input()}</td>
-              </tr>
-            `
-          )}
-        </tbody>
-      </table>
-    </fieldset>`;
+    const filters = GridFilter.FilterSettings(this.children);
     return html`<div>${filters}${inputs}</div>`;
   }
 

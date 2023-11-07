@@ -1,4 +1,5 @@
 import "css/tabcontrol.css";
+import { html } from "uhtml";
 import Globals from "app/globals";
 import { callAfterRender } from "app/render";
 import { TreeBase } from "./treebase";
@@ -18,6 +19,16 @@ export class Designer extends TabControl {
 
   panelTemplate() {
     return this.currentPanel?.settings() || this.empty;
+  }
+
+  template() {
+    return html`<div
+      onkeydown=${this.keyHandler}
+      onfocusin=${this.focusin}
+      onclick=${this.designerClick}
+    >
+      ${super.template()}
+    </div>`;
   }
 
   /**
@@ -112,7 +123,7 @@ export class Designer extends TabControl {
             panelNode.querySelector(
               "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), " +
                 'textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled]), ' +
-                "summary:not(:disabled)"
+                "summary:not(:disabled)",
             )
           );
 
@@ -127,46 +138,78 @@ export class Designer extends TabControl {
       }
     }
   }
-  /**
-   * @param {KeyboardEvent} event
-   */
-  panelKeyHandler = (event) => {
-    if (event.target instanceof HTMLTextAreaElement) return;
-    if (event.key != "ArrowDown" && event.key != "ArrowUp") return;
-    // get the components on this panel
-    // todo expand this to all components
-    const components = [...document.querySelectorAll(".panels .settings")];
-    // determine which one contains the focus
-    const focusedComponent = document.querySelector(
-      '.panels .settings:has([aria-selected="true"]):not(:has(.settings [aria-selected="true"]))'
-    );
-    if (!focusedComponent) return;
-    // get its index
-    const index = components.indexOf(focusedComponent);
-    // get the next index
-    const nextIndex = Math.min(
-      components.length - 1,
-      Math.max(0, index + (event.key == "ArrowUp" ? -1 : 1))
-    );
-    if (nextIndex != index) {
-      // focus on the first focusable in the next component
-      const focusable = /** @type {HTMLElement} */ (
-        components[nextIndex].querySelector(
-          "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), " +
-            'textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled]), ' +
-            "summary:not(:disabled)"
-        )
-      );
-      if (focusable) {
-        focusable.focus();
-      }
-    }
-  };
 
   /**
    * @param {KeyboardEvent} event
    */
-  tabButtonKeyHandler = ({ key }) => {
+  keyHandler = (event) => {
+    if (!this.currentPanel) return;
+    if (
+      event.target instanceof HTMLButtonElement &&
+      event.target.matches("#designer .tabcontrol .buttons button")
+    ) {
+      this.tabButtonKeyHandler(event);
+    } else {
+      const panel = document.getElementById(this.currentPanel.id);
+      if (
+        panel &&
+        event.target instanceof HTMLElement &&
+        panel.contains(event.target)
+      ) {
+        this.panelKeyHandler(event);
+      }
+    }
+  };
+  /**
+   * @param {KeyboardEvent} event
+   */
+  panelKeyHandler(event) {
+    if (event.target instanceof HTMLTextAreaElement) return;
+    if (event.key != "ArrowDown" && event.key != "ArrowUp") return;
+    if (event.shiftKey) {
+      // move the component
+      const component = Globals.designer.selectedComponent;
+      if (!component) return;
+      component.moveUpDown(event.key == "ArrowUp");
+      callAfterRender(() => Globals.designer.restoreFocus());
+      Globals.state.update();
+    } else {
+      // get the components on this panel
+      // todo expand this to all components
+      const components = [...document.querySelectorAll(".panels .settings")];
+      // determine which one contains the focus
+      const focusedComponent = document.querySelector(
+        '.panels .settings:has([aria-selected="true"]):not(:has(.settings [aria-selected="true"]))',
+      );
+      console.log({ event, focusedComponent });
+      if (!focusedComponent) return;
+      // get its index
+      const index = components.indexOf(focusedComponent);
+      // get the next index
+      const nextIndex = Math.min(
+        components.length - 1,
+        Math.max(0, index + (event.key == "ArrowUp" ? -1 : 1)),
+      );
+      if (nextIndex != index) {
+        // focus on the first focusable in the next component
+        const focusable = /** @type {HTMLElement} */ (
+          components[nextIndex].querySelector(
+            "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), " +
+              'textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled]), ' +
+              "summary:not(:disabled)",
+          )
+        );
+        if (focusable) {
+          focusable.focus();
+        }
+      }
+    }
+  }
+
+  /**
+   * @param {KeyboardEvent} event
+   */
+  tabButtonKeyHandler({ key }) {
     const tabButtons = /** @type {HTMLButtonElement[]} */ ([
       ...document.querySelectorAll("#designer .tabcontrol .buttons button"),
     ]);
@@ -195,6 +238,48 @@ export class Designer extends TabControl {
           tabButtons[j].focus();
           break;
         }
+      }
+    }
+  }
+
+  /** Tweak the focus behavior in the designer
+   * I want clicking on blank space to focus the nearest focusable element
+
+   * @param {KeyboardEvent} event
+   */
+  designerClick = (event) => {
+    // return if target is not an HTMLElement
+    if (!(event.target instanceof HTMLElement)) return;
+
+    const panel = document.querySelector("#designer .designer div.panels");
+    // return if not in designer
+    if (!panel) return;
+    // return if click is not inside the panel
+    if (!panel.contains(event.target)) return;
+    // check for background elements
+    if (
+      event.target instanceof HTMLDivElement ||
+      event.target instanceof HTMLFieldSetElement ||
+      event.target instanceof HTMLTableRowElement ||
+      event.target instanceof HTMLTableCellElement ||
+      event.target instanceof HTMLDetailsElement
+    ) {
+      if (event.target.matches('[tabindex="0"]')) return;
+      /** @type {HTMLElement | null} */
+      let target = event.target;
+      while (target) {
+        const focusable = /** @type {HTMLElement} */ (
+          target.querySelector(
+            "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), " +
+              'textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled]), ' +
+              "summary:not(:disabled)",
+          )
+        );
+        if (focusable) {
+          focusable.focus();
+          break;
+        }
+        target = target.parentElement;
       }
     }
   };

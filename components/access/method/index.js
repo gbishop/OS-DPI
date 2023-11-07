@@ -9,6 +9,9 @@ import { DesignerPanel } from "components/designer";
 import "css/method.css";
 import { toggleIndicator } from "app/components/helpers";
 
+// allow tearing down handlers when changing configurations
+const stop$ = new RxJs.Subject();
+
 export class MethodChooser extends DesignerPanel {
   name = new Props.String("Methods");
 
@@ -17,9 +20,6 @@ export class MethodChooser extends DesignerPanel {
   children = [];
 
   allowDelete = false;
-
-  // allow tearing down handlers when changing configurations
-  stop$ = new RxJs.Subject();
 
   static tableName = "method";
   static defaultValue = defaultMethods;
@@ -33,12 +33,12 @@ export class MethodChooser extends DesignerPanel {
     // tear down the old configuration if any
     this.stop();
     for (const method of this.children) {
-      method.configure(this.stop$);
+      method.configure(stop$);
     }
   }
 
   stop() {
-    this.stop$.next(1);
+    stop$.next(1);
   }
 
   settings() {
@@ -210,12 +210,17 @@ export class Method extends TreeBase {
     const pointerDebounce = handlerClasses.has("PointerHandler")
       ? [PointerDownDebounce.input(), PointerEnterDebounce.input()]
       : [];
+    const Debounce =
+      handlerClasses.has("KeyHandler") || handlerClasses.has("PointerHandler")
+        ? [
+            html`<fieldset>
+              <legend>Debounce</legend>
+              ${keyDebounce} ${pointerDebounce}
+            </fieldset> `,
+          ]
+        : [];
     return html`<div>
-      ${Name.input()} ${Active.input()} ${Pattern.input()}
-      <fieldset>
-        <legend>Debounce</legend>
-        ${keyDebounce} ${pointerDebounce}
-      </fieldset>
+      ${Name.input()} ${Active.input()} ${Pattern.input()} ${Debounce}
       ${timers.length > 0
         ? html`<fieldset>
             <legend>Timers</legend>
@@ -370,6 +375,13 @@ export class HandlerCondition extends TreeBase {
   eval(context) {
     return this.Condition.eval(context);
   }
+
+  /** move my parent instead of me.
+   * @param {boolean} up
+   */
+  moveUpDown(up) {
+    this.parent?.moveUpDown(up);
+  }
 }
 TreeBase.register(HandlerCondition, "HandlerCondition");
 
@@ -423,6 +435,13 @@ export class HandlerResponse extends TreeBaseSwitchable {
 
   subTemplate() {
     return this.empty;
+  }
+
+  /** move my parent instead of me.
+   * @param {boolean} up
+   */
+  moveUpDown(up) {
+    this.parent?.moveUpDown(up);
   }
 }
 TreeBase.register(HandlerResponse, "HandlerResponse");
