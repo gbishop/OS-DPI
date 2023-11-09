@@ -40,6 +40,43 @@ export function clearCues() {
   }
 }
 
+/** @param {number} time */
+async function pause(time) {
+  return new Promise((resolve) => setTimeout(resolve, time));
+}
+
+/** Convert a generator into an async function that cancels if it is called again
+ * */
+function makeSingle(generator) {
+  let globalNonce;
+  return async function (...args) {
+    const localNonce = (globalNonce = new Object());
+
+    const iter = generator(...args);
+    let resumeValue;
+    for (;;) {
+      const n = iter.next(resumeValue);
+      if (n.done) {
+        return n.value; // final return value of passed generator
+      }
+
+      // whatever the generator yielded, _now_ run await on it
+      resumeValue = await n.value;
+      if (localNonce !== globalNonce) {
+        return; // a new call was made
+      }
+      // next loop, we give resumeValue back to the generator
+    }
+  };
+}
+
+/** @param {Group} group */
+function animateGroup(group, cue) {
+  return group.animate(cue);
+}
+
+const animate = makeSingle(animateGroup);
+
 /**
  * Group is a collection of Buttons or Groups and associated properties such as
  * the label and cue.
@@ -94,6 +131,20 @@ export class Group {
         return i;
     }
     return -1;
+  }
+
+  /** Allow iterating over the members */
+  *animate(cue) {
+    const len = this.length;
+    for (let i = 0; i < len; i++) {
+      const member = this.members[i % this.members.length];
+      cueTarget(member, cue);
+      yield pause(member instanceof Group ? 500 : 200);
+      clearCues();
+      if (member instanceof Group) {
+        yield* member.animate.bind(member)(cue);
+      }
+    }
   }
 }
 
@@ -169,7 +220,7 @@ export class PatternManager extends PatternBase {
   allowedChildren = ["PatternSelector", "PatternGroup"];
 
   /** @type {Group} */
-  targets;
+  targets = new Group([], {});
   /**
    * Stack keeps track of the nesting as we walk the tree
    *
@@ -204,6 +255,14 @@ export class PatternManager extends PatternBase {
     return html`
       <div>
         ${Name.input()} ${Active.input()} ${Cycles.input()} ${Cue.input()}
+        <button
+          onclick=${() => {
+            clearCues();
+            animate(this.targets, Cue.value);
+          }}
+        >
+          Animate
+        </button>
         ${this.orderedChildren()}
       </div>
     `;
