@@ -7,6 +7,9 @@ import defaultPatterns from "./defaultPatterns";
 import { DesignerPanel } from "components/designer";
 import { toggleIndicator } from "app/components/helpers";
 
+// only run one animation at a time
+let globalNonce = 0;
+
 /** @param {Target} target
  * @param {string} defaultValue */
 export function cueTarget(target, defaultValue) {
@@ -18,7 +21,7 @@ export function cueTarget(target, defaultValue) {
       const promise = video.play();
       if (promise !== undefined) {
         promise
-          .then((_) => {})
+          .then(() => {})
           .catch((error) => {
             console.log("autoplay prevented", error);
           });
@@ -169,7 +172,7 @@ export class PatternManager extends PatternBase {
   allowedChildren = ["PatternSelector", "PatternGroup"];
 
   /** @type {Group} */
-  targets;
+  targets = new Group([], {});
   /**
    * Stack keeps track of the nesting as we walk the tree
    *
@@ -183,7 +186,6 @@ export class PatternManager extends PatternBase {
   cued = false;
 
   // props
-  Cycles = new Props.Integer(2, { min: 1 });
   Cue = new Props.Cue({ defaultValue: "DefaultCue" });
   Name = new Props.String("a pattern");
   Key = new Props.UID();
@@ -200,10 +202,17 @@ export class PatternManager extends PatternBase {
   }
 
   settingsDetails() {
-    const { Cycles, Cue, Name, Active } = this;
+    const { Cue, Name, Active } = this;
     return html`
       <div>
-        ${Name.input()} ${Active.input()} ${Cycles.input()} ${Cue.input()}
+        ${Name.input()} ${Active.input()} ${Cue.input()}
+        <button
+          onclick=${() => {
+            this.animate();
+          }}
+        >
+          Animate
+        </button>
         ${this.orderedChildren()}
       </div>
     `;
@@ -258,10 +267,13 @@ export class PatternManager extends PatternBase {
     } else {
       members = buttons;
     }
-    this.targets = new Group(members, this.props);
+    this.targets = new Group(members, { ...this.props, Cycles: 1 });
     // console.log("refresh", this.targets);
     this.stack = [{ group: this.targets, index: -1 }];
     this.cue();
+
+    // stop any running animations
+    globalNonce += 1;
   }
 
   /**
@@ -297,7 +309,7 @@ export class PatternManager extends PatternBase {
     // console.log("activate", event);
     if (target) {
       // adjust the stack to accomodate the target
-      while (true) {
+      for (;;) {
         const top = this.stack[0];
         const newIndex = top.group.members.indexOf(target);
         if (newIndex >= 0) {
@@ -420,6 +432,44 @@ export class PatternManager extends PatternBase {
       }
     }
     return event;
+  }
+
+  async animate() {
+    /** @param {Group} group
+     * @param {string} cue
+     */
+    function* animateGroup(group, cue) {
+      const cycles = +group.access.Cycles;
+      const groupTime = 500;
+      const buttonTime = Math.max(
+        100,
+        Math.min(500, 600 / group.members.length),
+      );
+      for (let cycle = 0; cycle < cycles; cycle++) {
+        for (const member of group.members) {
+          cueTarget(member, cue);
+          yield new Promise((resolve) =>
+            setTimeout(
+              resolve,
+              member instanceof Group ? groupTime : buttonTime,
+            ),
+          );
+          clearCues();
+          if (member instanceof Group) {
+            yield* animateGroup(member, cue);
+          }
+        }
+      }
+    }
+    this.clearCue();
+    this.refresh();
+
+    let nonce = ++globalNonce;
+
+    for (const promise of animateGroup(this.targets, this.Cue.value)) {
+      await promise;
+      if (nonce !== globalNonce) return;
+    }
   }
 }
 PatternBase.register(PatternManager, "PatternManager");
