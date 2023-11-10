@@ -80,7 +80,7 @@ class Display extends TreeBase {
         }}
       >
         ${content}
-      </button>`
+      </button>`,
     );
   }
 
@@ -103,133 +103,134 @@ class Display extends TreeBase {
   };
 
   initFunctions() {
-    if (!Display.functionsInitialized) {
-      Display.functionsInitialized = true;
-      let { actions } = Globals;
-      // console.log({ actions });
+    let { actions } = Globals;
 
-      /** return true of the message contains slots
-       * @param {String|Editor} message
+    // console.log({ actions });
+    /** return true of the message contains slots
+     * @param {String|Editor} message
+     */
+    function hasSlots(message) {
+      // console.log("has slots", message);
+      if (message instanceof Object) {
+        return message.slots.length > 0;
+      }
+      return message.indexOf("$$") >= 0;
+    }
+
+    /** initialize the editor
+     * @param {String} message
+     * @returns Editor
+     */
+    function init(message) {
+      // console.log("init", message);
+      const slots = Array.from(
+        message.matchAll(/\$\$(?<name>.*?)=(?<value>.*?)\$\$/g),
+      ).map((m) => m.groups);
+      return {
+        message,
+        slots,
+        slotIndex: 0,
+        slotName: (slots[0] && slots[0].name) || "",
+      };
+    }
+
+    /** cancel slot editing
+     * @returns Editor
+     */
+
+    function cancel() {
+      return {
+        message: "",
+        slots: [],
+        slotIndex: 0,
+        slotName: "",
+      };
+    }
+
+    /** update the value of the current slot
+     * @param {String} message
+     */
+    function update(message) {
+      /** @param {Editor} old
        */
-      function hasSlots(message) {
-        // console.log("has slots", message);
-        if (message instanceof Object) {
-          return message.slots.length > 0;
+      return (old) => {
+        // copy the slots from the old value
+        if (!old || !old.slots) {
+          return "";
         }
-        return message.indexOf("$$") >= 0;
-      }
-
-      /** initialize the editor
-       * @param {String} message
-       * @returns Editor
-       */
-      function init(message) {
-        // console.log("init", message);
-        const slots = Array.from(
-          message.matchAll(/\$\$(?<name>.*?)=(?<value>.*?)\$\$/g)
-        ).map((m) => m.groups);
-        return {
-          message,
-          slots,
-          slotIndex: 0,
-          slotName: (slots[0] && slots[0].name) || "",
-        };
-      }
-
-      /** cancel slot editing
-       * @returns Editor
-       */
-
-      function cancel() {
-        return {
-          message: "",
-          slots: [],
-          slotIndex: 0,
-          slotName: "",
-        };
-      }
-
-      /** update the value of the current slot
-       * @param {String} message
-       */
-      function update(message) {
-        /** @param {Editor} old
-         */
-        return (old) => {
-          // copy the slots from the old value
-          if (!old || !old.slots) {
-            return "";
-          }
-          const slots = [...old.slots];
-          let slotIndex = old.slotIndex;
-          // replace the current one
-          if (message.startsWith("*")) {
-            slots[slotIndex].value = message;
+        const slots = [...old.slots];
+        let slotIndex = old.slotIndex;
+        // replace the current one
+        if (message.startsWith("*")) {
+          slots[slotIndex].value = message;
+        } else {
+          if (slots[slotIndex].value.startsWith("*")) {
+            slots[slotIndex].value = `${slots[slotIndex].value} ${message}`;
           } else {
-            if (slots[slotIndex].value.startsWith("*")) {
-              slots[slotIndex].value = `${slots[slotIndex].value} ${message}`;
-            } else {
-              slots[slotIndex].value = message;
-            }
-            slotIndex++;
-            if (slotIndex >= slots.length) {
-              actions.queueEvent("okSlot", "press");
-            }
+            slots[slotIndex].value = message;
           }
-          return merge(old, {
-            slots,
-            slotIndex,
-            slotName: slots[slotIndex]?.name,
-          });
-        };
-      }
-
-      /** advance to the next slot
-       */
-      function nextSlot() {
-        /** @param {Editor} old
-         */
-        return (old) => {
-          if (!old) return;
-          const slotIndex = old.slotIndex + 1;
-          if (slotIndex >= old.slots.length) {
+          slotIndex++;
+          if (slotIndex >= slots.length) {
             actions.queueEvent("okSlot", "press");
           }
-          return merge(old, { slotIndex });
-        };
-      }
+        }
+        return merge(old, {
+          slots,
+          slotIndex,
+          slotName: slots[slotIndex]?.name,
+        });
+      };
+    }
 
-      /** duplicate the current slot
+    /** advance to the next slot
+     */
+    function nextSlot() {
+      /** @param {Editor} old
        */
-      function duplicate() {
-        /** @param {Editor} old
-         */
-        return (old) => {
-          const matches = Array.from(
-            old.message.matchAll(/\$\$(?<name>.*?)=(?<value>.*?)\$\$/g)
-          );
-          const current = matches[old.slotIndex];
-          if (current !== undefined && current.index !== undefined) {
-            const message =
-              old.message.slice(0, current.index) +
-              current[0] +
-              " and " +
-              current[0] +
-              old.message.slice(current.index + current[0].length);
-            const slots = [
-              ...old.slots.slice(0, old.slotIndex + 1),
-              { ...old.slots[old.slotIndex] }, // copy it
-              ...old.slots.slice(old.slotIndex + 1),
-            ];
-            return merge(old, {
-              message,
-              slots,
-            });
-          } else {
-            return old;
-          }
-        };
-      }
+      return (old) => {
+        if (!old) return;
+        const slotIndex = old.slotIndex + 1;
+        if (slotIndex >= old.slots.length) {
+          actions.queueEvent("okSlot", "press");
+        }
+        return merge(old, { slotIndex });
+      };
+    }
+
+    /** duplicate the current slot
+     */
+    function duplicate() {
+      /** @param {Editor} old
+       */
+      return (old) => {
+        const matches = Array.from(
+          old.message.matchAll(/\$\$(?<name>.*?)=(?<value>.*?)\$\$/g),
+        );
+        const current = matches[old.slotIndex];
+        if (current !== undefined && current.index !== undefined) {
+          const message =
+            old.message.slice(0, current.index) +
+            current[0] +
+            " and " +
+            current[0] +
+            old.message.slice(current.index + current[0].length);
+          const slots = [
+            ...old.slots.slice(0, old.slotIndex + 1),
+            { ...old.slots[old.slotIndex] }, // copy it
+            ...old.slots.slice(old.slotIndex + 1),
+          ];
+          return merge(old, {
+            message,
+            slots,
+          });
+        } else {
+          return old;
+        }
+      };
+    }
+
+    if (!Display.functionsInitialized) {
+      Display.functionsInitialized = true;
 
       Functions["slots"] = {
         init,

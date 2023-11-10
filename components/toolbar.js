@@ -306,7 +306,9 @@ function getFileMenuItems(bar) {
               }
             }
           }
-        } catch {}
+        } catch {
+          // ignore the error
+        }
         Globals.state.update();
       },
     }),

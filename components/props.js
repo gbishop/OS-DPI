@@ -126,25 +126,27 @@ export class Select extends Prop {
       choices = toMap(this.choices);
     }
     this.value = this.value || this.options.defaultValue || "";
-    return this.labeled(html`<select
-      id=${this.id}
-      required
-      title=${this.options.title}
-      onchange=${({ target }) => {
-        this.value = target.value;
-        this.update();
-      }}
-    >
-      <option value="" disabled ?selected=${!choices.has(this.value)}>
-        ${this.options.placeholder || "Choose one..."}
-      </option>
-      ${[...choices.entries()].map(
-        ([key, value]) =>
-          html`<option value=${key} ?selected=${this.value == key}>
-            ${value}
-          </option>`
-      )}
-    </select>`);
+    return this.labeled(
+      html`<select
+        id=${this.id}
+        required
+        title=${this.options.title}
+        onchange=${({ target }) => {
+          this.value = target.value;
+          this.update();
+        }}
+      >
+        <option value="" disabled ?selected=${!choices.has(this.value)}>
+          ${this.options.placeholder || "Choose one..."}
+        </option>
+        ${[...choices.entries()].map(
+          ([key, value]) =>
+            html`<option value=${key} ?selected=${this.value == key}>
+              ${value}
+            </option>`,
+        )}
+      </select>`,
+    );
   }
 
   /** @param {any} value */
@@ -160,7 +162,7 @@ export class Field extends Select {
   constructor(options = {}) {
     super(
       () => toMap([...Globals.data.allFields, "#ComponentName"].sort()),
-      options
+      options,
     );
   }
 }
@@ -211,20 +213,22 @@ export class String extends Prop {
   }
 
   input() {
-    return this.labeled(html`<input
-      type="text"
-      .value=${this.value}
-      id=${this.id}
-      pattern=${this.options.pattern}
-      onchange=${({ target }) => {
-        if (target.checkValidity()) {
-          this.value = target.value;
-          this.update();
-        }
-      }}
-      title=${this.options.title}
-      placeholder=${this.options.placeholder}
-    />`);
+    return this.labeled(
+      html`<input
+        type="text"
+        .value=${this.value}
+        id=${this.id}
+        pattern=${this.options.pattern}
+        onchange=${({ target }) => {
+          if (target.checkValidity()) {
+            this.value = target.value;
+            this.update();
+          }
+        }}
+        title=${this.options.title}
+        placeholder=${this.options.placeholder}
+      />`,
+    );
   }
 }
 
@@ -238,23 +242,25 @@ export class TextArea extends Prop {
   }
 
   input() {
-    return this.labeled(html`<textarea
-      .value=${this.value}
-      id=${this.id}
-      ?invalid=${!!this.validate(this.value)}
-      oninput=${({ target }) => {
-        const errorMsg = this.validate(target.value);
-        target.setCustomValidity(errorMsg);
-      }}
-      onchange=${({ target }) => {
-        if (target.checkValidity()) {
-          this.value = target.value;
-          this.update();
-        }
-      }}
-      title=${this.options.title}
-      placeholder=${this.options.placeholder}
-    />`);
+    return this.labeled(
+      html`<textarea
+        .value=${this.value}
+        id=${this.id}
+        ?invalid=${!!this.validate(this.value)}
+        oninput=${({ target }) => {
+          const errorMsg = this.validate(target.value);
+          target.setCustomValidity(errorMsg);
+        }}
+        onchange=${({ target }) => {
+          if (target.checkValidity()) {
+            this.value = target.value;
+            this.update();
+          }
+        }}
+        title=${this.options.title}
+        placeholder=${this.options.placeholder}
+      />`,
+    );
   }
 }
 
@@ -267,21 +273,23 @@ export class Integer extends Prop {
   }
 
   input() {
-    return this.labeled(html`<input
-      type="text"
-      inputmode="numeric"
-      pattern="[0-9]+"
-      .value=${this.value}
-      id=${this.id}
-      onchange=${({ target }) => {
-        if (target.checkValidity()) {
-          this.value = parseInt(target.value);
-          this.update();
-        }
-      }}
-      title=${this.options.title}
-      placeholder=${this.options.placeholder}
-    />`);
+    return this.labeled(
+      html`<input
+        type="text"
+        inputmode="numeric"
+        pattern="[0-9]+"
+        .value=${this.value}
+        id=${this.id}
+        onchange=${({ target }) => {
+          if (target.checkValidity()) {
+            this.value = parseInt(target.value);
+            this.update();
+          }
+        }}
+        title=${this.options.title}
+        placeholder=${this.options.placeholder}
+      />`,
+    );
   }
 }
 
@@ -294,22 +302,24 @@ export class Float extends Prop {
   }
 
   input() {
-    return this.labeled(html`<input
-      type="text"
-      inputmode="numeric"
-      pattern="[0-9]*([,.][0-9]*)?"
-      .value=${this.value}
-      id=${this.id}
-      onchange=${({ target }) => {
-        if (target.checkValidity()) {
-          this.value = parseFloat(target.value);
-          this.update();
-        }
-      }}
-      title=${this.options.title}
-      placeholder=${this.options.placeholder}
-      step="any"
-    />`);
+    return this.labeled(
+      html`<input
+        type="text"
+        inputmode="numeric"
+        pattern="[0-9]*([,.][0-9]*)?"
+        .value=${this.value}
+        id=${this.id}
+        onchange=${({ target }) => {
+          if (target.checkValidity()) {
+            this.value = parseFloat(target.value);
+            this.update();
+          }
+        }}
+        title=${this.options.title}
+        placeholder=${this.options.placeholder}
+        step="any"
+      />`,
+    );
   }
 }
 
@@ -324,16 +334,18 @@ export class Boolean extends Prop {
 
   input(options = {}) {
     options = { ...this.options, ...options };
-    return this.labeled(html`<input
-      type="checkbox"
-      ?checked=${this.value}
-      id=${this.id}
-      onchange=${({ target }) => {
-        this.value = target.checked;
-        this.update();
-      }}
-      title=${this.options.title}
-    />`);
+    return this.labeled(
+      html`<input
+        type="checkbox"
+        ?checked=${this.value}
+        id=${this.id}
+        onchange=${({ target }) => {
+          this.value = target.checked;
+          this.update();
+        }}
+        title=${options.title}
+      />`,
+    );
   }
 
   /** @param {any} value */
@@ -357,18 +369,20 @@ export class OneOfGroup extends Prop {
 
   input(options = {}) {
     options = { ...this.options, ...options };
-    return this.labeled(html`<input
-      type="checkbox"
-      .checked=${!!this.value}
-      id=${this.id}
-      name=${options.group}
-      onclick=${() => {
-        this.value = true;
-        this.clearPeers(options.group);
-        this.update();
-      }}
-      title=${this.options.title}
-    />`);
+    return this.labeled(
+      html`<input
+        type="checkbox"
+        .checked=${!!this.value}
+        id=${this.id}
+        name=${options.group}
+        onclick=${() => {
+          this.value = true;
+          this.clearPeers(options.group);
+          this.update();
+        }}
+        title=${this.options.title}
+      />`,
+    );
   }
 
   /** @param {any} value */
@@ -422,25 +436,27 @@ export class Expression extends Prop {
   }
 
   input() {
-    return this.labeled(html`<input
-      type="text"
-      .value=${this.value}
-      id=${this.id}
-      onchange=${({ target }) => {
-        this.value = target.value;
-        try {
-          this.compiled = compileExpression(this.value);
-          target.setCustomValidity("");
-          target.reportValidity();
-          this.update();
-        } catch (e) {
-          target.setCustomValidity(e.message);
-          target.reportValidity();
-        }
-      }}
-      title=${this.options.title}
-      placeholder=${this.options.placeholder}
-    />`);
+    return this.labeled(
+      html`<input
+        type="text"
+        .value=${this.value}
+        id=${this.id}
+        onchange=${({ target }) => {
+          this.value = target.value;
+          try {
+            this.compiled = compileExpression(this.value);
+            target.setCustomValidity("");
+            target.reportValidity();
+            this.update();
+          } catch (e) {
+            target.setCustomValidity(e.message);
+            target.reportValidity();
+          }
+        }}
+        title=${this.options.title}
+        placeholder=${this.options.placeholder}
+      />`,
+    );
   }
 
   /** @param {string} value */
@@ -537,8 +553,8 @@ export class Code extends Prop {
         (_, name) =>
           `data-${name.replace(
             /[A-Z]/g,
-            (/** @type {string} */ m) => `-${m.toLowerCase()}`
-          )}`
+            (/** @type {string} */ m) => `-${m.toLowerCase()}`,
+          )}`,
       );
       // prefix the selector so it only applies to the UI
       selector = `#UI ${editSelector(selector)}`;
@@ -568,7 +584,7 @@ export class Code extends Prop {
               // the property was invalid
               this.addError(
                 bodyOffset + (propMatch.index || 0),
-                `property ${propMatch[0]} is invalid`
+                `property ${propMatch[0]} is invalid`,
               );
             }
           }
@@ -583,31 +599,35 @@ export class Code extends Prop {
   }
 
   input() {
-    return this.labeled(html`<div class="Code">
-      <div class="numbered-textarea">
-        <textarea class="line-numbers" readonly></textarea>
-        <textarea
-          class="text"
-          .value=${this.value}
-          id=${this.id}
-          onchange=${({ target }) => {
-            this.value = target.value;
-            this.editCSS();
-            this.update();
-          }}
-          onkeyup=${(/** @type {{ target: HTMLTextAreaElement; }} */ event) => {
-            this.addLineNumbers(event.target);
-          }}
-          onscroll=${({ target }) => {
-            target.previousElementSibling.scrollTop = target.scrollTop;
-          }}
-          ref=${this.addLineNumbers}
-          title=${this.options.title}
-          placeholder=${this.options.placeholder}
-        ></textarea>
-      </div>
-      <div class="errors">${this.errors.join("\n")}</div>
-    </div>`);
+    return this.labeled(
+      html`<div class="Code">
+        <div class="numbered-textarea">
+          <textarea class="line-numbers" readonly></textarea>
+          <textarea
+            class="text"
+            .value=${this.value}
+            id=${this.id}
+            onchange=${({ target }) => {
+              this.value = target.value;
+              this.editCSS();
+              this.update();
+            }}
+            onkeyup=${(
+              /** @type {{ target: HTMLTextAreaElement; }} */ event,
+            ) => {
+              this.addLineNumbers(event.target);
+            }}
+            onscroll=${({ target }) => {
+              target.previousElementSibling.scrollTop = target.scrollTop;
+            }}
+            ref=${this.addLineNumbers}
+            title=${this.options.title}
+            placeholder=${this.options.placeholder}
+          ></textarea>
+        </div>
+        <div class="errors">${this.errors.join("\n")}</div>
+      </div>`,
+    );
   }
 
   /** @param {string} value */
@@ -626,14 +646,16 @@ export class Color extends Prop {
   }
 
   input() {
-    return this.labeled(html`<color-input
-      .value=${this.value}
-      id=${this.id}
-      onchange=${(/** @type {InputEventWithTarget} */ event) => {
-        this.value = event.target.value;
-        this.update();
-      }}
-    />`);
+    return this.labeled(
+      html`<color-input
+        .value=${this.value}
+        id=${this.id}
+        onchange=${(/** @type {InputEventWithTarget} */ event) => {
+          this.value = event.target.value;
+          this.update();
+        }}
+      />`,
+    );
   }
 }
 
@@ -646,17 +668,19 @@ export class Voice extends Prop {
   }
 
   input() {
-    return this.labeled(html`<select
-      is="select-voice"
-      .value=${this.value}
-      id=${this.id}
-      onchange=${(/** @type {InputEventWithTarget} */ event) => {
-        this.value = event.target.value;
-        this.update();
-      }}
-    >
-      <option value="">Default</option>
-    </select>`);
+    return this.labeled(
+      html`<select
+        is="select-voice"
+        .value=${this.value}
+        id=${this.id}
+        onchange=${(/** @type {InputEventWithTarget} */ event) => {
+          this.value = event.target.value;
+          this.update();
+        }}
+      >
+        <option value="">Default</option>
+      </select>`,
+    );
   }
 }
 
@@ -669,14 +693,16 @@ export class ADate extends Prop {
   }
 
   input() {
-    return this.labeled(html`<input
-      type="date"
-      .value=${this.value}
-      id=${this.id}
-      onchange=${(/** @type {InputEventWithTarget} */ event) => {
-        this.value = event.target.value;
-        this.update();
-      }}
-    />`);
+    return this.labeled(
+      html`<input
+        type="date"
+        .value=${this.value}
+        id=${this.id}
+        onchange=${(/** @type {InputEventWithTarget} */ event) => {
+          this.value = event.target.value;
+          this.update();
+        }}
+      />`,
+    );
   }
 }

@@ -60,7 +60,7 @@ export class Rules {
   applyRules(origin, event, data) {
     this.last = { origin, event, data, rule: null };
     // first for the event then for any that got queued.
-    while (true) {
+    for (;;) {
       const context = { ...Functions, state: Globals.state, data };
       for (const rule of this.rules) {
         if (
@@ -70,7 +70,7 @@ export class Rules {
           continue;
         }
         const result = rule.conditions.every((restriction) =>
-          evalInContext(restriction, context)
+          evalInContext(restriction, context),
         );
         if (result) {
           this.last.rule = rule;
@@ -78,7 +78,7 @@ export class Rules {
             Object.entries(rule.updates).map(([$var, value]) => [
               $var,
               evalInContext(value, context),
-            ])
+            ]),
           );
           Globals.state.update(patch);
           break;

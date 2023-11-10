@@ -43,8 +43,8 @@ function normalizeStyle(style) {
       .map(([key, value]) =>
         key.toLowerCase().indexOf("color") >= 0
           ? [key, getColor(/** @type {string} */ (value))]
-          : [key, value && value.toString()]
-      )
+          : [key, value && value.toString()],
+      ),
   );
 }
 
@@ -66,7 +66,7 @@ export function styleString(styles) {
       ":" +
       value +
       ";",
-    ""
+    "",
   );
 }
 
@@ -86,7 +86,7 @@ class ColorInput extends HTMLElement {
    * I will copy the props and call the init method
    */
   connectedCallback() {
-    if (!this.hasOwnProperty("initialized")) {
+    if (!Object.hasOwn(this, "initialized")) {
       this.initialized = true;
       this.init();
     }
@@ -142,7 +142,7 @@ class ColorInput extends HTMLElement {
         <div
           class="swatch"
           style=${`background-color: ${getColor(this.value)}`}
-        ></div>`
+        ></div>`,
     );
   }
 }

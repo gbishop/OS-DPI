@@ -65,7 +65,7 @@ export class Actions extends DesignerPanel {
     // console.trace({ origin, event, data });
     this.last = { origin, event, data, rule: null };
     // first for the event then for any that got queued.
-    while (true) {
+    for (;;) {
       const context = { ...Functions, state: Globals.state, ...data };
       for (const rule of this.children) {
         if (origin != rule.props.origin && rule.props.origin != "*") {

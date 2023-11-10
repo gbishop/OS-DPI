@@ -231,7 +231,7 @@ export class TreeBase {
    * @returns {Hole}
    */
   settingsSummary() {
-    const name = this.hasOwnProperty("name") ? this["name"].value : "";
+    const name = Object.hasOwn(this, "name") ? this["name"].value : "";
     return html`<h3>${friendlyName(this.className)} ${name}</h3>`;
   }
 

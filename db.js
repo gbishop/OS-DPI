@@ -14,7 +14,9 @@ export class DB {
           for (const name of ["store", "media", "saved", "url"]) {
             try {
               db.deleteObjectStore(name);
-            } catch (e) {}
+            } catch (e) {
+              // ignore the error
+            }
           }
         } else if (oldVersion == 3) {
           db.deleteObjectStore("images");
@@ -144,7 +146,7 @@ export class DB {
     const allNames = await this.names();
     if (allNames.indexOf(name) < 0) return name;
     const base = name;
-    for (let i = 1; true; i++) {
+    for (let i = 1; ; i++) {
       const name = `${base}-${i}`;
       if (allNames.indexOf(name) < 0) return name;
     }
