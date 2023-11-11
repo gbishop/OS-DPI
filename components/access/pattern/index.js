@@ -8,7 +8,7 @@ import { DesignerPanel } from "components/designer";
 import { toggleIndicator } from "app/components/helpers";
 
 // only run one animation at a time
-let globalNonce = 0;
+let animationNonce = 0;
 
 /** @param {Target} target
  * @param {string} defaultValue */
@@ -273,7 +273,7 @@ export class PatternManager extends PatternBase {
     this.cue();
 
     // stop any running animations
-    globalNonce += 1;
+    animationNonce += 1;
   }
 
   /**
@@ -464,11 +464,13 @@ export class PatternManager extends PatternBase {
     this.clearCue();
     this.refresh();
 
-    let nonce = ++globalNonce;
+    // kill any running animations and save the new value
+    let nonce = ++animationNonce;
 
     for (const promise of animateGroup(this.targets, this.Cue.value)) {
       await promise;
-      if (nonce !== globalNonce) return;
+      // quit if the animationNonce changes
+      if (nonce !== animationNonce) return;
     }
   }
 }
