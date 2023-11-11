@@ -232,6 +232,42 @@ export class String extends Prop {
   }
 }
 
+/* I'd like to let the designer type the key instead of using a select in the KeyHandlerCondition
+ * but there are two problems with this approach.
+ * 1. How do you get out of the control if every key is inputtable?
+ * 2. How to handle space which shows up a " "
+ *
+ * Maybe after typing a key you pop out of the control to somewhere?
+ * Maybe all values are shown surrounded by quotes?
+ */
+export class KeyName extends Prop {
+  value = "";
+
+  constructor(value = "", options = {}) {
+    super(options);
+    this.value = value;
+  }
+
+  input() {
+    return this.labeled(
+      html`<input
+        type="text"
+        .value=${this.value}
+        id=${this.id}
+        onkeydown=${(/** @type {KeyboardEvent} */ event) => {
+          event.stopPropagation();
+          event.preventDefault();
+          this.value = event.key;
+          event.target.value = event.key == " " ? "Space" : event.key;
+          console.log("ku", event, this.value);
+        }}
+        title=${this.options.title}
+        placeholder=${this.options.placeholder}
+      />`,
+    );
+  }
+}
+
 export class TextArea extends Prop {
   value = "";
 
