@@ -385,15 +385,6 @@ export class HandlerCondition extends TreeBase {
 }
 TreeBase.register(HandlerCondition, "HandlerCondition");
 
-const allKeys = new Map([
-  [" ", "Space"],
-  ["Enter", "Enter"],
-  ["ArrowLeft", "Left Arrow"],
-  ["ArrowRight", "Right Arrow"],
-  ["ArrowUp", "Up Arrow"],
-  ["ArrowDown", "Down Arrow"],
-]);
-
 export class HandlerKeyCondition extends HandlerCondition {
   Key = new Props.KeyName("", {
     placeholder: "Press Enter to edit",
