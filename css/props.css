@@ -82,6 +82,9 @@ div.Code div.errors {
   white-space: pre;
 }
 
+div.Key input[readonly] {
+  background: #eee;
+}
 /*
 div.Code textarea.line-numbers::-webkit-scrollbar {
   display: none;

@@ -395,7 +395,10 @@ const allKeys = new Map([
 ]);
 
 export class HandlerKeyCondition extends HandlerCondition {
-  Key = new Props.KeyName("", { placeholder: "Press a single key" });
+  Key = new Props.KeyName("", {
+    placeholder: "Press Enter to edit",
+    hiddenLabel: true,
+  });
 
   settings() {
     const { Key } = this;

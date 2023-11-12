@@ -232,13 +232,7 @@ export class String extends Prop {
   }
 }
 
-/* I'd like to let the designer type the key instead of using a select in the KeyHandlerCondition
- * but there are two problems with this approach.
- * 1. How do you get out of the control if every key is inputtable?
- * 2. How to handle space which shows up a " "
- *
- * Maybe after typing a key you pop out of the control to somewhere?
- * Maybe all values are shown surrounded by quotes?
+/* Allow entering a key name by first pressing Enter than pressing a single key
  */
 export class KeyName extends Prop {
   value = "";
@@ -249,19 +243,32 @@ export class KeyName extends Prop {
   }
 
   input() {
+    /** @param {string} key */
+    function mapKey(key) {
+      if (key == " ") return "Space";
+      return key;
+    }
     return this.labeled(
       html`<input
         type="text"
-        .value=${this.value}
+        .value=${mapKey(this.value)}
         id=${this.id}
+        readonly
         onkeydown=${(/** @type {KeyboardEvent} */ event) => {
-          event.stopPropagation();
-          event.preventDefault();
-          this.value = event.key;
-          event.target.value = event.key == " " ? "Space" : event.key;
-          console.log("ku", event, this.value);
+          const target = event.target;
+          if (!(target instanceof HTMLInputElement)) return;
+          if (target.hasAttribute("readonly") && event.key == "Enter") {
+            target.removeAttribute("readonly");
+            target.select();
+          } else if (!target.hasAttribute("readonly")) {
+            event.stopPropagation();
+            event.preventDefault();
+            this.value = event.key;
+            target.value = mapKey(event.key);
+            target.setAttribute("readonly", "");
+          }
         }}
-        title=${this.options.title}
+        title="Press Enter to change then press a single key to set"
         placeholder=${this.options.placeholder}
       />`,
     );
