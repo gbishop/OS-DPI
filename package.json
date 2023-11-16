@@ -24,6 +24,7 @@
     "rxjs": "^7.5.6",
     "sheetrock": "^1.2.0",
     "stacktrace-js": "^2.0.2",
+    "tracky-mouse": "^1.0.0",
     "uhtml": "^3.0.1",
     "weak-value": "^1.0.2",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.19.3/xlsx-0.19.3.tgz"

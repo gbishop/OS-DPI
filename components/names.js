@@ -29,6 +29,7 @@ const namesMap = {
   HandlerCondition: ["Condition", "Methods#Condition"],
   HandlerKeyCondition: ["Key Condition", "Methods#Key Condition"],
   HandlerResponse: ["Response", "Methods#Response"],
+  HeadMouse: ["Head Mouse", "Head Mouse"],
   KeyHandler: ["Key Handler", "Methods#Key Handler"],
   Layout: ["Layout", "Layout"],
   Logger: ["Logger", "Logger"],

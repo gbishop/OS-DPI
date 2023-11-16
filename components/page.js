@@ -11,7 +11,8 @@ export class Page extends Stack {
       "Audio",
       "Logger",
       "ModalDialog",
-      "Customize"
+      "Customize",
+      "HeadMouse"
     );
   }
 }
