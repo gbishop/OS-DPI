@@ -13,5 +13,5 @@
     "resolveJsonModule": true,
     "lib": ["dom", "dom.iterable", "esnext", "WebWorker"]
   },
-  "exclude": ["node_modules", "docs", "thinking", "OS-DPI"]
+  "exclude": ["node_modules", "docs", "thinking", "OS-DPI", "public"]
 }
