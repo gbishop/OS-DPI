@@ -22,7 +22,7 @@ echo > .nojekyll
 git init
 git checkout -B main
 mkdir public
-cp -r ../examples examples
+cp -r ../../examples examples
 git add -A
 git commit -m 'deploy'
 
