@@ -7038,7 +7038,7 @@ class Select extends Prop {
   constructor(choices = [], options = {}) {
     super(options);
     this.choices = choices;
-    this.value = "";
+    this.value = options.defaultValue || "";
   }
 
   /** @param {Map<string,string> | null} choices */
@@ -9587,7 +9587,7 @@ class Stack extends TreeBase {
     }
     const scaleSum = this.children.reduce(
       (sum, child) => sum + getScale(child),
-      0
+      0,
     );
     const empty = this.children.length && scaleSum ? "" : "empty";
     const dimension = this.props.direction == "row" ? "width" : "height";
@@ -9607,8 +9607,8 @@ class Stack extends TreeBase {
             })}
           >
             ${child.safeTemplate()}
-          </div>`
-      )
+          </div>`,
+      ),
     );
   }
 }
@@ -10634,8 +10634,8 @@ async function getActualImageSize(img) {
       width = ch * iratio;
       height = ch;
     }
-    left = (cw - width) / 2;
-    top = (ch - height) / 2;
+    left = (cw - width) / 2 + img.x;
+    top = (ch - height) / 2 + img.y;
   }
   return { left, top, width, height };
 }
