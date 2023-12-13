@@ -117,7 +117,7 @@ export class Select extends Prop {
   constructor(choices = [], options = {}) {
     super(options);
     this.choices = choices;
-    this.value = "";
+    this.value = options.defaultValue || "";
   }
 
   /** @param {Map<string,string> | null} choices */
