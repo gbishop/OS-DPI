@@ -45,8 +45,8 @@ async function getActualImageSize(img) {
       width = ch * iratio;
       height = ch;
     }
-    left = (cw - width) / 2;
-    top = (ch - height) / 2;
+    left = (cw - width) / 2 + img.x;
+    top = (ch - height) / 2 + img.y;
   }
   return { left, top, width, height };
 }

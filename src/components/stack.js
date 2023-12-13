@@ -36,7 +36,7 @@ export class Stack extends TreeBase {
     }
     const scaleSum = this.children.reduce(
       (sum, child) => sum + getScale(child),
-      0
+      0,
     );
     const empty = this.children.length && scaleSum ? "" : "empty";
     const dimension = this.props.direction == "row" ? "width" : "height";
@@ -56,8 +56,8 @@ export class Stack extends TreeBase {
             })}
           >
             ${child.safeTemplate()}
-          </div>`
-      )
+          </div>`,
+      ),
     );
   }
 }
