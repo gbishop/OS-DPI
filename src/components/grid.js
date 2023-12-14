@@ -33,7 +33,12 @@ export function imageOrVideo(src, title, onload = null) {
     />`;
   } else {
     // image
-    return html`<img is="img-db" dbsrc=${src} title=${title} />`;
+    return html`<img
+      is="img-db"
+      dbsrc=${src}
+      title=${title}
+      onload=${onload}
+    />`;
   }
 }
 

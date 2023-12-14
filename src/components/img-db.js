@@ -35,7 +35,10 @@ export class imgFromDb extends HTMLImageElement {
     // if it contains a slash treat it like an external url
     // if not, fetch it from the db
     if (url && url.indexOf("/") < 0) url = await db.getMediaURL(url);
-    if (url) this.src = url;
+    if (url) {
+      this.src = url;
+      this.dispatchEvent(new Event("load", { bubbles: true }));
+    }
   }
 }
 customElements.define("img-db", imgFromDb, { extends: "img" });
