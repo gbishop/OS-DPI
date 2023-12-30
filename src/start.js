@@ -36,7 +36,7 @@ export async function start() {
     const fetch = params.get("fetch");
     if (fetch) {
       await pleaseWait(db.readDesignFromURL(fetch));
-      editing = false;
+      editing = params.get("edit") !== null;
       window.history.replaceState(
         {},
         document.title,
