@@ -7,3 +7,7 @@ details.Method > *:not(summary) {
   font-weight: normal;
   font-size: 80%;
 }
+
+div.MethodChooser > ul {
+  width: 100%;
+}

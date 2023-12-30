@@ -13,9 +13,9 @@ export class Messages extends TreeBase {
         ${this.messages.map((message) => html`<p>${message}</p>`)}
       </div> `;
       this.messages = [];
-      return result;
+      return [result];
     } else {
-      return this.empty;
+      return [];
     }
   }
 
@@ -71,6 +71,12 @@ function reportInternalError(msg, trace) {
   document.body.prepend(result);
 }
 
+/** @param {string} msg
+ * @param {string} _file
+ * @param {number} _line
+ * @param {number} _col
+ * @param {Error} error
+ */
 window.onerror = async function (msg, _file, _line, _col, error) {
   console.error("onerror", msg, error);
   if (error instanceof Error) {
@@ -105,6 +111,6 @@ window.onunhandledrejection = function (error) {
   error.preventDefault();
   reportInternalError(
     error.reason.message,
-    error.reason.stack?.split("\n") || ["no stack"]
+    error.reason.stack?.split("\n") || ["no stack"],
   );
 };

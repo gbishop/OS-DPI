@@ -37,6 +37,7 @@ export class SocketHandler extends Handler {
   }
 
   init() {
+    super.init();
     // set the signal value
     this.Signal.set("socket");
 
@@ -132,12 +133,10 @@ export class SocketHandler extends Handler {
       URL: this.URL.value,
       state: Globals.state.values,
     };
-    const filters = GridFilter.toContentFilters(this.filters);
+    const filters = this.filters;
     if (filters.length > 0) {
       const content = Globals.data.getMatchingRows(
         filters,
-        Globals.state,
-        undefined, // no cache for now
         false, // do not pass NULL for the undefined fields
       );
       message["content"] = content;

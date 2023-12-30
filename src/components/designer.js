@@ -1,49 +1,86 @@
-import "css/tabcontrol.css";
 import { html } from "uhtml";
+import * as Props from "./props";
+import { colorNamesDataList } from "./style";
+import "css/designer.css";
 import Globals from "app/globals";
-import { callAfterRender } from "app/render";
 import { TreeBase } from "./treebase";
-import { TabControl, TabPanel } from "./tabcontrol";
+import { callAfterRender } from "app/render";
 import db from "app/db";
 
-/**
- * Customize the TabControl for use in the Designer interface
- */
-export class Designer extends TabControl {
-  allowDelete = false;
+export class Designer extends TreeBase {
+  stateName = new Props.String("$tabControl");
+  background = new Props.String("");
+  scale = new Props.Float(6);
+  name = new Props.String("tabs");
+
+  hint = "T";
+
+  allowedChildren = ["DesignerPanel"];
+
+  /** @type {DesignerPanel[]} */
+  children = [];
 
   /** @type {DesignerPanel | undefined} */
   currentPanel = undefined;
 
-  hint = "T";
-
-  panelTemplate() {
-    return this.currentPanel?.settings() || this.empty;
-  }
-
+  /** @returns {Hole|Hole[]} */
   template() {
-    return html`<div
-      onkeydown=${this.keyHandler}
-      onfocusin=${this.focusin}
-      onclick=${this.designerClick}
-    >
-      ${super.template()}
-    </div>`;
-  }
-
-  /**
-   * Wrap the body of a component
-   * Include the tabcontrol class so we inherit its properties
-   *
-   * @param {Object} attrs
-   * @param {Hole} body
-   * @returns {Hole}
-   */
-  component(attrs, body) {
-    const { classes } = attrs;
-    classes.push("tabcontrol");
-    attrs = { ...attrs, classes };
-    return super.component(attrs, body);
+    const { state } = Globals;
+    const panels = this.children;
+    let activeTabName = state.get(this.stateName.value);
+    // collect panel info
+    panels.forEach((panel, index) => {
+      panel.tabName = state.interpolate(panel.name.value); // internal name
+      panel.tabLabel = state.interpolate(panel.label.value || panel.name.value); // display name
+      if (index == 0 && !activeTabName) {
+        activeTabName = panel.tabName;
+        state.define(this.stateName.value, panel.tabName);
+      }
+      panel.active = activeTabName == panel.tabName || panels.length === 1;
+      if (panel.active) {
+        this.currentPanel = panel;
+      }
+    });
+    let buttons = [];
+    buttons = panels
+      .filter((panel) => panel.label.value != "UNLABELED")
+      .map((panel) => {
+        return html`<li>
+          <button
+            ?active=${panel.active}
+            .dataset=${{
+              name: this.name.value,
+              label: panel.tabLabel,
+              component: this.constructor.name,
+              id: panel.id,
+            }}
+            click
+            onClick=${() => {
+              this.switchTab(panel.tabName);
+            }}
+            tabindex="-1"
+          >
+            ${panel.tabLabel}
+          </button>
+        </li>`;
+      });
+    return this.component(
+      { classes: ["top", "tabcontrol"] },
+      html`
+        <ul class="buttons" hint="T" onkeyup=${this.tabButtonKeyHandler}>
+          ${buttons}
+        </ul>
+        <div
+          class="panels flex"
+          onkeydown=${this.keyHandler}
+          onfocusin=${this.focusin}
+          onclick=${this.designerClick}
+        >
+          ${panels.map((panel) => panel.settings())}
+        </div>
+        ${colorNamesDataList()}
+      `,
+    );
   }
 
   /**
@@ -51,7 +88,7 @@ export class Designer extends TabControl {
    */
   switchTab(tabName) {
     callAfterRender(() => this.restoreFocus());
-    super.switchTab(tabName);
+    Globals.state.update({ [this.stateName.value]: tabName });
   }
 
   /**
@@ -67,9 +104,11 @@ export class Designer extends TabControl {
     for (const element of panel.querySelectorAll("[aria-selected]")) {
       element.removeAttribute("aria-selected");
     }
-    const id = event.target.closest("[id]")?.id || "";
-    this.currentPanel.lastFocused = id;
-    event.target.setAttribute("aria-selected", "true");
+    if (panel.contains(event.target)) {
+      const id = event.target.closest("[id]")?.id || "";
+      this.currentPanel.lastFocused = id;
+      event.target.setAttribute("aria-selected", "true");
+    }
 
     if (this.currentPanel.name.value == "Layout") {
       this.currentPanel.highlight();
@@ -108,15 +147,8 @@ export class Designer extends TabControl {
             elem = document.querySelector(`[id^=${prefix}]`);
           }
         }
-        // console.log(
-        //   "restore focus",
-        //   elem,
-        //   this.currentPanel.lastFocused,
-        //   this.currentPanel
-        // );
         if (elem) elem.focus();
       } else {
-        // console.log("restoreFocus else path");
         const panelNode = document.getElementById(this.currentPanel.id);
         if (panelNode) {
           const focusable = /** @type {HTMLElement} */ (
@@ -129,10 +161,8 @@ export class Designer extends TabControl {
 
           if (focusable) {
             focusable.focus();
-            // console.log("send focus to element in panel");
           } else {
             panelNode.focus();
-            // console.log("send focus to empty panel");
           }
         }
       }
@@ -146,7 +176,7 @@ export class Designer extends TabControl {
     if (!this.currentPanel) return;
     if (
       event.target instanceof HTMLButtonElement &&
-      event.target.matches("#designer .tabcontrol .buttons button")
+      event.target.matches("#designer .buttons button")
     ) {
       this.tabButtonKeyHandler(event);
     } else {
@@ -174,14 +204,16 @@ export class Designer extends TabControl {
       callAfterRender(() => Globals.designer.restoreFocus());
       Globals.state.update();
     } else {
+      event.preventDefault();
       // get the components on this panel
       // todo expand this to all components
-      const components = [...document.querySelectorAll(".panels .settings")];
+      const components = [
+        ...document.querySelectorAll(".DesignerPanel.ActivePanel .settings"),
+      ];
       // determine which one contains the focus
       const focusedComponent = document.querySelector(
-        '.panels .settings:has([aria-selected="true"]):not(:has(.settings [aria-selected="true"]))',
+        '.DesignerPanel.ActivePanel .settings:has([aria-selected="true"]):not(:has(.settings [aria-selected="true"]))',
       );
-      console.log({ event, focusedComponent });
       if (!focusedComponent) return;
       // get its index
       const index = components.indexOf(focusedComponent);
@@ -211,10 +243,10 @@ export class Designer extends TabControl {
    */
   tabButtonKeyHandler({ key }) {
     const tabButtons = /** @type {HTMLButtonElement[]} */ ([
-      ...document.querySelectorAll("#designer .tabcontrol .buttons button"),
+      ...document.querySelectorAll("#designer .buttons button"),
     ]);
     const focused = /** @type {HTMLButtonElement} */ (
-      document.querySelector("#designer .tabcontrol .buttons button:focus")
+      document.querySelector("#designer .buttons button:focus")
     );
     if (key == "Escape") {
       Globals.designer.restoreFocus();
@@ -286,7 +318,18 @@ export class Designer extends TabControl {
 }
 TreeBase.register(Designer, "Designer");
 
-export class DesignerPanel extends TabPanel {
+export class DesignerPanel extends TreeBase {
+  name = new Props.String("");
+  label = new Props.String("");
+
+  /** @type {Designer | null} */
+  parent = null;
+
+  active = false;
+  tabName = "";
+  tabLabel = "";
+  lastFocused = "";
+
   // where to store in the db
   static tableName = "";
   // default value if it isn't found
@@ -297,9 +340,6 @@ export class DesignerPanel extends TabPanel {
     // @ts-expect-error
     return this.constructor.tableName;
   }
-
-  /** @type {string[]} */
-  allowedChildren = [];
 
   /**
    * Load a panel from the database.
@@ -323,6 +363,35 @@ export class DesignerPanel extends TabPanel {
     // I don't think this happens
     return this.create(expected);
   }
+
+  /**
+   * Render the details of a components settings
+   */
+  settingsDetails() {
+    const caption = this.active ? "Active" : "Activate";
+    let details = super.settingsDetails();
+    if (!Array.isArray(details)) details = [details];
+    return [
+      ...details,
+      html`<button
+        id=${this.id + "-activate"}
+        ?active=${this.active}
+        onclick=${() => {
+          if (this.parent) {
+            const parent = this.parent;
+            callAfterRender(() => {
+              Globals.layout.highlight();
+            });
+            parent.switchTab(this.name.value);
+          }
+        }}
+      >
+        ${caption}
+      </button>`,
+    ];
+  }
+
+  highlight() {}
 
   /**
    * An opportunity to upgrade the format if needed
@@ -349,5 +418,16 @@ export class DesignerPanel extends TabPanel {
       await db.undo(tableName);
       Globals.restart();
     }
+  }
+
+  /** @param {string[]} classes
+   * @returns {string}
+   */
+  CSSClasses(...classes) {
+    classes.push("DesignerPanel");
+    if (this.active) {
+      classes.push("ActivePanel");
+    }
+    return super.CSSClasses(...classes);
   }
 }

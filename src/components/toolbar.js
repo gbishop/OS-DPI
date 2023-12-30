@@ -38,7 +38,6 @@ function getComponentMenuItems(component, which = "all", wrapper) {
         new MenuItem({
           label: `${friendlyName(className)}`,
           callback: wrapper(() => {
-            console.log("add", className, component.className);
             const result = TreeBase.create(className, component);
             result.init();
             return result.id;
@@ -56,7 +55,6 @@ function getComponentMenuItems(component, which = "all", wrapper) {
           title: `Delete ${friendlyName(component.className)}`,
           callback: wrapper(() => {
             // remove returns the id of the nearest neighbor or the parent
-            console.log("delete", component.className, component.id);
             const nextId = component.remove();
             return nextId;
           }),
@@ -146,24 +144,34 @@ function getPanelMenuItems(type) {
   let menuItems = getComponentMenuItems(component, type, itemCallback);
 
   // Add the parent's actions in some cases
-  const parent = component.parent;
+  let parent = component.parent;
 
-  let parentItems = [];
-  if (
-    type === "add" &&
-    parent &&
-    !(component instanceof Stack && parent instanceof Stack) &&
-    !(component instanceof PatternGroup && parent instanceof PatternGroup) &&
-    !(parent instanceof Designer)
-  ) {
-    parentItems = getComponentMenuItems(parent, type, itemCallback);
+  let parentItems = new Map();
+  for (let i = 0; i < 3; i++) {
+    if (
+      type !== "add" ||
+      !parent ||
+      (component instanceof Stack && parent instanceof Stack) ||
+      (component instanceof PatternGroup && parent instanceof PatternGroup) ||
+      parent instanceof Designer
+    ) {
+      break;
+    }
+
+    for (const item of getComponentMenuItems(parent, type, itemCallback)) {
+      if (!parentItems.has(item.label)) {
+        parentItems.set(item.label, item);
+      }
+    }
+    if (parentItems.size > 10) break;
+    parent = parent.parent;
     // if (menuItems.length && parentItems.length) {
     //   parentItems[0].divider = "Parent";
     // }
     // menuItems = menuItems.concat(parentItems);
   }
 
-  return { child: menuItems, parent: parentItems };
+  return { child: menuItems, parent: [...parentItems.values()] };
 }
 
 /** @param {ToolBar} bar */
@@ -434,7 +442,7 @@ function getEditMenuItems() {
   items = items.concat(moveItems.child, deleteItems.child);
   const parentItems = moveItems.parent.concat(deleteItems.parent);
   if (parentItems.length > 0) {
-    parentItems[0].divider = "Parent";
+    parentItems[0].divider = "Parents";
     items = items.concat(parentItems);
   }
   return items;
@@ -583,7 +591,7 @@ export class ToolBar extends TreeBase {
       () => {
         const { child, parent } = getPanelMenuItems("add");
         if (parent.length > 0) {
-          parent[0].divider = "Parent";
+          parent[0].divider = "Parent" + (parent.length > 1 ? "s" : "");
         }
         return child.concat(parent);
       },

@@ -4,7 +4,7 @@
  * @typedef {Object} ContentFilter
  * @property {string} field
  * @property {string} operator
- * @property {string} value
+ * @property {string|number|boolean} value
  */
 
 /**
@@ -137,4 +137,10 @@
  * @property {Object} [access]
  * @property {Object} [originalTarget]
  * @property {number} [groupIndex]
+ */
+
+/**
+ * @typedef {Object} EvalContext
+ * @property {Object} [states]
+ * @property {Object} [data]
  */

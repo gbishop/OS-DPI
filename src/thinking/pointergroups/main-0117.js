@@ -183,7 +183,6 @@ s$ = s$.pipe(
             console.error("should not happen");
             return { isin: false, pin: false, pout: false, emit: false, input };
           }
-          // console.log(input);
         },
         { isin: false, pin: false, pout: false, emit: false, input: {} }
       )

@@ -7,8 +7,8 @@ import Globals from "app/globals";
 import { GridFilter } from "./gridFilter";
 
 class Option extends TreeBase {
-  name = new Props.String("");
-  value = new Props.String("");
+  name = new Props.String("", { hiddenLabel: true });
+  value = new Props.String("", { hiddenLabel: true });
   cache = {};
 }
 TreeBase.register(Option, "Option");
@@ -35,17 +35,15 @@ class Radio extends TreeBase {
    * @returns {boolean}
    */
   valid(option) {
-    const { data, state } = Globals;
-    const filters = GridFilter.toContentFilters(
-      this.filterChildren(GridFilter),
-    );
+    const { data } = Globals;
+    const filters = this.filterChildren(GridFilter);
     return (
       !filters.length ||
-      data.hasMatchingRows(
-        filters,
-        state.clone({ [this.props.stateName]: option.props.value }),
-        option.cache,
-      )
+      data.hasMatchingRows(filters, {
+        states: {
+          [this.stateName.value]: option.value.value,
+        },
+      })
     );
   }
 
@@ -56,66 +54,66 @@ class Radio extends TreeBase {
   handleClick({ target }) {
     if (target instanceof HTMLButtonElement) {
       const value = target.value;
-      const name = this.props.stateName;
+      const name = this.stateName.value;
       Globals.state.update({ [name]: value });
     }
   }
 
   template() {
     const { state } = Globals;
-    const stateName = this.props.stateName;
-    let current = state.get(stateName);
-    const choices = this.options.map((child, index) => {
-      const disabled = !this.valid(/** @type {Option}*/ (child));
-      if (stateName && !current && !disabled && child.props.value) {
-        current = child.props.value;
-        state.update({ [stateName]: current });
+    const stateName = this.stateName.value;
+    const selected = this.selected.value;
+    const unselected = this.unselected.value;
+    const radioLabel = this.label.value;
+    let currentValue = state.get(stateName);
+    const choices = this.options.map((choice, index) => {
+      const choiceDisabled = !this.valid(choice);
+      const choiceValue = choice.value.value;
+      const choiceName = choice.name.value;
+      if (stateName && !currentValue && !choiceDisabled && choiceValue) {
+        currentValue = choiceValue;
+        state.define(stateName, choiceValue);
       }
       const color =
-        child.props.value == current || (!current && index == 0)
-          ? this.props.selected
-          : this.props.unselected;
+        choiceValue == currentValue || (!currentValue && index == 0)
+          ? selected
+          : unselected;
       return html`<button
         style=${styleString({ backgroundColor: color })}
-        value=${child.props.value}
-        ?disabled=${disabled}
+        value=${choiceValue}
+        ?disabled=${choiceDisabled}
         .dataset=${{
           ComponentType: this.className,
-          ComponentName: this.name,
-          label: child.props.name,
+          ComponentName: radioLabel || stateName,
+          label: choiceName,
         }}
         click
-        onClick=${() => state.update({ [stateName]: child.props.value })}
+        @Activate=${() => state.update({ [stateName]: choice.value.value })}
       >
-        ${child.props.name}
+        ${choiceName}
       </button>`;
     });
 
     return this.component(
       {},
       html`<fieldset class="flex">
-        ${(this.props.label && html`<legend>${this.props.label}</legend>`) ||
-        this.empty}
+        ${(radioLabel && [html`<legend>${radioLabel}</legend>`]) || []}
         ${choices}
       </fieldset>`,
     );
   }
 
-  get name() {
-    return this.props.name || this.props.label || this.props.stateName;
-  }
-
   settingsDetails() {
-    const props = this.propsAsProps;
+    const props = this.props;
     const inputs = Object.values(props).map((prop) => prop.input());
     const filters = this.filterChildren(GridFilter);
     const editFilters = !filters.length
-      ? this.empty
-      : GridFilter.FilterSettings(filters);
+      ? []
+      : [GridFilter.FilterSettings(filters)];
     const options = this.filterChildren(Option);
     const editOptions = html`<fieldset>
       <legend>Options</legend>
-      <table>
+      <table class="RadioOptions">
         <thead>
           <tr>
             <th>#</th>
@@ -140,7 +138,7 @@ class Radio extends TreeBase {
   }
 
   settingsChildren() {
-    return this.empty;
+    return [];
   }
 }
 TreeBase.register(Radio, "Radio");

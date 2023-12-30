@@ -1,4 +1,7 @@
-import { evalInContext } from "./eval";
+import { GridFilter } from "components/gridFilter";
+
+const collator = new Intl.Collator("en", { sensitivity: "base" });
+const collatorNumber = new Intl.Collator("en", { numeric: true });
 
 /** Implement comparison operators
  * @typedef {function(string, string): boolean} Comparator
@@ -6,15 +9,14 @@ import { evalInContext } from "./eval";
  * @type {Object<string, Comparator>}
  */
 export const comparators = {
-  equals: (f, v) =>
-    f.localeCompare(v, undefined, { sensitivity: "base" }) === 0 ||
-    f === "*" ||
-    v === "*",
-  "less than": (f, v) => f.localeCompare(v, undefined, { numeric: true }) < 0,
-  "starts with": (f, v) =>
-    f.toUpperCase().startsWith(v.toUpperCase()) || f === "*" || v === "*",
+  equals: (f, v) => collator.compare(f, v) === 0 || f === "*" || v === "*",
+  "starts with": (f, v) => f.toUpperCase().startsWith(v.toUpperCase()),
   empty: (f) => !f,
   "not empty": (f) => !!f,
+  "less than": (f, v) => collatorNumber.compare(f, v) < 0,
+  "greater than": (f, v) => collatorNumber.compare(f, v) > 0,
+  "less or equal": (f, v) => collatorNumber.compare(f, v) <= 0,
+  "greater or equal": (f, v) => collatorNumber.compare(f, v) >= 0,
 };
 
 /** Test a row with a filter
@@ -31,109 +33,73 @@ function match(filter, row) {
   return r;
 }
 
+const testRows = [];
+for (let i = 0; i < 10; i++) {
+  testRows.push({ label: "" + i });
+}
+
 export class Data {
   /** @param {Rows} rows - rows coming from the spreadsheet */
   constructor(rows) {
     this.contentRows = (Array.isArray(rows) && rows) || [];
     this.allrows = this.contentRows;
-    /** @type {string[]} */
-    this.allFields = [];
+    /** @type {Set<string>} */
+    this.allFields = new Set();
     this.updateAllFields();
     this.loadTime = new Date();
   }
 
   updateAllFields() {
-    this.allFields = this.contentRows.reduce(
-      (previous, current) =>
-        Array.from(
-          new Set([
-            ...previous,
-            ...Object.keys(current).map((field) => "#" + field),
-          ]),
-        ),
-      [],
-    );
-    this.clearFields = Object.fromEntries(
-      this.allFields.map((field) => [field.slice(1), null]),
-    );
+    this.allFields = this.contentRows.reduce((previous, current) => {
+      for (const field of Object.keys(current)) {
+        previous.add("#" + field);
+      }
+      return previous;
+    }, new Set());
+    this.clearFields = {};
+    for (const field of this.allFields) {
+      this.clearFields[field.slice(1)] = null;
+    }
   }
 
   /**
    * Extract rows with the given filters
    *
-   * @param {ContentFilter[]} filters - each filter must return true
-   * @param {State} state
-   * @param {RowCache} [cache]
+   * @param {GridFilter[]} filters - each filter must return true
    * @param {boolean} [clearFields] - return null for undefined fields
    * @return {Rows} Rows that pass the filters
    */
-  getMatchingRows(filters, state, cache, clearFields = true) {
+  getMatchingRows(filters, clearFields = true) {
     // all the filters must match the row
-    const boundFilters = filters.map((filter) =>
-      Object.assign({}, filter, {
-        value: evalInContext(filter.value, { state }),
-      }),
-    );
-    if (cache) {
-      const newKey = JSON.stringify(boundFilters);
-      if (
-        cache.key == newKey &&
-        cache.loadTime == this.loadTime &&
-        cache.rows
-      ) {
-        cache.updated = false;
-        return cache.rows;
-      }
-      cache.key = newKey;
-    }
+    const boundFilters = filters.map((filter) => ({
+      field: filter.field.value,
+      operator: filter.operator.value,
+      value: filter.value.value,
+    }));
     let result = this.allrows.filter((row) =>
       boundFilters.every((filter) => match(filter, row)),
     );
     if (clearFields)
       result = result.map((row) => ({ ...this.clearFields, ...row }));
-    if (cache) {
-      cache.rows = result;
-      cache.updated = true;
-      cache.loadTime = this.loadTime;
-    }
-    // console.log("gtr result", result);
     return result;
   }
 
   /**
    * Test if any rows exist after filtering
    *
-   * @param {ContentFilter[]} filters
-   * @param {State} state
-   * @param {RowCache} [cache]
+   * @param {GridFilter[]} filters
+   * @param {EvalContext} context
    * @return {Boolean} true if tag combination occurs
    */
-  hasMatchingRows(filters, state, cache) {
-    const boundFilters = filters.map((filter) =>
-      Object.assign({}, filter, {
-        value: evalInContext(filter.value, { state }),
-      }),
-    );
-    if (cache) {
-      const newKey = JSON.stringify(boundFilters);
-      if (
-        cache.key == newKey &&
-        cache.loadTime == this.loadTime &&
-        cache.result
-      ) {
-        cache.updated = false;
-        return cache.result;
-      }
-      cache.key = newKey;
-    }
+  hasMatchingRows(filters, context) {
+    const boundFilters = filters.map((filter) => ({
+      field: filter.field.value,
+      operator: filter.operator.value,
+      value: filter.value.valueInContext(context),
+    }));
     const result = this.allrows.some((row) =>
       boundFilters.every((filter) => match(filter, row)),
     );
-    if (cache) {
-      cache.result = result;
-      cache.updated = true;
-      cache.loadTime = this.loadTime;
-    }
     return result;
   }
 

@@ -3,6 +3,7 @@ import "css/cues.css";
 import { TreeBase, TreeBaseSwitchable } from "components/treebase";
 import { DesignerPanel } from "components/designer";
 import * as Props from "components/props";
+import Globals from "app/globals";
 
 import { toggleIndicator } from "components/helpers";
 import { getColor } from "components/style";
@@ -21,7 +22,7 @@ export class CueList extends DesignerPanel {
   allowDelete = false;
 
   settings() {
-    return html`<div class="CueList" id=${this.id}>
+    return html`<div class=${this.CSSClasses("CueList")} id=${this.id}>
       ${this.unorderedChildren()}
     </div>`;
   }
@@ -32,18 +33,18 @@ export class CueList extends DesignerPanel {
       (child) =>
         html`<style>
           ${child.css}
-        </style>`
+        </style>`,
     );
     if (this.children.length > 0) {
       const defaultCue = this.defaultCue;
       const defaultCSS = defaultCue.css.replaceAll(
         defaultCue.Key.value,
-        "DefaultCue"
+        "DefaultCue",
       );
       result.push(
         html`<style>
           ${defaultCSS}
-        </style>`
+        </style>`,
       );
     }
     return result;
@@ -90,7 +91,7 @@ class Cue extends TreeBaseSwitchable {
   Name = new Props.String("a cue");
   Key = new Props.UID();
   CueType = new Props.TypeSelect(CueTypes);
-  Default = new Props.OneOfGroup(false, { name: "DefaultCue" });
+  Default = new Props.OneOfGroup(false, { group: "DefaultCue" });
 
   settingsSummary() {
     return html`<h3>
@@ -107,7 +108,7 @@ class Cue extends TreeBaseSwitchable {
 
   /** @returns {Hole[]} */
   subTemplate() {
-    return [this.empty];
+    return [];
   }
 
   get css() {
@@ -127,14 +128,15 @@ class CueCss extends Cue {
   }
 
   get css() {
-    return this.Code.editedValue;
+    return Globals.state.interpolate(this.Code.editedValue);
   }
 
   onUpdate() {
-    this.Code.editCSS(this.props);
+    this.Code.editCSS(this.propsAsObject);
   }
 
   init() {
+    super.init();
     this.onUpdate();
   }
 }
@@ -145,11 +147,14 @@ class CueOverlay extends Cue {
   Opacity = new Props.Float(0.3);
 
   subTemplate() {
-    return [this.Color.input(), this.Opacity.input(),
+    return [
+      this.Color.input(),
+      this.Opacity.input(),
       html`<details>
         <summary>generated CSS</summary>
         <pre><code>${this.css.replaceAll(this.Key.value, "$Key")}</code></pre>
-      </details>`];
+      </details>`,
+    ];
   }
 
   get css() {
@@ -188,12 +193,16 @@ class CueFill extends Cue {
   Repeat = new Props.Boolean(false);
 
   subTemplate() {
-    return [this.Color.input(), this.Opacity.input(),
-      this.Direction.input(), this.Repeat.input(),
+    return [
+      this.Color.input(),
+      this.Opacity.input(),
+      this.Direction.input(),
+      this.Repeat.input(),
       html`<details>
         <summary>generated CSS</summary>
         <pre><code>${this.css.replaceAll(this.Key.value, "$Key")}</code></pre>
-      </details>`];
+      </details>`,
+    ];
   }
 
   get css() {
@@ -233,11 +242,14 @@ class CueCircle extends Cue {
   Opacity = new Props.Float(0.3);
 
   subTemplate() {
-    return [this.Color.input(), this.Opacity.input(),
+    return [
+      this.Color.input(),
+      this.Opacity.input(),
       html`<details>
         <summary>generated CSS</summary>
         <pre><code>${this.css.replaceAll(this.Key.value, "$Key")}</code></pre>
-      </details>`];
+      </details>`,
+    ];
   }
 
   get css() {

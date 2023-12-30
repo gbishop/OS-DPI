@@ -52,7 +52,7 @@ export class KeyHandler extends Handler {
     if (method.streams[streamName]) return;
 
     // construct debounced key event stream
-    const debounceInterval = method.KeyDebounce.valueAsNumber * 1000;
+    const debounceInterval = method.KeyDebounce.value * 1000;
     const keyDown$ = /** @type RxJs.Observable<KeyboardEvent> */ (
       RxJs.fromEvent(document, "keydown")
     );
@@ -132,8 +132,9 @@ export class KeyHandler extends Handler {
     );
     return (
       event.type == signal &&
-      (keys.length == 0 || keys.some((key) => key.eval(event.access))) &&
-      conditions.every((condition) => condition.eval(event.access))
+      (keys.length == 0 ||
+        keys.some((key) => key.eval({ data: event.access }))) &&
+      conditions.every((condition) => condition.eval({ data: event.access }))
     );
   }
 }

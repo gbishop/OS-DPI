@@ -11,10 +11,10 @@ class Gap extends TreeBase {
     return this.component(
       {
         style: styleString({
-          backgroundColor: this.props.background,
+          backgroundColor: this.background.value,
         }),
       },
-      this.empty
+      [],
     );
   }
 }

@@ -14,7 +14,6 @@ export class State {
       const persist = window.sessionStorage.getItem(this.persistKey);
       if (persist) {
         this.values = JSON.parse(persist);
-        // console.log("restored $tabControl", this.values["$tabControl"]);
       }
     }
   }
@@ -44,18 +43,9 @@ export class State {
     for (const key in patch) {
       this.updated.add(key);
     }
-    const oldValues = this.values;
-    this.values = merge(oldValues, patch);
-    // see which values changed.
-    const allKeys = new Set([
-      ...Object.keys(oldValues),
-      ...Object.keys(this.values),
-    ]);
-    const changed = new Set(
-      [...allKeys].filter((key) => oldValues[key] !== this.values[key])
-    );
+    this.values = merge(this.values, patch);
     for (const callback of this.listeners) {
-      callback(changed);
+      callback();
     }
 
     if (this.persistKey) {
@@ -80,10 +70,10 @@ export class State {
    */
   clear() {
     const userState = Object.keys(this.values).filter((name) =>
-      name.startsWith("$")
+      name.startsWith("$"),
     );
     const patch = Object.fromEntries(
-      userState.map((name) => [name, undefined])
+      userState.map((name) => [name, undefined]),
     );
     this.update(patch);
   }
@@ -95,16 +85,18 @@ export class State {
     this.listeners.add(callback);
   }
 
-  /** return true if the given state has been upated since last you asked
+  /** return true if the given state has been upated on this cycle
    * @param {string} stateName
    * @returns boolean
    */
   hasBeenUpdated(stateName) {
-    const result = this.updated.has(stateName);
-    if (result) {
-      this.updated.delete(stateName);
-    }
-    return result;
+    return this.updated.has(stateName);
+  }
+
+  /** clear updated for the next cycle
+   */
+  clearUpdated() {
+    this.updated.clear();
   }
 
   /** define - add a named state to the global system state
@@ -121,11 +113,11 @@ export class State {
    * @returns {string} input with $name replaced by values from the state
    */
   interpolate(input) {
-    let result = input.replace(/(\$[a-zA-Z0-9_.]+)/, (_, name) =>
-      this.get(name)
+    let result = input.replace(/(\$[a-zA-Z0-9_.]+)/g, (_, name) =>
+      this.get(name),
     );
-    result = result.replace(/\$\{([a-zA-Z0-9_.]+)}/, (_, name) =>
-      this.get("$" + name)
+    result = result.replace(/\$\{([a-zA-Z0-9_.]+)}/g, (_, name) =>
+      this.get("$" + name),
     );
     return result;
   }

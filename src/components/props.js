@@ -5,6 +5,7 @@ import "css/props.css";
 import { compileExpression } from "app/eval";
 import Globals from "app/globals";
 import { TreeBaseSwitchable } from "./treebase";
+import { getColor, isValidColor, styleString } from "./style";
 
 /**
  * @typedef {Object} PropOptions
@@ -12,25 +13,39 @@ import { TreeBaseSwitchable } from "./treebase";
  * @property {string} [placeholder]
  * @property {string} [title]
  * @property {string} [label]
- * @property {boolean} [multiple]
  * @property {string} [defaultValue]
  * @property {string} [group]
  * @property {string} [language]
- * @property {Object<string,string>} [replacements]
  * @property {any} [valueWhenEmpty]
  * @property {string} [pattern]
  * @property {function(string):string} [validate]
+ * @property {string} [inputmode]
+ * @property {string} [datalist]
+ * @property {number} [min]
+ * @property {number} [max]
  */
 
+/**
+ * @template {number|boolean|string} T
+ */
 export class Prop {
   label = "";
-  /** @type {any} */
-  value;
+  /** @type {T} */
+  _value;
+
+  /** true if this is a formula without leading = */
+  isFormulaByDefault = false;
+
+  /** If the entered value starts with = treat it as an expression and store it here */
+  formula = "";
+
+  /** @type {((context?:EvalContext)=>any) | undefined} compiled expression if any */
+  compiled = undefined;
 
   // Each prop gets a unique id based on the id of its container
   id = "";
 
-  /** @type {import('./treebase').TreeBase} */
+  /** @type {TreeBase} */
   container;
 
   /** attach the prop to its containing TreeBase component
@@ -44,7 +59,7 @@ export class Prop {
     // link to the container
     this.container = container;
     // set the value if provided
-    if (value != null) {
+    if (value != undefined) {
       this.set(value);
     }
     // create a label if it has none
@@ -55,44 +70,202 @@ export class Prop {
         .replace(/^./, (s) => s.toUpperCase());
   }
 
-  get valueAsNumber() {
-    return parseFloat(this.value);
-  }
-
   /** @type {PropOptions} */
   options = {};
 
-  /** @param {PropOptions} options */
-  constructor(options = {}) {
+  /**
+   * @param {T} value
+   * @param {PropOptions} options */
+  constructor(value, options = {}) {
+    this._value = value;
     this.options = options;
-    if (options["label"]) {
-      this.label = options["label"];
+    if (options.label) {
+      this.label = options.label;
     }
   }
-  /** @param {Object} _ - The context */
-  eval(_ = {}) {
-    return this.value;
-  }
+  validate = debounce(
+    (/** @type {string} */ value, /** @type {HTMLInputElement} */ input) => {
+      input.setCustomValidity("");
+      if (this.isFormulaByDefault || value.startsWith("=")) {
+        const [compiled, error] = compileExpression(value);
+        if (error) {
+          let message = error.message.replace(/^\[.*?\]/, "");
+          message = message.split("\n")[0];
+          input.setCustomValidity(message);
+        } else if (compiled && this.options.validate)
+          input.setCustomValidity(this.options.validate("" + compiled({})));
+      } else if (this.options.validate) {
+        input.setCustomValidity(this.options.validate(value));
+      }
+      input.reportValidity();
+    },
+    100,
+  );
+
   input() {
-    return html`<!--empty-->`;
+    const text = this.text;
+    return this.labeled(
+      html`<input
+          type="text"
+          inputmode=${this.options.inputmode}
+          .value=${text}
+          id=${this.id}
+          style=${`width: min(${text.length + 3}ch, 100%)`}
+          list=${this.options.datalist}
+          title=${this.options.title}
+          placeholder=${this.options.placeholder}
+          onkeydown=${this.onkeydown}
+          oninput=${this.oninput}
+          onchange=${this.onchange}
+          onfocus=${this.onfocus}
+        />${this.showValue()}`,
+    );
   }
-  /** @param {Hole} body */
-  labeled(body) {
-    return html`<div class="labeledInput">
-      <label ?hiddenLabel=${this.options.hiddenLabel} for=${this.id}
-        >${this.label}</label
-      >
-      ${body}
-    </div>`;
+  onkeydown = (/** @type {KeyboardEvent} */ event) => {
+    // restore the input on Escape
+    const { key, target } = event;
+    if (key == "Escape" && target instanceof HTMLInputElement) {
+      const text = this.text;
+      this.validate(text, target);
+      event.preventDefault();
+      target.value = text;
+    }
+  };
+  oninput = (/** @type {InputEvent} */ event) => {
+    // validate on each character
+    if (event.target instanceof HTMLInputElement) {
+      this.validate(event.target.value, event.target);
+      event.target.style.width = `${event.target.value.length + 1}ch`;
+    }
+  };
+  onchange = (/** @type {InputEvent} */ event) => {
+    if (
+      event.target instanceof HTMLInputElement &&
+      event.target.checkValidity()
+    ) {
+      this.set(event.target.value);
+      this.update();
+    }
+  };
+  onfocus = (/** @type {FocusEvent}*/ event) => {
+    if (this.formula && event.target instanceof HTMLInputElement) {
+      const span = event.target.nextElementSibling;
+      if (span instanceof HTMLSpanElement) {
+        const value = this.value;
+        const type = typeof value;
+        let text = "";
+        if (type === "string" || type === "number" || type === "boolean") {
+          text = "" + value;
+        }
+        span.innerText = text;
+      }
+    }
+  };
+
+  showValue() {
+    return this.formula ? [html`<span class="propValue"></span>`] : [];
   }
 
-  /** @param {any} value */
+  /** @param {Hole} body */
+  labeled(body) {
+    return html`
+      <label class="labeledInput" ?hiddenLabel=${this.options.hiddenLabel}
+        ><span>${this.label}</span> ${body}</label
+      >
+    `;
+  }
+
+  /** @param {HTMLInputElement} inputElement */
+  setValidity(inputElement) {
+    if (inputElement instanceof HTMLInputElement) {
+      if (this.error) {
+        console.log("scv", this.error.message);
+        inputElement.setCustomValidity(this.error.message);
+        inputElement.reportValidity();
+      } else {
+        console.log("csv");
+        inputElement.setCustomValidity("");
+        inputElement.reportValidity();
+      }
+    } else {
+      console.log("not found", inputElement);
+    }
+  }
+
+  /** @param {any} value
+   * @returns {T}
+   * */
+  cast(value) {
+    return value;
+  }
+
+  /**
+   * @param {any} value
+   */
   set(value) {
-    this.value = value;
+    this.compiled = undefined;
+    this.formula = "";
+    if (
+      typeof value == "string" &&
+      (this.isFormulaByDefault || value.startsWith("="))
+    ) {
+      // compile it here
+      let error;
+      [this.compiled, error] = compileExpression(value);
+      if (error) {
+        console.error("set error", this.label, value, error.message);
+      } else {
+        this.formula = value;
+      }
+    } else {
+      this._value = this.cast(value);
+    }
+  }
+
+  /**
+   * extract the value to save
+   * returns {string}
+   */
+  get text() {
+    if (this.formula || this.isFormulaByDefault) return this.formula;
+    return "" + this._value;
+  }
+
+  /** @returns {T} */
+  get value() {
+    if (this.compiled) {
+      if (!this.formula) {
+        console.log(this.options);
+        this._value = this.options.valueWhenEmpty ?? "";
+      } else {
+        const v = this.compiled();
+        this._value = this.cast(v);
+      }
+    }
+    return this._value;
+  }
+
+  /** @param {EvalContext} context - The context
+   * @returns {T} */
+  valueInContext(context = {}) {
+    if (this.compiled) {
+      if (!this.formula) {
+        this._value = this.options.valueWhenEmpty ?? "";
+      } else {
+        const v = this.compiled(context);
+        this._value = this.cast(v);
+      }
+    }
+    return this._value;
   }
 
   update() {
     this.container.update();
+  }
+
+  /** @param {Error} [error] */
+  setError(error = undefined) {
+    this.error = error;
   }
 }
 
@@ -109,15 +282,16 @@ export function toMap(arrayOrMap) {
   return arrayOrMap;
 }
 
+/** @extends {Prop<string>} */
 export class Select extends Prop {
   /**
    * @param {string[] | Map<string, string> | function():Map<string,string>} choices
    * @param {PropOptions} options
    */
   constructor(choices = [], options = {}) {
-    super(options);
+    super("", options);
     this.choices = choices;
-    this.value = options.defaultValue || "";
+    this._value = options.defaultValue || "";
   }
 
   /** @param {Map<string,string> | null} choices */
@@ -125,23 +299,23 @@ export class Select extends Prop {
     if (!choices) {
       choices = toMap(this.choices);
     }
-    this.value = this.value || this.options.defaultValue || "";
+    this._value = this._value || this.options.defaultValue || "";
     return this.labeled(
       html`<select
         id=${this.id}
         required
         title=${this.options.title}
         onchange=${({ target }) => {
-          this.value = target.value;
+          this._value = target.value;
           this.update();
         }}
       >
-        <option value="" disabled ?selected=${!choices.has(this.value)}>
+        <option value="" disabled ?selected=${!choices.has(this._value)}>
           ${this.options.placeholder || "Choose one..."}
         </option>
         ${[...choices.entries()].map(
           ([key, value]) =>
-            html`<option value=${key} ?selected=${this.value == key}>
+            html`<option value=${key} ?selected=${this._value == key}>
               ${value}
             </option>`,
         )}
@@ -151,7 +325,7 @@ export class Select extends Prop {
 
   /** @param {any} value */
   set(value) {
-    this.value = value;
+    this._value = value;
   }
 }
 
@@ -164,15 +338,6 @@ export class Field extends Select {
       () => toMap([...Globals.data.allFields, "#ComponentName"].sort()),
       options,
     );
-  }
-}
-
-export class State extends Select {
-  /**
-   * @param {PropOptions} options
-   */
-  constructor(options = {}) {
-    super(() => toMap([...Globals.tree.allStates()]), options);
   }
 }
 
@@ -200,46 +365,22 @@ export class TypeSelect extends Select {
      * node with a new one to allow type switching in place
      * */
     if (this.container instanceof TreeBaseSwitchable)
-      this.container.replace(this.value);
+      this.container.replace(this._value);
   }
 }
 
-export class String extends Prop {
-  value = "";
-
-  constructor(value = "", options = {}) {
-    super(options);
-    this.value = value;
-  }
-
-  input() {
-    return this.labeled(
-      html`<input
-        type="text"
-        .value=${this.value}
-        id=${this.id}
-        pattern=${this.options.pattern}
-        onchange=${({ target }) => {
-          if (target.checkValidity()) {
-            this.value = target.value;
-            this.update();
-          }
-        }}
-        title=${this.options.title}
-        placeholder=${this.options.placeholder}
-      />`,
-    );
-  }
-}
+/** @extends {Prop<string>} */
+export class String extends Prop {}
 
 /* Allow entering a key name by first pressing Enter than pressing a single key
  */
 export class KeyName extends Prop {
-  value = "";
-
+  /**
+   * @param {string} value
+   * @param {PropOptions} options
+   */
   constructor(value = "", options = {}) {
-    super(options);
-    this.value = value;
+    super(value, options);
   }
 
   input() {
@@ -251,7 +392,7 @@ export class KeyName extends Prop {
     return this.labeled(
       html`<input
         type="text"
-        .value=${mapKey(this.value)}
+        .value=${mapKey(this._value)}
         id=${this.id}
         readonly
         onkeydown=${(/** @type {KeyboardEvent} */ event) => {
@@ -263,7 +404,7 @@ export class KeyName extends Prop {
           } else if (!target.hasAttribute("readonly")) {
             event.stopPropagation();
             event.preventDefault();
-            this.value = event.key;
+            this._value = event.key;
             target.value = mapKey(event.key);
             target.setAttribute("readonly", "");
           }
@@ -276,27 +417,28 @@ export class KeyName extends Prop {
 }
 
 export class TextArea extends Prop {
-  value = "";
-
+  /**
+   * @param {string} value
+   * @param {PropOptions} options
+   */
   constructor(value = "", options = {}) {
-    super(options);
-    this.value = value;
+    super(value, options);
     this.validate = this.options.validate || ((_) => "");
   }
 
   input() {
     return this.labeled(
       html`<textarea
-        .value=${this.value}
+        .value=${this._value}
         id=${this.id}
-        ?invalid=${!!this.validate(this.value)}
+        ?invalid=${!!this.validate(this._value)}
         oninput=${({ target }) => {
           const errorMsg = this.validate(target.value);
           target.setCustomValidity(errorMsg);
         }}
         onchange=${({ target }) => {
           if (target.checkValidity()) {
-            this.value = target.value;
+            this._value = target.value;
             this.update();
           }
         }}
@@ -307,83 +449,96 @@ export class TextArea extends Prop {
   }
 }
 
+/** @extends {Prop<number>} */
 export class Integer extends Prop {
-  /** @type {number} */
-  value = 0;
+  /** @param {number} value
+   * @param {PropOptions} options
+   */
   constructor(value = 0, options = {}) {
-    super(options);
-    this.value = value;
+    /** @param {string} value
+     * @returns {string}
+     */
+    function validate(value) {
+      if (!/^[0-9]+$/.test(value)) return "Please enter a whole number";
+      if (typeof options.min === "number" && parseInt(value) < options.min) {
+        return `Please enter a whole number at least ${this.options.min}`;
+      }
+      if (typeof options.max === "number" && parseInt(value) > options.max) {
+        return `Please enter a whole number at most ${this.options.max}`;
+      }
+      return "";
+    }
+    options = {
+      validate,
+      inputmode: "numeric",
+      ...options,
+    };
+    super(value, options);
   }
 
-  input() {
-    return this.labeled(
-      html`<input
-        type="text"
-        inputmode="numeric"
-        pattern="[0-9]+"
-        .value=${this.value}
-        id=${this.id}
-        onchange=${({ target }) => {
-          if (target.checkValidity()) {
-            this.value = parseInt(target.value);
-            this.update();
-          }
-        }}
-        title=${this.options.title}
-        placeholder=${this.options.placeholder}
-      />`,
-    );
+  /**
+   * Convert the input into an integer
+   * @param {any} value
+   * @returns {number}
+   */
+  cast(value) {
+    return Math.trunc(+value);
   }
 }
 
+/** @extends {Prop<number>} */
 export class Float extends Prop {
-  /** @type {number} */
-  value = 0;
+  /** @param {number} value
+   * @param {PropOptions} options
+   */
   constructor(value = 0, options = {}) {
-    super(options);
-    this.value = value;
+    /** @param {string} value
+     * @returns {string}
+     */
+    const validate = (value) => {
+      if (!/^[0-9]*([,.][0-9]*)?$/.test(value)) return "Please enter a number";
+      if (typeof options.min === "number" && parseFloat(value) < options.min) {
+        return `Please enter a number at least ${options.min}`;
+      }
+      if (typeof options.max === "number" && parseFloat(value) > options.max) {
+        return `Please enter a number at most ${this.options.max}`;
+      }
+      return "";
+    };
+    options = {
+      validate,
+      inputmode: "decimal",
+      ...options,
+    };
+    super(value, options);
   }
 
-  input() {
-    return this.labeled(
-      html`<input
-        type="text"
-        inputmode="numeric"
-        pattern="[0-9]*([,.][0-9]*)?"
-        .value=${this.value}
-        id=${this.id}
-        onchange=${({ target }) => {
-          if (target.checkValidity()) {
-            this.value = parseFloat(target.value);
-            this.update();
-          }
-        }}
-        title=${this.options.title}
-        placeholder=${this.options.placeholder}
-        step="any"
-      />`,
-    );
+  /** @param {any} value */
+  cast(value) {
+    return +value;
   }
 }
 
 export class Boolean extends Prop {
-  /** @type {boolean} */
-  value = false;
-
+  /** @param {boolean} value
+   * @param {PropOptions} options
+   */
   constructor(value = false, options = {}) {
-    super(options);
-    this.value = value;
+    super(value, options);
   }
 
+  /**
+   * @param {PropOptions} options
+   */
   input(options = {}) {
     options = { ...this.options, ...options };
     return this.labeled(
       html`<input
         type="checkbox"
-        ?checked=${this.value}
+        ?checked=${this._value}
         id=${this.id}
         onchange=${({ target }) => {
-          this.value = target.checked;
+          this._value = target.checked;
           this.update();
         }}
         title=${options.title}
@@ -394,33 +549,36 @@ export class Boolean extends Prop {
   /** @param {any} value */
   set(value) {
     if (typeof value === "boolean") {
-      this.value = value;
+      this._value = value;
     } else if (typeof value === "string") {
-      this.value = value === "true";
+      this._value = value === "true";
     }
   }
 }
 
 export class OneOfGroup extends Prop {
-  /** @type {boolean} */
-  value = false;
-
+  /** @param {boolean} value
+   * @param {PropOptions} options
+   */
   constructor(value = false, options = {}) {
-    super(options);
-    this.value = value;
+    options = { group: "AGroup", ...options };
+    super(value, options);
   }
 
+  /**
+   * @param {PropOptions} options
+   */
   input(options = {}) {
     options = { ...this.options, ...options };
     return this.labeled(
       html`<input
         type="checkbox"
-        .checked=${!!this.value}
+        .checked=${!!this._value}
         id=${this.id}
         name=${options.group}
         onclick=${() => {
-          this.value = true;
-          this.clearPeers(options.group);
+          this._value = true;
+          this.clearPeers();
           this.update();
         }}
         title=${this.options.title}
@@ -431,20 +589,23 @@ export class OneOfGroup extends Prop {
   /** @param {any} value */
   set(value) {
     if (typeof value === "boolean") {
-      this.value = value;
+      this._value = value;
     } else if (typeof value === "string") {
-      this.value = value === "true";
+      this._value = value === "true";
+    }
+    if (this._value) {
+      this.clearPeers();
     }
   }
 
   /**
    * Clear the value of peer radio buttons with the same name
-   * @param {string} name
    */
-  clearPeers(name) {
+  clearPeers() {
+    const name = this.options.group;
     const peers = this.container?.parent?.children || [];
     for (const peer of peers) {
-      const props = peer.propsAsProps;
+      const props = peer.props;
       for (const propName in props) {
         const prop = props[propName];
         if (
@@ -461,71 +622,47 @@ export class OneOfGroup extends Prop {
 
 export class UID extends Prop {
   constructor() {
-    super({});
-    this.value =
+    super("", {});
+    this._value =
       "id" + Date.now().toString(36) + Math.random().toString(36).slice(2);
   }
 }
 
+/** @extends {Prop<string|number|boolean>} */
 export class Expression extends Prop {
-  /** @type {function | null}
-  compiled = null;
+  isFormulaByDefault = true;
+
   /** @param {string} value
    * @param {PropOptions} options
    */
   constructor(value = "", options = {}) {
-    super(options);
-    this.value = value;
+    super(value, options);
+    this.formula = value;
+  }
+}
+
+/** @extends {Prop<boolean>} */
+export class Conditional extends Prop {
+  isFormulaByDefault = true;
+
+  /** @param {string} value
+   * @param {PropOptions} options
+   */
+  constructor(value = "", options = {}) {
+    super(false, options);
+    this.formula = value;
   }
 
-  input() {
-    return this.labeled(
-      html`<input
-        type="text"
-        .value=${this.value}
-        id=${this.id}
-        onchange=${({ target }) => {
-          this.value = target.value;
-          try {
-            this.compiled = compileExpression(this.value);
-            target.setCustomValidity("");
-            target.reportValidity();
-            this.update();
-          } catch (e) {
-            target.setCustomValidity(e.message);
-            target.reportValidity();
-          }
-        }}
-        title=${this.options.title}
-        placeholder=${this.options.placeholder}
-      />`,
-    );
+  get value() {
+    return !!super.value;
   }
 
-  /** @param {string} value */
-  set(value) {
-    this.value = value;
-    try {
-      this.compiled = compileExpression(this.value);
-    } catch (e) {
-      console.error(e);
-      console.log("value=", value, this);
-    }
-  }
-
-  /** @param {Object} context */
-  eval(context) {
-    if (this.compiled && this.value) {
-      const r = this.compiled(context);
-      return r;
-    } else {
-      return this.options["valueWhenEmpty"];
-    }
+  valueInContext(context = {}) {
+    return !!super.valueInContext(context);
   }
 }
 
 export class Code extends Prop {
-  value = "";
   editedValue = "";
 
   /** @type {string[]} */
@@ -538,11 +675,9 @@ export class Code extends Prop {
   constructor(value = "", options = {}) {
     options = {
       language: "css",
-      replacements: {},
       ...options,
     };
-    super(options);
-    this.value = value;
+    super(value, options);
   }
 
   /** @param {HTMLTextAreaElement} target */
@@ -566,14 +701,15 @@ export class Code extends Prop {
    * @param {string} message - the error message
    */
   addError(offset, message) {
-    const line = this.value.slice(0, offset).match(/$/gm)?.length || "??";
+    const line = this._value.slice(0, offset).match(/$/gm)?.length || "??";
     this.errors.push(`${line}: ${message}`);
   }
 
-  /** Edit and validate the value */
+  /** Edit and validate the value
+   * */
   editCSS(props = {}, editSelector = (selector = "") => selector) {
     // replaces props in the full text
-    let value = this.value;
+    let value = this._value;
     for (const prop in props) {
       value = value.replaceAll("$" + prop, props[prop]);
     }
@@ -593,6 +729,8 @@ export class Code extends Prop {
       // replace field names in the selector
       selector = selector.replace(
         /#(\w+)/g,
+        /** @param {string} _
+         * @param {string} name */
         (_, name) =>
           `data-${name.replace(
             /[A-Z]/g,
@@ -612,7 +750,8 @@ export class Code extends Prop {
         // exception. If any properties are bad they will omitted in the
         // result. I'm adding a bogus ;gap:0; property to the end of the body
         // because we get an exception if there is only one invalid property.
-        const index = styleSheet.insertRule(rule.replace("}", ";gap:0;}"));
+        let irule = (Globals.state && Globals.state.interpolate(rule)) || rule;
+        const index = styleSheet.insertRule(irule.replace("}", ";gap:0;}"));
         // retrieve the rule
         const newRule = styleSheet.cssRules[index].cssText;
         // extract the body
@@ -648,10 +787,10 @@ export class Code extends Prop {
           <textarea class="line-numbers" readonly></textarea>
           <textarea
             class="text"
-            .value=${this.value}
+            .value=${this._value}
             id=${this.id}
             onchange=${({ target }) => {
-              this.value = target.value;
+              this._value = target.value;
               this.editCSS();
               this.update();
             }}
@@ -675,49 +814,62 @@ export class Code extends Prop {
 
   /** @param {string} value */
   set(value) {
-    this.value = value;
+    this._value = value;
     this.editCSS();
   }
 }
 
+/** @extends {Prop<string>} */
 export class Color extends Prop {
-  value = "#ffffff";
-
-  constructor(value = "", options = {}) {
-    super(options);
-    this.value = value;
+  /**
+   * @param {string} value
+   * @param {PropOptions} options
+   */
+  constructor(value = "white", options = {}) {
+    options = {
+      /** @param {string} value */
+      validate: (value) => {
+        if (isValidColor(value)) {
+          const swatch = document.querySelector(`#${this.id}~div`);
+          if (swatch instanceof HTMLDivElement) {
+            swatch.style.backgroundColor = getColor(value);
+          }
+          return "";
+        }
+        return "invalid color";
+      },
+      datalist: "ColorNames",
+      ...options,
+    };
+    super(value, options);
   }
 
-  input() {
-    return this.labeled(
-      html`<color-input
-        .value=${this.value}
-        id=${this.id}
-        onchange=${(/** @type {InputEventWithTarget} */ event) => {
-          this.value = event.target.value;
-          this.update();
-        }}
-      />`,
-    );
+  showValue() {
+    return [
+      html`<div
+        class="swatch"
+        style=${styleString({ backgroundColor: getColor(this.value) })}
+      ></div>`,
+    ];
   }
 }
 
 export class Voice extends Prop {
-  value = "";
-
+  /** @param {string} value
+   * @param {PropOptions} options
+   */
   constructor(value = "", options = {}) {
-    super(options);
-    this.value = value;
+    super(value, options);
   }
 
   input() {
     return this.labeled(
       html`<select
         is="select-voice"
-        .value=${this.value}
+        .value=${this._value}
         id=${this.id}
         onchange=${(/** @type {InputEventWithTarget} */ event) => {
-          this.value = event.target.value;
+          this._value = event.target.value;
           this.update();
         }}
       >
@@ -728,24 +880,40 @@ export class Voice extends Prop {
 }
 
 export class ADate extends Prop {
-  value = "";
-
+  /** @param {string} value
+   * @param {PropOptions} options
+   */
   constructor(value = "", options = {}) {
-    super(options);
-    this.value = value;
+    super(value, options);
   }
 
   input() {
     return this.labeled(
       html`<input
         type="date"
-        .value=${this.value}
+        .value=${this._value}
         id=${this.id}
         onchange=${(/** @type {InputEventWithTarget} */ event) => {
-          this.value = event.target.value;
+          this._value = event.target.value;
           this.update();
         }}
       />`,
     );
   }
 }
+
+/**
+ * @template {unknown[]} T
+ * @param {(...args: T)=>void} callback
+ * @param {number} wait
+ * @returns {(...args: T)=>void}
+ * */
+const debounce = (callback, wait) => {
+  let timeoutId = null;
+  return (...args) => {
+    window.clearTimeout(timeoutId);
+    timeoutId = window.setTimeout(() => {
+      callback(...args);
+    }, wait);
+  };
+};

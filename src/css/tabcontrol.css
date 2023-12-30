@@ -113,3 +113,10 @@
 .tabcontrol.none .buttons {
   display: none;
 }
+
+.tabcontrol .tabpanel {
+  display: none;
+}
+.tabcontrol .tabpanel.ActivePanel {
+  display: flex;
+}

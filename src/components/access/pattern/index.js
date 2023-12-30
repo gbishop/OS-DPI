@@ -33,7 +33,7 @@ export function cueTarget(target, defaultValue) {
 }
 
 export function clearCues() {
-  for (const element of document.querySelectorAll("[cue]")) {
+  for (const element of document.querySelectorAll("#UI [cue]")) {
     element.removeAttribute("cue");
     const video = element.querySelector("video");
     if (video && !video.hasAttribute("autoplay")) {
@@ -76,7 +76,6 @@ export class Group {
     if (!value) {
       value = this.access.Cue;
     }
-    //    console.log("cue group", this);
     for (const member of this.members) {
       if (member instanceof HTMLButtonElement) cueTarget(member, value);
       else if (member instanceof Group) member.cue(value);
@@ -125,7 +124,7 @@ export class PatternList extends DesignerPanel {
   static defaultValue = defaultPatterns;
 
   settings() {
-    return html`<div class="PatternList" id=${this.id}>
+    return html`<div class=${this.CSSClasses("PatternList")} id=${this.id}>
       ${this.unorderedChildren()}
     </div>`;
   }
@@ -190,7 +189,7 @@ export class PatternManager extends PatternBase {
   Name = new Props.String("a pattern");
   Key = new Props.UID();
   Active = new Props.OneOfGroup(false, {
-    name: "pattern-active",
+    group: "pattern-active",
     label: "Default",
   });
 
@@ -219,7 +218,7 @@ export class PatternManager extends PatternBase {
   }
 
   settingsChildren() {
-    return this.empty;
+    return [];
   }
 
   /**
@@ -238,7 +237,7 @@ export class PatternManager extends PatternBase {
         }
       }
     }
-    if (members.length > 0) return [new Group(members, this.props)];
+    if (members.length > 0) return [new Group(members, this.propsAsObject)];
     else return [];
   }
 
@@ -267,9 +266,8 @@ export class PatternManager extends PatternBase {
     } else {
       members = buttons;
     }
-    this.targets = new Group(members, { ...this.props, Cycles: 1 });
-    // console.log("refresh", this.targets);
-    this.stack = [{ group: this.targets, index: -1 }];
+    this.targets = new Group(members, { ...this.propsAsObject, Cycles: 1 });
+    this.stack = [{ group: this.targets, index: 0 }];
     this.cue();
 
     // stop any running animations
@@ -288,17 +286,14 @@ export class PatternManager extends PatternBase {
 
   next() {
     const top = this.stack[0];
-    // console.log("next", { top }, this);
     if (top.index < top.group.length - 1) {
       top.index++;
     } else if (this.stack.length > 1) {
       this.stack.shift();
-      // console.log("stack pop");
     } else if (this.stack.length == 1) {
       top.index = 0;
     } else {
       // stack is empty ignore
-      // console.log("empty stack?");
     }
     this.cue();
   }
@@ -306,7 +301,6 @@ export class PatternManager extends PatternBase {
   /** @param {EventLike} event */
   activate(event) {
     const target = event.target;
-    // console.log("activate", event);
     if (target) {
       // adjust the stack to accomodate the target
       for (;;) {
@@ -314,37 +308,29 @@ export class PatternManager extends PatternBase {
         const newIndex = top.group.members.indexOf(target);
         if (newIndex >= 0) {
           top.index = newIndex;
-          // console.log("set index", top.index);
           break;
         }
         if (this.stack.length == 1) {
           top.index = 0;
-          // console.log("not found");
           break;
         } else {
           this.stack.shift();
-          // console.log("pop stack");
         }
       }
     }
-    //    console.log("stack", this.stack);
     let current = this.current;
     if (!current) return;
     if (current instanceof Group) {
-      // console.log("activate group", current, this.stack);
       while (current.length == 1 && current.members[0] instanceof Group) {
         current = current.members[0];
       }
       // I need to work out the index here. Should be the group under the pointer
       this.stack.unshift({ group: current, index: event?.groupIndex || 0 });
-      // console.log("push stack", this.current, this.stack);
     } else if (current instanceof HTMLButtonElement) {
       if (current.hasAttribute("click")) {
-        current.click();
+        current.dispatchEvent(new Event("Activate"));
       } else {
         const name = current.dataset.ComponentName;
-        // console.log("activate button", current);
-        // console.log("applyRules", name, current.access);
         Globals.actions.applyRules(name || "", "press", current.dataset);
       }
     }
@@ -359,7 +345,6 @@ export class PatternManager extends PatternBase {
   cue() {
     this.clearCue();
     const current = this.current;
-    //    console.log("cue current", current);
     if (!current) return;
     this.cued = true;
     cueTarget(current, this.Cue.value);
@@ -392,7 +377,6 @@ export class PatternManager extends PatternBase {
       event.access = event.target.dataset;
     }
     if (!event.target) return event;
-    // console.log("ret", this.stack);
     event.originalTarget = event.target;
     for (let level = 0; level < this.stack.length; level++) {
       const group = this.stack[level].group;
@@ -401,10 +385,8 @@ export class PatternManager extends PatternBase {
       let index = members.indexOf(event.target);
       if (index >= 0) {
         if (level === 0) {
-          // console.log("A", event);
           return event;
         } else {
-          // console.log("B", index);
           return {
             ...event,
             target: group,
@@ -419,7 +401,6 @@ export class PatternManager extends PatternBase {
           if (member instanceof Group) {
             let i = member.contains(event.target);
             if (i >= 0) {
-              // console.log("C", i);
               return {
                 ...event,
                 target: member,
@@ -511,7 +492,7 @@ export class PatternGroup extends PatternBase {
         }
       }
     }
-    if (members.length > 0) return [new Group(members, this.props)];
+    if (members.length > 0) return [new Group(members, this.propsAsObject)];
     else return [];
   }
 }
@@ -565,7 +546,7 @@ class Filter extends PatternBase {
         .filter((target) => target.length > 0);
     } else {
       return input.filter((/** @type {HTMLButtonElement} */ button) =>
-        this.Filter.eval(button.dataset),
+        this.Filter.valueInContext({ data: button.dataset }),
       );
     }
   }
@@ -643,7 +624,7 @@ class GroupBy extends PatternBase {
         )
         .filter((target) => target.length > 0);
     } else {
-      const { GroupBy, Name, ...props } = this.props;
+      const { GroupBy, Name, ...props } = this.propsAsObject;
       const key = GroupBy.slice(1);
       const result = [];
       const groupMap = new Map();

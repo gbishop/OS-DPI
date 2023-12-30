@@ -2,6 +2,14 @@
  * Bang color names from http://www.procato.com/rgb+index/?csv
  */
 export const ColorNames = {
+  white: "#ffffff",
+  red: "#ff0000",
+  green: "#00ff00",
+  blue: "#0000ff",
+  yellow: "#ffff00",
+  magenta: "#ff00ff",
+  cyan: "#00ffff",
+  black: "#000000",
   "pinkish white": "#fff6f6",
   "very pale pink": "#ffe2e2",
   "pale pink": "#ffc2c2",

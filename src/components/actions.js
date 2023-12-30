@@ -4,11 +4,10 @@ import * as Props from "./props";
 import { DesignerPanel } from "./designer";
 import "css/actions.css";
 import Globals from "app/globals";
-import { Functions } from "app/eval";
 
 export class Actions extends DesignerPanel {
   name = new Props.String("Actions");
-  scale = new Props.Integer(1);
+  scale = new Props.Float(1);
 
   allowedChildren = ["Action"];
 
@@ -66,20 +65,19 @@ export class Actions extends DesignerPanel {
     this.last = { origin, event, data, rule: null };
     // first for the event then for any that got queued.
     for (;;) {
-      const context = { ...Functions, state: Globals.state, ...data };
       for (const rule of this.children) {
-        if (origin != rule.props.origin && rule.props.origin != "*") {
+        if (origin != rule.origin.value && rule.origin.value != "*") {
           continue;
         }
         const result = rule.conditions.every((restriction) =>
-          restriction.Condition.eval(context),
+          restriction.Condition.valueInContext({ data }),
         );
         if (result) {
           this.last.rule = rule;
           const patch = Object.fromEntries(
             rule.updates.map((update) => [
-              update.props.stateName,
-              update.newValue.eval(context),
+              update.stateName.value,
+              update.newValue.valueInContext({ data }),
             ]),
           );
           Globals.state.update(patch);
@@ -119,13 +117,13 @@ export class Actions extends DesignerPanel {
     const result = new Set();
     for (const rule of this.children) {
       for (const condition of rule.conditions) {
-        for (const [match] of condition.props.Condition.matchAll(/\$\w+/g)) {
+        for (const [match] of condition.Condition.text.matchAll(/\$\w+/g)) {
           result.add(match);
         }
       }
       for (const update of rule.updates) {
-        result.add(update.props.stateName);
-        for (const [match] of update.newValue.value.matchAll(/\$\w+/g)) {
+        result.add(update.stateName.value);
+        for (const [match] of update.newValue.text.matchAll(/\$\w+/g)) {
           result.add(match);
         }
       }
@@ -136,7 +134,11 @@ export class Actions extends DesignerPanel {
   settings() {
     const { actions } = Globals;
     const rule = this.last.rule;
-    return html`<div class="actions" help="Actions" id=${this.id}>
+    return html`<div
+      class=${this.CSSClasses("actions")}
+      help="Actions"
+      id=${this.id}
+    >
       <table>
         <thead>
           <tr>
@@ -244,6 +246,7 @@ class Action extends TreeBase {
   }
 
   init() {
+    super.init();
     if (this.children.length == 0) {
       // add a condition and update if none are present
       TreeBase.create(ActionCondition, this, {}).init();
@@ -254,7 +257,7 @@ class Action extends TreeBase {
 TreeBase.register(Action, "Action");
 
 export class ActionCondition extends TreeBase {
-  Condition = new Props.Expression("", {
+  Condition = new Props.Conditional("", {
     hiddenLabel: true,
     valueWhenEmpty: true,
   });

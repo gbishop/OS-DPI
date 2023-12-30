@@ -9,7 +9,6 @@ import db from "./db";
 import pleaseWait from "./components/wait";
 import "css/designer.css";
 import "css/colors.css";
-import { clearAccessChanged } from "./components/access";
 import Globals from "./globals";
 import { PatternList } from "./components/access/pattern";
 import { MethodChooser } from "./components/access/method";
@@ -18,6 +17,7 @@ import { Actions } from "./components/actions";
 import { callAfterRender, safeRender, postRender } from "./render";
 import { Designer } from "components/designer";
 import { workerCheckForUpdate } from "components/serviceWorker";
+import { accessed } from "./eval";
 
 /** let me wait for the page to load */
 const pageLoaded = new Promise((resolve) => {
@@ -30,11 +30,13 @@ const pageLoaded = new Promise((resolve) => {
 /** Load page and data then go
  */
 export async function start() {
+  let editing = true;
   if (window.location.search && !window.location.hash.slice(1)) {
     const params = new URLSearchParams(window.location.search);
     const fetch = params.get("fetch");
     if (fetch) {
       await pleaseWait(db.readDesignFromURL(fetch));
+      editing = false;
       window.history.replaceState(
         {},
         document.title,
@@ -77,7 +79,7 @@ export async function start() {
   }
 
   /* Designer */
-  Globals.state.define("editing", true); // for now
+  Globals.state.define("editing", editing); // for now
   Globals.designer = /** @type {Designer} */ (
     Designer.fromObject({
       className: "Designer",
@@ -109,7 +111,6 @@ export async function start() {
     const startTime = performance.now();
     document.body.classList.toggle("designing", Globals.state.get("editing"));
     // clear the changed flag, TODO there must be a better way!
-    clearAccessChanged();
     safeRender("cues", Globals.cues);
     safeRender("UI", Globals.tree);
     safeRender("toolbar", toolbar);
@@ -118,6 +119,11 @@ export async function start() {
     safeRender("errors", Globals.error);
     postRender();
     Globals.method.refresh();
+    // clear the accessed bits for the next cycle
+    accessed.clear();
+    // clear the updated bits for the next cycle
+    Globals.state.clearUpdated();
+
     if (location.host.startsWith("localhost")) {
       const timer = document.getElementById("timer");
       if (timer) {

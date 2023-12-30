@@ -93,7 +93,7 @@ export async function saveContent(name, rows, type) {
   const workbook = XLSX.utils.book_new();
   for (const sheetName of sheetNames) {
     let sheetRows = rows.filter(
-      (row) => sheetName == (row.sheetName || "sheet1")
+      (row) => sheetName == (row.sheetName || "sheet1"),
     );
     if (type != "csv") {
       sheetRows = sheetRows.map((row) => {
@@ -117,7 +117,7 @@ export class Content extends DesignerPanel {
     // list the names that are checked
     const toDelete = [
       ...document.querySelectorAll(
-        "#ContentMedia input[type=checkbox]:checked"
+        "#ContentMedia input[type=checkbox]:checked",
       ),
     ].map((element) => {
       // clear the checks as we go
@@ -138,7 +138,7 @@ export class Content extends DesignerPanel {
   /** Check or uncheck all the media file checkboxes */
   selectAll({ target }) {
     for (const element of document.querySelectorAll(
-      '#ContentMedia input[type="checkbox"]'
+      '#ContentMedia input[type="checkbox"]',
     )) {
       const checkbox = /** @type {HTMLInputElement} */ (element);
       checkbox.checked = target.checked;
@@ -147,45 +147,47 @@ export class Content extends DesignerPanel {
 
   settings() {
     const data = Globals.data;
-    return html`<div class="content" id=${this.id}>
-      <h1>Content</h1>
-      <p>
-        ${data.allrows.length} rows with these fields:
-        ${String(data.allFields).replaceAll(",", ", ")}
-      </p>
-      <h2>Media files</h2>
-      <button onclick=${this.deleteSelected}>Delete checked</button>
-      <label
-        ><input
-          type="checkbox"
-          name="Select all"
-          id="ContentSelectAll"
-          oninput=${this.selectAll}
-        />Select All</label
-      >
-      <ol id="ContentMedia" style="column-count: 3">
-        ${(/** @type {HTMLElement} */ comment) => {
-          /* I'm experimenting here. db.listImages() is asynchronous but I don't want
-           * to convert this entire application to the async version of uhtml. Can I
-           * inject content asynchronously using the callback mechanism he provides?
-           * As I understand it, when an interpolation is a function he places a
-           * comment node in the output and passes it to the function.
-           * I am using the comment node to find the parent container, then rendering
-           * the asynchronous content when it becomes available being careful to keep
-           * the comment node in the output. It seems to work, is it safe?
-           */
-          db.listMedia().then((names) => {
-            const list = names.map(
-              (name) =>
-                html`<li>
-                  <label><input type="checkbox" name=${name} />${name}</label>
-                </li>`
-            );
-            if (comment.parentNode)
-              render(comment.parentNode, html`${comment}${list}`);
-          });
-        }}
-      </ol>
+    return html`<div class=${this.CSSClasses("content")} id=${this.id}>
+      <div>
+        <h1>Content</h1>
+        <p>
+          ${data.allrows.length} rows with these fields:
+          ${String([...data.allFields]).replaceAll(",", ", ")}
+        </p>
+        <h2>Media files</h2>
+        <button onclick=${this.deleteSelected}>Delete checked</button>
+        <label
+          ><input
+            type="checkbox"
+            name="Select all"
+            id="ContentSelectAll"
+            oninput=${this.selectAll}
+          />Select All</label
+        >
+        <ol id="ContentMedia" style="column-count: 3">
+          ${(/** @type {HTMLElement} */ comment) => {
+            /* I'm experimenting here. db.listImages() is asynchronous but I don't want
+             * to convert this entire application to the async version of uhtml. Can I
+             * inject content asynchronously using the callback mechanism he provides?
+             * As I understand it, when an interpolation is a function he places a
+             * comment node in the output and passes it to the function.
+             * I am using the comment node to find the parent container, then rendering
+             * the asynchronous content when it becomes available being careful to keep
+             * the comment node in the output. It seems to work, is it safe?
+             */
+            db.listMedia().then((names) => {
+              const list = names.map(
+                (name) =>
+                  html`<li>
+                    <label><input type="checkbox" name=${name} />${name}</label>
+                  </li>`,
+              );
+              if (comment.parentNode)
+                render(comment.parentNode, html`${comment}${list}`);
+            });
+          }}
+        </ol>
+      </div>
     </div>`;
   }
 }

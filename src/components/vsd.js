@@ -87,9 +87,7 @@ class VSD extends TreeBase {
   template() {
     const { data, state, actions } = Globals;
     const editing = state.get("editing");
-    const items = /** @type {VRow[]} */ (
-      data.getMatchingRows(GridFilter.toContentFilters(this.children), state)
-    );
+    const items = /** @type {VRow[]} */ (data.getMatchingRows(this.children));
     const src = items.find((item) => item.image)?.image || "";
     let dragging = 0;
     const coords = [
@@ -101,7 +99,9 @@ class VSD extends TreeBase {
     return this.component(
       { classes: ["show"] },
       html`<div>
-        ${imageOrVideo(src, "", () => this.sizeMarkers(this.markers))}
+        ${imageOrVideo(src, "", () => {
+          this.sizeMarkers(this.markers);
+        })}
         <div
           class="markers"
           ref=${(/** @type {HTMLDivElement & { observer: any }} */ node) => {
@@ -110,7 +110,7 @@ class VSD extends TreeBase {
           onpointermove=${editing &&
           ((/** @type {PointerEvent} */ event) => {
             const rect = this.markers.getBoundingClientRect();
-            const div = document.querySelector("span.coords");
+            const div = document.querySelector("#UI span.coords");
             if (!div) return;
             coords[dragging][0] = Math.round(
               (100 * (event.pageX - rect.left)) / rect.width,
@@ -156,7 +156,8 @@ class VSD extends TreeBase {
                     ComponentType: this.constructor.name,
                     ...item,
                   }}
-                  onClick=${actions.handler(this.name.value, item, "press")}
+                  click
+                  @Activate=${actions.handler(this.name.value, item, "press")}
                 >
                   <span>${item.label || ""}</span>
                 </button>`,
@@ -180,14 +181,14 @@ class VSD extends TreeBase {
   }
 
   settingsDetails() {
-    const props = this.propsAsProps;
+    const props = this.props;
     const inputs = Object.values(props).map((prop) => prop.input());
     const filters = GridFilter.FilterSettings(this.children);
     return html`<div>${filters}${inputs}</div>`;
   }
 
   settingsChildren() {
-    return this.empty;
+    return [];
   }
 }
 TreeBase.register(VSD, "VSD");

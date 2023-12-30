@@ -1,12 +1,13 @@
 import { html } from "uhtml";
 import { TreeBase } from "./treebase";
 import { comparators } from "app/data";
+import "css/gridfilter.css";
 import * as Props from "./props";
 
 export class GridFilter extends TreeBase {
   field = new Props.Field({ hiddenLabel: true });
   operator = new Props.Select(Object.keys(comparators), { hiddenLabel: true });
-  value = new Props.String("", { hiddenLabel: true });
+  value = new Props.Expression("", { hiddenLabel: true });
 
   /** move my parent instead of me.
    * @param {boolean} up
@@ -23,7 +24,7 @@ export class GridFilter extends TreeBase {
     const table = [];
     if (filters.length > 0) {
       table.push(html`
-        <table>
+        <table class="GridFilter">
           <thead>
             <tr>
               <th>#</th>

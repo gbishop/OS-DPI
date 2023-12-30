@@ -27,9 +27,7 @@ export class PointerHandler extends Handler {
   settings() {
     const { conditions, responses, Signal } = this;
     const skip =
-      this.Signal.value == "pointerover"
-        ? this.SkipOnRedraw.input()
-        : this.empty;
+      this.Signal.value == "pointerover" ? [this.SkipOnRedraw.input()] : [];
     return html`
       <fieldset class="Handler" tabindex="0" id="${this.id}">
         <legend>Pointer Handler</legend>
@@ -55,8 +53,8 @@ export class PointerHandler extends Handler {
 
     const pattern = method.pattern;
 
-    const inOutThreshold = method.PointerEnterDebounce.valueAsNumber * 1000;
-    const upDownThreshold = method.PointerDownDebounce.valueAsNumber * 1000;
+    const inOutThreshold = method.PointerEnterDebounce.value * 1000;
+    const upDownThreshold = method.PointerDownDebounce.value * 1000;
 
     /**
      * Get the types correct
@@ -148,7 +146,6 @@ export class PointerHandler extends Handler {
           current = over;
           if (current !== None) {
             emittedEvents.push({ ...current, type: "pointerover" });
-            // console.log("push pointerover", events);
           }
         } else {
           current = over;

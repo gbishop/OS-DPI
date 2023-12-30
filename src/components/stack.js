@@ -23,12 +23,12 @@ export class Stack extends TreeBase {
   /** @returns {Hole|Hole[]} */
   template() {
     /** return the scale of the child making sure it isn't zero or undefined.
-     * @param {TreeBase} child
+     * @param {TreeBase } child
      * @returns {number}
      */
     function getScale(child) {
       const SCALE_MIN = 0.0;
-      let scale = +child.props.scale;
+      let scale = +child["scale"]?.value;
       if (!scale || scale < SCALE_MIN) {
         scale = SCALE_MIN;
       }
@@ -39,13 +39,14 @@ export class Stack extends TreeBase {
       0,
     );
     const empty = this.children.length && scaleSum ? "" : "empty";
-    const dimension = this.props.direction == "row" ? "width" : "height";
+    const direction = this.direction.value;
+    const dimension = direction == "row" ? "width" : "height";
 
     return this.component(
       {
-        classes: [this.props.direction, empty],
+        classes: [this.CSSClasses(direction, empty)],
         style: {
-          backgroundColor: this.props.background,
+          backgroundColor: this.background.value,
         },
       },
       this.children.map(

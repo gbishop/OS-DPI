@@ -1,6 +1,6 @@
-import { TreeBase } from "./treebase";
-import * as Props from "./props";
-import { TrackyMouse } from "../public/tracky-mouse/tracky-mouse";
+import { TreeBase } from "components/treebase";
+import * as Props from "components/props";
+import { TrackyMouse } from "./tracky-mouse/tracky-mouse";
 import "css/tracky-mouse.css";
 import Globals from "app/globals";
 
@@ -11,11 +11,12 @@ class HeadMouse extends TreeBase {
   promise;
 
   template() {
+    const stateName = this.stateName.value;
+    const { state } = Globals;
+    const updated = state.hasBeenUpdated(stateName);
     this.promise.then(() => {
-      const stateName = this.stateName.value;
-      const { state } = Globals;
-      if (state.hasBeenUpdated(stateName)) {
-        const status = state.values[stateName];
+      if (updated) {
+        const status = state.get(stateName, "off");
         if (status == "on" || status == "setup") {
           document.body.classList.toggle("HeadMouse", true);
           TrackyMouse.useCamera();
@@ -27,10 +28,11 @@ class HeadMouse extends TreeBase {
         }
       }
     });
-    return [];
+    return /** @type {Hole[]} */ ([]);
   }
 
   init() {
+    super.init();
     TrackyMouse.dependenciesRoot = "./tracky-mouse";
     this.promise = TrackyMouse.loadDependencies();
     this.promise.then(() => {
@@ -49,6 +51,9 @@ class HeadMouse extends TreeBase {
         };
       };
       let last_el_over;
+      /** @param {number} x
+       * @param {number} y
+       */
       TrackyMouse.onPointerMove = (x, y) => {
         const target = document.elementFromPoint(x, y) || document.body;
         if (target !== last_el_over) {
@@ -60,7 +65,7 @@ class HeadMouse extends TreeBase {
                 buttons: 1,
                 bubbles: true,
                 cancelable: false,
-              })
+              }),
             );
             last_el_over.dispatchEvent(event);
           }
@@ -71,7 +76,7 @@ class HeadMouse extends TreeBase {
               buttons: 1,
               bubbles: true,
               cancelable: false,
-            })
+            }),
           );
           target.dispatchEvent(event);
           last_el_over = target;
@@ -83,7 +88,7 @@ class HeadMouse extends TreeBase {
             buttons: 1,
             bubbles: true,
             cancelable: true,
-          })
+          }),
         );
         target.dispatchEvent(event);
       };

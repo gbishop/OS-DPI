@@ -42,7 +42,7 @@ export class MethodChooser extends DesignerPanel {
   }
 
   settings() {
-    return html`<div class="MethodChooser" id=${this.id}>
+    return html`<div class=${this.CSSClasses("MethodChooser")} id=${this.id}>
       ${this.unorderedChildren()}
     </div> `;
   }
@@ -118,7 +118,7 @@ export class Method extends TreeBase {
   PointerEnterDebounce = new Props.Float(0, { label: "Pointer enter/leave" });
   PointerDownDebounce = new Props.Float(0, { label: "Pointer down/up" });
   Key = new Props.UID();
-  Active = new Props.Boolean(false);
+  Active = new Props.OneOfGroup(false, { group: "ActiveMethod" });
 
   allowedChildren = [
     "Timer",
@@ -222,11 +222,13 @@ export class Method extends TreeBase {
     return html`<div>
       ${Name.input()} ${Active.input()} ${Pattern.input()} ${Debounce}
       ${timers.length > 0
-        ? html`<fieldset>
-            <legend>Timers</legend>
-            ${this.unorderedChildren(timers)}
-          </fieldset>`
-        : this.empty}
+        ? [
+            html`<fieldset>
+              <legend>Timers</legend>
+              ${this.unorderedChildren(timers)}
+            </fieldset>`,
+          ]
+        : []}
       <fieldset>
         <legend>Handlers</legend>
         ${this.orderedChildren(this.handlers)}
@@ -234,8 +236,9 @@ export class Method extends TreeBase {
     </div>`;
   }
 
+  /** @returns {Hole[]} */
   settingsChildren() {
-    return this.empty;
+    return [];
   }
 
   /** Configure the rxjs pipelines to implement this method */
@@ -340,7 +343,9 @@ export class Handler extends TreeBase {
   test(event) {
     return (
       this.Signal.value == event.type &&
-      this.conditions.every((condition) => condition.eval(event.access))
+      this.conditions.every((condition) =>
+        condition.eval({ data: event.access }),
+      )
     );
   }
 
@@ -353,7 +358,6 @@ export class Handler extends TreeBase {
 
   /** @param {EventLike} event */
   respond(event) {
-    // console.log("handler respond", event.type, this.responses);
     const method = this.nearestParent(Method);
     if (!method) return;
     method.cancelTimers();
@@ -364,16 +368,16 @@ export class Handler extends TreeBase {
 }
 
 export class HandlerCondition extends TreeBase {
-  Condition = new Props.Expression("", { hiddenLabel: true });
+  Condition = new Props.Conditional("", { hiddenLabel: true });
 
   settings() {
     const { Condition } = this;
     return html`<div class="Condition">${Condition.input()}</div>`;
   }
 
-  /** @param {Object} context */
+  /** @param {EvalContext} context */
   eval(context) {
-    return this.Condition.eval(context);
+    return this.Condition.valueInContext(context);
   }
 
   /** move my parent instead of me.
@@ -396,9 +400,9 @@ export class HandlerKeyCondition extends HandlerCondition {
     return html`<div class="Key">${Key.input()}</div>`;
   }
 
-  /** @param {Object} context */
+  /** @param {EvalContext} context */
   eval(context) {
-    return this.Key.value == context.key;
+    return this.Key.value == context.data.key;
   }
 }
 TreeBase.register(HandlerKeyCondition, "HandlerKeyCondition");
@@ -428,7 +432,7 @@ export class HandlerResponse extends TreeBaseSwitchable {
   }
 
   subTemplate() {
-    return this.empty;
+    return [];
   }
 
   /** move my parent instead of me.

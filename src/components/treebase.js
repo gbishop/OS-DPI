@@ -62,7 +62,7 @@ export class TreeBase {
    * Extract the class fields that are Props and return their values as an Object
    * @returns {Object<string, any>}
    */
-  get props() {
+  get propsAsObject() {
     return Object.fromEntries(
       Object.entries(this)
         .filter(([_, prop]) => prop instanceof Props.Prop)
@@ -74,7 +74,7 @@ export class TreeBase {
    * Extract the values of the fields that are Props
    * @returns {Object<string, Props.Prop>}
    */
-  get propsAsProps() {
+  get props() {
     return Object.fromEntries(
       Object.entries(this).filter(([_, prop]) => prop instanceof Props.Prop),
     );
@@ -93,7 +93,7 @@ export class TreeBase {
             prop instanceof Props.Prop &&
             !options.omittedProps.includes(prop.constructor.name),
         )
-        .map(([name, prop]) => [name, prop.value]),
+        .map(([name, prop]) => [name, prop.text]),
     );
     const children = this.children.map((child) => child.toObject(options));
     const result = {
@@ -109,7 +109,18 @@ export class TreeBase {
    * called in fromObject after the children have been added. If you
    * call create directly you should call init afterward.
    */
-  init() {}
+  init() {
+    /** Make sure OnOfGroup is enforced */
+    for (const child of this.children) {
+      const props = child.props;
+      for (const instance of Object.values(props)) {
+        if (instance instanceof Props.OneOfGroup && instance._value) {
+          instance.clearPeers();
+          break;
+        }
+      }
+    }
+  }
 
   /**
    *   Create a TreeBase object
@@ -128,7 +139,7 @@ export class TreeBase {
     const result = new constructor();
 
     // initialize the props
-    for (const [name, prop] of Object.entries(result.propsAsProps)) {
+    for (const [name, prop] of Object.entries(result.props)) {
       prop.initialize(name, props[name], result);
     }
 
@@ -240,11 +251,14 @@ export class TreeBase {
    * @returns {Hole|Hole[]}
    */
   settingsDetails() {
-    const props = this.propsAsProps;
+    const props = this.props;
     const inputs = Object.values(props).map((prop) => prop.input());
     return inputs;
   }
 
+  /**
+   * @returns {Hole|Hole[]}
+   */
   settingsChildren() {
     return this.orderedChildren();
   }
@@ -254,7 +268,7 @@ export class TreeBase {
    * @returns {Hole|Hole[]}
    */
   template() {
-    return this.empty;
+    return [];
   }
 
   /**
@@ -425,39 +439,11 @@ export class TreeBase {
     return result;
   }
 
-  /* Methods from original Base many not used */
-
-  /** Return matching strings from props
-   * @param {RegExp} pattern
-   * @param {string[]} [props]
-   * @returns {Set<string>}
+  /** @param {string[]} classes
+   * @returns {string}
    */
-  all(pattern, props) {
-    const matches = new Set();
-    for (const [name, theProp] of Object.entries(this.props)) {
-      if (!props || props.indexOf(name) >= 0) {
-        if (theProp instanceof Props.String) {
-          for (const [match] of theProp.value.matchAll(pattern)) {
-            matches.add(match);
-          }
-        }
-      }
-    }
-    for (const child of this.children) {
-      for (const match of child.all(pattern, props)) {
-        matches.add(match);
-      }
-    }
-    return matches;
-  }
-
-  /** @returns {Set<string>} */
-  allStates() {
-    return this.all(/\$\w+/g);
-  }
-
-  get empty() {
-    return html`<!--empty-->`;
+  CSSClasses(...classes) {
+    return classes.join(" ");
   }
 }
 
@@ -466,8 +452,9 @@ export class TreeBase {
  */
 export class TreeBaseSwitchable extends TreeBase {
   init() {
+    super.init();
     // find the TypeSelect property and set its value
-    for (const prop of Object.values(this.propsAsProps)) {
+    for (const prop of Object.values(this.props)) {
       if (prop instanceof Props.TypeSelect) {
         if (!prop.value) {
           prop.set(this.className);
@@ -482,7 +469,11 @@ export class TreeBaseSwitchable extends TreeBase {
     if (!this.parent) return;
     if (this.className == className) return;
     // extract the values of the old props
-    const props = this.props;
+    const props = Object.fromEntries(
+      Object.entries(this)
+        .filter(([_, prop]) => prop instanceof Props.Prop)
+        .map(([name, prop]) => [name, prop.value]),
+    );
     const replacement = TreeBase.create(className, null, props);
     replacement.init();
     const index = this.parent.children.indexOf(this);

@@ -9,7 +9,7 @@ import { callAfterRender } from "app/render";
 
 export class TabControl extends TreeBase {
   stateName = new Props.String("$tabControl");
-  background = new Props.String("");
+  background = new Props.Color("");
   scale = new Props.Float(6);
   tabEdge = new Props.Select(["bottom", "top", "left", "right", "none"], {
     defaultValue: "top",
@@ -27,23 +27,23 @@ export class TabControl extends TreeBase {
   template() {
     const { state } = Globals;
     const panels = this.children;
-    let activeTabName = state.get(this.props.stateName);
+    let activeTabName = state.get(this.stateName.value);
     // collect panel info
     panels.forEach((panel, index) => {
-      panel.tabName = state.interpolate(panel.props.name); // internal name
-      panel.tabLabel = state.interpolate(panel.props.label || panel.props.name); // display name
+      panel.tabName = state.interpolate(panel.name.value); // internal name
+      panel.tabLabel = state.interpolate(panel.label.value || panel.name.value); // display name
       if (index == 0 && !activeTabName) {
         activeTabName = panel.tabName;
-        state.define(this.props.stateName, panel.tabName);
+        state.define(this.stateName.value, panel.tabName);
       }
       panel.active = activeTabName == panel.tabName || panels.length === 1;
     });
-    let buttons = [this.empty];
-    if (this.props.tabEdge != "none") {
+    let buttons = [];
+    if (this.tabEdge.value != "none") {
       buttons = panels
-        .filter((panel) => panel.props.label != "UNLABELED")
+        .filter((panel) => panel.label.value != "UNLABELED")
         .map((panel) => {
-          const color = panel.props.background;
+          const color = panel.background.value;
           const buttonStyle = {
             backgroundColor: color,
           };
@@ -58,7 +58,7 @@ export class TabControl extends TreeBase {
                 id: panel.id,
               }}
               click
-              onClick=${() => {
+              @Activate=${() => {
                 this.switchTab(panel.tabName);
               }}
               tabindex="-1"
@@ -68,34 +68,25 @@ export class TabControl extends TreeBase {
           </li>`;
         });
     }
-    this.currentPanel = panels.find((panel) => panel.active);
-    const panel = this.panelTemplate();
     return this.component(
-      { classes: [this.props.tabEdge] },
+      { classes: [this.tabEdge.value] },
       html`
-        <ul class="buttons" hint=${this.hint}>
+        <ul class="buttons">
           ${buttons}
         </ul>
-        <div class="panels flex">${panel}</div>
+        <div class="panels flex">
+          ${panels.map((panel) => panel.safeTemplate())}
+        </div>
       `,
     );
-  }
-
-  panelTemplate() {
-    return this.currentPanel?.safeTemplate() || this.empty;
   }
 
   /**
    * @param {string} tabName
    */
   switchTab(tabName) {
-    Globals.state.update({ [this.props.stateName]: tabName });
+    Globals.state.update({ [this.stateName.value]: tabName });
   }
-
-  /** @type {string | null} */
-  hint = null;
-
-  restoreFocus() {}
 }
 TreeBase.register(TabControl, "TabControl");
 
@@ -136,6 +127,16 @@ export class TabPanel extends Stack {
         ${caption}
       </button>`,
     ];
+  }
+
+  /** @param {string[]} classes
+   * @returns {string}
+   */
+  CSSClasses(...classes) {
+    if (this.active) {
+      classes.push("ActivePanel");
+    }
+    return super.CSSClasses(...classes);
   }
 
   highlight() {}

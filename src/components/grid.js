@@ -3,7 +3,7 @@ import * as Props from "./props";
 import { TreeBase } from "./treebase";
 import { GridFilter } from "./gridFilter";
 import { styleString } from "./style";
-import { formatSlottedString } from "./helpers";
+import { formatSlottedString } from "./slots";
 import Globals from "app/globals";
 import "css/grid.css";
 
@@ -65,7 +65,7 @@ class Grid extends TreeBase {
 
   /** @param {Row} item */
   gridCell(item) {
-    const { name } = this.props;
+    const name = this.name.value;
     let content;
     let msg = formatSlottedString(item.label || "");
     if (item.symbol) {
@@ -103,7 +103,8 @@ class Grid extends TreeBase {
    */
   pageSelector(pages, info) {
     const { state } = Globals;
-    const { background, name } = this.props;
+    const background = this.background.value;
+    const name = this.name.value;
 
     return html`<div class="page-control">
       <div class="text">Page ${this.page} of ${pages}</div>
@@ -144,15 +145,13 @@ class Grid extends TreeBase {
 
   template() {
     /** @type {Partial<CSSStyleDeclaration>} */
-    const style = { backgroundColor: this.props.background };
-    const { data, state } = Globals;
-    let { rows, columns, fillItems } = this.props;
+    const style = { backgroundColor: this.background.value };
+    const { data } = Globals;
+    let rows = this.rows.value;
+    let columns = this.columns.value;
+    let fillItems = this.fillItems.value;
     /** @type {Rows} */
-    let items = data.getMatchingRows(
-      GridFilter.toContentFilters(this.children),
-      state,
-      this.cache,
-    );
+    let items = data.getMatchingRows(this.children);
     // reset the page when the key changes
     if (this.cache.updated) {
       this.page = 1;
@@ -235,14 +234,14 @@ class Grid extends TreeBase {
 
   /** @returns {Hole|Hole[]} */
   settingsDetails() {
-    const props = this.propsAsProps;
+    const props = this.props;
     const inputs = Object.values(props).map((prop) => prop.input());
     const filters = GridFilter.FilterSettings(this.children);
     return html`<div>${filters}${inputs}</div>`;
   }
 
   settingsChildren() {
-    return this.empty;
+    return [];
   }
 }
 TreeBase.register(Grid, "Grid");

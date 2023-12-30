@@ -17,3 +17,21 @@
   min-width: 45%;
   max-width: 45%;
 }
+
+.settings .Radio table.RadioOptions {
+  width: 100%;
+}
+.settings .Radio table.RadioOptions tr {
+  width: 100%;
+}
+.settings .Radio table.RadioOptions td:nth-child(2) {
+  width: 30%;
+}
+
+.settings .Radio table.RadioOptions label.labeledInput {
+  width: 100% !important;
+}
+
+.settings .Radio table.RadioOptions input {
+  width: 100% !important;
+}

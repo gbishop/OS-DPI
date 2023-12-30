@@ -2,10 +2,15 @@ import { html } from "uhtml";
 import { TreeBase } from "./treebase";
 import "css/monitor.css";
 import Globals from "app/globals";
+import { accessed } from "app/eval";
+import { toString } from "components/slots";
 
 export class Monitor extends TreeBase {
   template() {
     const { state, actions: rules } = Globals;
+    const stateKeys = [
+      ...new Set([...Object.keys(state.values), ...accessed.keys()]),
+    ].sort();
     const s = html`<table class="state">
       <thead>
         <tr>
@@ -14,15 +19,19 @@ export class Monitor extends TreeBase {
         </tr>
       </thead>
       <tbody>
-        ${Object.keys(state.values)
+        ${stateKeys
           .filter((key) => key.startsWith("$"))
           .map((key) => {
-            const value = state.get(key).toString();
+            let value = state.get(key);
+            value = toString(value);
             let clamped = value.slice(0, 30);
             if (value.length > clamped.length) {
               clamped += "...";
             }
-            return html`<tr>
+            return html`<tr
+              ?updated=${state.hasBeenUpdated(key)}
+              ?undefined=${accessed.get(key) === false}
+            >
               <td>${key}</td>
               <td>${clamped}</td>
             </tr>`;
@@ -31,6 +40,12 @@ export class Monitor extends TreeBase {
     </table>`;
 
     const row = rules.last.data || {};
+    const rowAccessedKeys = [...accessed.keys()]
+      .filter((key) => key.startsWith("_"))
+      .map((key) => key.slice(1));
+    const rowKeys = [
+      ...new Set([...Object.keys(row), ...rowAccessedKeys]),
+    ].sort();
     const f = html`<table class="fields">
       <thead>
         <tr>
@@ -39,9 +54,12 @@ export class Monitor extends TreeBase {
         </tr>
       </thead>
       <tbody>
-        ${Object.keys(row).map((key) => {
+        ${rowKeys.map((key) => {
           const value = row[key];
-          return html`<tr>
+          return html`<tr
+            ?undefined=${accessed.get(`_${key}`) === false}
+            ?accessed=${accessed.has(`_${key}`)}
+          >
             <td>#${key}</td>
             <td>${value}</td>
           </tr>`;

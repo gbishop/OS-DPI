@@ -38,6 +38,11 @@ export const Functions = {
     let args = arg.split(",");
     return args[Math.floor(Math.random() * args.length)];
   },
+  max: Math.max,
+  min: Math.min,
+  if: (/** @type {boolean} */ c, /** @type {any} */ t, /** @type {any} */ f) =>
+    c ? t : f,
+  abs: (/** @type {number} */ v) => Math.abs(v),
 };
 
 /**
@@ -48,10 +53,12 @@ export const Functions = {
  */
 function translate(expression) {
   /* translate the expression from the excel like form to javascript */
+  // remove any initial = sign
+  let exp = expression.replace(/^=/, "");
   // translate single = to ==
-  let exp = expression.replaceAll(/(?<![=<>!])=/g, "==");
+  exp = exp.replaceAll(/(?<![=<>!])=/g, "==");
   // translate words
-  exp = exp.replaceAll(/[$#]\w+/g, "access('$&')");
+  exp = exp.replaceAll(/(?<!['"])[#](\w+)/g, "_$1");
   return exp;
 }
 
@@ -94,32 +101,87 @@ export function access(state, data) {
   };
 }
 
-/** @param {string} expression
+/** Track access to states and fields, true if the value was undefined
+ * @type {Map<string, boolean>}
+ */
+export const accessed = new Map();
+
+/* intercept access to variables so I can track access to undefined state and field values
+ * and map them to empty strings.
+ */
+const variableHandler = {
+  /** @param {Object} target
+   * @param {string} prop
+   */
+  get(target, prop) {
+    let result = undefined;
+    if (prop.startsWith("$")) {
+      result = target.states[prop];
+      accessed.set(prop, prop in target.states);
+    } else if (prop.startsWith("_")) {
+      let ps = prop.slice(1);
+      result = target.data[ps];
+      accessed.set(prop, Globals.data.allFields.has("#" + ps));
+    } else if (prop in Functions) {
+      result = Functions[prop];
+    } else {
+      console.error("undefined", prop);
+    }
+    if (result === undefined || result === null) {
+      result = "";
+    }
+    return result;
+  },
+
+  /** The expressions library is testing for own properties for safety.
+   * I need to defeat that for the renaming I want to do.
+   * @param {Object} target;
+   * @param {string} prop;
+   */
+  getOwnPropertyDescriptor(target, prop) {
+    if (prop.startsWith("$")) {
+      return Object.getOwnPropertyDescriptor(target.states, prop);
+    } else if (prop.startsWith("_")) {
+      return Object.getOwnPropertyDescriptor(target.data, prop.slice(1));
+    } else {
+      return Object.getOwnPropertyDescriptor(Functions, prop);
+    }
+  },
+};
+
+/**
+ * Compile an expression returning the function or an error
+ * @param {string} expression
+ * @returns {[ ((context?:Object)=>any ) | undefined, Error | undefined ]}
  *
- * This could throw an error which we should catch and report.
  * */
 export function compileExpression(expression) {
   const te = translate(expression);
-  const exp = expressions.compile(te);
-  /** @param {Object} context */
-  return (context) =>
-    exp({ ...Functions, access: access(Globals.state, context), ...context });
-}
-
-/**
- * Evaluate a string as an expression in a given context
- *
- * @param {string} expression - Expression to evaluate
- * @param {Object} context - Context for the evaluation
- * @returns {any} Value returned by the expression
- */
-export function evalInContext(expression, context) {
   try {
-    const te = translate(expression);
     const exp = expressions.compile(te);
-    return exp({ ...context, access: access(context.state, context.data) });
+    /** @param {EvalContext} context */
+    return [
+      (context = {}) => {
+        let states =
+          "states" in context
+            ? { ...Globals.state.values, ...context.states }
+            : Globals.state.values;
+        let data = context.data ?? [];
+        const r = exp(
+          new Proxy(
+            {
+              Functions,
+              states,
+              data,
+            },
+            variableHandler,
+          ),
+        );
+        return r;
+      },
+      undefined,
+    ];
   } catch (e) {
-    console.error(e);
-    return null;
+    return [undefined, e];
   }
 }

@@ -1,4 +1,3 @@
-import { strip } from "./display";
 import { TreeBase } from "./treebase";
 import * as Props from "./props";
 import db from "app/db";
@@ -10,18 +9,16 @@ class Audio extends TreeBase {
 
   async playAudio() {
     const { state } = Globals;
-    const { stateName } = this.props;
-    const fileName = strip(state.get(stateName) || "");
+    const fileName = state.get(this.stateName.value) || "";
     (await db.getAudio(fileName)).play();
   }
 
   template() {
-    const { stateName } = this.props;
     const { state } = Globals;
-    if (state.hasBeenUpdated(stateName)) {
+    if (state.hasBeenUpdated(this.stateName.value)) {
       this.playAudio();
     }
-    return this.empty;
+    return [];
   }
 }
 TreeBase.register(Audio, "Audio");

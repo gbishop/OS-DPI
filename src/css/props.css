@@ -1,25 +1,44 @@
-div.labeledInput {
+input:focus ~ span.propValue {
+  position: absolute;
+  top: -1.5em;
+  right: 0;
+  padding: 0.2em;
+  background-color: var(--surface2);
   display: inline-block;
+  font-size: 75%;
 }
-div.labeledInput:has(div.Code) {
+span.propValue {
+  display: none;
+}
+label[hiddenLabel]:has(div.Code) {
   display: block;
   flex-basis: 100%;
 }
-label[hiddenLabel] {
-  clip: rect(0 0 0 0);
-  clip-path: inset(50%);
-  height: 1px;
-  overflow: hidden;
-  position: absolute;
+label.labeledInput {
   white-space: nowrap;
+  line-height: 1.5em;
+}
+label.labeledInput[hiddenLabel] > span {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
   width: 1px;
 }
 select:required:invalid {
   color: gray;
   border-color: red;
 }
-input[inputmode="numeric"] {
-  width: 3em;
+input[type="text"] {
+  min-width: 10ch;
+}
+input[type="text"][inputmode="numeric"],
+input[type="text"][inputmode="decimal"] {
+  width: 3ch;
+  min-width: 3ch;
 }
 input[inputmode="numeric"]:invalid {
   color: red;
@@ -30,6 +49,10 @@ textarea:invalid,
 textarea[invalid] {
   border-color: red;
   background-color: var(--warning);
+}
+input,
+select {
+  min-height: 1.5rem;
 }
 
 option[value=""][disabled] {
@@ -90,3 +113,12 @@ div.Code textarea.line-numbers::-webkit-scrollbar {
   display: none;
 }
 */
+
+.swatch {
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  border: 1px solid black;
+  vertical-align: middle;
+  margin-left: 0.2em;
+}

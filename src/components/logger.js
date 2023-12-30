@@ -44,7 +44,9 @@ export class Logger extends TreeBase {
 
   template() {
     const { state, actions } = Globals;
-    const { stateName, logUntil, logThese } = this.props;
+    const stateName = this.stateName.value;
+    const logUntil = this.logUntil.value;
+    const logThese = this.logThese.value;
     const logging =
       !!state.get(stateName) && logUntil && new Date() < new Date(logUntil);
     const getValue = access(state, actions.last.data);
@@ -85,6 +87,7 @@ export class Logger extends TreeBase {
   }
 
   init() {
+    super.init();
     this.onUpdate();
   }
 

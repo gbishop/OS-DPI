@@ -11,8 +11,9 @@ class Button extends TreeBase {
   scale = new Props.Float(1);
 
   template() {
-    const style = styleString({ backgroundColor: this.props.background });
-    const { name, label } = this.props;
+    const style = styleString({ backgroundColor: this.background.value });
+    const name = this.name.value;
+    const label = this.label.value;
     return this.component(
       {},
       html`<button
@@ -22,12 +23,12 @@ class Button extends TreeBase {
         .dataset=${{
           name: name,
           label: label,
-          ComponentName: this.props.name,
+          ComponentName: name,
           ComponentType: this.constructor.name,
         }}
       >
         ${label}
-      </button>`
+      </button>`,
     );
   }
 

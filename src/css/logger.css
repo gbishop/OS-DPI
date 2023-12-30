@@ -34,6 +34,6 @@ div.logging-indicator[logging] {
   width: 100%;
 }
 
-.settings div.labeledInput:has(textarea) {
+.settings label.labeledInput:has(textarea) {
   width: 100%;
 }

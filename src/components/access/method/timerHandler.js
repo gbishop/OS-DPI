@@ -48,7 +48,7 @@ export class TimerHandler extends Handler {
     const timer = method.timer(timerName);
     if (!timer) return;
 
-    const delayTime = 1000 * timer.Interval.valueAsNumber;
+    const delayTime = 1000 * timer.Interval.value;
     method.streams[streamName] = timer.subject$.pipe(
       RxJs.switchMap((event) =>
         event.type == "cancel"

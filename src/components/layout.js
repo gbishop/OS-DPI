@@ -47,7 +47,7 @@ export class Layout extends DesignerPanel {
 
   settings() {
     return html`<div
-      class="treebase layout"
+      class=${this.CSSClasses("layout")}
       help="Layout tab"
       id=${this.id}
       onkeydown=${(/** @type {KeyboardEvent} */ event) => {
@@ -73,11 +73,10 @@ export class Layout extends DesignerPanel {
     /** @param {Object} obj */
     function oldToNew(obj) {
       if ("type" in obj) {
-        // console.log("upgrade", obj);
         // convert to new representation
         const newObj = {
           children: obj.children.map((/** @type {Object} */ child) =>
-            oldToNew(child)
+            oldToNew(child),
           ),
         };
         if ("filters" in obj.props) {
@@ -93,7 +92,6 @@ export class Layout extends DesignerPanel {
         const { filters, ...props } = obj.props;
         newObj.props = props;
         obj = newObj;
-        // console.log("upgraded", obj);
       }
       return obj;
     }
@@ -125,7 +123,7 @@ export class Layout extends DesignerPanel {
       element.removeAttribute("highlight");
     }
     // find the selection in the panel
-    let selected = document.querySelector("[aria-selected]");
+    let selected = document.querySelector("#UI [aria-selected]");
     if (!selected) return;
     selected = selected.closest("[id]");
     if (!selected) return;

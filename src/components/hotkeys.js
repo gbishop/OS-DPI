@@ -57,14 +57,15 @@ function focusPanel() {
 function focusTabs() {
   clearHints();
   const currentTab = /** @type {HTMLButtonElement} */ (
-    document.querySelector("#designer .tabcontrol .buttons button[active]")
+    document.querySelector("#designer #tabs .buttons button[active]")
   );
+  console.log({ currentTab });
   if (currentTab) {
     currentTab.focus();
     return;
   }
   const tabs = /** @type {HTMLButtonElement[]} */ ([
-    ...document.querySelectorAll(".designing .tabcontrol .buttons button"),
+    ...document.querySelectorAll(".designing #designer #tabs .buttons button"),
   ]);
   if (!tabs.length) return;
   tabs[0].focus();

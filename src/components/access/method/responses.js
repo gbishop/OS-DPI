@@ -32,7 +32,6 @@ class ResponderCue extends HandlerResponse {
 
   /** @param {EventLike} event */
   respond(event) {
-    //    console.log("cue", event);
     cueTarget(event.target, this.Cue.value);
   }
 }
@@ -72,7 +71,7 @@ class ResponderStartTimer extends HandlerResponse {
     // hand the interval to Cue CSS for animations
     document.documentElement.style.setProperty(
       "--timerInterval",
-      `${timer.Interval.value}s`
+      `${timer.Interval.value}s`,
     );
     timer.start(event);
   }

@@ -2,6 +2,7 @@ import { html } from "uhtml";
 // import "css/customize.css";
 import { TreeBase } from "components/treebase";
 import * as Props from "components/props";
+import Globals from "app/globals";
 
 /**
  * Customize component allows modifying the CSS of the UI to
@@ -16,7 +17,7 @@ export class Customize extends TreeBase {
 
   template() {
     return html`<style>
-      ${this.css.editedValue}
+      ${Globals.state.interpolate(this.css.editedValue)}
     </style>`;
   }
 }
