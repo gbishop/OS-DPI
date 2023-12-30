@@ -170,7 +170,7 @@ export class Prop {
   labeled(body) {
     return html`
       <label class="labeledInput" ?hiddenLabel=${this.options.hiddenLabel}
-        ><span>${this.label}</span> ${body}</label
+        ><span class="labelText">${this.label}</span> ${body}</label
       >
     `;
   }

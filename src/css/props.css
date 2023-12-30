@@ -17,8 +17,9 @@ label[hiddenLabel]:has(div.Code) {
 label.labeledInput {
   white-space: nowrap;
   line-height: 1.5em;
+  position: relative;
 }
-label.labeledInput[hiddenLabel] > span {
+label.labeledInput[hiddenLabel] span.labelText {
   border: 0;
   clip: rect(0 0 0 0);
   height: 1px;
