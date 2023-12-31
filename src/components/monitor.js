@@ -68,7 +68,7 @@ export class Monitor extends TreeBase {
     </table>`;
 
     return html`<button
-        onclick=${() => {
+        @click=${() => {
           state.clear();
           rules.configure();
         }}

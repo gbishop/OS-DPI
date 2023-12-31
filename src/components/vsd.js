@@ -107,7 +107,7 @@ class VSD extends TreeBase {
           ref=${(/** @type {HTMLDivElement & { observer: any }} */ node) => {
             this.sizeMarkers(node);
           }}
-          onpointermove=${editing &&
+          @pointermove=${editing &&
           ((/** @type {PointerEvent} */ event) => {
             const rect = this.markers.getBoundingClientRect();
             const div = document.querySelector("#UI span.coords");
@@ -128,11 +128,11 @@ class VSD extends TreeBase {
             }
             div.innerHTML = clip;
           })}
-          onpointerdown=${editing &&
+          @pointerdown=${editing &&
           (() => {
             dragging = 1;
           })}
-          onpointerup=${editing &&
+          @pointerup=${editing &&
           (() => {
             dragging = 0;
             navigator.clipboard.writeText(clip);
@@ -150,8 +150,8 @@ class VSD extends TreeBase {
                     height: pct(item.h),
                     position: "absolute",
                   })}
-                  ?invisible=${item.invisible}
-                  .dataset=${{
+                  ?invisible=${!!item.invisible}
+                  data=${{
                     ComponentName: this.name.value,
                     ComponentType: this.constructor.name,
                     ...item,
@@ -184,11 +184,11 @@ class VSD extends TreeBase {
     const props = this.props;
     const inputs = Object.values(props).map((prop) => prop.input());
     const filters = GridFilter.FilterSettings(this.children);
-    return html`<div>${filters}${inputs}</div>`;
+    return [html`<div>${filters}${inputs}</div>`];
   }
 
   settingsChildren() {
-    return [];
+    return html`<div />`;
   }
 }
 TreeBase.register(VSD, "VSD");

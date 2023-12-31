@@ -30,14 +30,14 @@ export default async function wait(promise, message = "Please wait") {
         html`<div>
           <p class="error">${e.message}</p>
           <button
-            onclick=${() => {
+            @click=${() => {
               div.remove();
               resolve(e.message);
             }}
           >
             OK
           </button>
-        </div>`
+        </div>`,
       );
     });
   }

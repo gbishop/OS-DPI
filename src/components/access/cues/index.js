@@ -27,7 +27,6 @@ export class CueList extends DesignerPanel {
     </div>`;
   }
 
-  /** @returns {Hole|Hole[]} */
   template() {
     const result = this.children.map(
       (child) =>
@@ -47,7 +46,7 @@ export class CueList extends DesignerPanel {
         </style>`,
       );
     }
-    return result;
+    return html`${result}`;
   }
 
   get cueMap() {
@@ -100,10 +99,12 @@ class Cue extends TreeBaseSwitchable {
   }
 
   settingsDetails() {
-    return html`<div class="Cue">
-      ${this.Name.input()} ${this.Default.input()} ${this.CueType.input()}
-      ${this.subTemplate()}
-    </div>`;
+    return [
+      html`<div class="Cue">
+        ${this.Name.input()} ${this.Default.input()} ${this.CueType.input()}
+        ${this.subTemplate()}
+      </div>`,
+    ];
   }
 
   /** @returns {Hole[]} */

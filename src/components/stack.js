@@ -20,7 +20,7 @@ export class Stack extends TreeBase {
     "Button",
   ];
 
-  /** @returns {Hole|Hole[]} */
+  /** @returns {Hole} */
   template() {
     /** return the scale of the child making sure it isn't zero or undefined.
      * @param {TreeBase } child
@@ -49,7 +49,7 @@ export class Stack extends TreeBase {
           backgroundColor: this.background.value,
         },
       },
-      this.children.map(
+      html`${this.children.map(
         (child) =>
           html`<div
             style=${styleString({
@@ -58,7 +58,7 @@ export class Stack extends TreeBase {
           >
             ${child.safeTemplate()}
           </div>`,
-      ),
+      )}`,
     );
   }
 }

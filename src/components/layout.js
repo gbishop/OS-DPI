@@ -50,7 +50,7 @@ export class Layout extends DesignerPanel {
       class=${this.CSSClasses("layout")}
       help="Layout tab"
       id=${this.id}
-      onkeydown=${(/** @type {KeyboardEvent} */ event) => {
+      @keydown=${(/** @type {KeyboardEvent} */ event) => {
         const { key, ctrlKey } = event;
         if ((key == "H" || key == "h") && ctrlKey) {
           event.preventDefault();

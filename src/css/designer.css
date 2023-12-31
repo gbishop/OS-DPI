@@ -48,32 +48,26 @@ body.designing #monitor {
   border-left: 1px solid #d0d0d0;
 }
 
-#designer .panels ol li:not(:last-of-type),
-#designer .panels ul li:not(:last-of-type) {
-  border-bottom: 1px solid #d0d0d0;
-  margin-bottom: 5px;
+#designer .settings > details > summary {
+  cursor: pointer;
+  background-color: var(--surface2);
 }
 
-#designer details summary {
-  cursor: pointer;
+#designer .settings > details {
+  margin-bottom: 0.5em;
 }
 
 details summary > * {
   display: inline;
 }
 
-#designer details[open] {
-  border: 1px solid black;
-  margin-left: 1em;
+#designer .settings > details[open] {
+  border: 4px inset var(--surface4);
   padding-left: 0.2em;
   padding-bottom: 0.2em;
 }
 
-#designer details[open] summary {
-  margin-left: -1em;
-}
-
-#designer details summary h3 {
+#designer .settings > details summary h3 {
   font-weight: 500;
 }
 

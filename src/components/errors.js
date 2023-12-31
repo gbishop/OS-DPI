@@ -1,5 +1,5 @@
 import * as StackTrace from "stacktrace-js";
-import { html } from "uhtml";
+import { html, render } from "uhtml";
 import "css/errors.css";
 import { TreeBase } from "./treebase";
 
@@ -13,9 +13,9 @@ export class Messages extends TreeBase {
         ${this.messages.map((message) => html`<p>${message}</p>`)}
       </div> `;
       this.messages = [];
-      return [result];
+      return result;
     } else {
-      return [];
+      return html`<div />`;
     }
   }
 
@@ -30,44 +30,51 @@ export class Messages extends TreeBase {
  * @param {string[]} trace - stack trace
  */
 function reportInternalError(msg, trace) {
-  const result = html.node`<div id="ErrorReport">
-    <h1>Internal Error</h1>
-    <p>
-      Your browser has detected an internal error in OS-DPI. It was very likely
-      caused by our program bug. We hope you will help us by sending a report of
-      the information below. Simply click this button
-      <button
-        onclick=${() => {
-          const html =
-            document.getElementById("ErrorReportBody")?.innerHTML || "";
-          const blob = new Blob([html], { type: "text/html" });
-          const data = [new ClipboardItem({ "text/html": blob })];
-          navigator.clipboard.write(data);
-        }}
-      >
-        Copy report to clipboard
-      </button>
-      and then paste into an email to
-      <a href="mailto:gb@cs.unc.edu?subject=OS-DPI Error Report" target="email"
-        >gb@cs.unc.edu</a
-      >.
-      <button
-        onclick=${() => {
-          document.getElementById("ErrorReport")?.remove();
-        }}
-      >
-        Dismiss this dialog
-      </button>
-    </p>
-    <div id="ErrorReportBody">
-      <h2>Error Report</h2>
-      <p>${msg}</p>
-      <h2>Stack Trace</h2>
-      <ul>
-        ${trace.map((s) => html`<li>${s}</li>`)}
-      </ul>
-    </div>
-  </div>`;
+  const result = document.createElement("div");
+  result.id = "ErrorReport";
+  render(
+    result,
+    html`<div id="ErrorReport">
+      <h1>Internal Error</h1>
+      <p>
+        Your browser has detected an internal error in OS-DPI. It was very
+        likely caused by our program bug. We hope you will help us by sending a
+        report of the information below. Simply click this button
+        <button
+          @click=${() => {
+            const html =
+              document.getElementById("ErrorReportBody")?.innerHTML || "";
+            const blob = new Blob([html], { type: "text/html" });
+            const data = [new ClipboardItem({ "text/html": blob })];
+            navigator.clipboard.write(data);
+          }}
+        >
+          Copy report to clipboard
+        </button>
+        and then paste into an email to
+        <a
+          href="mailto:gb@cs.unc.edu?subject=OS-DPI Error Report"
+          target="email"
+          >gb@cs.unc.edu</a
+        >.
+        <button
+          @click=${() => {
+            document.getElementById("ErrorReport")?.remove();
+          }}
+        >
+          Dismiss this dialog
+        </button>
+      </p>
+      <div id="ErrorReportBody">
+        <h2>Error Report</h2>
+        <p>${msg}</p>
+        <h2>Stack Trace</h2>
+        <ul>
+          ${trace.map((s) => html`<li>${s}</li>`)}
+        </ul>
+      </div>
+    </div>`,
+  );
   document.body.prepend(result);
 }
 

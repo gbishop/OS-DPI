@@ -35,7 +35,7 @@ class Speech extends TreeBase {
     if (state.hasBeenUpdated(this.stateName.value)) {
       this.speak();
     }
-    return [];
+    return html`<div />`;
   }
 }
 TreeBase.register(Speech, "Speech");
@@ -72,10 +72,11 @@ class VoiceSelect extends HTMLSelectElement {
     const voices = await getVoices();
     const current = this.getAttribute("value");
     for (const voice of voices) {
-      const item = html.node`<option value=${voice.voiceURI} ?selected=${
-        voice.voiceURI == current
-      }>${voice.name}</option>`;
-      this.add(/** @type {HTMLOptionElement} */ (item));
+      const item = document.createElement("option");
+      item.value = voice.voiceURI;
+      if (voice.voiceURI == current) item.setAttribute("selected", "");
+      item.innerText = voice.name;
+      this.add(item);
     }
   }
 }

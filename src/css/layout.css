@@ -20,3 +20,7 @@ body.designing #UI [highlight="component"] {
 body.designing #UI [highlight="parent"] {
   border: 2px dotted red;
 }
+
+#designer .layout summary {
+  border-bottom: 1px solid #d0d0d0;
+}

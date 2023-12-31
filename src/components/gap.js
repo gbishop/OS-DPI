@@ -2,6 +2,7 @@ import { TreeBase } from "./treebase";
 import * as Props from "./props";
 import { styleString } from "./style";
 import "css/gap.css";
+import { html } from "uhtml";
 
 class Gap extends TreeBase {
   scale = new Props.Float(1);
@@ -14,7 +15,7 @@ class Gap extends TreeBase {
           backgroundColor: this.background.value,
         }),
       },
-      [],
+      html`<div />`,
     );
   }
 }

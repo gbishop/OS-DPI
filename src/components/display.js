@@ -19,7 +19,6 @@ class Display extends TreeBase {
 
   template() {
     const { state } = Globals;
-    /** @type {Hole[]} */
     let value = state.get(this.stateName.value) || "";
     const content = formatSlottedString(value);
     return this.component(
@@ -31,10 +30,10 @@ class Display extends TreeBase {
       },
       html`<button
         ref=${this}
-        onpointerup=${this.click}
+        @pointerup=${this.click}
         tabindex="-1"
         ?disabled=${!this.Name.value}
-        .dataset=${{
+        data=${{
           name: this.Name.value,
           ComponentName: this.Name.value,
           ComponentType: this.className,

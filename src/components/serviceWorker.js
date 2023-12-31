@@ -73,7 +73,7 @@ if (import.meta.env.PROD && navigator.serviceWorker) {
 export function workerUpdateButton() {
   return html`<button
     id="update-available-button"
-    onclick=${() => {
+    @click=${() => {
       if (registration && registration.waiting) {
         registration.waiting.postMessage("SKIP_WAITING");
       }

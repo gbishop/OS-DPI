@@ -29,7 +29,7 @@ export function imageOrVideo(src, title, onload = null) {
       ?loop=${options.indexOf("loop") >= 0}
       ?autoplay=${options.indexOf("autoplay") >= 0}
       ?muted=${options.indexOf("muted") >= 0}
-      onload=${onload}
+      @load=${onload}
     />`;
   } else {
     // image
@@ -37,7 +37,7 @@ export function imageOrVideo(src, title, onload = null) {
       is="img-db"
       dbsrc=${src}
       title=${title}
-      onload=${onload}
+      @load=${onload}
     />`;
   }
 }
@@ -66,21 +66,24 @@ class Grid extends TreeBase {
   /** @param {Row} item */
   gridCell(item) {
     const name = this.name.value;
+    /** @type {Hole[]} */
     let content;
     let msg = formatSlottedString(item.label || "");
     if (item.symbol) {
-      content = html`<div>
-        <figure>
-          ${imageOrVideo(item.symbol, item.label || "")}
-          <figcaption>${msg}</figcaption>
-        </figure>
-      </div>`;
+      content = [
+        html`<div>
+          <figure>
+            ${imageOrVideo(item.symbol, item.label || "")}
+            <figcaption>${msg}</figcaption>
+          </figure>
+        </div>`,
+      ];
     } else {
       content = msg;
     }
     return html`<button
       tabindex="-1"
-      .dataset=${{
+      data=${{
         ...item,
         ComponentName: name,
         ComponentType: this.className,
@@ -112,12 +115,13 @@ class Grid extends TreeBase {
         <button
           style=${styleString({ backgroundColor: background })}
           .disabled=${this.page == 1}
-          .dataset=${{
+          data=${{
             ...info,
             ComponentName: name,
             ComponentType: this.className,
           }}
-          onClick=${() => {
+          click
+          @Activate=${() => {
             this.page = ((((this.page - 2) % pages) + pages) % pages) + 1;
             state.update(); // trigger redraw
           }}
@@ -126,12 +130,13 @@ class Grid extends TreeBase {
           &#9754;</button
         ><button
           .disabled=${this.page == pages}
-          .dataset=${{
+          data=${{
             ...info,
             ComponentName: name,
             ComponentType: this.className,
           }}
-          onClick=${() => {
+          click
+          @Activate=${() => {
             this.page = (this.page % pages) + 1;
             state.update(); // trigger redraw
           }}
@@ -229,19 +234,18 @@ class Grid extends TreeBase {
 
     style.gridTemplate = `repeat(${rows}, calc(100% / ${rows})) / repeat(${columns}, 1fr)`;
 
-    return this.component({ style }, result);
+    return this.component({ style }, html`${result}`);
   }
 
-  /** @returns {Hole|Hole[]} */
   settingsDetails() {
     const props = this.props;
     const inputs = Object.values(props).map((prop) => prop.input());
     const filters = GridFilter.FilterSettings(this.children);
-    return html`<div>${filters}${inputs}</div>`;
+    return [html`<div>${filters}${inputs}</div>`];
   }
 
   settingsChildren() {
-    return [];
+    return html`<div />`;
   }
 }
 TreeBase.register(Grid, "Grid");

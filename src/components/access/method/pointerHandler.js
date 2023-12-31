@@ -22,16 +22,13 @@ export class PointerHandler extends Handler {
   allowedChildren = ["HandlerCondition", "HandlerResponse"];
 
   Signal = new Props.Select(pointerSignals);
-  SkipOnRedraw = new Props.Boolean(false);
 
   settings() {
     const { conditions, responses, Signal } = this;
-    const skip =
-      this.Signal.value == "pointerover" ? [this.SkipOnRedraw.input()] : [];
     return html`
       <fieldset class="Handler" tabindex="0" id="${this.id}">
         <legend>Pointer Handler</legend>
-        ${Signal.input()} ${skip}
+        ${Signal.input()}
         <fieldset class="Conditions">
           <legend>Conditions</legend>
           ${this.unorderedChildren(conditions)}

@@ -70,7 +70,7 @@ export class Menu {
     return html`<div
       class="Menu"
       id=${this.id}
-      onfocusout=${this.focusHandler}
+      @focusout=${this.focusHandler}
       ref=${this}
     >
       <button
@@ -78,8 +78,8 @@ export class Menu {
         aria-expanded=${this.expanded}
         aria-controls=${this.contentId}
         aria-haspopup="true"
-        onclick=${this.toggleExpanded}
-        onkeyup=${this.buttonKeyHandler}
+        @click=${this.toggleExpanded}
+        @keyup=${this.buttonKeyHandler}
       >
         ${this.label}
       </button>
@@ -88,7 +88,7 @@ export class Menu {
         role="menu"
         id=${this.contentId}
         aria-labelledby=${this.buttonId}
-        onkeyup=${this.menuKeyHandler}
+        @keyup=${this.menuKeyHandler}
       >
         ${this.items.map((item, index) => {
           return html`<li role="menuitem" divider=${item.divider}>
@@ -96,7 +96,7 @@ export class Menu {
               index=${index}
               aria-disabled=${!item.callback}
               title=${item.title}
-              onclick=${() => {
+              @click=${() => {
                 if (item.callback) {
                   this.toggleExpanded();
                   item.apply();

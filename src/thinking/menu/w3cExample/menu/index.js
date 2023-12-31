@@ -116,7 +116,7 @@ export class Menu {
     const foo = "foo";
     return html`<menu-button
       .foo=${foo}
-      onMenuSelect=${(event) => {
+      @MenuSelect=${(event) => {
         const target = event.detail;
         console.log(target, target.ariaDisabled);
         if (target.ariaDisabled != "true") {

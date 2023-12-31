@@ -21,9 +21,10 @@ export class GridFilter extends TreeBase {
    * @return {Hole}
    */
   static FilterSettings(filters) {
-    const table = [];
+    /** @type {Hole} */
+    let table;
     if (filters.length > 0) {
-      table.push(html`
+      table = html`
         <table class="GridFilter">
           <thead>
             <tr>
@@ -46,7 +47,9 @@ export class GridFilter extends TreeBase {
             )}
           </tbody>
         </table>
-      `);
+      `;
+    } else {
+      table = html`<div />`;
     }
     return html`<fieldset>
       <legend>Filters</legend>

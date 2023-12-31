@@ -18,6 +18,7 @@ import { callAfterRender, safeRender, postRender } from "./render";
 import { Designer } from "components/designer";
 import { workerCheckForUpdate } from "components/serviceWorker";
 import { accessed } from "./eval";
+import { TreeBase } from "./components/treebase";
 
 /** let me wait for the page to load */
 const pageLoaded = new Promise((resolve) => {
@@ -53,18 +54,19 @@ export async function start() {
   const dataArray = await db.read("content", []);
   await pageLoaded;
 
+  Globals.data = new Data(dataArray);
   const layout = await Layout.load(Layout);
   Globals.layout = layout;
   Globals.tree = layout.children[0];
   Globals.state = new State(`UIState`);
   Globals.actions = await Actions.load(Actions);
-  Globals.data = new Data(dataArray);
   Globals.cues = await CueList.load(CueList);
   Globals.patterns = await PatternList.load(PatternList);
   Globals.method = await MethodChooser.load(MethodChooser);
   Globals.restart = async () => {
     // tear down any existing event handlers before restarting
     Globals.method.stop();
+    TreeBase.treeBaseCounter = 0;
     start();
   };
   Globals.error = new Messages();

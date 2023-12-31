@@ -1,6 +1,7 @@
 import { TreeBase } from "./treebase";
 import * as Props from "./props";
 import db from "app/db";
+import { html } from "uhtml";
 
 import Globals from "app/globals";
 
@@ -18,7 +19,7 @@ class Audio extends TreeBase {
     if (state.hasBeenUpdated(this.stateName.value)) {
       this.playAudio();
     }
-    return [];
+    return html`<div />`;
   }
 }
 TreeBase.register(Audio, "Audio");

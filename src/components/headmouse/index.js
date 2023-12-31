@@ -3,6 +3,7 @@ import * as Props from "components/props";
 import { TrackyMouse } from "./tracky-mouse/tracky-mouse";
 import "css/tracky-mouse.css";
 import Globals from "app/globals";
+import { html } from "uhtml";
 
 class HeadMouse extends TreeBase {
   stateName = new Props.String("$HeadMouse");
@@ -28,7 +29,7 @@ class HeadMouse extends TreeBase {
         }
       }
     });
-    return /** @type {Hole[]} */ ([]);
+    return html`<div />`;
   }
 
   init() {

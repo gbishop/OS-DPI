@@ -114,10 +114,10 @@ export class Prop {
           list=${this.options.datalist}
           title=${this.options.title}
           placeholder=${this.options.placeholder}
-          onkeydown=${this.onkeydown}
-          oninput=${this.oninput}
-          onchange=${this.onchange}
-          onfocus=${this.onfocus}
+          @keydown=${this.onkeydown}
+          @input=${this.oninput}
+          @change=${this.onchange}
+          @focus=${this.onfocus}
         />${this.showValue()}`,
     );
   }
@@ -169,7 +169,7 @@ export class Prop {
   /** @param {Hole} body */
   labeled(body) {
     return html`
-      <label class="labeledInput" ?hiddenLabel=${this.options.hiddenLabel}
+      <label class="labeledInput" ?hiddenLabel=${!!this.options.hiddenLabel}
         ><span class="labelText">${this.label}</span> ${body}</label
       >
     `;
@@ -305,7 +305,7 @@ export class Select extends Prop {
         id=${this.id}
         required
         title=${this.options.title}
-        onchange=${({ target }) => {
+        @change=${({ target }) => {
           this._value = target.value;
           this.update();
         }}
@@ -395,7 +395,7 @@ export class KeyName extends Prop {
         .value=${mapKey(this._value)}
         id=${this.id}
         readonly
-        onkeydown=${(/** @type {KeyboardEvent} */ event) => {
+        @keydown=${(/** @type {KeyboardEvent} */ event) => {
           const target = event.target;
           if (!(target instanceof HTMLInputElement)) return;
           if (target.hasAttribute("readonly") && event.key == "Enter") {
@@ -432,11 +432,11 @@ export class TextArea extends Prop {
         .value=${this._value}
         id=${this.id}
         ?invalid=${!!this.validate(this._value)}
-        oninput=${({ target }) => {
+        @input=${({ target }) => {
           const errorMsg = this.validate(target.value);
           target.setCustomValidity(errorMsg);
         }}
-        onchange=${({ target }) => {
+        @change=${({ target }) => {
           if (target.checkValidity()) {
             this._value = target.value;
             this.update();
@@ -537,7 +537,7 @@ export class Boolean extends Prop {
         type="checkbox"
         ?checked=${this._value}
         id=${this.id}
-        onchange=${({ target }) => {
+        @change=${({ target }) => {
           this._value = target.checked;
           this.update();
         }}
@@ -576,7 +576,7 @@ export class OneOfGroup extends Prop {
         .checked=${!!this._value}
         id=${this.id}
         name=${options.group}
-        onclick=${() => {
+        @click=${() => {
           this._value = true;
           this.clearPeers();
           this.update();
@@ -789,17 +789,17 @@ export class Code extends Prop {
             class="text"
             .value=${this._value}
             id=${this.id}
-            onchange=${({ target }) => {
+            @change=${({ target }) => {
               this._value = target.value;
               this.editCSS();
               this.update();
             }}
-            onkeyup=${(
+            @keyup=${(
               /** @type {{ target: HTMLTextAreaElement; }} */ event,
             ) => {
               this.addLineNumbers(event.target);
             }}
-            onscroll=${({ target }) => {
+            @scroll=${({ target }) => {
               target.previousElementSibling.scrollTop = target.scrollTop;
             }}
             ref=${this.addLineNumbers}
@@ -868,7 +868,7 @@ export class Voice extends Prop {
         is="select-voice"
         .value=${this._value}
         id=${this.id}
-        onchange=${(/** @type {InputEventWithTarget} */ event) => {
+        @change=${(/** @type {InputEventWithTarget} */ event) => {
           this._value = event.target.value;
           this.update();
         }}
@@ -893,7 +893,7 @@ export class ADate extends Prop {
         type="date"
         .value=${this._value}
         id=${this.id}
-        onchange=${(/** @type {InputEventWithTarget} */ event) => {
+        @change=${(/** @type {InputEventWithTarget} */ event) => {
           this._value = event.target.value;
           this.update();
         }}

@@ -152,29 +152,22 @@ export class Content extends DesignerPanel {
         <h1>Content</h1>
         <p>
           ${data.allrows.length} rows with these fields:
-          ${String([...data.allFields]).replaceAll(",", ", ")}
+          ${String([...data.allFields].sort()).replaceAll(",", ", ")}
         </p>
         <h2>Media files</h2>
-        <button onclick=${this.deleteSelected}>Delete checked</button>
+        <button @click=${this.deleteSelected}>Delete checked</button>
         <label
           ><input
             type="checkbox"
             name="Select all"
             id="ContentSelectAll"
-            oninput=${this.selectAll}
+            @input=${this.selectAll}
           />Select All</label
         >
-        <ol id="ContentMedia" style="column-count: 3">
-          ${(/** @type {HTMLElement} */ comment) => {
-            /* I'm experimenting here. db.listImages() is asynchronous but I don't want
-             * to convert this entire application to the async version of uhtml. Can I
-             * inject content asynchronously using the callback mechanism he provides?
-             * As I understand it, when an interpolation is a function he places a
-             * comment node in the output and passes it to the function.
-             * I am using the comment node to find the parent container, then rendering
-             * the asynchronous content when it becomes available being careful to keep
-             * the comment node in the output. It seems to work, is it safe?
-             */
+        <ol
+          id="ContentMedia"
+          style="column-count: 3"
+          ref=${(/** @type {HTMLOListElement} */ ol) => {
             db.listMedia().then((names) => {
               const list = names.map(
                 (name) =>
@@ -182,11 +175,10 @@ export class Content extends DesignerPanel {
                     <label><input type="checkbox" name=${name} />${name}</label>
                   </li>`,
               );
-              if (comment.parentNode)
-                render(comment.parentNode, html`${comment}${list}`);
+              render(ol, html`${list}`);
             });
           }}
-        </ol>
+        ></ol>
       </div>
     </div>`;
   }

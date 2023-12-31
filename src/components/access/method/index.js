@@ -219,26 +219,27 @@ export class Method extends TreeBase {
             </fieldset> `,
           ]
         : [];
-    return html`<div>
-      ${Name.input()} ${Active.input()} ${Pattern.input()} ${Debounce}
-      ${timers.length > 0
-        ? [
-            html`<fieldset>
-              <legend>Timers</legend>
-              ${this.unorderedChildren(timers)}
-            </fieldset>`,
-          ]
-        : []}
-      <fieldset>
-        <legend>Handlers</legend>
-        ${this.orderedChildren(this.handlers)}
-      </fieldset>
-    </div>`;
+    return [
+      html`<div>
+        ${Name.input()} ${Active.input()} ${Pattern.input()} ${Debounce}
+        ${timers.length > 0
+          ? [
+              html`<fieldset>
+                <legend>Timers</legend>
+                ${this.unorderedChildren(timers)}
+              </fieldset>`,
+            ]
+          : []}
+        <fieldset>
+          <legend>Handlers</legend>
+          ${this.orderedChildren(this.handlers)}
+        </fieldset>
+      </div>`,
+    ];
   }
 
-  /** @returns {Hole[]} */
   settingsChildren() {
-    return [];
+    return html`<div />`;
   }
 
   /** Configure the rxjs pipelines to implement this method */
@@ -432,7 +433,7 @@ export class HandlerResponse extends TreeBaseSwitchable {
   }
 
   subTemplate() {
-    return [];
+    return html`<div />`;
   }
 
   /** move my parent instead of me.

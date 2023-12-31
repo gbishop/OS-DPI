@@ -227,7 +227,7 @@ export class TreeBase {
         class=${this.className}
         id=${detailsId}
         ?open=${this.persisted.settingsDetailsOpen}
-        ontoggle=${({ target }) =>
+        @toggle=${({ target }) =>
           (this.persisted.settingsDetailsOpen = target.open)}
       >
         <summary id=${settingsId}>${this.settingsSummary()}</summary>
@@ -248,7 +248,7 @@ export class TreeBase {
 
   /**
    * Render the details of a components settings
-   * @returns {Hole|Hole[]}
+   * @returns {Hole[]}
    */
   settingsDetails() {
     const props = this.props;
@@ -257,7 +257,7 @@ export class TreeBase {
   }
 
   /**
-   * @returns {Hole|Hole[]}
+   * @returns {Hole}
    */
   settingsChildren() {
     return this.orderedChildren();
@@ -265,15 +265,15 @@ export class TreeBase {
 
   /**
    * Render the user interface and return the resulting Hole
-   * @returns {Hole|Hole[]}
+   * @returns {Hole}
    */
   template() {
-    return [];
+    return html`<div />`;
   }
 
   /**
    * Render the user interface catching errors and return the resulting Hole
-   * @returns {Hole|Hole[]}
+   * @returns {Hole}
    */
   safeTemplate() {
     try {
@@ -295,7 +295,7 @@ export class TreeBase {
    * Wrap the body of a component
    *
    * @param {ComponentAttrs} attrs
-   * @param {Hole|Hole[]} body
+   * @param {Hole} body
    * @returns {Hole}
    */
   component(attrs, body) {
@@ -382,9 +382,7 @@ export class TreeBase {
    * Create HTML LI nodes from the children
    */
   listChildren(children = this.children) {
-    return children.map(
-      (child) => html.for(child)`<li>${child.settings()}</li>`,
-    );
+    return children.map((child) => html`<li>${child.settings()}</li>`);
   }
 
   /**

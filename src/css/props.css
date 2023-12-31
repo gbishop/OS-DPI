@@ -29,6 +29,9 @@ label.labeledInput[hiddenLabel] span.labelText {
   position: absolute;
   width: 1px;
 }
+label.labeledInput input[type="checkbox"] {
+  vertical-align: middle;
+}
 select:required:invalid {
   color: gray;
   border-color: red;

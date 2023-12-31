@@ -56,7 +56,7 @@ function input(event) {
     (match) =>
       typeof match.index === "number" &&
       match.index <= charPosition &&
-      charPosition <= match.index + match[0].length
+      charPosition <= match.index + match[0].length,
   );
   if (match) {
     // get the prefix that matched
@@ -113,14 +113,14 @@ function drawMenu(element) {
       ${element.suggest.results.map(
         (result, i) =>
           html`<li
-            onmouseenter=${mouseEnter}
-            onmousedown=${mouseDown}
+            @mouseenter=${mouseEnter}
+            @mousedown=${mouseDown}
             ?selected=${i == element.suggest.index}
           >
             ${result}
-          </li>`
+          </li>`,
       )}
-    </ul>`
+    </ul>`,
   );
 }
 

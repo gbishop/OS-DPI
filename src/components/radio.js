@@ -82,7 +82,7 @@ class Radio extends TreeBase {
         style=${styleString({ backgroundColor: color })}
         value=${choiceValue}
         ?disabled=${choiceDisabled}
-        .dataset=${{
+        data=${{
           ComponentType: this.className,
           ComponentName: radioLabel || stateName,
           label: choiceName,
@@ -134,11 +134,11 @@ class Radio extends TreeBase {
         </tbody>
       </table>
     </fieldset>`;
-    return html`<div>${editFilters}${editOptions}${inputs}</div>`;
+    return [html`<div>${editFilters}${editOptions}${inputs}</div>`];
   }
 
   settingsChildren() {
-    return [];
+    return html`<div />`;
   }
 }
 TreeBase.register(Radio, "Radio");

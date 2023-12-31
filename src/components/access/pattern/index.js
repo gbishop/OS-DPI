@@ -202,23 +202,25 @@ export class PatternManager extends PatternBase {
 
   settingsDetails() {
     const { Cue, Name, Active } = this;
-    return html`
-      <div>
-        ${Name.input()} ${Active.input()} ${Cue.input()}
-        <button
-          onclick=${() => {
-            this.animate();
-          }}
-        >
-          Animate
-        </button>
-        ${this.orderedChildren()}
-      </div>
-    `;
+    return [
+      html`
+        <div>
+          ${Name.input()} ${Active.input()} ${Cue.input()}
+          <button
+            @click=${() => {
+              this.animate();
+            }}
+          >
+            Animate
+          </button>
+          ${this.orderedChildren()}
+        </div>
+      `,
+    ];
   }
 
   settingsChildren() {
-    return [];
+    return html`<div />`;
   }
 
   /**

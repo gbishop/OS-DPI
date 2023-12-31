@@ -51,7 +51,7 @@ export class TabControl extends TreeBase {
             <button
               ?active=${panel.active}
               style=${styleString(buttonStyle)}
-              .dataset=${{
+              data=${{
                 name: this.name.value,
                 label: panel.tabLabel,
                 component: this.constructor.name,
@@ -114,7 +114,7 @@ export class TabPanel extends Stack {
       html`<button
         id=${this.id + "-activate"}
         ?active=${this.active}
-        onclick=${() => {
+        @click=${() => {
           if (this.parent) {
             const parent = this.parent;
             callAfterRender(() => {

@@ -23,7 +23,6 @@ export class Designer extends TreeBase {
   /** @type {DesignerPanel | undefined} */
   currentPanel = undefined;
 
-  /** @returns {Hole|Hole[]} */
   template() {
     const { state } = Globals;
     const panels = this.children;
@@ -48,14 +47,13 @@ export class Designer extends TreeBase {
         return html`<li>
           <button
             ?active=${panel.active}
-            .dataset=${{
+            data=${{
               name: this.name.value,
               label: panel.tabLabel,
               component: this.constructor.name,
               id: panel.id,
             }}
-            click
-            onClick=${() => {
+            @click=${() => {
               this.switchTab(panel.tabName);
             }}
             tabindex="-1"
@@ -67,14 +65,14 @@ export class Designer extends TreeBase {
     return this.component(
       { classes: ["top", "tabcontrol"] },
       html`
-        <ul class="buttons" hint="T" onkeyup=${this.tabButtonKeyHandler}>
+        <ul class="buttons" hint="T" @keyup=${this.tabButtonKeyHandler}>
           ${buttons}
         </ul>
         <div
           class="panels flex"
-          onkeydown=${this.keyHandler}
-          onfocusin=${this.focusin}
-          onclick=${this.designerClick}
+          @keydown=${this.keyHandler}
+          @focusin=${this.focusin}
+          @click=${this.designerClick}
         >
           ${panels.map((panel) => panel.settings())}
         </div>
@@ -376,7 +374,7 @@ export class DesignerPanel extends TreeBase {
       html`<button
         id=${this.id + "-activate"}
         ?active=${this.active}
-        onclick=${() => {
+        @click=${() => {
           if (this.parent) {
             const parent = this.parent;
             callAfterRender(() => {

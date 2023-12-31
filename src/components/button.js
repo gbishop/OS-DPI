@@ -20,7 +20,7 @@ class Button extends TreeBase {
         class="button"
         name=${name}
         style=${style}
-        .dataset=${{
+        data=${{
           name: name,
           label: label,
           ComponentName: name,

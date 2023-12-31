@@ -22,7 +22,7 @@ function main() {
   render(
     document.body,
     html` <button
-        onclick=${() => {
+        @click=${() => {
           index = (index + 1) % data.length;
           main();
         }}
@@ -30,7 +30,7 @@ function main() {
         Next
       </button>
       <label for="inp">${name}</label>
-      <input id=${name} type="number" value=${value} />`
+      <input id=${name} type="number" value=${value} />`,
   );
 }
 

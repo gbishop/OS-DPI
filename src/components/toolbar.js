@@ -5,7 +5,7 @@ import { Page } from "components/page";
 
 import "css/toolbar.css";
 import db from "app/db";
-import { html } from "uhtml";
+import { html, render } from "uhtml";
 import Globals from "app/globals";
 import { Menu, MenuItem } from "./menu";
 import { callAfterRender } from "app/render";
@@ -513,9 +513,7 @@ class DesignListDialog {
     const dialog = /** @type {HTMLDialogElement} */ (
       document.getElementById("OpenDialog")
     );
-    const list = html.node`<div
-        onclick=${() => dialog.close()}
-      >
+    const list = html`<div @click=${() => dialog.close()}>
       <h1>Open one of your designs</h1>
       <ul>
         ${names.map(
@@ -526,10 +524,9 @@ class DesignListDialog {
         )}
       </ul>
       <button>Cancel</button>
-      </div>`;
+    </div>`;
     if (dialog) {
-      dialog.innerHTML = "";
-      dialog.appendChild(list);
+      render(dialog, list);
     }
     dialog.showModal();
   }
@@ -552,7 +549,7 @@ class DesignListDialog {
       }
       dialog.close();
     }
-    const list = html.node`<div>
+    const list = html`<div>
       <h1>Check the designs you want to unload</h1>
       <ul>
         ${names.map((name) => {
@@ -567,12 +564,11 @@ class DesignListDialog {
           </li>`;
         })}
       </ul>
-      <button onclick=${unloadChecked}>Unload</button>
-      <button onclick=${() => dialog.close()}>Cancel</button>
-      </div>`;
+      <button @click=${unloadChecked}>Unload</button>
+      <button @click=${() => dialog.close()}>Cancel</button>
+    </div>`;
     if (dialog) {
-      dialog.innerHTML = "";
-      dialog.appendChild(list);
+      render(dialog, list);
     }
     dialog.showModal();
   }
@@ -613,7 +609,7 @@ export class ToolBar extends TreeBase {
                 type="text"
                 .value=${db.designName}
                 .size=${Math.max(db.designName.length, 12)}
-                onchange=${(/** @type {InputEventWithTarget} */ event) =>
+                @change=${(/** @type {InputEventWithTarget} */ event) =>
                   db
                     .renameDesign(event.target.value)
                     .then(() => (window.location.hash = db.designName))}
