@@ -65,19 +65,8 @@ div.actions div.scroll {
   background-color: var(--secondary-fg);
 }
 
-.actions .updates {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  grid-gap: 0.25em 1em;
-}
-
 .actions input[type="text"] {
   min-width: 100%;
   width: 100%;
   box-sizing: border-box;
-}
-
-.actions label,
-.actions label.labeledInput {
-  width: 100%;
 }
