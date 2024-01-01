@@ -60,7 +60,7 @@
  */
 
 /**
- * @typedef {Object} Row
+ * @typedef {Object<string,any>} Row
  * @property {string} [message]
  * @property {string} [label]
  * @property {string} [symbol]
@@ -134,13 +134,21 @@
  * @property {string} type
  * @property {Target} target
  * @property {number} timeStamp
- * @property {Object} [access]
- * @property {Object} [originalTarget]
+ * @property {Object<string,any>} [access]
+ * @property {Target} [originalTarget]
  * @property {number} [groupIndex]
  */
 
 /**
  * @typedef {Object} EvalContext
- * @property {Object} [states]
- * @property {Object} [data]
+ * @property {{[key: string]: string}} [states]
+ * @property {{[key: string]: string}} [data]
+ * @property {{[key: string]: function}} [Functions]
+ */
+
+/**
+ * @typedef {Object} ExternalRep
+ * @property {string} className
+ * @property {Object<string, string | number | boolean>} props
+ * @property {ExternalRep[]} children
  */

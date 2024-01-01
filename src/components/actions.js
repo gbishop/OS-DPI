@@ -23,7 +23,7 @@ export class Actions extends DesignerPanel {
   last = {
     /** @type {Action|Null} */
     rule: null,
-    /** @type {Object} */
+    /** @type {Row} */
     data: {},
     /** @type {string} */
     event: "",

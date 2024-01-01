@@ -79,6 +79,7 @@ export class TreeBase {
       Object.entries(this).filter(([_, prop]) => prop instanceof Props.Prop),
     );
   }
+
   /**
    * Prepare a TreeBase tree for external storage by converting to simple objects and arrays
    * @param {Object} [options]

@@ -57,11 +57,6 @@ class Grid extends TreeBase {
 
   page = 1;
   pageBoundaries = { 0: 0 }; //track starting indices of pages
-  /**
-   * @type {Object}
-   * @property {string} key
-   */
-  cache = {};
 
   /** @param {Row} item */
   gridCell(item) {
@@ -157,10 +152,6 @@ class Grid extends TreeBase {
     let fillItems = this.fillItems.value;
     /** @type {Rows} */
     let items = data.getMatchingRows(this.children);
-    // reset the page when the key changes
-    if (this.cache.updated) {
-      this.page = 1;
-    }
     let maxPage = 1;
     const result = [];
     if (!fillItems) {

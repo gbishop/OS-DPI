@@ -374,6 +374,7 @@ export class String extends Prop {}
 
 /* Allow entering a key name by first pressing Enter than pressing a single key
  */
+/** @extends {Prop<string>} */
 export class KeyName extends Prop {
   /**
    * @param {string} value
@@ -416,6 +417,7 @@ export class KeyName extends Prop {
   }
 }
 
+/** @extends {Prop<string>} */
 export class TextArea extends Prop {
   /**
    * @param {string} value
@@ -519,6 +521,7 @@ export class Float extends Prop {
   }
 }
 
+/** @extends {Prop<boolean>} */
 export class Boolean extends Prop {
   /** @param {boolean} value
    * @param {PropOptions} options
@@ -556,6 +559,7 @@ export class Boolean extends Prop {
   }
 }
 
+/** @extends {Prop<boolean>} */
 export class OneOfGroup extends Prop {
   /** @param {boolean} value
    * @param {PropOptions} options
@@ -620,6 +624,7 @@ export class OneOfGroup extends Prop {
   }
 }
 
+/** @extends {Prop<string>} */
 export class UID extends Prop {
   constructor() {
     super("", {});
@@ -662,6 +667,7 @@ export class Conditional extends Prop {
   }
 }
 
+/** @extends {Prop<string>} */
 export class Code extends Prop {
   editedValue = "";
 
@@ -854,6 +860,7 @@ export class Color extends Prop {
   }
 }
 
+/** @extends {Prop<string>} */
 export class Voice extends Prop {
   /** @param {string} value
    * @param {PropOptions} options
@@ -878,7 +885,7 @@ export class Voice extends Prop {
     );
   }
 }
-
+/** @extends {Prop<string>} */
 export class ADate extends Prop {
   /** @param {string} value
    * @param {PropOptions} options
