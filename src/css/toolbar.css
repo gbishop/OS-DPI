@@ -1,0 +1,51 @@
+.toolbar {
+  padding: 3px;
+  margin: 3px;
+  border-radius: 0.5em;
+}
+.toolbar > ul {
+  list-style: none;
+  padding-inline-start: 1em;
+}
+.toolbar > ul li {
+  display: inline;
+}
+.toolbar button {
+  border-radius: 0.5em;
+  color: var(--text2);
+  background-color: var(--surface2);
+}
+.toolbar input {
+  border-radius: 0.5em;
+}
+
+[hint] {
+  display: inline-block;
+  position: relative;
+}
+.hints [hint]::after {
+  content: attr(hint);
+  top: 50%;
+  left: 50%;
+  font-size: 1em;
+  padding: 0.2em;
+  transform: translate(-50%, 30%);
+  position: absolute;
+  background-color: var(--text1);
+  color: var(--surface1);
+  display: block;
+  z-index: 100;
+}
+.hints div#designer[hint]::after,
+.hints div#UI[hint]::after {
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+}
+
+dialog#OpenDialog {
+  margin: auto;
+}
+
+dialog#OpenDialog button {
+  margin-top: 1em;
+}

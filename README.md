@@ -42,7 +42,7 @@ We are formatting code with <a href="https://prettier.io/">Prettier</a> and acce
 We are documenting our Javascript with <a href="https://jsdoc.app/">JSDoc</a> and providing a few type hints to the
 <a href="https://www.typescriptlang.org/">TypeScript</a> compiler for static checking of our Javascript code.
 
-## Key files in this folder
+## Key files in the src folder
 
 - index.html: tiny shell needed to get things started.
 - start.js: the Javascript starts here.
@@ -55,7 +55,7 @@ We are documenting our Javascript with <a href="https://jsdoc.app/">JSDoc</a> an
 - eval.js: evaluate user entered expressions.
 - rules.js: implements the actions.
 
-## Key folders
+## Key src folders
 
 - components/: code for all the components and some helpers.
 - css/: style for the site

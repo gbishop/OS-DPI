@@ -1,0 +1,31 @@
+{
+  "name": "os-dpi",
+  "version": "0.7.0",
+  "description": "",
+  "scripts": {
+    "start": "vite --port 8080 --host 0.0.0.0",
+    "build": "vite build",
+    "deploy": "./deploy.sh",
+    "publish": "./publish.sh",
+    "preview": "vite preview"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "vite": "^4.3.9"
+  },
+  "dependencies": {
+    "angular-expressions": "^1.1.5",
+    "browser-fs-access": "^0.34.1",
+    "fflate": "^0.8.0",
+    "idb": "^7.0.2",
+    "mergerino": "^0.4.0",
+    "rxjs": "^7.5.6",
+    "sheetrock": "^1.2.0",
+    "stacktrace-js": "^2.0.2",
+    "tracky-mouse": "^1.0.0",
+    "uhtml": "^4.0.1",
+    "weak-value": "^1.0.2",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.19.3/xlsx-0.19.3.tgz"
+  }
+}

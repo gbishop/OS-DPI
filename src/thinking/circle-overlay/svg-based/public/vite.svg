@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+   class="progress-ring"
+   width="120"
+   height="120">
+   <defs>
+    <style>
+    .progress-ring__circle {
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+      stroke-dashoffset: 0;
+      animation: 3s linear 0s 1 fillin;
+    }
+    @keyframes fillin {
+      from { stroke-dashoffset: 100; }
+      to { stroke-dashoffset: 0; }
+    }
+    </style>
+  </defs>
+  <circle
+    class="progress-ring__circle"
+    stroke="black"
+    stroke-width="4"
+    fill="transparent"
+    r="52"
+    cx="60"
+    cy="60"
+    pathLength="100"
+    stroke-dasharray="100"
+    stroke-dashoffset="50"
+  />
+</svg>
+

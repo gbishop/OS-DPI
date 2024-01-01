@@ -1,0 +1,38 @@
+div#ErrorReport:empty {
+  display: none;
+}
+
+div#ErrorReport {
+  padding: 1em;
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10000;
+  background: white;
+  opacity: 0.9;
+}
+#ErrorReport h1 {
+  color: var(--failure);
+}
+
+#ErrorReport h2 {
+  margin-top: 1em;
+}
+#ErrorReport p {
+  margin: 1em;
+  max-width: 40em;
+}
+
+div#messages {
+  color: var(--failure);
+  padding: 0.5em;
+}
+
+.error {
+  background-color: var(--failure);
+  color: var(--text1);
+  justify-content: center;
+  align-items: center;
+}
