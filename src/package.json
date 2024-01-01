@@ -1,6 +1,6 @@
 {
   "name": "os-dpi",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "",
   "scripts": {
     "start": "vite --port 8080 --host 0.0.0.0",
