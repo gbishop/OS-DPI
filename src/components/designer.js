@@ -278,7 +278,7 @@ export class Designer extends TreeBase {
   /** Tweak the focus behavior in the designer
    * I want clicking on blank space to focus the nearest focusable element
 
-   * @param {KeyboardEvent} event
+   * @param {PointerEvent} event
    */
   designerClick = (event) => {
     // return if target is not an HTMLElement
