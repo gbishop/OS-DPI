@@ -37,6 +37,7 @@ export class TabControl extends TreeBase {
         state.define(this.stateName.value, panel.tabName);
       }
       panel.active = activeTabName == panel.tabName || panels.length === 1;
+      if (panel.active) this.currentPanel = panel;
     });
     let buttons = [];
     if (this.tabEdge.value != "none") {
@@ -68,15 +69,16 @@ export class TabControl extends TreeBase {
           </li>`;
         });
     }
+    const panel = this.currentPanel
+      ? this.currentPanel.safeTemplate()
+      : html`<div />`;
     return this.component(
       { classes: [this.tabEdge.value] },
       html`
         <ul class="buttons">
           ${buttons}
         </ul>
-        <div class="panels flex">
-          ${panels.map((panel) => panel.safeTemplate())}
-        </div>
+        <div class="panels flex">${panel}</div>
       `,
     );
   }

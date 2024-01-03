@@ -62,6 +62,9 @@ export class Designer extends TreeBase {
           </button>
         </li>`;
       });
+    const panel = this.currentPanel
+      ? this.currentPanel.settings()
+      : html`<div />`;
     return this.component(
       { classes: ["top", "tabcontrol"] },
       html`
@@ -74,7 +77,7 @@ export class Designer extends TreeBase {
           @focusin=${this.focusin}
           @click=${this.designerClick}
         >
-          ${panels.map((panel) => panel.settings())}
+          ${panel}
         </div>
         ${colorNamesDataList()}
       `,

@@ -15,10 +15,14 @@ export class ModalDialog extends TreeBase {
     const state = Globals.state;
     const open =
       !!state.get(this.stateName.value) || this.open.value ? "open" : "";
-    return this.component(
-      { classes: [open] },
-      html`<div>${this.children.map((child) => child.safeTemplate())}</div>`,
-    );
+    if (open) {
+      return this.component(
+        { classes: [open] },
+        html`<div>${this.children.map((child) => child.safeTemplate())}</div>`,
+      );
+    } else {
+      return html`<div />`;
+    }
   }
 }
 TreeBase.register(ModalDialog, "ModalDialog");
