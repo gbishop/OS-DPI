@@ -111,14 +111,17 @@ export async function start() {
 
   function renderUI() {
     const startTime = performance.now();
-    document.body.classList.toggle("designing", Globals.state.get("editing"));
+    const editing = Globals.state.get("editing");
+    document.body.classList.toggle("designing", editing);
     // clear the changed flag, TODO there must be a better way!
     safeRender("cues", Globals.cues);
     safeRender("UI", Globals.tree);
-    safeRender("toolbar", toolbar);
-    safeRender("tabs", Globals.designer);
-    safeRender("monitor", monitor);
-    safeRender("errors", Globals.error);
+    if (editing) {
+      safeRender("toolbar", toolbar);
+      safeRender("tabs", Globals.designer);
+      safeRender("monitor", monitor);
+      safeRender("errors", Globals.error);
+    }
     postRender();
     Globals.method.refresh();
     // clear the accessed bits for the next cycle
