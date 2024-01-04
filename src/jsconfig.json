@@ -5,7 +5,7 @@
       "app/*": ["./*"],
       "components/*": ["./components/*"]
     },
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "checkJs": true,
     "target": "ESNext",
     "module": "ESNext",

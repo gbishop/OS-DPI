@@ -1,4 +1,4 @@
-import { openDB } from "idb/with-async-ittr";
+import { openDB } from "idb";
 import { zipSync, strToU8, unzipSync, strFromU8 } from "fflate";
 import { fileSave } from "browser-fs-access";
 import Globals from "./globals";
