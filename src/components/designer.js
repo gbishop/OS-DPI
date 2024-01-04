@@ -62,6 +62,9 @@ export class Designer extends TreeBase {
           </button>
         </li>`;
       });
+    const panel = this.currentPanel
+      ? this.currentPanel.settings()
+      : html`<div />`;
     return this.component(
       { classes: ["top", "tabcontrol"] },
       html`
@@ -74,7 +77,7 @@ export class Designer extends TreeBase {
           @focusin=${this.focusin}
           @click=${this.designerClick}
         >
-          ${panels.map((panel) => panel.settings())}
+          ${panel}
         </div>
         ${colorNamesDataList()}
       `,
@@ -275,7 +278,7 @@ export class Designer extends TreeBase {
   /** Tweak the focus behavior in the designer
    * I want clicking on blank space to focus the nearest focusable element
 
-   * @param {KeyboardEvent} event
+   * @param {PointerEvent} event
    */
   designerClick = (event) => {
     // return if target is not an HTMLElement

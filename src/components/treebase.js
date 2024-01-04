@@ -223,15 +223,39 @@ export class TreeBase {
   settings() {
     const detailsId = this.id + "-details";
     const settingsId = this.id + "-settings";
+    let focused = false; // suppress toggle when not focused
     return html`<div class="settings">
       <details
         class=${this.className}
         id=${detailsId}
         ?open=${this.persisted.settingsDetailsOpen}
-        @toggle=${({ target }) =>
-          (this.persisted.settingsDetailsOpen = target.open)}
+        @click=${(/** @type {PointerEvent} */ event) => {
+          if (
+            !focused &&
+            event.target instanceof HTMLElement &&
+            event.target.parentElement instanceof HTMLDetailsElement &&
+            event.target.parentElement.open &&
+            event.pointerId >= 0 // not from the keyboard
+          ) {
+            /* When we click on the summary bar of a details element that is not focused,
+             * only focus it and prevent the toggle */
+            event.preventDefault();
+          }
+        }}
+        @toggle=${(/** @type {Event} */ event) => {
+          if (event.target instanceof HTMLDetailsElement)
+            this.persisted.settingsDetailsOpen = event.target.open;
+        }}
       >
-        <summary id=${settingsId}>${this.settingsSummary()}</summary>
+        <summary
+          id=${settingsId}
+          @pointerdown=${(/** @type {PointerEvent} */ event) => {
+            /** Record if the summary was focused before we clicked */
+            focused = event.target == document.activeElement;
+          }}
+        >
+          ${this.settingsSummary()}
+        </summary>
         ${this.settingsDetails()}
       </details>
       ${this.settingsChildren()}
