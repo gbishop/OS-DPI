@@ -110,10 +110,22 @@ export async function start() {
   monitor.init();
 
   function renderUI() {
-    const startTime = performance.now();
+    // report the time to draw the frame
+    if (location.host.startsWith("localhost")) {
+      const startTime = performance.now();
+      const timer = document.getElementById("timer");
+      if (timer) {
+        // I think this makes it wait until all drawing is done.
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            timer.innerText = `${(performance.now() - startTime).toFixed(0)}ms`;
+          });
+        });
+      }
+    }
+    // the real update begins here
     const editing = Globals.state.get("editing");
     document.body.classList.toggle("designing", editing);
-    // clear the changed flag, TODO there must be a better way!
     safeRender("cues", Globals.cues);
     safeRender("UI", Globals.tree);
     if (editing) {
@@ -129,12 +141,6 @@ export async function start() {
     // clear the updated bits for the next cycle
     Globals.state.clearUpdated();
 
-    if (location.host.startsWith("localhost")) {
-      const timer = document.getElementById("timer");
-      if (timer) {
-        timer.innerText = (performance.now() - startTime).toFixed(0);
-      }
-    }
     workerCheckForUpdate();
   }
   Globals.state.observe(debounce(renderUI));
