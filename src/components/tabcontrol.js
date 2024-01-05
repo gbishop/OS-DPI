@@ -102,7 +102,6 @@ export class TabPanel extends Stack {
   active = false;
   tabName = "";
   tabLabel = "";
-  lastFocused = "";
 
   /**
    * Render the details of a components settings

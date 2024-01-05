@@ -6,6 +6,7 @@ import Globals from "app/globals";
 import { TreeBase } from "./treebase";
 import { callAfterRender } from "app/render";
 import db from "app/db";
+import { session } from "./persist";
 
 export class Designer extends TreeBase {
   stateName = new Props.String("$tabControl");
@@ -107,7 +108,7 @@ export class Designer extends TreeBase {
     }
     if (panel.contains(event.target)) {
       const id = event.target.closest("[id]")?.id || "";
-      this.currentPanel.lastFocused = id;
+      this.currentPanel.persisted.lastFocused = id;
       event.target.setAttribute("aria-selected", "true");
     }
 
@@ -123,11 +124,11 @@ export class Designer extends TreeBase {
     const panel = designer.currentPanel;
 
     // Ask that tab which component is focused
-    if (!panel?.lastFocused) {
+    if (!panel?.persisted.lastFocused) {
       console.log("no lastFocused");
       return null;
     }
-    const component = TreeBase.componentFromId(panel.lastFocused);
+    const component = TreeBase.componentFromId(panel.persisted.lastFocused);
     if (!component) {
       console.log("no component");
       return null;
@@ -137,8 +138,8 @@ export class Designer extends TreeBase {
 
   restoreFocus() {
     if (this.currentPanel) {
-      if (this.currentPanel.lastFocused) {
-        let targetId = this.currentPanel.lastFocused;
+      if (this.currentPanel.persisted.lastFocused) {
+        let targetId = this.currentPanel.persisted.lastFocused;
         let elem = document.getElementById(targetId);
         if (!elem) {
           // perhaps this one is embeded, look for something that starts with it
@@ -329,7 +330,11 @@ export class DesignerPanel extends TreeBase {
   active = false;
   tabName = "";
   tabLabel = "";
-  lastFocused = "";
+
+  persisted = session(this.id, {
+    settingsDetailsOpen: false,
+    lastFocused: "",
+  });
 
   // where to store in the db
   static tableName = "";

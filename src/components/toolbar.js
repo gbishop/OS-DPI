@@ -116,7 +116,9 @@ function getPanelMenuItems(type) {
     return { child: [], parent: [] };
   }
   const component =
-    TreeBase.componentFromId(panel.lastFocused) || panel.children[0] || panel;
+    TreeBase.componentFromId(panel.persisted.lastFocused) ||
+    panel.children[0] ||
+    panel;
   if (!component) {
     console.log("no component");
     return { child: [], parent: [] };
@@ -128,13 +130,13 @@ function getPanelMenuItems(type) {
       let nextId = arg();
       if (!panel) return;
       // we're looking for the settings view but we may have the id of the user view
-      if (panel.lastFocused.startsWith(nextId)) {
-        nextId = panel.lastFocused;
+      if (panel.persisted.lastFocused.startsWith(nextId)) {
+        nextId = panel.persisted.lastFocused;
       }
       if (nextId.match(/^TreeBase-\d+$/)) {
         nextId = nextId + "-settings";
       }
-      panel.lastFocused = nextId;
+      panel.persisted.lastFocused = nextId;
       callAfterRender(() => panel.parent?.restoreFocus());
       panel.update();
     };
