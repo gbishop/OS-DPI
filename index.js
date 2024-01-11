@@ -12561,9 +12561,10 @@ class DB {
           const store4 = transaction.objectStore("store");
           for await (const cursor of store4) {
             const record4 = cursor.value;
+            console.log(record4);
             store5.put(record4);
           }
-          db.deleteObjectStore("store");
+          // db.deleteObjectStore("store");
           // add an etag index to url store
           transaction.objectStore("url").createIndex("by-etag", "etag");
         } else if (oldVersion < 4) {
@@ -14330,17 +14331,17 @@ class Layout extends DesignerPanel {
         newObj.props = props;
         obj = newObj;
       }
-      // make sure it begins with Layout
-      if (obj.className != "Layout") {
-        obj = {
-          className: "Layout",
-          props: { name: "Layout" },
-          children: [obj],
-        };
-      }
       return obj;
     }
     obj = oldToNew(obj);
+    // make sure it begins with Layout
+    if (obj.className != "Layout" && obj.className == "Page") {
+      obj = {
+        className: "Layout",
+        props: { name: "Layout" },
+        children: [obj],
+      };
+    }
     return obj;
   }
 
