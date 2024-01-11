@@ -42,8 +42,6 @@ true&&(function polyfill() {
     }
 }());
 
-const site = '';
-
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
 var stacktrace = {exports: {}};
@@ -3299,10 +3297,12 @@ let range$1;
  */
 const drop = (firstChild, lastChild, preserve) => {
   if (!range$1) range$1 = newRange();
+  /* c8 ignore start */
   if (preserve)
     range$1.setStartAfter(firstChild);
   else
     range$1.setStartBefore(firstChild);
+  /* c8 ignore stop */
   range$1.setEndAfter(lastChild);
   range$1.deleteContents();
   return firstChild;
@@ -3343,9 +3343,9 @@ class PersistentFragment extends custom(DocumentFragment) {
   get firstChild() { return this.#nodes[0]; }
   get lastChild() { return this.#nodes.at(-1); }
   get parentNode() { return this.#nodes[0].parentNode; }
-  remove() {
-    remove(this, false);
-  }
+  /* c8 ignore start */
+  remove() { remove(this, false); }
+  /* c8 ignore stop */
   replaceWith(node) {
     remove(this, true).replaceWith(node);
   }
@@ -3775,10 +3775,12 @@ const toggle = (element, value, name) => (
  * @param {Node[]} prev
  * @returns {Node[]}
  */
-const array = (node, value, _, prev) => (
-  value.length ?
-    udomdiff(node.parentNode, prev, value, diffFragment, node) :
-    (prev.length && drop(prev[0], prev.at(-1), false), empty)
+const array = (node, value, _, prev) => udomdiff(
+  node.parentNode,
+  prev,
+  value.length ? value : empty,
+  diffFragment,
+  node
 );
 
 const attr = new Map([
@@ -4029,10 +4031,6 @@ const tag = svg => (template, ...values) => new Hole(svg, template, values);
 /** @type {(template: TemplateStringsArray, ...values:Value[]) => Hole} A tag to render HTML content. */
 const html = tag(false);
 
-const errors = '';
-
-const props = '';
-
 var main = {};
 
 var parse$1 = {};
@@ -4066,7 +4064,7 @@ var manualLowercase = function (s) {
 	return isString(s)
 		? s.replace(/[A-Z]/g, function (ch) {
 				return String.fromCharCode(ch.charCodeAt(0) | 32);
-		  })
+			})
 		: s;
 	/* eslint-enable */
 };
@@ -4957,12 +4955,12 @@ Lexer$1.prototype = {
 		end = end || this.index;
 		var colStr = isDefined(start)
 			? "s " +
-			  start +
-			  "-" +
-			  this.index +
-			  " [" +
-			  this.text.substring(start, end) +
-			  "]"
+				start +
+				"-" +
+				this.index +
+				" [" +
+				this.text.substring(start, end) +
+				"]"
 			: " " + end;
 		throw $parseMinErr(
 			"lexerr",
@@ -5891,7 +5889,7 @@ ASTCompiler.prototype = {
 								: this.assign(
 										this.nextId(),
 										this.getHasOwnProperty("l", ast.name) + "?l:s"
-								  );
+									);
 					}
 					nameId.computed = false;
 					nameId.name = ast.name;
@@ -6394,14 +6392,14 @@ ASTInterpreter.prototype = {
 			ast.body.length === 0
 				? noop$2
 				: ast.body.length === 1
-				? expressions[0]
-				: function (scope, locals) {
-						var lastValue;
-						forEach(expressions, function (exp) {
-							lastValue = exp(scope, locals);
-						});
-						return lastValue;
-				  };
+					? expressions[0]
+					: function (scope, locals) {
+							var lastValue;
+							forEach(expressions, function (exp) {
+								lastValue = exp(scope, locals);
+							});
+							return lastValue;
+						};
 
 		if (assign) {
 			fn.assign = function (scope, value, locals) {
@@ -6475,7 +6473,7 @@ ASTInterpreter.prototype = {
 							return context
 								? { context: undefined, name: undefined, value: value }
 								: value;
-					  }
+						}
 					: function (scope, locals, assign, inputs) {
 							var rhs = right(scope, locals, assign, inputs);
 							var value;
@@ -6487,7 +6485,7 @@ ASTInterpreter.prototype = {
 								value = rhs.value.apply(rhs.context, values);
 							}
 							return context ? { value: value } : value;
-					  };
+						};
 			case AST.AssignmentExpression:
 				left = this.recurse(ast.left, true, 1);
 				right = this.recurse(ast.right);
@@ -8069,6 +8067,8 @@ class Prop {
         const v = this.compiled(context);
         this._value = this.cast(v);
       }
+    } else if (this.isFormulaByDefault) {
+      this._value = this.options.valueWhenEmpty ?? "";
     }
     return this._value;
   }
@@ -8178,8 +8178,9 @@ class TypeSelect extends Select {
     /* Magic happens here! The replace method on a TreeBaseSwitchable replaces the
      * node with a new one to allow type switching in place
      * */
-    if (this.container instanceof TreeBaseSwitchable)
+    if (this.container instanceof TreeBaseSwitchable) {
       this.container.replace(this._value);
+    }
   }
 }
 
@@ -8739,8 +8740,6 @@ const debounce = (callback, wait) => {
   };
 };
 
-const treebase = '';
-
 /*! (c) Andrea Giammarchi */
 
 const {iterator: iterator$1} = Symbol;
@@ -8830,47 +8829,6 @@ class WeakValue extends Map {
     for (const [_, value] of this[iterator$1]())
       yield value;
   }
-}
-
-/**
- * Create an object that is persisted to sessionStorage
- *
- * @template {Object} T
- * @param {string} key
- * @param {T} initial
- * @returns {T} - same type as the initial value
- */
-function session(key, initial) {
-  // import values from storage if present
-  const json = window.sessionStorage.getItem(key);
-  if (json) {
-    const values = JSON.parse(json);
-    if (!(values instanceof Object)) throw TypeError();
-    // validate the value from storage
-    if (sameObjectShape(initial, values)) initial = values;
-  }
-  if (!(initial instanceof Object)) throw TypeError();
-  return new Proxy(initial, {
-    set(obj, prop, value) {
-      const r = Reflect.set(obj, prop, value);
-      const json = JSON.stringify(obj);
-      window.sessionStorage.setItem(key, json);
-      return r;
-    },
-  });
-}
-
-/**
- * Compare objects to see if they have the same keys and types
- * @param {Object} a
- * @param {Object} b
- * @returns {boolean}
- */
-function sameObjectShape(a, b) {
-  for (const key of Object.keys(a)) {
-    if (typeof a[key] !== typeof b[key]) return false;
-  }
-  return true;
 }
 
 /**
@@ -8965,10 +8923,7 @@ class TreeBase {
   static treeBaseCounter = 0;
   id = `TreeBase-${TreeBase.treeBaseCounter++}`;
 
-  // values here are stored in sessionStorage
-  persisted = session(this.id, {
-    settingsDetailsOpen: false,
-  });
+  settingsDetailsOpen = false;
 
   // map from id to the component
   static idMap = new WeakValue();
@@ -9168,15 +9123,38 @@ class TreeBase {
   settings() {
     const detailsId = this.id + "-details";
     const settingsId = this.id + "-settings";
+    let focused = false; // suppress toggle when not focused
     return html`<div class="settings">
       <details
         class=${this.className}
         id=${detailsId}
-        ?open=${this.persisted.settingsDetailsOpen}
-        @toggle=${({ target }) =>
-          (this.persisted.settingsDetailsOpen = target.open)}
+        @click=${(/** @type {PointerEvent} */ event) => {
+          if (
+            !focused &&
+            event.target instanceof HTMLElement &&
+            event.target.parentElement instanceof HTMLDetailsElement &&
+            event.target.parentElement.open &&
+            event.pointerId >= 0 // not from the keyboard
+          ) {
+            /* When we click on the summary bar of a details element that is not focused,
+             * only focus it and prevent the toggle */
+            event.preventDefault();
+          }
+        }}
+        @toggle=${(/** @type {Event} */ event) => {
+          if (event.target instanceof HTMLDetailsElement)
+            this.settingsDetailsOpen = event.target.open;
+        }}
       >
-        <summary id=${settingsId}>${this.settingsSummary()}</summary>
+        <summary
+          id=${settingsId}
+          @pointerdown=${(/** @type {PointerEvent} */ event) => {
+            /** Record if the summary was focused before we clicked */
+            focused = event.target == document.activeElement;
+          }}
+        >
+          ${this.settingsSummary()}
+        </summary>
         ${this.settingsDetails()}
       </details>
       ${this.settingsChildren()}
@@ -9408,22 +9386,38 @@ class TreeBaseSwitchable extends TreeBase {
   }
 
   /** Replace this node with one of a compatible type
-   * @param {string} className */
-  replace(className) {
+   * @param {string} className
+   * @param {Object} [props] - used in undo to reset the props
+   * */
+  replace(className, props) {
     if (!this.parent) return;
     if (this.className == className) return;
+
+    let update = true;
     // extract the values of the old props
-    const props = Object.fromEntries(
-      Object.entries(this)
-        .filter(([_, prop]) => prop instanceof Prop)
-        .map(([name, prop]) => [name, prop.value]),
-    );
+    if (!props) {
+      props = Object.fromEntries(
+        Object.entries(this)
+          .filter(([_, prop]) => prop instanceof Prop)
+          .map(([name, prop]) => [name, prop.value]),
+      );
+    } else {
+      update = false;
+    }
     const replacement = TreeBase.create(className, null, props);
     replacement.init();
+    if (!(replacement instanceof TreeBaseSwitchable)) {
+      throw new Error(
+        `Invalid TreeBaseSwitchable replacement ${this.className} ${replacement.className}`,
+      );
+    }
     const index = this.parent.children.indexOf(this);
     this.parent.children[index] = replacement;
     replacement.parent = this.parent;
-    this.update();
+    if (update) {
+      console.log("update");
+      this.update();
+    }
   }
 }
 
@@ -9545,8 +9539,6 @@ window.onunhandledrejection = function (error) {
     error.reason.stack?.split("\n") || ["no stack"],
   );
 };
-
-const gridfilter = '';
 
 class GridFilter extends TreeBase {
   field = new Field({ hiddenLabel: true });
@@ -9848,8 +9840,6 @@ let State$1 = class State {
     return result;
   }
 };
-
-const stack = '';
 
 class Stack extends TreeBase {
   direction = new Select(["row", "column"], { defaultValue: "column" });
@@ -10172,8 +10162,6 @@ function slotName(message) {
   };
 }
 
-const grid = '';
-
 /**
  * Return an image or video element given the name + parameters
  * like "foo.mp4 autoplay loop".
@@ -10390,9 +10378,17 @@ class Grid extends TreeBase {
       }
     }
 
+    // empty result provokes a crash from uhtmlV4
+    if (!result.length) {
+      rows = columns = 1;
+      result.push(this.emptyCell());
+    }
+
     style.gridTemplate = `repeat(${rows}, calc(100% / ${rows})) / repeat(${columns}, 1fr)`;
 
-    return this.component({ style }, html`${result}`);
+    const body = html`<div style=${styleString(style)}>${result}</div>`;
+
+    return this.component({}, body);
   }
 
   settingsDetails() {
@@ -10407,8 +10403,6 @@ class Grid extends TreeBase {
   }
 }
 TreeBase.register(Grid, "Grid");
-
-const display = '';
 
 class Display extends TreeBase {
   stateName = new String$1("$Display");
@@ -10469,12 +10463,9 @@ class Display extends TreeBase {
 }
 TreeBase.register(Display, "Display");
 
-const radio = '';
-
 let Option$1 = class Option extends TreeBase {
   name = new String$1("", { hiddenLabel: true });
   value = new String$1("", { hiddenLabel: true });
-  cache = {};
 };
 TreeBase.register(Option$1, "Option");
 
@@ -10608,8 +10599,6 @@ class Radio extends TreeBase {
 }
 TreeBase.register(Radio, "Radio");
 
-const gap = '';
-
 class Gap extends TreeBase {
   scale = new Float(1);
   background = new Color("");
@@ -10626,8 +10615,6 @@ class Gap extends TreeBase {
   }
 }
 TreeBase.register(Gap, "Gap");
-
-const tabcontrol = '';
 
 /** @type {Function[]} */
 const PostRenderFunctions = [];
@@ -10699,6 +10686,7 @@ class TabControl extends TreeBase {
         state.define(this.stateName.value, panel.tabName);
       }
       panel.active = activeTabName == panel.tabName || panels.length === 1;
+      if (panel.active) this.currentPanel = panel;
     });
     let buttons = [];
     if (this.tabEdge.value != "none") {
@@ -10730,15 +10718,16 @@ class TabControl extends TreeBase {
           </li>`;
         });
     }
+    const panel = this.currentPanel
+      ? this.currentPanel.safeTemplate()
+      : html`<div />`;
     return this.component(
       { classes: [this.tabEdge.value] },
       html`
         <ul class="buttons">
           ${buttons}
         </ul>
-        <div class="panels flex">
-          ${panels.map((panel) => panel.safeTemplate())}
-        </div>
+        <div class="panels flex">${panel}</div>
       `,
     );
   }
@@ -10762,7 +10751,6 @@ class TabPanel extends Stack {
   active = false;
   tabName = "";
   tabLabel = "";
-  lastFocused = "";
 
   /**
    * Render the details of a components settings
@@ -10805,8 +10793,6 @@ class TabPanel extends Stack {
 }
 TreeBase.register(TabPanel, "TabPanel");
 
-const modalDialog = '';
-
 class ModalDialog extends TreeBase {
   stateName = new String$1("$modalOpen");
   open = new Boolean$1(false);
@@ -10817,15 +10803,17 @@ class ModalDialog extends TreeBase {
     const state = Globals.state;
     const open =
       !!state.get(this.stateName.value) || this.open.value ? "open" : "";
-    return this.component(
-      { classes: [open] },
-      html`<div>${this.children.map((child) => child.safeTemplate())}</div>`,
-    );
+    if (open) {
+      return this.component(
+        { classes: [open] },
+        html`<div>${this.children.map((child) => child.safeTemplate())}</div>`,
+      );
+    } else {
+      return html`<div />`;
+    }
   }
 }
 TreeBase.register(ModalDialog, "ModalDialog");
-
-const vsd = '';
 
 /** Allow await'ing for a short time
  * @param {number} ms */
@@ -11013,8 +11001,6 @@ class VSD extends TreeBase {
 }
 TreeBase.register(VSD, "VSD");
 
-const button = '';
-
 class Button extends TreeBase {
   label = new String$1("click me");
   name = new String$1("button");
@@ -11048,8 +11034,6 @@ class Button extends TreeBase {
   }
 }
 TreeBase.register(Button, "Button");
-
-const monitor = '';
 
 class Monitor extends TreeBase {
   template() {
@@ -11228,9 +11212,7 @@ function getCursorAdvanceMethods() {
             IDBCursor.prototype.continuePrimaryKey,
         ]));
 }
-const cursorRequestMap = new WeakMap();
 const transactionDoneMap = new WeakMap();
-const transactionStoreNamesMap = new WeakMap();
 const transformCache = new WeakMap();
 const reverseTransformCache = new WeakMap();
 function promisifyRequest(request) {
@@ -11250,16 +11232,6 @@ function promisifyRequest(request) {
         request.addEventListener('success', success);
         request.addEventListener('error', error);
     });
-    promise
-        .then((value) => {
-        // Since cursoring reuses the IDBRequest (*sigh*), we cache it for later retrieval
-        // (see wrapFunction).
-        if (value instanceof IDBCursor) {
-            cursorRequestMap.set(value, request);
-        }
-        // Catching to avoid "Uncaught Promise exceptions"
-    })
-        .catch(() => { });
     // This mapping exists in reverseTransformCache but doesn't doesn't exist in transformCache. This
     // is because we create many promises from a single IDBRequest.
     reverseTransformCache.set(promise, request);
@@ -11296,10 +11268,6 @@ let idbProxyTraps = {
             // Special handling for transaction.done.
             if (prop === 'done')
                 return transactionDoneMap.get(target);
-            // Polyfill for objectStoreNames because of Edge.
-            if (prop === 'objectStoreNames') {
-                return target.objectStoreNames || transactionStoreNamesMap.get(target);
-            }
             // Make tx.store return the only store in the transaction, or undefined if there are many.
             if (prop === 'store') {
                 return receiver.objectStoreNames[1]
@@ -11328,15 +11296,6 @@ function replaceTraps(callback) {
 function wrapFunction(func) {
     // Due to expected object equality (which is enforced by the caching in `wrap`), we
     // only create one new func per func.
-    // Edge doesn't support objectStoreNames (booo), so we polyfill it here.
-    if (func === IDBDatabase.prototype.transaction &&
-        !('objectStoreNames' in IDBTransaction.prototype)) {
-        return function (storeNames, ...args) {
-            const tx = func.call(unwrap(this), storeNames, ...args);
-            transactionStoreNamesMap.set(tx, storeNames.sort ? storeNames.sort() : [storeNames]);
-            return wrap(tx);
-        };
-    }
     // Cursor methods are special, as the behaviour is a little more different to standard IDB. In
     // IDB, you advance the cursor and wait for a new 'success' on the IDBRequest that gave you the
     // cursor. It's kinda like a promise that can resolve with many values. That doesn't make sense
@@ -11347,7 +11306,7 @@ function wrapFunction(func) {
             // Calling the original function with the proxy as 'this' causes ILLEGAL INVOCATION, so we use
             // the original object.
             func.apply(unwrap(this), args);
-            return wrap(cursorRequestMap.get(this));
+            return wrap(this.request);
         };
     }
     return function (...args) {
@@ -12586,48 +12545,50 @@ function unzipSync(data, opts) {
     return files;
 }
 
-const e=(()=>{if("undefined"==typeof self)return !1;if("top"in self&&self!==top)try{top;}catch(e){return !1}return "showOpenFilePicker"in self})(),t=e?Promise.resolve().then(function(){return l}):Promise.resolve().then(function(){return v});async function n(...e){return (await t).default(...e)}e?Promise.resolve().then(function(){return y}):Promise.resolve().then(function(){return b});const a=e?Promise.resolve().then(function(){return m}):Promise.resolve().then(function(){return k});async function o(...e){return (await a).default(...e)}const s=async e=>{const t=await e.getFile();return t.handle=e,t};var c=async(e=[{}])=>{Array.isArray(e)||(e=[e]);const t=[];e.forEach((e,n)=>{t[n]={description:e.description||"Files",accept:{}},e.mimeTypes?e.mimeTypes.map(r=>{t[n].accept[r]=e.extensions||[];}):t[n].accept["*/*"]=e.extensions||[];});const n=await window.showOpenFilePicker({id:e[0].id,startIn:e[0].startIn,types:t,multiple:e[0].multiple||!1,excludeAcceptAllOption:e[0].excludeAcceptAllOption||!1}),r=await Promise.all(n.map(s));return e[0].multiple?r:r[0]},l={__proto__:null,default:c};function u(e){function t(e){if(Object(e)!==e)return Promise.reject(new TypeError(e+" is not an object."));var t=e.done;return Promise.resolve(e.value).then(function(e){return {value:e,done:t}})}return u=function(e){this.s=e,this.n=e.next;},u.prototype={s:null,n:null,next:function(){return t(this.n.apply(this.s,arguments))},return:function(e){var n=this.s.return;return void 0===n?Promise.resolve({value:e,done:!0}):t(n.apply(this.s,arguments))},throw:function(e){var n=this.s.return;return void 0===n?Promise.reject(e):t(n.apply(this.s,arguments))}},new u(e)}const p=async(e,t,n=e.name,r)=>{const i=[],a=[];var o,s=!1,c=!1;try{for(var l,d=function(e){var t,n,r,i=2;for("undefined"!=typeof Symbol&&(n=Symbol.asyncIterator,r=Symbol.iterator);i--;){if(n&&null!=(t=e[n]))return t.call(e);if(r&&null!=(t=e[r]))return new u(t.call(e));n="@@asyncIterator",r="@@iterator";}throw new TypeError("Object is not async iterable")}(e.values());s=!(l=await d.next()).done;s=!1){const o=l.value,s=`${n}/${o.name}`;"file"===o.kind?a.push(o.getFile().then(t=>(t.directoryHandle=e,t.handle=o,Object.defineProperty(t,"webkitRelativePath",{configurable:!0,enumerable:!0,get:()=>s})))):"directory"!==o.kind||!t||r&&r(o)||i.push(p(o,t,s,r));}}catch(e){c=!0,o=e;}finally{try{s&&null!=d.return&&await d.return();}finally{if(c)throw o}}return [...(await Promise.all(i)).flat(),...await Promise.all(a)]};var d=async(e={})=>{e.recursive=e.recursive||!1,e.mode=e.mode||"read";const t=await window.showDirectoryPicker({id:e.id,startIn:e.startIn,mode:e.mode});return (await(await t.values()).next()).done?[t]:p(t,e.recursive,void 0,e.skipDirectory)},y={__proto__:null,default:d},f=async(e,t=[{}],n=null,r=!1,i=null)=>{Array.isArray(t)||(t=[t]),t[0].fileName=t[0].fileName||"Untitled";const a=[];let o=null;if(e instanceof Blob&&e.type?o=e.type:e.headers&&e.headers.get("content-type")&&(o=e.headers.get("content-type")),t.forEach((e,t)=>{a[t]={description:e.description||"Files",accept:{}},e.mimeTypes?(0===t&&o&&e.mimeTypes.push(o),e.mimeTypes.map(n=>{a[t].accept[n]=e.extensions||[];})):o?a[t].accept[o]=e.extensions||[]:a[t].accept["*/*"]=e.extensions||[];}),n)try{await n.getFile();}catch(e){if(n=null,r)throw e}const s=n||await window.showSaveFilePicker({suggestedName:t[0].fileName,id:t[0].id,startIn:t[0].startIn,types:a,excludeAcceptAllOption:t[0].excludeAcceptAllOption||!1});!n&&i&&i(s);const c=await s.createWritable();if("stream"in e){const t=e.stream();return await t.pipeTo(c),s}return "body"in e?(await e.body.pipeTo(c),s):(await c.write(await e),await c.close(),s)},m={__proto__:null,default:f},w=async(e=[{}])=>(Array.isArray(e)||(e=[e]),new Promise((t,n)=>{const r=document.createElement("input");r.type="file";const i=[...e.map(e=>e.mimeTypes||[]),...e.map(e=>e.extensions||[])].join();r.multiple=e[0].multiple||!1,r.accept=i||"",r.style.display="none",document.body.append(r);const a=e=>{"function"==typeof o&&o(),t(e);},o=e[0].legacySetup&&e[0].legacySetup(a,()=>o(n),r),s=()=>{window.removeEventListener("focus",s),r.remove();};r.addEventListener("click",()=>{window.addEventListener("focus",s);}),r.addEventListener("change",()=>{window.removeEventListener("focus",s),r.remove(),a(r.multiple?Array.from(r.files):r.files[0]);}),"showPicker"in HTMLInputElement.prototype?r.showPicker():r.click();})),v={__proto__:null,default:w},h=async(e=[{}])=>(Array.isArray(e)||(e=[e]),e[0].recursive=e[0].recursive||!1,new Promise((t,n)=>{const r=document.createElement("input");r.type="file",r.webkitdirectory=!0;const i=e=>{"function"==typeof a&&a(),t(e);},a=e[0].legacySetup&&e[0].legacySetup(i,()=>a(n),r);r.addEventListener("change",()=>{let t=Array.from(r.files);e[0].recursive?e[0].recursive&&e[0].skipDirectory&&(t=t.filter(t=>t.webkitRelativePath.split("/").every(t=>!e[0].skipDirectory({name:t,kind:"directory"})))):t=t.filter(e=>2===e.webkitRelativePath.split("/").length),i(t);}),"showPicker"in HTMLInputElement.prototype?r.showPicker():r.click();})),b={__proto__:null,default:h},P=async(e,t={})=>{Array.isArray(t)&&(t=t[0]);const n=document.createElement("a");let r=e;"body"in e&&(r=await async function(e,t){const n=e.getReader(),r=new ReadableStream({start:e=>async function t(){return n.read().then(({done:n,value:r})=>{if(!n)return e.enqueue(r),t();e.close();})}()}),i=new Response(r),a=await i.blob();return n.releaseLock(),new Blob([a],{type:t})}(e.body,e.headers.get("content-type"))),n.download=t.fileName||"Untitled",n.href=URL.createObjectURL(await r);const i=()=>{"function"==typeof a&&a();},a=t.legacySetup&&t.legacySetup(i,()=>a(),n);return n.addEventListener("click",()=>{setTimeout(()=>URL.revokeObjectURL(n.href),3e4),i();}),n.click(),null},k={__proto__:null,default:P};
-
-const N_RECORDS_SAVE = 10;
-const N_RECORDS_MAX = 20;
+const e=(()=>{if("undefined"==typeof self)return !1;if("top"in self&&self!==top)try{top.window.document._=0;}catch(e){return !1}return "showOpenFilePicker"in self})(),t=e?Promise.resolve().then(function(){return l}):Promise.resolve().then(function(){return v});async function n(...e){return (await t).default(...e)}e?Promise.resolve().then(function(){return y}):Promise.resolve().then(function(){return b});const a=e?Promise.resolve().then(function(){return m}):Promise.resolve().then(function(){return k});async function o(...e){return (await a).default(...e)}const s=async e=>{const t=await e.getFile();return t.handle=e,t};var c=async(e=[{}])=>{Array.isArray(e)||(e=[e]);const t=[];e.forEach((e,n)=>{t[n]={description:e.description||"Files",accept:{}},e.mimeTypes?e.mimeTypes.map(r=>{t[n].accept[r]=e.extensions||[];}):t[n].accept["*/*"]=e.extensions||[];});const n=await window.showOpenFilePicker({id:e[0].id,startIn:e[0].startIn,types:t,multiple:e[0].multiple||!1,excludeAcceptAllOption:e[0].excludeAcceptAllOption||!1}),r=await Promise.all(n.map(s));return e[0].multiple?r:r[0]},l={__proto__:null,default:c};function u(e){function t(e){if(Object(e)!==e)return Promise.reject(new TypeError(e+" is not an object."));var t=e.done;return Promise.resolve(e.value).then(function(e){return {value:e,done:t}})}return u=function(e){this.s=e,this.n=e.next;},u.prototype={s:null,n:null,next:function(){return t(this.n.apply(this.s,arguments))},return:function(e){var n=this.s.return;return void 0===n?Promise.resolve({value:e,done:!0}):t(n.apply(this.s,arguments))},throw:function(e){var n=this.s.return;return void 0===n?Promise.reject(e):t(n.apply(this.s,arguments))}},new u(e)}const p=async(e,t,n=e.name,r)=>{const i=[],a=[];var o,s=!1,c=!1;try{for(var l,d=function(e){var t,n,r,i=2;for("undefined"!=typeof Symbol&&(n=Symbol.asyncIterator,r=Symbol.iterator);i--;){if(n&&null!=(t=e[n]))return t.call(e);if(r&&null!=(t=e[r]))return new u(t.call(e));n="@@asyncIterator",r="@@iterator";}throw new TypeError("Object is not async iterable")}(e.values());s=!(l=await d.next()).done;s=!1){const o=l.value,s=`${n}/${o.name}`;"file"===o.kind?a.push(o.getFile().then(t=>(t.directoryHandle=e,t.handle=o,Object.defineProperty(t,"webkitRelativePath",{configurable:!0,enumerable:!0,get:()=>s})))):"directory"!==o.kind||!t||r&&r(o)||i.push(p(o,t,s,r));}}catch(e){c=!0,o=e;}finally{try{s&&null!=d.return&&await d.return();}finally{if(c)throw o}}return [...(await Promise.all(i)).flat(),...await Promise.all(a)]};var d=async(e={})=>{e.recursive=e.recursive||!1,e.mode=e.mode||"read";const t=await window.showDirectoryPicker({id:e.id,startIn:e.startIn,mode:e.mode});return (await(await t.values()).next()).done?[t]:p(t,e.recursive,void 0,e.skipDirectory)},y={__proto__:null,default:d},f=async(e,t=[{}],n=null,r=!1,i=null)=>{Array.isArray(t)||(t=[t]),t[0].fileName=t[0].fileName||"Untitled";const a=[];let o=null;if(e instanceof Blob&&e.type?o=e.type:e.headers&&e.headers.get("content-type")&&(o=e.headers.get("content-type")),t.forEach((e,t)=>{a[t]={description:e.description||"Files",accept:{}},e.mimeTypes?(0===t&&o&&e.mimeTypes.push(o),e.mimeTypes.map(n=>{a[t].accept[n]=e.extensions||[];})):o?a[t].accept[o]=e.extensions||[]:a[t].accept["*/*"]=e.extensions||[];}),n)try{await n.getFile();}catch(e){if(n=null,r)throw e}const s=n||await window.showSaveFilePicker({suggestedName:t[0].fileName,id:t[0].id,startIn:t[0].startIn,types:a,excludeAcceptAllOption:t[0].excludeAcceptAllOption||!1});!n&&i&&i(s);const c=await s.createWritable();if("stream"in e){const t=e.stream();return await t.pipeTo(c),s}return "body"in e?(await e.body.pipeTo(c),s):(await c.write(await e),await c.close(),s)},m={__proto__:null,default:f},w=async(e=[{}])=>(Array.isArray(e)||(e=[e]),new Promise((t,n)=>{const r=document.createElement("input");r.type="file";const i=[...e.map(e=>e.mimeTypes||[]),...e.map(e=>e.extensions||[])].join();r.multiple=e[0].multiple||!1,r.accept=i||"",r.style.display="none",document.body.append(r);const a=e=>{"function"==typeof o&&o(),t(e);},o=e[0].legacySetup&&e[0].legacySetup(a,()=>o(n),r),s=()=>{window.removeEventListener("focus",s),r.remove();};r.addEventListener("click",()=>{window.addEventListener("focus",s);}),r.addEventListener("change",()=>{window.removeEventListener("focus",s),r.remove(),a(r.multiple?Array.from(r.files):r.files[0]);}),"showPicker"in HTMLInputElement.prototype?r.showPicker():r.click();})),v={__proto__:null,default:w},h=async(e=[{}])=>(Array.isArray(e)||(e=[e]),e[0].recursive=e[0].recursive||!1,new Promise((t,n)=>{const r=document.createElement("input");r.type="file",r.webkitdirectory=!0;const i=e=>{"function"==typeof a&&a(),t(e);},a=e[0].legacySetup&&e[0].legacySetup(i,()=>a(n),r);r.addEventListener("change",()=>{let t=Array.from(r.files);e[0].recursive?e[0].recursive&&e[0].skipDirectory&&(t=t.filter(t=>t.webkitRelativePath.split("/").every(t=>!e[0].skipDirectory({name:t,kind:"directory"})))):t=t.filter(e=>2===e.webkitRelativePath.split("/").length),i(t);}),"showPicker"in HTMLInputElement.prototype?r.showPicker():r.click();})),b={__proto__:null,default:h},P=async(e,t={})=>{Array.isArray(t)&&(t=t[0]);const n=document.createElement("a");let r=e;"body"in e&&(r=await async function(e,t){const n=e.getReader(),r=new ReadableStream({start:e=>async function t(){return n.read().then(({done:n,value:r})=>{if(!n)return e.enqueue(r),t();e.close();})}()}),i=new Response(r),a=await i.blob();return n.releaseLock(),new Blob([a],{type:t})}(e.body,e.headers.get("content-type"))),n.download=t.fileName||"Untitled",n.href=URL.createObjectURL(await r);const i=()=>{"function"==typeof a&&a();},a=t.legacySetup&&t.legacySetup(i,()=>a(),n);return n.addEventListener("click",()=>{setTimeout(()=>URL.revokeObjectURL(n.href),3e4),i();}),n.click(),null},k={__proto__:null,default:P};
 
 class DB {
   constructor() {
-    this.dbPromise = openDB("os-dpi", 4, {
-      upgrade(db, oldVersion, newVersion) {
-        if (oldVersion && oldVersion < 3) {
-          for (const name of ["store", "media", "saved", "url"]) {
-            try {
-              db.deleteObjectStore(name);
-            } catch (e) {
-              // ignore the error
-            }
+    this.dbPromise = openDB("os-dpi", 5, {
+      async upgrade(db, oldVersion, newVersion, transaction) {
+        console.log("upgrade", { oldVersion, newVersion });
+        let store5 = db.createObjectStore("store5", {
+          keyPath: ["name", "type"],
+        });
+        store5.createIndex("by-name", "name");
+        if (oldVersion == 4) {
+          // copy data from old store to new
+          const store4 = transaction.objectStore("store");
+          for await (const cursor of store4) {
+            const record4 = cursor.value;
+            store5.put(record4);
           }
-        } else if (oldVersion == 3) {
-          db.deleteObjectStore("images");
-        }
-        if (oldVersion < 3) {
-          let objectStore = db.createObjectStore("store", {
-            keyPath: "id",
-            autoIncrement: true,
-          });
-          objectStore.createIndex("by-name", "name");
-          objectStore.createIndex("by-name-type", ["name", "type"]);
-        }
-        if (newVersion && newVersion >= 4) {
+          db.deleteObjectStore("store");
+          // add an etag index to url store
+          transaction.objectStore("url").createIndex("by-etag", "etag");
+        } else if (oldVersion < 4) {
           db.createObjectStore("media");
-        }
-        if (oldVersion < 3) {
-          // keep track of the name and ETag (if any) of designs that have been saved
           let savedStore = db.createObjectStore("saved", {
             keyPath: "name",
           });
           savedStore.createIndex("by-etag", "etag");
           // track etags for urls
-          db.createObjectStore("url", {
+          const urlStore = db.createObjectStore("url", {
             keyPath: "url",
           });
+          // add an etag index to the url store
+          urlStore.createIndex("by-etag", "etag");
         }
+      },
+      blocked(currentVersion, blockedVersion, event) {
+        console.log("blocked", { currentVersion, blockedVersion, event });
+      },
+      blocking(currentVersion, blockedVersion, event) {
+        console.log("blocking", { currentVersion, blockedVersion, event });
+        window.location.reload();
+      },
+      terminated() {
+        console.log("terminated");
       },
     });
     this.updateListeners = [];
@@ -12652,8 +12613,8 @@ class DB {
   async renameDesign(newName) {
     const db = await this.dbPromise;
     newName = await this.uniqueName(newName);
-    const tx = db.transaction(["store", "media", "saved"], "readwrite");
-    const index = tx.objectStore("store").index("by-name");
+    const tx = db.transaction(["store5", "media", "saved"], "readwrite");
+    const index = tx.objectStore("store5").index("by-name");
     for await (const cursor of index.iterate(this.designName)) {
       const record = { ...cursor.value };
       record.name = newName;
@@ -12687,7 +12648,7 @@ class DB {
    */
   async names() {
     const db = await this.dbPromise;
-    const index = db.transaction("store", "readonly").store.index("by-name");
+    const index = db.transaction("store5", "readonly").store.index("by-name");
     const result = [];
     for await (const cursor of index.iterate(null, "nextunique")) {
       result.push(/** @type {string} */ (cursor.key));
@@ -12744,21 +12705,10 @@ class DB {
    */
   async read(type, defaultValue = {}) {
     const db = await this.dbPromise;
-    const index = db
-      .transaction("store", "readonly")
-      .store.index("by-name-type");
-    const cursor = await index.openCursor([this.designName, type], "prev");
-    if (cursor) {
-      const data = cursor.value.data;
-      if (
-        (Array.isArray(defaultValue) && !Array.isArray(data)) ||
-        typeof data != typeof defaultValue
-      ) {
-        return defaultValue;
-      }
-      return data;
-    }
-    return defaultValue;
+    const record = await db.get("store5", [this.designName, type]);
+    const data = record ? record.data : defaultValue;
+    console.log("read", data);
+    return data;
   }
 
   /**
@@ -12768,17 +12718,7 @@ class DB {
    * @returns {Promise<Object[]>}
    */
   async readAll(type) {
-    const db = await this.dbPromise;
-    const index = db
-      .transaction("store", "readonly")
-      .store.index("by-name-type");
-    const key = [this.designName, type];
-    const result = [];
-    for await (const cursor of index.iterate(key)) {
-      const data = cursor.value.data;
-      result.push(data);
-    }
-    return result;
+    return [this.read(type)];
   }
 
   /** Add a new record
@@ -12788,37 +12728,12 @@ class DB {
   async write(type, data) {
     const db = await this.dbPromise;
     // do all this in a transaction
-    const tx = db.transaction(["store", "saved"], "readwrite");
+    const tx = db.transaction(["store5", "saved"], "readwrite");
     // note that this design has been updated
     await tx.objectStore("saved").delete(this.designName);
     // add the record to the store
-    const store = tx.objectStore("store");
+    const store = tx.objectStore("store5");
     await store.put({ name: this.designName, type, data });
-
-    let n_max = N_RECORDS_MAX; // zero to prevent limiting
-    let n_save = N_RECORDS_SAVE;
-    if (type == "content") {
-      n_max = n_save = 1; // only save 1 content record
-    } else if (type == "log") {
-      n_max = n_save = 0; // don't limit log records
-    }
-
-    /* Only keep the last few records per type */
-    const index = store.index("by-name-type");
-    const key = [this.designName, type];
-    if (n_max > 0) {
-      // count how many we have
-      let count = await index.count(key);
-      if (count > n_max) {
-        // get the number to delete
-        let toDelete = count - n_save;
-        // we're getting them in order so this will delete the oldest ones
-        for await (const cursor of index.iterate(key)) {
-          if (--toDelete <= 0) break;
-          cursor.delete();
-        }
-      }
-    }
     await tx.done;
 
     this.notify({ action: "update", name: this.designName });
@@ -12832,12 +12747,7 @@ class DB {
    */
   async clear(type) {
     const db = await this.dbPromise;
-    const tx = db.transaction("store", "readwrite");
-    const index = tx.store.index("by-name-type");
-    for await (const cursor of index.iterate([this.designName, type])) {
-      cursor.delete();
-    }
-    await tx.done;
+    return db.delete("store5", [this.designName, type]);
   }
 
   /** Undo by deleting the most recent record
@@ -12847,7 +12757,7 @@ class DB {
     if (type == "content") return;
     const db = await this.dbPromise;
     const index = db
-      .transaction("store", "readwrite")
+      .transaction("store5", "readwrite")
       .store.index("by-name-type");
     const cursor = await index.openCursor([this.designName, type], "prev");
     if (cursor) await cursor.delete();
@@ -12866,14 +12776,42 @@ class DB {
 
   /** Read a design from a URL
    * @param {string} url
+   * @param {string} [name]
+   * @returns {Promise<boolean>}
    */
-  async readDesignFromURL(url) {
+  async readDesignFromURL(url, name = "") {
+    console.log({ url, name });
+    let design_url = url;
+
+    // allow for the url to point to HTML that contains the link
+    if (!url.match(/.*\.(osdpi|zip)$/)) {
+      console.log("get page at", url);
+      const response = await fetch("https://gb.cs.unc.edu/cors/", {
+        headers: { "Target-URL": url },
+      });
+      if (!response.ok) {
+        throw new Error(`Fetching the URL (${url}) failed: ${response.status}`);
+      }
+      const html = await response.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+      // find the first link that matches the name
+      const link =
+        doc.querySelector(`a[href$="${name}.zip"]`) ||
+        doc.querySelector(`a[href$="${name}.osdpi"]`);
+      console.log({ link });
+      if (link instanceof HTMLAnchorElement) {
+        design_url = link.href;
+      } else {
+        throw new Error(`Invalid URL ${url}`);
+      }
+    }
+    console.log({ design_url });
     const db = await this.dbPromise;
     // have we seen this url before?
-    const urlRecord = await db.get("url", url);
+    const urlRecord = await db.get("url", design_url);
     /** @type {HeadersInit} */
     const headers = {}; // for the fetch
-    let name = "";
     if (urlRecord) {
       /** @type {string} */
       const etag = urlRecord.etag;
@@ -12886,41 +12824,83 @@ class DB {
         name = savedKey.toString();
       }
     }
+    headers["Target-URL"] = design_url;
+    console.log({ headers });
 
-    const response = await fetch(url, { headers });
+    const response = await fetch("https://gb.cs.unc.edu/cors/", { headers });
+    console.log({ response });
     if (response.status == 304) {
       // we already have it
       this.designName = name;
-      return;
+      console.log("unchanged");
+      return false;
     }
     if (!response.ok) {
       throw new Error(`Fetching the URL (${url}) failed: ${response.status}`);
     }
-    const etag = response.headers.get("ETag") || "";
-    await db.put("url", { url, etag });
 
-    const urlParts = new URL(url, window.location.origin);
-    const pathParts = urlParts.pathname.split("/");
-    if (
-      pathParts.length > 0 &&
-      pathParts[pathParts.length - 1].endsWith(".osdpi")
-    ) {
-      name = pathParts[pathParts.length - 1];
-    } else {
-      throw new Error(`Design files should have .osdpi suffix`);
+    const etag = response.headers.get("ETag") || "";
+    console.log({ etag });
+    await db.put("url", { url: design_url, etag });
+
+    if (!name) {
+      const urlParts = new URL(design_url, window.location.origin);
+      const pathParts = urlParts.pathname.split("/");
+      if (
+        pathParts.length > 0 &&
+        (pathParts[pathParts.length - 1].endsWith(".osdpi") ||
+          pathParts[pathParts.length - 1].endsWith(".zip"))
+      ) {
+        name = pathParts[pathParts.length - 1];
+      } else {
+        throw new Error(`Design files should have .osdpi suffix`);
+      }
     }
 
+    console.log("blob");
     const blob = await response.blob();
+    console.log("got blob");
+
     // parse the URL
     return this.readDesignFromBlob(blob, name, etag);
+  }
+
+  /**
+   * Reload the design from a URL if and only if:
+   * 1. It was loaded from a URL
+   * 2. It has not been edited
+   * 3. The ETag has changed
+   */
+  async reloadDesignFromOriginalURL() {
+    const db = await this.dbPromise;
+
+    const name = this.designName;
+
+    // check saved
+    const savedRecord = await db.get("saved", name);
+    console.log({ savedRecord });
+    if (savedRecord && savedRecord.etag && savedRecord.etag != "none") {
+      // lookup the URL
+      const etag = savedRecord.etag;
+      const savedKey = await db.getKeyFromIndex("url", "by-etag", etag);
+      console.log({ etag, savedKey });
+      if (savedKey) {
+        const url = savedKey.toString();
+        console.log({ url });
+        if (await this.readDesignFromURL(url)) {
+          Globals.restart();
+        }
+      }
+    }
   }
 
   /** Read a design from a zip file
    * @param {Blob} blob
    * @param {string} filename
    * @param {string} etag
+   * @returns {Promise<boolean>}
    */
-  async readDesignFromBlob(blob, filename, etag = "none") {
+  async readDesignFromBlob(blob, filename, etag = "") {
     const db = await this.dbPromise;
     this.fileName = filename;
 
@@ -12931,7 +12911,11 @@ class DB {
     // normalize the fileName to make the design name
     let name = this.fileName;
     // make sure it is unique
-    name = await this.uniqueName(name);
+    if (!etag) {
+      name = await this.uniqueName(name);
+    } else {
+      name = name.replace(/\.(zip|osdpi)$/, "");
+    }
 
     this.designName = name;
 
@@ -12968,7 +12952,7 @@ class DB {
     }
     await db.put("saved", { name: this.designName, etag });
     this.notify({ action: "update", name: this.designName });
-    return;
+    return true;
   }
 
   // do this part async to avoid file picker timeout
@@ -13036,7 +13020,7 @@ class DB {
    */
   async unload(name) {
     const db = await this.dbPromise;
-    const tx = db.transaction("store", "readwrite");
+    const tx = db.transaction("store5", "readwrite");
     const index = tx.store.index("by-name");
     for await (const cursor of index.iterate(name)) {
       cursor.delete();
@@ -13230,51 +13214,52 @@ let Audio$1 = class Audio extends TreeBase {
 TreeBase.register(Audio$1, "Audio");
 
 const scriptRel = 'modulepreload';const assetsURL = function(dep) { return "/OS-DPI/"+dep };const seen = {};const __vitePreload = function preload(baseModule, deps, importerUrl) {
+    let promise = Promise.resolve();
     // @ts-expect-error true will be replaced with boolean later
-    if (!true || !deps || deps.length === 0) {
-        return baseModule();
-    }
-    const links = document.getElementsByTagName('link');
-    return Promise.all(deps.map((dep) => {
-        // @ts-expect-error assetsURL is declared before preload.toString()
-        dep = assetsURL(dep);
-        if (dep in seen)
-            return;
-        seen[dep] = true;
-        const isCss = dep.endsWith('.css');
-        const cssSelector = isCss ? '[rel="stylesheet"]' : '';
-        const isBaseRelative = !!importerUrl;
-        // check if the file is already preloaded by SSR markup
-        if (isBaseRelative) {
-            // When isBaseRelative is true then we have `importerUrl` and `dep` is
-            // already converted to an absolute URL by the `assetsURL` function
-            for (let i = links.length - 1; i >= 0; i--) {
-                const link = links[i];
-                // The `links[i].href` is an absolute URL thanks to browser doing the work
-                // for us. See https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#reflecting-content-attributes-in-idl-attributes:idl-domstring-5
-                if (link.href === dep && (!isCss || link.rel === 'stylesheet')) {
-                    return;
+    if (true && deps && deps.length > 0) {
+        const links = document.getElementsByTagName('link');
+        promise = Promise.all(deps.map((dep) => {
+            // @ts-expect-error assetsURL is declared before preload.toString()
+            dep = assetsURL(dep);
+            if (dep in seen)
+                return;
+            seen[dep] = true;
+            const isCss = dep.endsWith('.css');
+            const cssSelector = isCss ? '[rel="stylesheet"]' : '';
+            const isBaseRelative = !!importerUrl;
+            // check if the file is already preloaded by SSR markup
+            if (isBaseRelative) {
+                // When isBaseRelative is true then we have `importerUrl` and `dep` is
+                // already converted to an absolute URL by the `assetsURL` function
+                for (let i = links.length - 1; i >= 0; i--) {
+                    const link = links[i];
+                    // The `links[i].href` is an absolute URL thanks to browser doing the work
+                    // for us. See https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#reflecting-content-attributes-in-idl-attributes:idl-domstring-5
+                    if (link.href === dep && (!isCss || link.rel === 'stylesheet')) {
+                        return;
+                    }
                 }
             }
-        }
-        else if (document.querySelector(`link[href="${dep}"]${cssSelector}`)) {
-            return;
-        }
-        const link = document.createElement('link');
-        link.rel = isCss ? 'stylesheet' : scriptRel;
-        if (!isCss) {
-            link.as = 'script';
-            link.crossOrigin = '';
-        }
-        link.href = dep;
-        document.head.appendChild(link);
-        if (isCss) {
-            return new Promise((res, rej) => {
-                link.addEventListener('load', res);
-                link.addEventListener('error', () => rej(new Error(`Unable to preload CSS for ${dep}`)));
-            });
-        }
-    }))
+            else if (document.querySelector(`link[href="${dep}"]${cssSelector}`)) {
+                return;
+            }
+            const link = document.createElement('link');
+            link.rel = isCss ? 'stylesheet' : scriptRel;
+            if (!isCss) {
+                link.as = 'script';
+                link.crossOrigin = '';
+            }
+            link.href = dep;
+            document.head.appendChild(link);
+            if (isCss) {
+                return new Promise((res, rej) => {
+                    link.addEventListener('load', res);
+                    link.addEventListener('error', () => rej(new Error(`Unable to preload CSS for ${dep}`)));
+                });
+            }
+        }));
+    }
+    return promise
         .then(() => baseModule())
         .catch((err) => {
         const e = new Event('vite:preloadError', { cancelable: true });
@@ -13287,7 +13272,159 @@ const scriptRel = 'modulepreload';const assetsURL = function(dep) { return "/OS-
     });
 };
 
-const designer = '';
+/** Implement undo/redo for the designer by comparing the current and previous trees
+ *
+ * I'm assuming only 1 change has been made since we save after every change.
+ */
+
+class UndoRedo {
+  /** @type {ExternalRep[]} */
+  stack = [];
+
+  /* boundary between undo and redo. Points to the first cell beyond the undos */
+  top = 0;
+
+  get canUndo() {
+    return this.top > 1;
+  }
+
+  get canRedo() {
+    return this.top < this.stack.length;
+  }
+
+  /** Save a state for possible undo
+   * @param {ExternalRep} state
+   */
+  save(state) {
+    this.stack.splice(this.top);
+    this.stack.push(state);
+    this.top = this.stack.length;
+  }
+
+  /** Undo
+   * @param {TreeBase} current
+   */
+  undo(current) {
+    if (this.canUndo) {
+      this.restore(current, this.stack[this.top - 2]);
+      this.top--;
+    }
+  }
+
+  /** Redo
+   * @param {TreeBase} current
+   */
+  redo(current) {
+    if (this.canRedo) {
+      this.restore(current, this.stack[this.top]);
+      this.top++;
+    }
+  }
+
+  /**
+   * restore the state of current to previous
+   * @param {TreeBase} current
+   * @param {ExternalRep} previous
+   * @returns {boolean}
+   */
+  restore(current, previous) {
+    if (this.equal(current, previous)) {
+      return false;
+    }
+
+    // we get here because the are different
+    if (current.className != previous.className) {
+      // I think this happens only for the components that dynamically change their class
+      if (current instanceof TreeBaseSwitchable) {
+        // switch the class and force the props to their old values
+        current.replace(previous.className, previous.props);
+      } else {
+        throw new Error(
+          `non switchable class changed ${current.className} ${previous.className}`,
+        );
+      }
+      return true;
+    }
+
+    // check the props
+    const pprops = previous.props;
+    for (let propName in pprops) {
+      if (
+        pprops[propName] &&
+        propName in current &&
+        current[propName].text != pprops[propName]
+      ) {
+        current[propName].set(pprops[propName]);
+        return true;
+      }
+    }
+
+    // check the children
+    const cc = current.children;
+    const pc = previous.children;
+
+    if (cc.length < pc.length) {
+      // determine which one was deleted
+      // it is a merge, first difference is the one that matters
+      for (let i = 0; i < pc.length; i++) {
+        if (!this.equal(cc[i], pc[i])) {
+          // pc[i] is the one that got deleted. Create it
+          const deleted = TreeBase.fromObject(pc[i], current);
+          if (i < pc.length) {
+            // move it
+            deleted.moveTo(i);
+          }
+          return true;
+        }
+      }
+      throw new Error("undo delete failed");
+    } else if (cc.length > pc.length) {
+      // the added one must be last
+      current.children.splice(cc.length - 1, 1);
+      return true;
+    } else {
+      // check for reordering
+      let diffs = [];
+      for (let i = 0; i < cc.length; i++) {
+        if (!this.equal(cc[i], pc[i])) diffs.push(i);
+      }
+      if (diffs.length == 2) {
+        // reordered
+        current.swap(diffs[0], diffs[1]);
+        return true;
+      } else if (diffs.length == 1) {
+        // changed
+        return this.restore(cc[diffs[0]], pc[diffs[0]]);
+      } else if (diffs.length == 0) {
+        return true;
+      } else {
+        throw new Error("too many diffs");
+      }
+    }
+  }
+
+  /** Compare TreeBase and ExternalRep for equality
+   * @param {TreeBase} tb - current value
+   * @param {ExternalRep} er -- previous value
+   * @returns {boolean}
+   */
+  equal(tb, er) {
+    if (!tb || !er) return false;
+
+    if (tb.className != er.className) return false;
+
+    for (const prop in tb.props) {
+      if (prop in er.props) {
+        if (er.props[prop] && tb[prop].text != er.props[prop].toString())
+          return false;
+      }
+    }
+
+    if (tb.children.length != er.children.length) return false;
+
+    return tb.children.every((child, i) => this.equal(child, er.children[i]));
+  }
+}
 
 class Designer extends TreeBase {
   stateName = new String$1("$tabControl");
@@ -13475,45 +13612,53 @@ class Designer extends TreeBase {
    */
   panelKeyHandler(event) {
     if (event.target instanceof HTMLTextAreaElement) return;
-    if (event.key != "ArrowDown" && event.key != "ArrowUp") return;
-    if (event.shiftKey) {
-      // move the component
-      const component = Globals.designer.selectedComponent;
-      if (!component) return;
-      component.moveUpDown(event.key == "ArrowUp");
-      callAfterRender(() => Globals.designer.restoreFocus());
-      Globals.state.update();
-    } else {
-      event.preventDefault();
-      // get the components on this panel
-      // todo expand this to all components
-      const components = [
-        ...document.querySelectorAll(".DesignerPanel.ActivePanel .settings"),
-      ];
-      // determine which one contains the focus
-      const focusedComponent = document.querySelector(
-        '.DesignerPanel.ActivePanel .settings:has([aria-selected="true"]):not(:has(.settings [aria-selected="true"]))',
-      );
-      if (!focusedComponent) return;
-      // get its index
-      const index = components.indexOf(focusedComponent);
-      // get the next index
-      const nextIndex = Math.min(
-        components.length - 1,
-        Math.max(0, index + (event.key == "ArrowUp" ? -1 : 1)),
-      );
-      if (nextIndex != index) {
-        // focus on the first focusable in the next component
-        const focusable = /** @type {HTMLElement} */ (
-          components[nextIndex].querySelector(
-            "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), " +
-              'textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled]), ' +
-              "summary:not(:disabled)",
-          )
+    if (event.key == "ArrowDown" || event.key == "ArrowUp") {
+      if (event.shiftKey) {
+        // move the component
+        const component = Globals.designer.selectedComponent;
+        if (!component) return;
+        component.moveUpDown(event.key == "ArrowUp");
+        callAfterRender(() => Globals.designer.restoreFocus());
+        this.currentPanel?.update();
+        Globals.state.update();
+      } else {
+        event.preventDefault();
+        // get the components on this panel
+        // todo expand this to all components
+        const components = [
+          ...document.querySelectorAll(".DesignerPanel.ActivePanel .settings"),
+        ];
+        // determine which one contains the focus
+        const focusedComponent = document.querySelector(
+          '.DesignerPanel.ActivePanel .settings:has([aria-selected="true"]):not(:has(.settings [aria-selected="true"]))',
         );
-        if (focusable) {
-          focusable.focus();
+        if (!focusedComponent) return;
+        // get its index
+        const index = components.indexOf(focusedComponent);
+        // get the next index
+        const nextIndex = Math.min(
+          components.length - 1,
+          Math.max(0, index + (event.key == "ArrowUp" ? -1 : 1)),
+        );
+        if (nextIndex != index) {
+          // focus on the first focusable in the next component
+          const focusable = /** @type {HTMLElement} */ (
+            components[nextIndex].querySelector(
+              "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), " +
+                'textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled]), ' +
+                "summary:not(:disabled)",
+            )
+          );
+          if (focusable) {
+            focusable.focus();
+          }
         }
+      }
+    } else if (event.key == "z") {
+      if (event.ctrlKey && event.shiftKey) {
+        this.currentPanel?.redo();
+      } else if (event.ctrlKey) {
+        this.currentPanel?.undo();
       }
     }
   }
@@ -13557,7 +13702,7 @@ class Designer extends TreeBase {
   /** Tweak the focus behavior in the designer
    * I want clicking on blank space to focus the nearest focusable element
 
-   * @param {KeyboardEvent} event
+   * @param {PointerEvent} event
    */
   designerClick = (event) => {
     // return if target is not an HTMLElement
@@ -13608,6 +13753,8 @@ class DesignerPanel extends TreeBase {
   active = false;
   tabName = "";
   tabLabel = "";
+
+  settingsDetailsOpen = false;
   lastFocused = "";
 
   // where to store in the db
@@ -13620,6 +13767,8 @@ class DesignerPanel extends TreeBase {
     // @ts-expect-error
     return this.constructor.tableName;
   }
+
+  backup = new UndoRedo();
 
   /**
    * Load a panel from the database.
@@ -13638,6 +13787,7 @@ class DesignerPanel extends TreeBase {
     const result = this.fromObject(obj);
     if (result instanceof expected) {
       result.configure();
+      result.backup.save(obj);
       return result;
     }
     // I don't think this happens
@@ -13684,10 +13834,16 @@ class DesignerPanel extends TreeBase {
 
   configure() {}
 
-  onUpdate() {
+  async onUpdate() {
+    return this.doUpdate(true);
+  }
+
+  async doUpdate(save = true) {
     const tableName = this.staticTableName;
     if (tableName) {
-      db.write(tableName, this.toObject());
+      const externalRep = this.toObject();
+      await db.write(tableName, externalRep);
+      if (save) this.backup.save(externalRep);
       Globals.state.update();
     }
   }
@@ -13695,8 +13851,18 @@ class DesignerPanel extends TreeBase {
   async undo() {
     const tableName = this.staticTableName;
     if (tableName) {
-      await db.undo(tableName);
-      Globals.restart();
+      this.backup.undo(this);
+      await this.doUpdate(false);
+      Globals.designer.restoreFocus();
+    }
+  }
+
+  async redo() {
+    const tableName = this.staticTableName;
+    if (tableName) {
+      this.backup.redo(this);
+      await this.doUpdate(false);
+      Globals.designer.restoreFocus();
     }
   }
 
@@ -13711,10 +13877,6 @@ class DesignerPanel extends TreeBase {
     return super.CSSClasses(...classes);
   }
 }
-
-const content = '';
-
-const wait$1 = '';
 
 /**
  * Handle displaying a "please wait" message and error reporting for
@@ -13760,7 +13922,7 @@ async function wait(promise, message = "Please wait") {
 
 /** @param {Blob} blob */
 async function readSheetFromBlob(blob) {
-  const XLSX = await __vitePreload(() => import('./xlsx.js'),true?[]:void 0);
+  const XLSX = await __vitePreload(() => import('./xlsx.js'),true?__vite__mapDeps([]):void 0);
   const data = await blob.arrayBuffer();
   const workbook = XLSX.read(data, { codepage: 65001 });
   /** @type {Rows} */
@@ -13839,7 +14001,7 @@ async function readSheetFromBlob(blob) {
  * @param {string} type
  */
 async function saveContent(name, rows, type) {
-  const XLSX = await wait(__vitePreload(() => import('./xlsx.js'),true?[]:void 0));
+  const XLSX = await wait(__vitePreload(() => import('./xlsx.js'),true?__vite__mapDeps([]):void 0));
   const sheetNames = new Set(rows.map((row) => row.sheetName || "sheet1"));
   const workbook = XLSX.utils.book_new();
   for (const sheetName of sheetNames) {
@@ -13935,8 +14097,6 @@ class Content extends DesignerPanel {
   }
 }
 TreeBase.register(Content, "Content");
-
-const logger = '';
 
 class Logger extends TreeBase {
   // name = new Props.String("Log");
@@ -14085,8 +14245,6 @@ async function ClearLogs() {
   await db.clear("log");
 }
 
-const layout = '';
-
 const emptyPage = {
   className: "Page",
   props: {},
@@ -14172,26 +14330,18 @@ class Layout extends DesignerPanel {
         newObj.props = props;
         obj = newObj;
       }
+      // make sure it begins with Layout
+      if (obj.className != "Layout") {
+        obj = {
+          className: "Layout",
+          props: { name: "Layout" },
+          children: [obj],
+        };
+      }
       return obj;
     }
     obj = oldToNew(obj);
-    // upgrade from the old format
-    return {
-      className: "Layout",
-      props: { name: "Layout" },
-      children: [obj],
-    };
-  }
-
-  toObject() {
-    return this.children[0].toObject();
-  }
-
-  /** Update the state
-   */
-  onUpdate() {
-    db.write("layout", this.children[0].toObject());
-    Globals.state.update();
+    return obj;
   }
 
   /** Allow highlighting the current component in the UI
@@ -14256,8 +14406,6 @@ class Layout extends DesignerPanel {
   }
 }
 TreeBase.register(Layout, "Layout");
-
-const actions = '';
 
 class Actions extends DesignerPanel {
   name = new String$1("Actions");
@@ -14537,8 +14685,6 @@ class ActionUpdate extends TreeBase {
   }
 }
 TreeBase.register(ActionUpdate, "ActionUpdate");
-
-const hotkeys = '';
 
 /** Global Hot Keys for keyboard access */
 
@@ -15115,10 +15261,6 @@ var timeoutProvider = {
         var args = [];
         for (var _i = 2; _i < arguments.length; _i++) {
             args[_i - 2] = arguments[_i];
-        }
-        var delegate = timeoutProvider.delegate;
-        if (delegate === null || delegate === void 0 ? void 0 : delegate.setTimeout) {
-            return delegate.setTimeout.apply(delegate, __spreadArray([handler, timeout], __read(args)));
         }
         return setTimeout.apply(void 0, __spreadArray([handler, timeout], __read(args)));
     },
@@ -15733,10 +15875,6 @@ var intervalProvider = {
         var args = [];
         for (var _i = 2; _i < arguments.length; _i++) {
             args[_i - 2] = arguments[_i];
-        }
-        var delegate = intervalProvider.delegate;
-        if (delegate === null || delegate === void 0 ? void 0 : delegate.setInterval) {
-            return delegate.setInterval.apply(delegate, __spreadArray([handler, timeout], __read(args)));
         }
         return setInterval.apply(void 0, __spreadArray([handler, timeout], __read(args)));
     },
@@ -17123,8 +17261,6 @@ const defaultMethods = {
   ],
 };
 
-const method = '';
-
 /**
  * Conditionally show an indicator with a title
  *
@@ -17403,7 +17539,7 @@ class Method extends TreeBase {
 
   /** Refresh the pattern and other state on redraw */
   refresh() {
-    this.pattern.refresh();
+    if (this.pattern) this.pattern.refresh();
   }
 }
 TreeBase.register(Method, "Method");
@@ -17575,8 +17711,6 @@ class HandlerResponse extends TreeBaseSwitchable {
   }
 }
 TreeBase.register(HandlerResponse, "HandlerResponse");
-
-const pattern = '';
 
 const defaultPatterns = {
   className: "PatternList",
@@ -17908,6 +18042,7 @@ class PatternManager extends PatternBase {
     group: "pattern-active",
     label: "Default",
   });
+  StartVisible = new Boolean$1(false);
 
   settingsSummary() {
     const { Name, Active } = this;
@@ -17917,11 +18052,12 @@ class PatternManager extends PatternBase {
   }
 
   settingsDetails() {
-    const { Cue, Name, Active } = this;
+    const { Cue, Name, Active, StartVisible } = this;
     return [
       html`
         <div>
           ${Name.input()} ${Active.input()} ${Cue.input()}
+          ${StartVisible.input()}
           <button
             @click=${() => {
               this.animate();
@@ -17985,7 +18121,9 @@ class PatternManager extends PatternBase {
       members = buttons;
     }
     this.targets = new Group(members, { ...this.propsAsObject, Cycles: 1 });
-    this.stack = [{ group: this.targets, index: 0 }];
+    this.stack = [
+      { group: this.targets, index: this.StartVisible.value ? 0 : -1 },
+    ];
     this.cue();
 
     // stop any running animations
@@ -19225,8 +19363,6 @@ class TimerHandler extends Handler {
 }
 TreeBase.register(TimerHandler, "TimerHandler");
 
-const cues = '';
-
 const defaultCues = {
   className: "CueList",
   props: {
@@ -19243,7 +19379,7 @@ const defaultCues = {
         Name: "red overlay",
         Key: "idl7w16hghqop9hcgn95",
         CueType: "CueOverlay",
-        Default: true,
+        Default: "true",
         Color: "red",
         Opacity: "0.2",
       },
@@ -19255,11 +19391,11 @@ const defaultCues = {
         Name: "fill",
         Key: "idl7ysqw4agxg63qvx4j5",
         CueType: "CueFill",
-        Default: false,
+        Default: "false",
         Color: "#7BAFD4",
         Opacity: "0.3",
         Direction: "top",
-        Repeat: false,
+        Repeat: "false",
       },
       children: [],
     },
@@ -19269,9 +19405,9 @@ const defaultCues = {
         Name: "circle",
         Key: "idl7ythslqew02w4pom29",
         CueType: "CueCircle",
-        Default: false,
+        Default: "false",
         Color: "#7BAFD4",
-        Opacity: 0.7,
+        Opacity: "0.7",
       },
       children: [],
     },
@@ -19281,7 +19417,7 @@ const defaultCues = {
         Name: "yellow overlay using CSS",
         Key: "idl7qm4cs28fh2ogf4ni",
         CueType: "CueCss",
-        Default: false,
+        Default: "false",
         Code: `button[cue="$Key"] {
   position: relative;
   border-color: yellow;
@@ -20574,8 +20710,6 @@ TrackyMouse.init = function (div) {
   }
 };
 
-const trackyMouse = '';
-
 class HeadMouse extends TreeBase {
   stateName = new String$1("$HeadMouse");
 
@@ -20668,10 +20802,6 @@ class HeadMouse extends TreeBase {
   }
 }
 TreeBase.register(HeadMouse, "HeadMouse");
-
-const toolbar = '';
-
-const menu = '';
 
 /** A menu object with these features:
  *  * Accessible
@@ -20888,64 +21018,37 @@ class Menu {
   };
 }
 
-const serviceWorker = '';
-
-// Interface to the service worker for offline
-
-
-/** A pointer to the service worker
- * @type {ServiceWorkerRegistration} */
 let registration;
-
-/**
- * Ask the service worker to check for an update
- */
 function workerCheckForUpdate() {
   if (registration) {
     registration.update();
   }
 }
-
-/**
- * Show the update button when an update is available
- */
 function signalUpdateAvailable() {
   document.body.classList.add("update-available");
 }
-
-// only start the service worker in production mode
 if (navigator.serviceWorker) {
   window.addEventListener("load", async () => {
     registration = await navigator.serviceWorker.register("service-worker.js", {
-      scope: "/OS-DPI/",
+      scope: "/OS-DPI/"
     });
-    // ensure the case when the updatefound event was missed is also handled
-    // by re-invoking the prompt when there's a waiting Service Worker
     if (registration.waiting) {
       signalUpdateAvailable();
     }
-
-    // detect Service Worker update available and wait for it to become installed
     registration.addEventListener("updatefound", () => {
       if (registration.installing) {
-        // wait until the new Service worker is actually installed (ready to take over)
         registration.installing.addEventListener("statechange", () => {
           if (registration.waiting) {
-            // if there's an existing controller (previous Service Worker), show the prompt
             if (navigator.serviceWorker.controller) {
               signalUpdateAvailable();
             } else {
-              // otherwise it's the first install, nothing to do
               console.log("Service Worker initialized for the first time");
             }
           }
         });
       }
     });
-
     let refreshing = false;
-
-    // detect controller change and refresh the page
     navigator.serviceWorker.addEventListener("controllerchange", () => {
       if (!refreshing) {
         window.location.reload();
@@ -20954,20 +21057,14 @@ if (navigator.serviceWorker) {
     });
   });
 }
-
-/**
- * Return a button for updating the service worker
- * CSS assures this is only visible when an update is available
- * @returns {Hole}
- */
 function workerUpdateButton() {
   return html`<button
     id="update-available-button"
     @click=${() => {
-      if (registration && registration.waiting) {
-        registration.waiting.postMessage("SKIP_WAITING");
-      }
-    }}
+    if (registration && registration.waiting) {
+      registration.waiting.postMessage("SKIP_WAITING");
+    }
+  }}
     title="Click to update the app"
   >
     Update
@@ -21193,6 +21290,13 @@ function getFileMenuItems(bar) {
       },
     }),
     new MenuItem({
+      label: "Refetch design",
+      callback: async () => {
+        await db.reloadDesignFromOriginalURL();
+        console.log("refetched");
+      },
+    }),
+    new MenuItem({
       label: "Load Sheet",
       title: "Load a spreadsheet of content",
       divider: "Content",
@@ -21314,12 +21418,18 @@ async function copyComponent(cut = false) {
 }
 
 function getEditMenuItems() {
+  // Figure out which tab is active
+  const { designer } = Globals;
+  const panel = designer.currentPanel;
+
   let items = [
     new MenuItem({
       label: "Undo",
-      callback: () => {
-        Globals.designer.currentPanel?.undo();
-      },
+      callback: panel?.backup.canUndo ? () => panel?.undo() : undefined,
+    }),
+    new MenuItem({
+      label: "Redo",
+      callback: panel?.backup.canRedo ? () => panel?.redo() : undefined,
     }),
     new MenuItem({
       label: "Copy",
@@ -21604,8 +21714,6 @@ class ToolBar extends TreeBase {
 }
 TreeBase.register(ToolBar, "ToolBar");
 
-const colors = '';
-
 /** let me wait for the page to load */
 const pageLoaded = new Promise((resolve) => {
   window.addEventListener("load", () => {
@@ -21618,11 +21726,14 @@ const pageLoaded = new Promise((resolve) => {
  */
 async function start() {
   let editing = true;
-  if (window.location.search && !window.location.hash.slice(1)) {
+  if (window.location.search) {
     const params = new URLSearchParams(window.location.search);
     const fetch = params.get("fetch");
+    console.log({ fetch });
     if (fetch) {
-      await wait(db.readDesignFromURL(fetch));
+      await wait(
+        db.readDesignFromURL(fetch, window.location.hash.slice(1)),
+      );
       editing = params.get("edit") !== null;
       window.history.replaceState(
         {},
@@ -21652,7 +21763,6 @@ async function start() {
   Globals.restart = async () => {
     // tear down any existing event handlers before restarting
     Globals.method.stop();
-    TreeBase.treeBaseCounter = 0;
     start();
   };
   Globals.error = new Messages();
@@ -21696,15 +21806,30 @@ async function start() {
   monitor.init();
 
   function renderUI() {
-    const startTime = performance.now();
-    document.body.classList.toggle("designing", Globals.state.get("editing"));
-    // clear the changed flag, TODO there must be a better way!
+    // report the time to draw the frame
+    if (location.host.startsWith("localhost")) {
+      const startTime = performance.now();
+      const timer = document.getElementById("timer");
+      if (timer) {
+        // I think this makes it wait until all drawing is done.
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            timer.innerText = `${(performance.now() - startTime).toFixed(0)}ms`;
+          });
+        });
+      }
+    }
+    // the real update begins here
+    const editing = Globals.state.get("editing");
+    document.body.classList.toggle("designing", editing);
     safeRender("cues", Globals.cues);
     safeRender("UI", Globals.tree);
-    safeRender("toolbar", toolbar);
-    safeRender("tabs", Globals.designer);
-    safeRender("monitor", monitor);
-    safeRender("errors", Globals.error);
+    if (editing) {
+      safeRender("toolbar", toolbar);
+      safeRender("tabs", Globals.designer);
+      safeRender("monitor", monitor);
+      safeRender("errors", Globals.error);
+    }
     postRender();
     Globals.method.refresh();
     // clear the accessed bits for the next cycle
@@ -21712,12 +21837,6 @@ async function start() {
     // clear the updated bits for the next cycle
     Globals.state.clearUpdated();
 
-    if (location.host.startsWith("localhost")) {
-      const timer = document.getElementById("timer");
-      if (timer) {
-        timer.innerText = (performance.now() - startTime).toFixed(0);
-      }
-    }
     workerCheckForUpdate();
   }
   Globals.state.observe(debounce(renderUI));
@@ -21761,3 +21880,9 @@ window.addEventListener("resize", () => {
 
 start();
 //# sourceMappingURL=index.js.map
+function __vite__mapDeps(indexes) {
+  if (!__vite__mapDeps.viteFileDeps) {
+    __vite__mapDeps.viteFileDeps = []
+  }
+  return indexes.map((i) => __vite__mapDeps.viteFileDeps[i])
+}

@@ -35,9 +35,11 @@ div#UI {
   position: absolute;
   left: 0;
   top: 0;
-  width: 5em;
   padding: 0.5em;
   z-index: 10;
+  font-size: 0.6em;
+  background-color: white;
+  border: 1px solid var(--brand);
 }
 div#ErrorReport:empty {
   display: none;
@@ -284,6 +286,11 @@ table.GridFilter td:nth-child(4) label.labeledInput {
   flex-direction: column;
 }
 .grid {
+  height: 100%;
+  width: 100%;
+}
+
+.grid > div {
   display: grid;
   grid-auto-rows: 1fr;
   height: 100%;
@@ -781,12 +788,12 @@ details summary > * {
 #designer .settings[aria-selected="true"] {
   background-color: var(--surface1);
   color: var(--text1);
-  border: 4px dashed var(--brand);
+  outline: 4px dashed var(--brand);
 }
 #designer .settings:has(.settings [aria-selected="true"]) {
   background-color: var(--surface2);
   color: var(--text2);
-  border: 0px;
+  outline: 0px;
   box-shadow: none;
 }
 
@@ -959,38 +966,36 @@ details summary > * {
   vertical-align: bottom;
   margin-right: 0.5em;
 }
-  #PleaseWait {
-    position: fixed;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgb(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-    font-size: 2em;
-    transition: all 0.5s ease-in;
-    opacity: 1;
-  }
+#PleaseWait {
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgb(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  font-size: 2em;
+  transition: all 0.5s ease-in;
+  opacity: 1;
+  top: 0;
+  left: 0;
+}
 
-  #PleaseWait:empty {
-    background-color: rgb(0, 0, 0, 0);
-    opacity: 0;
-  }
+#PleaseWait:empty {
+  background-color: rgb(0, 0, 0, 0);
+  opacity: 0;
+}
 
-  #PleaseWait div {
-    padding: 5em;
-    border: 1px solid black;
-    background-color: white;
-  }
+#PleaseWait div {
+  padding: 5em;
+  border: 1px solid black;
+  background-color: white;
+}
 
-  #PleaseWait .message {
-    color: blue;
-  }
-
-  #PleaseWait .error {
-    color: red;
-  }
+#PleaseWait .message {
+  color: blue;
+}
 div.logging-indicator {
   position: absolute;
   top: 2px;
@@ -1108,12 +1113,10 @@ div.actions div.scroll {
   background: white;
 }
 
-#designer .actions tbody {
+#designer .actions tbody.settings {
   border-top: 2px solid black;
   border-left: 2px solid black;
   border-right: 2px solid black;
-  position: relative;
-  z-index: 10;
 }
 .actions thead {
   border-top: 0px;
