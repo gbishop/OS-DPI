@@ -8067,8 +8067,6 @@ class Prop {
         const v = this.compiled(context);
         this._value = this.cast(v);
       }
-    } else if (this.isFormulaByDefault) {
-      this._value = this.options.valueWhenEmpty ?? "";
     }
     return this._value;
   }
@@ -8178,9 +8176,8 @@ class TypeSelect extends Select {
     /* Magic happens here! The replace method on a TreeBaseSwitchable replaces the
      * node with a new one to allow type switching in place
      * */
-    if (this.container instanceof TreeBaseSwitchable) {
+    if (this.container instanceof TreeBaseSwitchable)
       this.container.replace(this._value);
-    }
   }
 }
 
@@ -8832,6 +8829,47 @@ class WeakValue extends Map {
 }
 
 /**
+ * Create an object that is persisted to sessionStorage
+ *
+ * @template {Object} T
+ * @param {string} key
+ * @param {T} initial
+ * @returns {T} - same type as the initial value
+ */
+function session(key, initial) {
+  // import values from storage if present
+  const json = window.sessionStorage.getItem(key);
+  if (json) {
+    const values = JSON.parse(json);
+    if (!(values instanceof Object)) throw TypeError();
+    // validate the value from storage
+    if (sameObjectShape(initial, values)) initial = values;
+  }
+  if (!(initial instanceof Object)) throw TypeError();
+  return new Proxy(initial, {
+    set(obj, prop, value) {
+      const r = Reflect.set(obj, prop, value);
+      const json = JSON.stringify(obj);
+      window.sessionStorage.setItem(key, json);
+      return r;
+    },
+  });
+}
+
+/**
+ * Compare objects to see if they have the same keys and types
+ * @param {Object} a
+ * @param {Object} b
+ * @returns {boolean}
+ */
+function sameObjectShape(a, b) {
+  for (const key of Object.keys(a)) {
+    if (typeof a[key] !== typeof b[key]) return false;
+  }
+  return true;
+}
+
+/**
  * Provide user friendly names for the components
  */
 
@@ -8923,7 +8961,10 @@ class TreeBase {
   static treeBaseCounter = 0;
   id = `TreeBase-${TreeBase.treeBaseCounter++}`;
 
-  settingsDetailsOpen = false;
+  // values here are stored in sessionStorage
+  persisted = session(this.id, {
+    settingsDetailsOpen: false,
+  });
 
   // map from id to the component
   static idMap = new WeakValue();
@@ -9128,6 +9169,7 @@ class TreeBase {
       <details
         class=${this.className}
         id=${detailsId}
+        ?open=${this.persisted.settingsDetailsOpen}
         @click=${(/** @type {PointerEvent} */ event) => {
           if (
             !focused &&
@@ -9143,7 +9185,7 @@ class TreeBase {
         }}
         @toggle=${(/** @type {Event} */ event) => {
           if (event.target instanceof HTMLDetailsElement)
-            this.settingsDetailsOpen = event.target.open;
+            this.persisted.settingsDetailsOpen = event.target.open;
         }}
       >
         <summary
@@ -9386,38 +9428,22 @@ class TreeBaseSwitchable extends TreeBase {
   }
 
   /** Replace this node with one of a compatible type
-   * @param {string} className
-   * @param {Object} [props] - used in undo to reset the props
-   * */
-  replace(className, props) {
+   * @param {string} className */
+  replace(className) {
     if (!this.parent) return;
     if (this.className == className) return;
-
-    let update = true;
     // extract the values of the old props
-    if (!props) {
-      props = Object.fromEntries(
-        Object.entries(this)
-          .filter(([_, prop]) => prop instanceof Prop)
-          .map(([name, prop]) => [name, prop.value]),
-      );
-    } else {
-      update = false;
-    }
+    const props = Object.fromEntries(
+      Object.entries(this)
+        .filter(([_, prop]) => prop instanceof Prop)
+        .map(([name, prop]) => [name, prop.value]),
+    );
     const replacement = TreeBase.create(className, null, props);
     replacement.init();
-    if (!(replacement instanceof TreeBaseSwitchable)) {
-      throw new Error(
-        `Invalid TreeBaseSwitchable replacement ${this.className} ${replacement.className}`,
-      );
-    }
     const index = this.parent.children.indexOf(this);
     this.parent.children[index] = replacement;
     replacement.parent = this.parent;
-    if (update) {
-      console.log("update");
-      this.update();
-    }
+    this.update();
   }
 }
 
@@ -10335,8 +10361,6 @@ class Grid extends TreeBase {
           if (!itemMap.has(key)) itemMap.set(key, item);
         }
       }
-      rows = maxRow;
-      columns = maxColumn;
       for (let row = 1; row <= rows; row++) {
         for (let column = 1; column <= columns; column++) {
           if (maxPage > 1 && row == rows && column == columns) {
@@ -10466,6 +10490,7 @@ TreeBase.register(Display, "Display");
 let Option$1 = class Option extends TreeBase {
   name = new String$1("", { hiddenLabel: true });
   value = new String$1("", { hiddenLabel: true });
+  cache = {};
 };
 TreeBase.register(Option$1, "Option");
 
@@ -12547,49 +12572,46 @@ function unzipSync(data, opts) {
 
 const e=(()=>{if("undefined"==typeof self)return !1;if("top"in self&&self!==top)try{top.window.document._=0;}catch(e){return !1}return "showOpenFilePicker"in self})(),t=e?Promise.resolve().then(function(){return l}):Promise.resolve().then(function(){return v});async function n(...e){return (await t).default(...e)}e?Promise.resolve().then(function(){return y}):Promise.resolve().then(function(){return b});const a=e?Promise.resolve().then(function(){return m}):Promise.resolve().then(function(){return k});async function o(...e){return (await a).default(...e)}const s=async e=>{const t=await e.getFile();return t.handle=e,t};var c=async(e=[{}])=>{Array.isArray(e)||(e=[e]);const t=[];e.forEach((e,n)=>{t[n]={description:e.description||"Files",accept:{}},e.mimeTypes?e.mimeTypes.map(r=>{t[n].accept[r]=e.extensions||[];}):t[n].accept["*/*"]=e.extensions||[];});const n=await window.showOpenFilePicker({id:e[0].id,startIn:e[0].startIn,types:t,multiple:e[0].multiple||!1,excludeAcceptAllOption:e[0].excludeAcceptAllOption||!1}),r=await Promise.all(n.map(s));return e[0].multiple?r:r[0]},l={__proto__:null,default:c};function u(e){function t(e){if(Object(e)!==e)return Promise.reject(new TypeError(e+" is not an object."));var t=e.done;return Promise.resolve(e.value).then(function(e){return {value:e,done:t}})}return u=function(e){this.s=e,this.n=e.next;},u.prototype={s:null,n:null,next:function(){return t(this.n.apply(this.s,arguments))},return:function(e){var n=this.s.return;return void 0===n?Promise.resolve({value:e,done:!0}):t(n.apply(this.s,arguments))},throw:function(e){var n=this.s.return;return void 0===n?Promise.reject(e):t(n.apply(this.s,arguments))}},new u(e)}const p=async(e,t,n=e.name,r)=>{const i=[],a=[];var o,s=!1,c=!1;try{for(var l,d=function(e){var t,n,r,i=2;for("undefined"!=typeof Symbol&&(n=Symbol.asyncIterator,r=Symbol.iterator);i--;){if(n&&null!=(t=e[n]))return t.call(e);if(r&&null!=(t=e[r]))return new u(t.call(e));n="@@asyncIterator",r="@@iterator";}throw new TypeError("Object is not async iterable")}(e.values());s=!(l=await d.next()).done;s=!1){const o=l.value,s=`${n}/${o.name}`;"file"===o.kind?a.push(o.getFile().then(t=>(t.directoryHandle=e,t.handle=o,Object.defineProperty(t,"webkitRelativePath",{configurable:!0,enumerable:!0,get:()=>s})))):"directory"!==o.kind||!t||r&&r(o)||i.push(p(o,t,s,r));}}catch(e){c=!0,o=e;}finally{try{s&&null!=d.return&&await d.return();}finally{if(c)throw o}}return [...(await Promise.all(i)).flat(),...await Promise.all(a)]};var d=async(e={})=>{e.recursive=e.recursive||!1,e.mode=e.mode||"read";const t=await window.showDirectoryPicker({id:e.id,startIn:e.startIn,mode:e.mode});return (await(await t.values()).next()).done?[t]:p(t,e.recursive,void 0,e.skipDirectory)},y={__proto__:null,default:d},f=async(e,t=[{}],n=null,r=!1,i=null)=>{Array.isArray(t)||(t=[t]),t[0].fileName=t[0].fileName||"Untitled";const a=[];let o=null;if(e instanceof Blob&&e.type?o=e.type:e.headers&&e.headers.get("content-type")&&(o=e.headers.get("content-type")),t.forEach((e,t)=>{a[t]={description:e.description||"Files",accept:{}},e.mimeTypes?(0===t&&o&&e.mimeTypes.push(o),e.mimeTypes.map(n=>{a[t].accept[n]=e.extensions||[];})):o?a[t].accept[o]=e.extensions||[]:a[t].accept["*/*"]=e.extensions||[];}),n)try{await n.getFile();}catch(e){if(n=null,r)throw e}const s=n||await window.showSaveFilePicker({suggestedName:t[0].fileName,id:t[0].id,startIn:t[0].startIn,types:a,excludeAcceptAllOption:t[0].excludeAcceptAllOption||!1});!n&&i&&i(s);const c=await s.createWritable();if("stream"in e){const t=e.stream();return await t.pipeTo(c),s}return "body"in e?(await e.body.pipeTo(c),s):(await c.write(await e),await c.close(),s)},m={__proto__:null,default:f},w=async(e=[{}])=>(Array.isArray(e)||(e=[e]),new Promise((t,n)=>{const r=document.createElement("input");r.type="file";const i=[...e.map(e=>e.mimeTypes||[]),...e.map(e=>e.extensions||[])].join();r.multiple=e[0].multiple||!1,r.accept=i||"",r.style.display="none",document.body.append(r);const a=e=>{"function"==typeof o&&o(),t(e);},o=e[0].legacySetup&&e[0].legacySetup(a,()=>o(n),r),s=()=>{window.removeEventListener("focus",s),r.remove();};r.addEventListener("click",()=>{window.addEventListener("focus",s);}),r.addEventListener("change",()=>{window.removeEventListener("focus",s),r.remove(),a(r.multiple?Array.from(r.files):r.files[0]);}),"showPicker"in HTMLInputElement.prototype?r.showPicker():r.click();})),v={__proto__:null,default:w},h=async(e=[{}])=>(Array.isArray(e)||(e=[e]),e[0].recursive=e[0].recursive||!1,new Promise((t,n)=>{const r=document.createElement("input");r.type="file",r.webkitdirectory=!0;const i=e=>{"function"==typeof a&&a(),t(e);},a=e[0].legacySetup&&e[0].legacySetup(i,()=>a(n),r);r.addEventListener("change",()=>{let t=Array.from(r.files);e[0].recursive?e[0].recursive&&e[0].skipDirectory&&(t=t.filter(t=>t.webkitRelativePath.split("/").every(t=>!e[0].skipDirectory({name:t,kind:"directory"})))):t=t.filter(e=>2===e.webkitRelativePath.split("/").length),i(t);}),"showPicker"in HTMLInputElement.prototype?r.showPicker():r.click();})),b={__proto__:null,default:h},P=async(e,t={})=>{Array.isArray(t)&&(t=t[0]);const n=document.createElement("a");let r=e;"body"in e&&(r=await async function(e,t){const n=e.getReader(),r=new ReadableStream({start:e=>async function t(){return n.read().then(({done:n,value:r})=>{if(!n)return e.enqueue(r),t();e.close();})}()}),i=new Response(r),a=await i.blob();return n.releaseLock(),new Blob([a],{type:t})}(e.body,e.headers.get("content-type"))),n.download=t.fileName||"Untitled",n.href=URL.createObjectURL(await r);const i=()=>{"function"==typeof a&&a();},a=t.legacySetup&&t.legacySetup(i,()=>a(),n);return n.addEventListener("click",()=>{setTimeout(()=>URL.revokeObjectURL(n.href),3e4),i();}),n.click(),null},k={__proto__:null,default:P};
 
+const N_RECORDS_SAVE = 10;
+const N_RECORDS_MAX = 20;
+
 class DB {
   constructor() {
-    this.dbPromise = openDB("os-dpi", 5, {
-      async upgrade(db, oldVersion, newVersion, transaction) {
-        console.log("upgrade", { oldVersion, newVersion });
-        let store5 = db.createObjectStore("store5", {
-          keyPath: ["name", "type"],
-        });
-        store5.createIndex("by-name", "name");
-        if (oldVersion == 4) {
-          // copy data from old store to new
-          const store4 = transaction.objectStore("store");
-          for await (const cursor of store4) {
-            const record4 = cursor.value;
-            console.log(record4);
-            store5.put(record4);
+    this.dbPromise = openDB("os-dpi", 4, {
+      upgrade(db, oldVersion, newVersion) {
+        if (oldVersion && oldVersion < 3) {
+          for (const name of ["store", "media", "saved", "url"]) {
+            try {
+              db.deleteObjectStore(name);
+            } catch (e) {
+              // ignore the error
+            }
           }
-          // db.deleteObjectStore("store");
-          // add an etag index to url store
-          transaction.objectStore("url").createIndex("by-etag", "etag");
-        } else if (oldVersion < 4) {
+        } else if (oldVersion == 3) {
+          db.deleteObjectStore("images");
+        }
+        if (oldVersion < 3) {
+          let objectStore = db.createObjectStore("store", {
+            keyPath: "id",
+            autoIncrement: true,
+          });
+          objectStore.createIndex("by-name", "name");
+          objectStore.createIndex("by-name-type", ["name", "type"]);
+        }
+        if (newVersion && newVersion >= 4) {
           db.createObjectStore("media");
+        }
+        if (oldVersion < 3) {
+          // keep track of the name and ETag (if any) of designs that have been saved
           let savedStore = db.createObjectStore("saved", {
             keyPath: "name",
           });
           savedStore.createIndex("by-etag", "etag");
           // track etags for urls
-          const urlStore = db.createObjectStore("url", {
+          db.createObjectStore("url", {
             keyPath: "url",
           });
-          // add an etag index to the url store
-          urlStore.createIndex("by-etag", "etag");
         }
-      },
-      blocked(currentVersion, blockedVersion, event) {
-        console.log("blocked", { currentVersion, blockedVersion, event });
-      },
-      blocking(currentVersion, blockedVersion, event) {
-        console.log("blocking", { currentVersion, blockedVersion, event });
-        window.location.reload();
-      },
-      terminated() {
-        console.log("terminated");
       },
     });
     this.updateListeners = [];
@@ -12614,8 +12636,8 @@ class DB {
   async renameDesign(newName) {
     const db = await this.dbPromise;
     newName = await this.uniqueName(newName);
-    const tx = db.transaction(["store5", "media", "saved"], "readwrite");
-    const index = tx.objectStore("store5").index("by-name");
+    const tx = db.transaction(["store", "media", "saved"], "readwrite");
+    const index = tx.objectStore("store").index("by-name");
     for await (const cursor of index.iterate(this.designName)) {
       const record = { ...cursor.value };
       record.name = newName;
@@ -12649,7 +12671,7 @@ class DB {
    */
   async names() {
     const db = await this.dbPromise;
-    const index = db.transaction("store5", "readonly").store.index("by-name");
+    const index = db.transaction("store", "readonly").store.index("by-name");
     const result = [];
     for await (const cursor of index.iterate(null, "nextunique")) {
       result.push(/** @type {string} */ (cursor.key));
@@ -12706,10 +12728,21 @@ class DB {
    */
   async read(type, defaultValue = {}) {
     const db = await this.dbPromise;
-    const record = await db.get("store5", [this.designName, type]);
-    const data = record ? record.data : defaultValue;
-    console.log("read", data);
-    return data;
+    const index = db
+      .transaction("store", "readonly")
+      .store.index("by-name-type");
+    const cursor = await index.openCursor([this.designName, type], "prev");
+    if (cursor) {
+      const data = cursor.value.data;
+      if (
+        (Array.isArray(defaultValue) && !Array.isArray(data)) ||
+        typeof data != typeof defaultValue
+      ) {
+        return defaultValue;
+      }
+      return data;
+    }
+    return defaultValue;
   }
 
   /**
@@ -12719,7 +12752,17 @@ class DB {
    * @returns {Promise<Object[]>}
    */
   async readAll(type) {
-    return [this.read(type)];
+    const db = await this.dbPromise;
+    const index = db
+      .transaction("store", "readonly")
+      .store.index("by-name-type");
+    const key = [this.designName, type];
+    const result = [];
+    for await (const cursor of index.iterate(key)) {
+      const data = cursor.value.data;
+      result.push(data);
+    }
+    return result;
   }
 
   /** Add a new record
@@ -12729,12 +12772,37 @@ class DB {
   async write(type, data) {
     const db = await this.dbPromise;
     // do all this in a transaction
-    const tx = db.transaction(["store5", "saved"], "readwrite");
+    const tx = db.transaction(["store", "saved"], "readwrite");
     // note that this design has been updated
     await tx.objectStore("saved").delete(this.designName);
     // add the record to the store
-    const store = tx.objectStore("store5");
+    const store = tx.objectStore("store");
     await store.put({ name: this.designName, type, data });
+
+    let n_max = N_RECORDS_MAX; // zero to prevent limiting
+    let n_save = N_RECORDS_SAVE;
+    if (type == "content") {
+      n_max = n_save = 1; // only save 1 content record
+    } else if (type == "log") {
+      n_max = n_save = 0; // don't limit log records
+    }
+
+    /* Only keep the last few records per type */
+    const index = store.index("by-name-type");
+    const key = [this.designName, type];
+    if (n_max > 0) {
+      // count how many we have
+      let count = await index.count(key);
+      if (count > n_max) {
+        // get the number to delete
+        let toDelete = count - n_save;
+        // we're getting them in order so this will delete the oldest ones
+        for await (const cursor of index.iterate(key)) {
+          if (--toDelete <= 0) break;
+          cursor.delete();
+        }
+      }
+    }
     await tx.done;
 
     this.notify({ action: "update", name: this.designName });
@@ -12748,7 +12816,12 @@ class DB {
    */
   async clear(type) {
     const db = await this.dbPromise;
-    return db.delete("store5", [this.designName, type]);
+    const tx = db.transaction("store", "readwrite");
+    const index = tx.store.index("by-name-type");
+    for await (const cursor of index.iterate([this.designName, type])) {
+      cursor.delete();
+    }
+    await tx.done;
   }
 
   /** Undo by deleting the most recent record
@@ -12758,7 +12831,7 @@ class DB {
     if (type == "content") return;
     const db = await this.dbPromise;
     const index = db
-      .transaction("store5", "readwrite")
+      .transaction("store", "readwrite")
       .store.index("by-name-type");
     const cursor = await index.openCursor([this.designName, type], "prev");
     if (cursor) await cursor.delete();
@@ -12777,42 +12850,14 @@ class DB {
 
   /** Read a design from a URL
    * @param {string} url
-   * @param {string} [name]
-   * @returns {Promise<boolean>}
    */
-  async readDesignFromURL(url, name = "") {
-    console.log({ url, name });
-    let design_url = url;
-
-    // allow for the url to point to HTML that contains the link
-    if (!url.match(/.*\.(osdpi|zip)$/)) {
-      console.log("get page at", url);
-      const response = await fetch("https://gb.cs.unc.edu/cors/", {
-        headers: { "Target-URL": url },
-      });
-      if (!response.ok) {
-        throw new Error(`Fetching the URL (${url}) failed: ${response.status}`);
-      }
-      const html = await response.text();
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, "text/html");
-      // find the first link that matches the name
-      const link =
-        doc.querySelector(`a[href$="${name}.zip"]`) ||
-        doc.querySelector(`a[href$="${name}.osdpi"]`);
-      console.log({ link });
-      if (link instanceof HTMLAnchorElement) {
-        design_url = link.href;
-      } else {
-        throw new Error(`Invalid URL ${url}`);
-      }
-    }
-    console.log({ design_url });
+  async readDesignFromURL(url) {
     const db = await this.dbPromise;
     // have we seen this url before?
-    const urlRecord = await db.get("url", design_url);
+    const urlRecord = await db.get("url", url);
     /** @type {HeadersInit} */
     const headers = {}; // for the fetch
+    let name = "";
     if (urlRecord) {
       /** @type {string} */
       const etag = urlRecord.etag;
@@ -12825,83 +12870,41 @@ class DB {
         name = savedKey.toString();
       }
     }
-    headers["Target-URL"] = design_url;
-    console.log({ headers });
 
-    const response = await fetch("https://gb.cs.unc.edu/cors/", { headers });
-    console.log({ response });
+    const response = await fetch(url, { headers });
     if (response.status == 304) {
       // we already have it
       this.designName = name;
-      console.log("unchanged");
-      return false;
+      return;
     }
     if (!response.ok) {
       throw new Error(`Fetching the URL (${url}) failed: ${response.status}`);
     }
-
     const etag = response.headers.get("ETag") || "";
-    console.log({ etag });
-    await db.put("url", { url: design_url, etag });
+    await db.put("url", { url, etag });
 
-    if (!name) {
-      const urlParts = new URL(design_url, window.location.origin);
-      const pathParts = urlParts.pathname.split("/");
-      if (
-        pathParts.length > 0 &&
-        (pathParts[pathParts.length - 1].endsWith(".osdpi") ||
-          pathParts[pathParts.length - 1].endsWith(".zip"))
-      ) {
-        name = pathParts[pathParts.length - 1];
-      } else {
-        throw new Error(`Design files should have .osdpi suffix`);
-      }
+    const urlParts = new URL(url, window.location.origin);
+    const pathParts = urlParts.pathname.split("/");
+    if (
+      pathParts.length > 0 &&
+      pathParts[pathParts.length - 1].endsWith(".osdpi")
+    ) {
+      name = pathParts[pathParts.length - 1];
+    } else {
+      throw new Error(`Design files should have .osdpi suffix`);
     }
 
-    console.log("blob");
     const blob = await response.blob();
-    console.log("got blob");
-
     // parse the URL
     return this.readDesignFromBlob(blob, name, etag);
-  }
-
-  /**
-   * Reload the design from a URL if and only if:
-   * 1. It was loaded from a URL
-   * 2. It has not been edited
-   * 3. The ETag has changed
-   */
-  async reloadDesignFromOriginalURL() {
-    const db = await this.dbPromise;
-
-    const name = this.designName;
-
-    // check saved
-    const savedRecord = await db.get("saved", name);
-    console.log({ savedRecord });
-    if (savedRecord && savedRecord.etag && savedRecord.etag != "none") {
-      // lookup the URL
-      const etag = savedRecord.etag;
-      const savedKey = await db.getKeyFromIndex("url", "by-etag", etag);
-      console.log({ etag, savedKey });
-      if (savedKey) {
-        const url = savedKey.toString();
-        console.log({ url });
-        if (await this.readDesignFromURL(url)) {
-          Globals.restart();
-        }
-      }
-    }
   }
 
   /** Read a design from a zip file
    * @param {Blob} blob
    * @param {string} filename
    * @param {string} etag
-   * @returns {Promise<boolean>}
    */
-  async readDesignFromBlob(blob, filename, etag = "") {
+  async readDesignFromBlob(blob, filename, etag = "none") {
     const db = await this.dbPromise;
     this.fileName = filename;
 
@@ -12912,11 +12915,7 @@ class DB {
     // normalize the fileName to make the design name
     let name = this.fileName;
     // make sure it is unique
-    if (!etag) {
-      name = await this.uniqueName(name);
-    } else {
-      name = name.replace(/\.(zip|osdpi)$/, "");
-    }
+    name = await this.uniqueName(name);
 
     this.designName = name;
 
@@ -12953,7 +12952,7 @@ class DB {
     }
     await db.put("saved", { name: this.designName, etag });
     this.notify({ action: "update", name: this.designName });
-    return true;
+    return;
   }
 
   // do this part async to avoid file picker timeout
@@ -13021,7 +13020,7 @@ class DB {
    */
   async unload(name) {
     const db = await this.dbPromise;
-    const tx = db.transaction("store5", "readwrite");
+    const tx = db.transaction("store", "readwrite");
     const index = tx.store.index("by-name");
     for await (const cursor of index.iterate(name)) {
       cursor.delete();
@@ -13273,160 +13272,6 @@ const scriptRel = 'modulepreload';const assetsURL = function(dep) { return "/OS-
     });
 };
 
-/** Implement undo/redo for the designer by comparing the current and previous trees
- *
- * I'm assuming only 1 change has been made since we save after every change.
- */
-
-class UndoRedo {
-  /** @type {ExternalRep[]} */
-  stack = [];
-
-  /* boundary between undo and redo. Points to the first cell beyond the undos */
-  top = 0;
-
-  get canUndo() {
-    return this.top > 1;
-  }
-
-  get canRedo() {
-    return this.top < this.stack.length;
-  }
-
-  /** Save a state for possible undo
-   * @param {ExternalRep} state
-   */
-  save(state) {
-    this.stack.splice(this.top);
-    this.stack.push(state);
-    this.top = this.stack.length;
-  }
-
-  /** Undo
-   * @param {TreeBase} current
-   */
-  undo(current) {
-    if (this.canUndo) {
-      this.restore(current, this.stack[this.top - 2]);
-      this.top--;
-    }
-  }
-
-  /** Redo
-   * @param {TreeBase} current
-   */
-  redo(current) {
-    if (this.canRedo) {
-      this.restore(current, this.stack[this.top]);
-      this.top++;
-    }
-  }
-
-  /**
-   * restore the state of current to previous
-   * @param {TreeBase} current
-   * @param {ExternalRep} previous
-   * @returns {boolean}
-   */
-  restore(current, previous) {
-    if (this.equal(current, previous)) {
-      return false;
-    }
-
-    // we get here because the are different
-    if (current.className != previous.className) {
-      // I think this happens only for the components that dynamically change their class
-      if (current instanceof TreeBaseSwitchable) {
-        // switch the class and force the props to their old values
-        current.replace(previous.className, previous.props);
-      } else {
-        throw new Error(
-          `non switchable class changed ${current.className} ${previous.className}`,
-        );
-      }
-      return true;
-    }
-
-    // check the props
-    const pprops = previous.props;
-    for (let propName in pprops) {
-      if (
-        pprops[propName] &&
-        propName in current &&
-        current[propName].text != pprops[propName]
-      ) {
-        current[propName].set(pprops[propName]);
-        return true;
-      }
-    }
-
-    // check the children
-    const cc = current.children;
-    const pc = previous.children;
-
-    if (cc.length < pc.length) {
-      // determine which one was deleted
-      // it is a merge, first difference is the one that matters
-      for (let i = 0; i < pc.length; i++) {
-        if (!this.equal(cc[i], pc[i])) {
-          // pc[i] is the one that got deleted. Create it
-          const deleted = TreeBase.fromObject(pc[i], current);
-          if (i < pc.length) {
-            // move it
-            deleted.moveTo(i);
-          }
-          return true;
-        }
-      }
-      throw new Error("undo delete failed");
-    } else if (cc.length > pc.length) {
-      // the added one must be last
-      current.children.splice(cc.length - 1, 1);
-      return true;
-    } else {
-      // check for reordering
-      let diffs = [];
-      for (let i = 0; i < cc.length; i++) {
-        if (!this.equal(cc[i], pc[i])) diffs.push(i);
-      }
-      if (diffs.length == 2) {
-        // reordered
-        current.swap(diffs[0], diffs[1]);
-        return true;
-      } else if (diffs.length == 1) {
-        // changed
-        return this.restore(cc[diffs[0]], pc[diffs[0]]);
-      } else if (diffs.length == 0) {
-        return true;
-      } else {
-        throw new Error("too many diffs");
-      }
-    }
-  }
-
-  /** Compare TreeBase and ExternalRep for equality
-   * @param {TreeBase} tb - current value
-   * @param {ExternalRep} er -- previous value
-   * @returns {boolean}
-   */
-  equal(tb, er) {
-    if (!tb || !er) return false;
-
-    if (tb.className != er.className) return false;
-
-    for (const prop in tb.props) {
-      if (prop in er.props) {
-        if (er.props[prop] && tb[prop].text != er.props[prop].toString())
-          return false;
-      }
-    }
-
-    if (tb.children.length != er.children.length) return false;
-
-    return tb.children.every((child, i) => this.equal(child, er.children[i]));
-  }
-}
-
 class Designer extends TreeBase {
   stateName = new String$1("$tabControl");
   background = new String$1("");
@@ -13524,7 +13369,7 @@ class Designer extends TreeBase {
     }
     if (panel.contains(event.target)) {
       const id = event.target.closest("[id]")?.id || "";
-      this.currentPanel.lastFocused = id;
+      this.currentPanel.persisted.lastFocused = id;
       event.target.setAttribute("aria-selected", "true");
     }
 
@@ -13540,11 +13385,11 @@ class Designer extends TreeBase {
     const panel = designer.currentPanel;
 
     // Ask that tab which component is focused
-    if (!panel?.lastFocused) {
+    if (!panel?.persisted.lastFocused) {
       console.log("no lastFocused");
       return null;
     }
-    const component = TreeBase.componentFromId(panel.lastFocused);
+    const component = TreeBase.componentFromId(panel.persisted.lastFocused);
     if (!component) {
       console.log("no component");
       return null;
@@ -13554,8 +13399,8 @@ class Designer extends TreeBase {
 
   restoreFocus() {
     if (this.currentPanel) {
-      if (this.currentPanel.lastFocused) {
-        let targetId = this.currentPanel.lastFocused;
+      if (this.currentPanel.persisted.lastFocused) {
+        let targetId = this.currentPanel.persisted.lastFocused;
         let elem = document.getElementById(targetId);
         if (!elem) {
           // perhaps this one is embeded, look for something that starts with it
@@ -13613,53 +13458,45 @@ class Designer extends TreeBase {
    */
   panelKeyHandler(event) {
     if (event.target instanceof HTMLTextAreaElement) return;
-    if (event.key == "ArrowDown" || event.key == "ArrowUp") {
-      if (event.shiftKey) {
-        // move the component
-        const component = Globals.designer.selectedComponent;
-        if (!component) return;
-        component.moveUpDown(event.key == "ArrowUp");
-        callAfterRender(() => Globals.designer.restoreFocus());
-        this.currentPanel?.update();
-        Globals.state.update();
-      } else {
-        event.preventDefault();
-        // get the components on this panel
-        // todo expand this to all components
-        const components = [
-          ...document.querySelectorAll(".DesignerPanel.ActivePanel .settings"),
-        ];
-        // determine which one contains the focus
-        const focusedComponent = document.querySelector(
-          '.DesignerPanel.ActivePanel .settings:has([aria-selected="true"]):not(:has(.settings [aria-selected="true"]))',
+    if (event.key != "ArrowDown" && event.key != "ArrowUp") return;
+    if (event.shiftKey) {
+      // move the component
+      const component = Globals.designer.selectedComponent;
+      if (!component) return;
+      component.moveUpDown(event.key == "ArrowUp");
+      callAfterRender(() => Globals.designer.restoreFocus());
+      Globals.state.update();
+    } else {
+      event.preventDefault();
+      // get the components on this panel
+      // todo expand this to all components
+      const components = [
+        ...document.querySelectorAll(".DesignerPanel.ActivePanel .settings"),
+      ];
+      // determine which one contains the focus
+      const focusedComponent = document.querySelector(
+        '.DesignerPanel.ActivePanel .settings:has([aria-selected="true"]):not(:has(.settings [aria-selected="true"]))',
+      );
+      if (!focusedComponent) return;
+      // get its index
+      const index = components.indexOf(focusedComponent);
+      // get the next index
+      const nextIndex = Math.min(
+        components.length - 1,
+        Math.max(0, index + (event.key == "ArrowUp" ? -1 : 1)),
+      );
+      if (nextIndex != index) {
+        // focus on the first focusable in the next component
+        const focusable = /** @type {HTMLElement} */ (
+          components[nextIndex].querySelector(
+            "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), " +
+              'textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled]), ' +
+              "summary:not(:disabled)",
+          )
         );
-        if (!focusedComponent) return;
-        // get its index
-        const index = components.indexOf(focusedComponent);
-        // get the next index
-        const nextIndex = Math.min(
-          components.length - 1,
-          Math.max(0, index + (event.key == "ArrowUp" ? -1 : 1)),
-        );
-        if (nextIndex != index) {
-          // focus on the first focusable in the next component
-          const focusable = /** @type {HTMLElement} */ (
-            components[nextIndex].querySelector(
-              "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), " +
-                'textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled]), ' +
-                "summary:not(:disabled)",
-            )
-          );
-          if (focusable) {
-            focusable.focus();
-          }
+        if (focusable) {
+          focusable.focus();
         }
-      }
-    } else if (event.key == "z") {
-      if (event.ctrlKey && event.shiftKey) {
-        this.currentPanel?.redo();
-      } else if (event.ctrlKey) {
-        this.currentPanel?.undo();
       }
     }
   }
@@ -13755,8 +13592,10 @@ class DesignerPanel extends TreeBase {
   tabName = "";
   tabLabel = "";
 
-  settingsDetailsOpen = false;
-  lastFocused = "";
+  persisted = session(this.id, {
+    settingsDetailsOpen: false,
+    lastFocused: "",
+  });
 
   // where to store in the db
   static tableName = "";
@@ -13768,8 +13607,6 @@ class DesignerPanel extends TreeBase {
     // @ts-expect-error
     return this.constructor.tableName;
   }
-
-  backup = new UndoRedo();
 
   /**
    * Load a panel from the database.
@@ -13788,7 +13625,6 @@ class DesignerPanel extends TreeBase {
     const result = this.fromObject(obj);
     if (result instanceof expected) {
       result.configure();
-      result.backup.save(obj);
       return result;
     }
     // I don't think this happens
@@ -13835,16 +13671,10 @@ class DesignerPanel extends TreeBase {
 
   configure() {}
 
-  async onUpdate() {
-    return this.doUpdate(true);
-  }
-
-  async doUpdate(save = true) {
+  onUpdate() {
     const tableName = this.staticTableName;
     if (tableName) {
-      const externalRep = this.toObject();
-      await db.write(tableName, externalRep);
-      if (save) this.backup.save(externalRep);
+      db.write(tableName, this.toObject());
       Globals.state.update();
     }
   }
@@ -13852,18 +13682,8 @@ class DesignerPanel extends TreeBase {
   async undo() {
     const tableName = this.staticTableName;
     if (tableName) {
-      this.backup.undo(this);
-      await this.doUpdate(false);
-      Globals.designer.restoreFocus();
-    }
-  }
-
-  async redo() {
-    const tableName = this.staticTableName;
-    if (tableName) {
-      this.backup.redo(this);
-      await this.doUpdate(false);
-      Globals.designer.restoreFocus();
+      await db.undo(tableName);
+      Globals.restart();
     }
   }
 
@@ -14334,15 +14154,23 @@ class Layout extends DesignerPanel {
       return obj;
     }
     obj = oldToNew(obj);
-    // make sure it begins with Layout
-    if (obj.className != "Layout" && obj.className == "Page") {
-      obj = {
-        className: "Layout",
-        props: { name: "Layout" },
-        children: [obj],
-      };
-    }
-    return obj;
+    // upgrade from the old format
+    return {
+      className: "Layout",
+      props: { name: "Layout" },
+      children: [obj],
+    };
+  }
+
+  toObject() {
+    return this.children[0].toObject();
+  }
+
+  /** Update the state
+   */
+  onUpdate() {
+    db.write("layout", this.children[0].toObject());
+    Globals.state.update();
   }
 
   /** Allow highlighting the current component in the UI
@@ -17540,7 +17368,7 @@ class Method extends TreeBase {
 
   /** Refresh the pattern and other state on redraw */
   refresh() {
-    if (this.pattern) this.pattern.refresh();
+    this.pattern.refresh();
   }
 }
 TreeBase.register(Method, "Method");
@@ -19380,7 +19208,7 @@ const defaultCues = {
         Name: "red overlay",
         Key: "idl7w16hghqop9hcgn95",
         CueType: "CueOverlay",
-        Default: "true",
+        Default: true,
         Color: "red",
         Opacity: "0.2",
       },
@@ -19392,11 +19220,11 @@ const defaultCues = {
         Name: "fill",
         Key: "idl7ysqw4agxg63qvx4j5",
         CueType: "CueFill",
-        Default: "false",
+        Default: false,
         Color: "#7BAFD4",
         Opacity: "0.3",
         Direction: "top",
-        Repeat: "false",
+        Repeat: false,
       },
       children: [],
     },
@@ -19406,9 +19234,9 @@ const defaultCues = {
         Name: "circle",
         Key: "idl7ythslqew02w4pom29",
         CueType: "CueCircle",
-        Default: "false",
+        Default: false,
         Color: "#7BAFD4",
-        Opacity: "0.7",
+        Opacity: 0.7,
       },
       children: [],
     },
@@ -19418,7 +19246,7 @@ const defaultCues = {
         Name: "yellow overlay using CSS",
         Key: "idl7qm4cs28fh2ogf4ni",
         CueType: "CueCss",
-        Default: "false",
+        Default: false,
         Code: `button[cue="$Key"] {
   position: relative;
   border-color: yellow;
@@ -21168,7 +20996,9 @@ function getPanelMenuItems(type) {
     return { child: [], parent: [] };
   }
   const component =
-    TreeBase.componentFromId(panel.lastFocused) || panel.children[0] || panel;
+    TreeBase.componentFromId(panel.persisted.lastFocused) ||
+    panel.children[0] ||
+    panel;
   if (!component) {
     console.log("no component");
     return { child: [], parent: [] };
@@ -21180,13 +21010,13 @@ function getPanelMenuItems(type) {
       let nextId = arg();
       if (!panel) return;
       // we're looking for the settings view but we may have the id of the user view
-      if (panel.lastFocused.startsWith(nextId)) {
-        nextId = panel.lastFocused;
+      if (panel.persisted.lastFocused.startsWith(nextId)) {
+        nextId = panel.persisted.lastFocused;
       }
       if (nextId.match(/^TreeBase-\d+$/)) {
         nextId = nextId + "-settings";
       }
-      panel.lastFocused = nextId;
+      panel.persisted.lastFocused = nextId;
       callAfterRender(() => panel.parent?.restoreFocus());
       panel.update();
     };
@@ -21288,13 +21118,6 @@ function getFileMenuItems(bar) {
       label: "Unload...",
       callback: () => {
         bar.designListDialog.unload();
-      },
-    }),
-    new MenuItem({
-      label: "Refetch design",
-      callback: async () => {
-        await db.reloadDesignFromOriginalURL();
-        console.log("refetched");
       },
     }),
     new MenuItem({
@@ -21419,18 +21242,12 @@ async function copyComponent(cut = false) {
 }
 
 function getEditMenuItems() {
-  // Figure out which tab is active
-  const { designer } = Globals;
-  const panel = designer.currentPanel;
-
   let items = [
     new MenuItem({
       label: "Undo",
-      callback: panel?.backup.canUndo ? () => panel?.undo() : undefined,
-    }),
-    new MenuItem({
-      label: "Redo",
-      callback: panel?.backup.canRedo ? () => panel?.redo() : undefined,
+      callback: () => {
+        Globals.designer.currentPanel?.undo();
+      },
     }),
     new MenuItem({
       label: "Copy",
@@ -21727,14 +21544,11 @@ const pageLoaded = new Promise((resolve) => {
  */
 async function start() {
   let editing = true;
-  if (window.location.search) {
+  if (window.location.search && !window.location.hash.slice(1)) {
     const params = new URLSearchParams(window.location.search);
     const fetch = params.get("fetch");
-    console.log({ fetch });
     if (fetch) {
-      await wait(
-        db.readDesignFromURL(fetch, window.location.hash.slice(1)),
-      );
+      await wait(db.readDesignFromURL(fetch));
       editing = params.get("edit") !== null;
       window.history.replaceState(
         {},
@@ -21764,6 +21578,7 @@ async function start() {
   Globals.restart = async () => {
     // tear down any existing event handlers before restarting
     Globals.method.stop();
+    TreeBase.treeBaseCounter = 0;
     start();
   };
   Globals.error = new Messages();
