@@ -255,6 +255,8 @@ export class Prop {
         const v = this.compiled(context);
         this._value = this.cast(v);
       }
+    } else if (this.isFormulaByDefault) {
+      this._value = this.options.valueWhenEmpty ?? "";
     }
     return this._value;
   }
@@ -364,8 +366,9 @@ export class TypeSelect extends Select {
     /* Magic happens here! The replace method on a TreeBaseSwitchable replaces the
      * node with a new one to allow type switching in place
      * */
-    if (this.container instanceof TreeBaseSwitchable)
+    if (this.container instanceof TreeBaseSwitchable) {
       this.container.replace(this._value);
+    }
   }
 }
 

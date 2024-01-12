@@ -50,12 +50,14 @@ export class Data {
   }
 
   updateAllFields() {
-    this.allFields = this.contentRows.reduce((previous, current) => {
-      for (const field of Object.keys(current)) {
-        previous.add("#" + field);
-      }
-      return previous;
-    }, new Set());
+    this.allFields = /** @type {Set<string>} */ (
+      this.contentRows.reduce((previous, current) => {
+        for (const field of Object.keys(current)) {
+          previous.add("#" + field);
+        }
+        return previous;
+      }, new Set())
+    );
     this.clearFields = {};
     for (const field of this.allFields) {
       this.clearFields[field.slice(1)] = null;

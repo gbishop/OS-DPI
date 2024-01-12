@@ -2,7 +2,6 @@ import { html } from "uhtml";
 import { TreeBase } from "./treebase";
 import { DesignerPanel } from "./designer";
 import "css/layout.css";
-import db from "app/db";
 import Globals from "app/globals";
 import { TabPanel } from "./tabcontrol";
 import { callAfterRender } from "app/render";
@@ -96,23 +95,15 @@ export class Layout extends DesignerPanel {
       return obj;
     }
     obj = oldToNew(obj);
-    // upgrade from the old format
-    return {
-      className: "Layout",
-      props: { name: "Layout" },
-      children: [obj],
-    };
-  }
-
-  toObject() {
-    return this.children[0].toObject();
-  }
-
-  /** Update the state
-   */
-  onUpdate() {
-    db.write("layout", this.children[0].toObject());
-    Globals.state.update();
+    // make sure it begins with Layout
+    if (obj.className != "Layout" && obj.className == "Page") {
+      obj = {
+        className: "Layout",
+        props: { name: "Layout" },
+        children: [obj],
+      };
+    }
+    return obj;
   }
 
   /** Allow highlighting the current component in the UI
@@ -123,7 +114,7 @@ export class Layout extends DesignerPanel {
       element.removeAttribute("highlight");
     }
     // find the selection in the panel
-    let selected = document.querySelector("#UI [aria-selected]");
+    let selected = document.querySelector("#designer .layout [aria-selected]");
     if (!selected) return;
     selected = selected.closest("[id]");
     if (!selected) return;

@@ -24,11 +24,6 @@ export class MethodChooser extends DesignerPanel {
   static tableName = "method";
   static defaultValue = defaultMethods;
 
-  onUpdate() {
-    super.onUpdate();
-    this.configure();
-  }
-
   configure() {
     // tear down the old configuration if any
     this.stop();
@@ -272,7 +267,7 @@ export class Method extends TreeBase {
 
   /** Refresh the pattern and other state on redraw */
   refresh() {
-    this.pattern.refresh();
+    if (this.pattern) this.pattern.refresh();
   }
 }
 TreeBase.register(Method, "Method");
@@ -403,7 +398,11 @@ export class HandlerKeyCondition extends HandlerCondition {
 
   /** @param {EvalContext} context */
   eval(context) {
-    return this.Key.value == context.data.key;
+    return !!(
+      context.data &&
+      context.data.key &&
+      this.Key.value == context.data.key
+    );
   }
 }
 TreeBase.register(HandlerKeyCondition, "HandlerKeyCondition");

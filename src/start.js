@@ -18,7 +18,6 @@ import { callAfterRender, safeRender, postRender } from "./render";
 import { Designer } from "components/designer";
 import { workerCheckForUpdate } from "components/serviceWorker";
 import { accessed } from "./eval";
-import { TreeBase } from "./components/treebase";
 
 /** let me wait for the page to load */
 const pageLoaded = new Promise((resolve) => {
@@ -32,11 +31,14 @@ const pageLoaded = new Promise((resolve) => {
  */
 export async function start() {
   let editing = true;
-  if (window.location.search && !window.location.hash.slice(1)) {
+  if (window.location.search) {
     const params = new URLSearchParams(window.location.search);
     const fetch = params.get("fetch");
+    console.log({ fetch });
     if (fetch) {
-      await pleaseWait(db.readDesignFromURL(fetch));
+      await pleaseWait(
+        db.readDesignFromURL(fetch, window.location.hash.slice(1)),
+      );
       editing = params.get("edit") !== null;
       window.history.replaceState(
         {},
@@ -66,7 +68,6 @@ export async function start() {
   Globals.restart = async () => {
     // tear down any existing event handlers before restarting
     Globals.method.stop();
-    TreeBase.treeBaseCounter = 0;
     start();
   };
   Globals.error = new Messages();

@@ -5,6 +5,14 @@ import path from "path";
 const dt = new Date();
 const version = `"${dt.getFullYear()}-${dt.getMonth()}-${dt.getDate()}-${dt.getHours()}-${dt.getMinutes()}-${dt.getSeconds()}"`;
 
+const fullReloadAlways = {
+  name: "full-reload-always",
+  handleHotUpdate({ server }) {
+    server.ws.send({ type: "full-reload" });
+    return [];
+  },
+};
+
 export default defineConfig({
   base: "/OS-DPI/",
   resolve: {
@@ -37,4 +45,5 @@ export default defineConfig({
   define: {
     APP_VERSION: version,
   },
+  plugins: [fullReloadAlways],
 });

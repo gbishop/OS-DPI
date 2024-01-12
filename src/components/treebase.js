@@ -3,7 +3,6 @@ import * as Props from "./props";
 import "css/treebase.css";
 import WeakValue from "weak-value";
 import { styleString } from "./style";
-import { session } from "./persist";
 import { errorHandler } from "./errors";
 import { friendlyName } from "./names";
 
@@ -20,10 +19,7 @@ export class TreeBase {
   static treeBaseCounter = 0;
   id = `TreeBase-${TreeBase.treeBaseCounter++}`;
 
-  // values here are stored in sessionStorage
-  persisted = session(this.id, {
-    settingsDetailsOpen: false,
-  });
+  settingsDetailsOpen = false;
 
   // map from id to the component
   static idMap = new WeakValue();
@@ -228,7 +224,6 @@ export class TreeBase {
       <details
         class=${this.className}
         id=${detailsId}
-        ?open=${this.persisted.settingsDetailsOpen}
         @click=${(/** @type {PointerEvent} */ event) => {
           if (
             !focused &&
@@ -244,7 +239,7 @@ export class TreeBase {
         }}
         @toggle=${(/** @type {Event} */ event) => {
           if (event.target instanceof HTMLDetailsElement)
-            this.persisted.settingsDetailsOpen = event.target.open;
+            this.settingsDetailsOpen = event.target.open;
         }}
       >
         <summary
@@ -487,21 +482,37 @@ export class TreeBaseSwitchable extends TreeBase {
   }
 
   /** Replace this node with one of a compatible type
-   * @param {string} className */
-  replace(className) {
+   * @param {string} className
+   * @param {Object} [props] - used in undo to reset the props
+   * */
+  replace(className, props) {
     if (!this.parent) return;
     if (this.className == className) return;
+
+    let update = true;
     // extract the values of the old props
-    const props = Object.fromEntries(
-      Object.entries(this)
-        .filter(([_, prop]) => prop instanceof Props.Prop)
-        .map(([name, prop]) => [name, prop.value]),
-    );
+    if (!props) {
+      props = Object.fromEntries(
+        Object.entries(this)
+          .filter(([_, prop]) => prop instanceof Props.Prop)
+          .map(([name, prop]) => [name, prop.value]),
+      );
+    } else {
+      update = false;
+    }
     const replacement = TreeBase.create(className, null, props);
     replacement.init();
+    if (!(replacement instanceof TreeBaseSwitchable)) {
+      throw new Error(
+        `Invalid TreeBaseSwitchable replacement ${this.className} ${replacement.className}`,
+      );
+    }
     const index = this.parent.children.indexOf(this);
     this.parent.children[index] = replacement;
     replacement.parent = this.parent;
-    this.update();
+    if (update) {
+      console.log("update");
+      this.update();
+    }
   }
 }

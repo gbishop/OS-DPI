@@ -180,6 +180,8 @@ class Grid extends TreeBase {
           if (!itemMap.has(key)) itemMap.set(key, item);
         }
       }
+      rows = maxRow;
+      columns = maxColumn;
       for (let row = 1; row <= rows; row++) {
         for (let column = 1; column <= columns; column++) {
           if (maxPage > 1 && row == rows && column == columns) {

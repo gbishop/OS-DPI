@@ -6,7 +6,7 @@ import Globals from "app/globals";
 import { TreeBase } from "./treebase";
 import { callAfterRender } from "app/render";
 import db from "app/db";
-import { session } from "./persist";
+import { UndoRedo } from "./undo";
 
 export class Designer extends TreeBase {
   stateName = new Props.String("$tabControl");
@@ -105,7 +105,7 @@ export class Designer extends TreeBase {
     }
     if (panel.contains(event.target)) {
       const id = event.target.closest("[id]")?.id || "";
-      this.currentPanel.persisted.lastFocused = id;
+      this.currentPanel.lastFocused = id;
       event.target.setAttribute("aria-selected", "true");
     }
 
@@ -121,11 +121,11 @@ export class Designer extends TreeBase {
     const panel = designer.currentPanel;
 
     // Ask that tab which component is focused
-    if (!panel?.persisted.lastFocused) {
+    if (!panel?.lastFocused) {
       console.log("no lastFocused");
       return null;
     }
-    const component = TreeBase.componentFromId(panel.persisted.lastFocused);
+    const component = TreeBase.componentFromId(panel.lastFocused);
     if (!component) {
       console.log("no component");
       return null;
@@ -135,8 +135,8 @@ export class Designer extends TreeBase {
 
   restoreFocus() {
     if (this.currentPanel) {
-      if (this.currentPanel.persisted.lastFocused) {
-        let targetId = this.currentPanel.persisted.lastFocused;
+      if (this.currentPanel.lastFocused) {
+        let targetId = this.currentPanel.lastFocused;
         let elem = document.getElementById(targetId);
         if (!elem) {
           // perhaps this one is embeded, look for something that starts with it
@@ -194,45 +194,53 @@ export class Designer extends TreeBase {
    */
   panelKeyHandler(event) {
     if (event.target instanceof HTMLTextAreaElement) return;
-    if (event.key != "ArrowDown" && event.key != "ArrowUp") return;
-    if (event.shiftKey) {
-      // move the component
-      const component = Globals.designer.selectedComponent;
-      if (!component) return;
-      component.moveUpDown(event.key == "ArrowUp");
-      callAfterRender(() => Globals.designer.restoreFocus());
-      Globals.state.update();
-    } else {
-      event.preventDefault();
-      // get the components on this panel
-      // todo expand this to all components
-      const components = [
-        ...document.querySelectorAll(".DesignerPanel.ActivePanel .settings"),
-      ];
-      // determine which one contains the focus
-      const focusedComponent = document.querySelector(
-        '.DesignerPanel.ActivePanel .settings:has([aria-selected="true"]):not(:has(.settings [aria-selected="true"]))',
-      );
-      if (!focusedComponent) return;
-      // get its index
-      const index = components.indexOf(focusedComponent);
-      // get the next index
-      const nextIndex = Math.min(
-        components.length - 1,
-        Math.max(0, index + (event.key == "ArrowUp" ? -1 : 1)),
-      );
-      if (nextIndex != index) {
-        // focus on the first focusable in the next component
-        const focusable = /** @type {HTMLElement} */ (
-          components[nextIndex].querySelector(
-            "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), " +
-              'textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled]), ' +
-              "summary:not(:disabled)",
-          )
+    if (event.key == "ArrowDown" || event.key == "ArrowUp") {
+      if (event.shiftKey) {
+        // move the component
+        const component = Globals.designer.selectedComponent;
+        if (!component) return;
+        component.moveUpDown(event.key == "ArrowUp");
+        callAfterRender(() => Globals.designer.restoreFocus());
+        this.currentPanel?.update();
+        Globals.state.update();
+      } else {
+        event.preventDefault();
+        // get the components on this panel
+        // todo expand this to all components
+        const components = [
+          ...document.querySelectorAll(".DesignerPanel.ActivePanel .settings"),
+        ];
+        // determine which one contains the focus
+        const focusedComponent = document.querySelector(
+          '.DesignerPanel.ActivePanel .settings:has([aria-selected="true"]):not(:has(.settings [aria-selected="true"]))',
         );
-        if (focusable) {
-          focusable.focus();
+        if (!focusedComponent) return;
+        // get its index
+        const index = components.indexOf(focusedComponent);
+        // get the next index
+        const nextIndex = Math.min(
+          components.length - 1,
+          Math.max(0, index + (event.key == "ArrowUp" ? -1 : 1)),
+        );
+        if (nextIndex != index) {
+          // focus on the first focusable in the next component
+          const focusable = /** @type {HTMLElement} */ (
+            components[nextIndex].querySelector(
+              "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), " +
+                'textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled]), ' +
+                "summary:not(:disabled)",
+            )
+          );
+          if (focusable) {
+            focusable.focus();
+          }
         }
+      }
+    } else if (event.key == "z") {
+      if (event.ctrlKey && event.shiftKey) {
+        this.currentPanel?.redo();
+      } else if (event.ctrlKey) {
+        this.currentPanel?.undo();
       }
     }
   }
@@ -328,10 +336,8 @@ export class DesignerPanel extends TreeBase {
   tabName = "";
   tabLabel = "";
 
-  persisted = session(this.id, {
-    settingsDetailsOpen: false,
-    lastFocused: "",
-  });
+  settingsDetailsOpen = false;
+  lastFocused = "";
 
   // where to store in the db
   static tableName = "";
@@ -343,6 +349,8 @@ export class DesignerPanel extends TreeBase {
     // @ts-expect-error
     return this.constructor.tableName;
   }
+
+  backup = new UndoRedo();
 
   /**
    * Load a panel from the database.
@@ -361,6 +369,7 @@ export class DesignerPanel extends TreeBase {
     const result = this.fromObject(obj);
     if (result instanceof expected) {
       result.configure();
+      result.backup.save(obj);
       return result;
     }
     // I don't think this happens
@@ -407,10 +416,17 @@ export class DesignerPanel extends TreeBase {
 
   configure() {}
 
-  onUpdate() {
+  async onUpdate() {
+    await this.doUpdate(true);
+    this.configure();
+  }
+
+  async doUpdate(save = true) {
     const tableName = this.staticTableName;
     if (tableName) {
-      db.write(tableName, this.toObject());
+      const externalRep = this.toObject();
+      await db.write(tableName, externalRep);
+      if (save) this.backup.save(externalRep);
       Globals.state.update();
     }
   }
@@ -418,8 +434,18 @@ export class DesignerPanel extends TreeBase {
   async undo() {
     const tableName = this.staticTableName;
     if (tableName) {
-      await db.undo(tableName);
-      Globals.restart();
+      this.backup.undo(this);
+      await this.doUpdate(false);
+      Globals.designer.restoreFocus();
+    }
+  }
+
+  async redo() {
+    const tableName = this.staticTableName;
+    if (tableName) {
+      this.backup.redo(this);
+      await this.doUpdate(false);
+      Globals.designer.restoreFocus();
     }
   }
 

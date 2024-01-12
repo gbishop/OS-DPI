@@ -101,7 +101,7 @@ export class SocketHandler extends Handler {
      */
     let dynamicRows = [];
     const fields = [];
-    for (const [key, value] of Object.entries(event.access)) {
+    for (const [key, value] of Object.entries(event.access || {})) {
       console.log(key, value);
       if (
         Array.isArray(value) &&
