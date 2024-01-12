@@ -369,7 +369,9 @@ export class DesignerPanel extends TreeBase {
     const result = this.fromObject(obj);
     if (result instanceof expected) {
       result.configure();
-      result.changeStack.save(obj);
+      result.changeStack.save(
+        result.toObject({ omittedProps: [], includeIds: true }),
+      );
       return result;
     }
     // I don't think this happens
@@ -424,7 +426,7 @@ export class DesignerPanel extends TreeBase {
   async doUpdate(save = true) {
     const tableName = this.staticTableName;
     if (tableName) {
-      const externalRep = this.toObject();
+      const externalRep = this.toObject({ omittedProps: [], includeIds: true });
       await db.write(tableName, externalRep);
       if (save) this.changeStack.save(externalRep);
       Globals.state.update();

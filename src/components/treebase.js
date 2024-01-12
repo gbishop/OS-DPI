@@ -22,17 +22,28 @@ export class TreeBase {
   settingsDetailsOpen = false;
 
   // map from id to the component
-  static idMap = new WeakValue();
+  /** @type {Map<string, TreeBase>} */
+  static idMap = new Map();
 
   /** @param {string} id
-   * @returns {TreeBase | null} */
+   * @returns {TreeBase | undefined } */
   static componentFromId(id) {
     // strip off any added bits of the id
     const match = id.match(/TreeBase-\d+/);
     if (match) {
       return this.idMap.get(match[0]);
     }
-    return null;
+    return undefined;
+  }
+
+  /** Remove this component and its children from the idMap
+   * @param {TreeBase} component
+   */
+  static removeFromIdMap(component) {
+    this.idMap.delete(component.id);
+    for (const child of component.children) {
+      this.removeFromIdMap(child);
+    }
   }
 
   designer = {};
@@ -80,6 +91,7 @@ export class TreeBase {
    * Prepare a TreeBase tree for external storage by converting to simple objects and arrays
    * @param {Object} [options]
    * @param {string[]} options.omittedProps - class names of props to omit
+   * @param {boolean} [options.includeIds] - true to include the ids
    * @returns {Object}
    * */
   toObject(options = { omittedProps: [] }) {
@@ -98,6 +110,9 @@ export class TreeBase {
       props,
       children,
     };
+    if (options.includeIds) {
+      result.id = this.id;
+    }
     return result;
   }
 
@@ -125,15 +140,20 @@ export class TreeBase {
    *   @param {string|(new()=>TB)} constructorOrName
    *   @param {TreeBase | null} parent
    *   @param {Object<string,string|number|boolean>} props
+   *   @param {string} [id] - set the newly created id
    *   @returns {TB}
    *   */
-  static create(constructorOrName, parent = null, props = {}) {
+  static create(constructorOrName, parent = null, props = {}, id = "") {
     const constructor =
       typeof constructorOrName == "string"
         ? TreeBase.nameToClass.get(constructorOrName)
         : constructorOrName;
     /** @type {TB} */
     const result = new constructor();
+
+    if (id) {
+      result.id = id;
+    }
 
     // initialize the props
     for (const [name, prop] of Object.entries(result.props)) {
@@ -156,9 +176,11 @@ export class TreeBase {
    * Instantiate a TreeBase tree from its external representation
    * @param {Object} obj
    * @param {TreeBase | null} parent
+   * @param {Object} [options]
+   * @param {boolean} [options.useId]
    * @returns {TreeBase} - should be {this} but that isn't supported for some reason
    * */
-  static fromObject(obj, parent = null) {
+  static fromObject(obj, parent = null, options = { useId: false }) {
     // Get the constructor from the class map
     if (!obj) console.trace("fromObject", obj);
     const className = obj.className;
@@ -169,7 +191,12 @@ export class TreeBase {
     }
 
     // Create the object and link it to its parent
-    const result = this.create(constructor, parent, obj.props);
+    const result = this.create(
+      constructor,
+      parent,
+      obj.props,
+      options.useId ? obj.id || "" : "",
+    );
 
     // Link in the children
     for (const childObj of obj.children) {
@@ -389,6 +416,9 @@ export class TreeBase {
     const parent = this.parent;
     this.parent = null;
     peers.splice(index, 1);
+    // remove it and its children from the idMap
+    TreeBase.removeFromIdMap(this);
+
     if (peers.length > index) {
       return peers[index].id;
     } else if (peers.length > 0) {

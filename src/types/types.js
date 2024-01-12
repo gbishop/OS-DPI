@@ -151,4 +151,5 @@
  * @property {string} className
  * @property {Object<string, string | number | boolean>} props
  * @property {ExternalRep[]} children
+ * @property {string} [id]
  */

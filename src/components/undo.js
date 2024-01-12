@@ -68,7 +68,7 @@ export class ChangeStack {
         current.replace(previous.className, previous.props);
       } else {
         throw new Error(
-          `non switchable class changed ${current.className} ${previous.className}`,
+          `Undo: non switchable class changed ${current.className} ${previous.className}`,
         );
       }
       return true;
@@ -91,13 +91,13 @@ export class ChangeStack {
     const cc = current.children;
     const pc = previous.children;
 
-    if (cc.length < pc.length) {
+    if (cc.length == pc.length - 1) {
       // determine which one was deleted
       // it is a merge, first difference is the one that matters
       for (let i = 0; i < pc.length; i++) {
         if (!this.equal(cc[i], pc[i])) {
           // pc[i] is the one that got deleted. Create it
-          const deleted = TreeBase.fromObject(pc[i], current);
+          const deleted = TreeBase.fromObject(pc[i], current, { useId: true });
           if (i < pc.length) {
             // move it
             deleted.moveTo(i);
@@ -105,12 +105,12 @@ export class ChangeStack {
           return true;
         }
       }
-      throw new Error("undo delete failed");
-    } else if (cc.length > pc.length) {
+      throw new Error("Undo: delete failed");
+    } else if (cc.length == pc.length + 1) {
       // the added one must be last
-      current.children.splice(cc.length - 1, 1);
+      cc[cc.length - 1].remove();
       return true;
-    } else {
+    } else if (cc.length == pc.length) {
       // check for reordering
       let diffs = [];
       for (let i = 0; i < cc.length; i++) {
@@ -124,10 +124,14 @@ export class ChangeStack {
         // changed
         return this.restore(cc[diffs[0]], pc[diffs[0]]);
       } else if (diffs.length == 0) {
-        return true;
+        return false;
       } else {
-        throw new Error("too many diffs");
+        throw new Error(`Undo: too many diffs ${diffs.length}`);
       }
+    } else {
+      throw new Error(
+        `Undo: incompatible number of children ${cc.length} ${pc.length}`,
+      );
     }
   }
 
@@ -138,6 +142,8 @@ export class ChangeStack {
    */
   equal(tb, er) {
     if (!tb || !er) return false;
+
+    if (tb.id != er.id) return false;
 
     if (tb.className != er.className) return false;
 
