@@ -1,5 +1,6 @@
 import expressions from "angular-expressions";
 import Globals from "./globals";
+import db from "./db";
 
 /** @param {function(string, string): string} f */
 function updateString(f) {
@@ -43,6 +44,10 @@ export const Functions = {
   if: (/** @type {boolean} */ c, /** @type {any} */ t, /** @type {any} */ f) =>
     c ? t : f,
   abs: (/** @type {number} */ v) => Math.abs(v),
+  reload_design: () => {
+    db.reloadDesignFromOriginalURL();
+    return "reloaded";
+  },
 };
 
 /**

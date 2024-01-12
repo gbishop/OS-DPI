@@ -7,7 +7,6 @@ export class DB {
   constructor() {
     this.dbPromise = openDB("os-dpi", 5, {
       async upgrade(db, oldVersion, newVersion, transaction) {
-        console.log("upgrade", { oldVersion, newVersion });
         let store5 = db.createObjectStore("store5", {
           keyPath: ["name", "type"],
         });
@@ -40,7 +39,6 @@ export class DB {
         console.log("blocked", { currentVersion, blockedVersion, event });
       },
       blocking(currentVersion, blockedVersion, event) {
-        console.log("blocking", { currentVersion, blockedVersion, event });
         window.location.reload();
       },
       terminated() {
@@ -72,9 +70,9 @@ export class DB {
     const tx = db.transaction(["store5", "media", "saved"], "readwrite");
     const index = tx.objectStore("store5").index("by-name");
     for await (const cursor of index.iterate(this.designName)) {
-      const record = { ...cursor.value };
-      record.name = newName;
-      cursor.update(record);
+      const record = { ...cursor.value, name: newName };
+      cursor.delete();
+      tx.objectStore("store5").put(record);
     }
     const mst = tx.objectStore("media");
     for await (const cursor of mst.iterate()) {
@@ -163,7 +161,6 @@ export class DB {
     const db = await this.dbPromise;
     const record = await db.get("store5", [this.designName, type]);
     const data = record ? record.data : defaultValue;
-    console.log("read", data);
     return data;
   }
 
@@ -236,12 +233,10 @@ export class DB {
    * @returns {Promise<boolean>}
    */
   async readDesignFromURL(url, name = "") {
-    console.log({ url, name });
     let design_url = url;
 
     // allow for the url to point to HTML that contains the link
     if (!url.match(/.*\.(osdpi|zip)$/)) {
-      console.log("get page at", url);
       const response = await fetch("https://gb.cs.unc.edu/cors/", {
         headers: { "Target-URL": url },
       });
@@ -255,14 +250,12 @@ export class DB {
       const link =
         doc.querySelector(`a[href$="${name}.zip"]`) ||
         doc.querySelector(`a[href$="${name}.osdpi"]`);
-      console.log({ link });
       if (link instanceof HTMLAnchorElement) {
         design_url = link.href;
       } else {
         throw new Error(`Invalid URL ${url}`);
       }
     }
-    console.log({ design_url });
     const db = await this.dbPromise;
     // have we seen this url before?
     const urlRecord = await db.get("url", design_url);
@@ -281,14 +274,11 @@ export class DB {
       }
     }
     headers["Target-URL"] = design_url;
-    console.log({ headers });
 
     const response = await fetch("https://gb.cs.unc.edu/cors/", { headers });
-    console.log({ response });
     if (response.status == 304) {
       // we already have it
       this.designName = name;
-      console.log("unchanged");
       return false;
     }
     if (!response.ok) {
@@ -296,8 +286,7 @@ export class DB {
     }
 
     const etag = response.headers.get("ETag") || "";
-    console.log({ etag });
-    await db.put("url", { url: design_url, etag });
+    await db.put("url", { url: design_url, page_url: url, etag });
 
     if (!name) {
       const urlParts = new URL(design_url, window.location.origin);
@@ -313,9 +302,7 @@ export class DB {
       }
     }
 
-    console.log("blob");
     const blob = await response.blob();
-    console.log("got blob");
 
     // parse the URL
     return this.readDesignFromBlob(blob, name, etag);
@@ -334,15 +321,12 @@ export class DB {
 
     // check saved
     const savedRecord = await db.get("saved", name);
-    console.log({ savedRecord });
     if (savedRecord && savedRecord.etag && savedRecord.etag != "none") {
       // lookup the URL
       const etag = savedRecord.etag;
-      const savedKey = await db.getKeyFromIndex("url", "by-etag", etag);
-      console.log({ etag, savedKey });
-      if (savedKey) {
-        const url = savedKey.toString();
-        console.log({ url });
+      const urlRecord = await db.getFromIndex("url", "by-etag", etag);
+      if (urlRecord) {
+        const url = urlRecord.page_url;
         if (await this.readDesignFromURL(url)) {
           Globals.restart();
         }
