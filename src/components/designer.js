@@ -6,7 +6,7 @@ import Globals from "app/globals";
 import { TreeBase } from "./treebase";
 import { callAfterRender } from "app/render";
 import db from "app/db";
-import { UndoRedo } from "./undo";
+import { ChangeStack } from "./undo";
 
 export class Designer extends TreeBase {
   stateName = new Props.String("$tabControl");
@@ -350,7 +350,7 @@ export class DesignerPanel extends TreeBase {
     return this.constructor.tableName;
   }
 
-  backup = new UndoRedo();
+  changeStack = new ChangeStack();
 
   /**
    * Load a panel from the database.
@@ -369,7 +369,7 @@ export class DesignerPanel extends TreeBase {
     const result = this.fromObject(obj);
     if (result instanceof expected) {
       result.configure();
-      result.backup.save(obj);
+      result.changeStack.save(obj);
       return result;
     }
     // I don't think this happens
@@ -426,7 +426,7 @@ export class DesignerPanel extends TreeBase {
     if (tableName) {
       const externalRep = this.toObject();
       await db.write(tableName, externalRep);
-      if (save) this.backup.save(externalRep);
+      if (save) this.changeStack.save(externalRep);
       Globals.state.update();
     }
   }
@@ -434,7 +434,7 @@ export class DesignerPanel extends TreeBase {
   async undo() {
     const tableName = this.staticTableName;
     if (tableName) {
-      this.backup.undo(this);
+      this.changeStack.undo(this);
       await this.doUpdate(false);
       Globals.designer.restoreFocus();
     }
@@ -443,7 +443,7 @@ export class DesignerPanel extends TreeBase {
   async redo() {
     const tableName = this.staticTableName;
     if (tableName) {
-      this.backup.redo(this);
+      this.changeStack.redo(this);
       await this.doUpdate(false);
       Globals.designer.restoreFocus();
     }

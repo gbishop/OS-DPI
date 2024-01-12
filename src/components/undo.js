@@ -5,7 +5,7 @@ import { TreeBase, TreeBaseSwitchable } from "./treebase";
  * I'm assuming only 1 change has been made since we save after every change.
  */
 
-export class UndoRedo {
+export class ChangeStack {
   /** @type {ExternalRep[]} */
   stack = [];
 

@@ -374,11 +374,11 @@ function getEditMenuItems() {
   let items = [
     new MenuItem({
       label: "Undo",
-      callback: panel?.backup.canUndo ? () => panel?.undo() : undefined,
+      callback: panel?.changeStack.canUndo ? () => panel?.undo() : undefined,
     }),
     new MenuItem({
       label: "Redo",
-      callback: panel?.backup.canRedo ? () => panel?.redo() : undefined,
+      callback: panel?.changeStack.canRedo ? () => panel?.redo() : undefined,
     }),
     new MenuItem({
       label: "Copy",
