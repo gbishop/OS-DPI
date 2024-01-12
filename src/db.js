@@ -6,7 +6,7 @@ import Globals from "./globals";
 export class DB {
   constructor() {
     this.dbPromise = openDB("os-dpi", 5, {
-      async upgrade(db, oldVersion, newVersion, transaction) {
+      async upgrade(db, oldVersion, _newVersion, transaction) {
         let store5 = db.createObjectStore("store5", {
           keyPath: ["name", "type"],
         });
@@ -38,7 +38,7 @@ export class DB {
       blocked(currentVersion, blockedVersion, event) {
         console.log("blocked", { currentVersion, blockedVersion, event });
       },
-      blocking(currentVersion, blockedVersion, event) {
+      blocking(_currentVersion, _blockedVersion, _event) {
         window.location.reload();
       },
       terminated() {
