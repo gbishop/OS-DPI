@@ -4,7 +4,6 @@
  * @property {State} state
  * @property {import("./data").Data} data
  * @property {import("./components/actions").Actions} actions
- * @property {TreeBase} tree
  * @property {import('./components/layout').Layout} layout
  * @property {import('./components/access/pattern').PatternList} patterns
  * @property {import('./components/access/cues').CueList} cues

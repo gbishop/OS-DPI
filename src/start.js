@@ -59,7 +59,6 @@ export async function start() {
   Globals.data = new Data(dataArray);
   const layout = await Layout.load(Layout);
   Globals.layout = layout;
-  Globals.tree = layout.children[0];
   Globals.state = new State(`UIState`);
   Globals.actions = await Actions.load(Actions);
   Globals.cues = await CueList.load(CueList);
@@ -128,7 +127,7 @@ export async function start() {
     const editing = Globals.state.get("editing");
     document.body.classList.toggle("designing", editing);
     safeRender("cues", Globals.cues);
-    safeRender("UI", Globals.tree);
+    safeRender("UI", Globals.layout.children[0]);
     if (editing) {
       safeRender("toolbar", toolbar);
       safeRender("tabs", Globals.designer);

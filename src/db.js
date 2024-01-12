@@ -399,7 +399,7 @@ export class DB {
   async convertDesignToBlob() {
     const db = await this.dbPromise;
     // collect the parts of the design
-    const layout = Globals.tree.toObject();
+    const layout = Globals.layout.toObject();
     const actions = Globals.actions.toObject();
     const content = await this.read("content");
     const method = Globals.method.toObject();
