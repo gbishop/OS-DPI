@@ -49,7 +49,7 @@ export class Stack extends TreeBase {
           backgroundColor: this.background.value,
         },
       },
-      html`${this.children.map(
+      this.children.map(
         (child) =>
           html`<div
             style=${styleString({
@@ -58,7 +58,7 @@ export class Stack extends TreeBase {
           >
             ${child.safeTemplate()}
           </div>`,
-      )}`,
+      ),
     );
   }
 }

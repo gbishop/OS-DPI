@@ -164,9 +164,7 @@ export class Content extends DesignerPanel {
             @input=${this.selectAll}
           />Select All</label
         >
-        <ol
-          id="ContentMedia"
-          style="column-count: 3"
+        <div
           ref=${(/** @type {HTMLOListElement} */ ol) => {
             db.listMedia().then((names) => {
               const list = names.map(
@@ -175,10 +173,13 @@ export class Content extends DesignerPanel {
                     <label><input type="checkbox" name=${name} />${name}</label>
                   </li>`,
               );
-              render(ol, html`${list}`);
+              const body = html`<ol id="ContentMedia" style="column-count: 3">
+                ${list}
+              </ol> `;
+              render(ol, body);
             });
           }}
-        ></ol>
+        ></div>
       </div>
     </div>`;
   }

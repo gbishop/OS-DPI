@@ -5,35 +5,18 @@ import { getPanelMenuItems, getComponentMenuItems } from "components/toolbar";
 import Globals from "app/globals";
 import { callAfterRender } from "app/render";
 
-const panelNames = ["Layout", "Actions", "Cues", "Patterns", "Methods"].slice(
-  0,
-  1,
-);
+const panelNames = ["Layout", "Actions", "Cues", "Patterns", "Methods"];
 
 const MenuItemBlacklist = [
   "Audio",
-  "Button",
-  "Customize",
-  "Display",
   "Head Mouse",
   "Logger",
-  "Modal Dialog",
-  "Page",
-  "Radio",
   "Speech",
-  "VSD",
-  "Grid",
-  "Tab Control",
   "Socket Handler",
   "Copy",
   "Cut",
   "Paste",
   "Paste Into",
-  "Undo",
-  "Redo",
-  "Move up",
-  "Move down",
-  // "Gap",
 ];
 
 /** Seeded random number generator
@@ -62,12 +45,6 @@ function choose(items) {
   return items[Math.floor(random() * items.length)];
 }
 
-function waitForIdle() {
-  requestAnimationFrame(() => {
-    setTimeout(() => {}, 30);
-  });
-}
-
 /** @param {TreeBase} component */
 function listChildren(component) {
   /** @type {TreeBase[]} */
@@ -86,10 +63,10 @@ function listChildren(component) {
 /** Implement the test
  */
 function* monkeyTest() {
-  let steps = 11;
+  let steps = 1000;
 
   while (steps-- > 0) {
-    console.log(steps);
+    // console.log(steps);
     // choose a panel
     const panelName = choose(panelNames);
     Globals.designer.switchTab(panelName);
@@ -115,7 +92,7 @@ function* monkeyTest() {
         // choose one
         const menuItem = choose(menuItems);
         if (menuItem.callback) {
-          console.log(menuItem.label, components.indexOf(component), component);
+          // console.log(menuItem.label, components.indexOf(component), component);
           menuItem.callback();
           yield true;
         }
@@ -128,17 +105,14 @@ function* monkeyTest() {
   let undos = 0;
   // now undo all those changes
   for (const panelName of panelNames) {
-    console.log("undo", panelName);
+    // console.log("undo", panelName);
 
     Globals.designer.switchTab(panelName);
     yield true;
 
     // get the panel object
     const panel = Globals.designer.children[0];
-    console.log({ panel });
-    console.log(panel.changeStack.canUndo);
     while (panel && panel.changeStack.canUndo) {
-      console.log(++undos);
       panel.undo();
       yield true;
     }
@@ -162,9 +136,8 @@ export function monkey() {
       if (!test.next().value) clearTimeout(timer);
     } else {
       wait--;
-      console.log(wait);
     }
-  }, 200);
+  }, 20);
 }
 
 if (location.host.startsWith("localhost")) {

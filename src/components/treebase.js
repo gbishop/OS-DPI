@@ -342,7 +342,7 @@ export class TreeBase {
    * Wrap the body of a component
    *
    * @param {ComponentAttrs} attrs
-   * @param {Hole} body
+   * @param {Hole|Hole[]} body
    * @returns {Hole}
    */
   component(attrs, body) {
@@ -351,6 +351,7 @@ export class TreeBase {
     if ("classes" in attrs) {
       classes = classes.concat(attrs.classes);
     }
+    if (!Array.isArray(body)) body = [body];
     return html`<div
       class=${classes.join(" ")}
       id=${this.id}

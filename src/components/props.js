@@ -235,7 +235,6 @@ export class Prop {
   get value() {
     if (this.compiled) {
       if (!this.formula) {
-        console.log(this.options);
         this._value = this.options.valueWhenEmpty ?? "";
       } else {
         const v = this.compiled();

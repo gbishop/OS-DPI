@@ -578,7 +578,7 @@ class DesignListDialog {
         ${names.map((name) => {
           let label;
           if (saved.includes(name)) {
-            label = html`${name}`;
+            label = html`<span>${name}</span>`;
           } else {
             label = html`<b>${name}</b> <b class="warning">Not saved</b>`;
           }

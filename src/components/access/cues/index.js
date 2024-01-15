@@ -28,25 +28,18 @@ export class CueList extends DesignerPanel {
   }
 
   template() {
-    const result = this.children.map(
-      (child) =>
-        html`<style>
-          ${child.css}
-        </style>`,
-    );
+    const result = this.children.map((child) => child.css);
     if (this.children.length > 0) {
       const defaultCue = this.defaultCue;
       const defaultCSS = defaultCue.css.replaceAll(
         defaultCue.Key.value,
         "DefaultCue",
       );
-      result.push(
-        html`<style>
-          ${defaultCSS}
-        </style>`,
-      );
+      result.push(defaultCSS);
     }
-    return html`${result}`;
+    return html`<style>
+      ${result}
+    </style>`;
   }
 
   get cueMap() {
