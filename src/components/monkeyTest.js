@@ -80,12 +80,16 @@ function* monkeyTest() {
         // choose one
         const component = choose(components);
         // get menu items
-        let menuItems = getComponentMenuItems(component, "all", (f) => {
-          return () => {
-            f();
-            panel.update();
-          };
-        });
+        let menuItems = getComponentMenuItems(
+          component,
+          "all",
+          (/** @type {function} */ f) => {
+            return () => {
+              f();
+              panel.update();
+            };
+          },
+        );
         menuItems = menuItems.filter((item) => {
           return MenuItemBlacklist.indexOf(item.label) < 0;
         });
@@ -100,19 +104,9 @@ function* monkeyTest() {
     }
   }
 
-  // console.log(JSON.stringify(Globals.designer.currentPanel.changeStack.stack));
-
-  let undos = 0;
   // now undo all those changes
-  for (const panelName of panelNames) {
-    // console.log("undo", panelName);
-
-    Globals.designer.switchTab(panelName);
-    yield true;
-
-    // get the panel object
-    const panel = Globals.designer.children[0];
-    while (panel && panel.changeStack.canUndo) {
+  for (const panel of Globals.designer.children) {
+    while (panel.changeStack.canUndo) {
       panel.undo();
       yield true;
     }
