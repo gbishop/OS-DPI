@@ -19,6 +19,7 @@ import { SaveLogs, ClearLogs } from "./logger";
 import { friendlyName, wikiName } from "./names";
 
 import { workerUpdateButton } from "components/serviceWorker";
+import { monkey } from "components/monkeyTest";
 
 /** Return a list of available Menu items on this component
  *
@@ -27,7 +28,7 @@ import { workerUpdateButton } from "components/serviceWorker";
  * @param {function} wrapper
  * @returns {MenuItem[]}
  */
-function getComponentMenuItems(component, which = "all", wrapper) {
+export function getComponentMenuItems(component, which = "all", wrapper) {
   /** @type {MenuItem[]} */
   const result = [];
 
@@ -105,7 +106,7 @@ function getComponentMenuItems(component, which = "all", wrapper) {
  * @param {"add" | "delete" | "move" | "all"} type
  * @return {{ child: MenuItem[], parent: MenuItem[]}}
  * */
-function getPanelMenuItems(type) {
+export function getPanelMenuItems(type) {
   // Figure out which tab is active
   const { designer } = Globals;
   const panel = designer.currentPanel;
@@ -366,7 +367,7 @@ async function copyComponent(cut = false) {
   }
 }
 
-function getEditMenuItems() {
+export function getEditMenuItems() {
   // Figure out which tab is active
   const { designer } = Globals;
   const panel = designer.currentPanel;
@@ -500,6 +501,15 @@ function getHelpMenuItems() {
       args: ["About-Project-Open"],
     }),
   );
+
+  if (location.host.startsWith("localhost")) {
+    items.push(
+      new MenuItem({
+        label: "Test",
+        callback: monkey,
+      }),
+    );
+  }
   return items;
 }
 

@@ -76,6 +76,7 @@ function reportInternalError(msg, trace) {
     </div>`,
   );
   document.body.prepend(result);
+  document.dispatchEvent(new Event("internalerror"));
 }
 
 /** @param {string} msg

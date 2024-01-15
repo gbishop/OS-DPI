@@ -142,6 +142,7 @@ export async function start() {
     Globals.state.clearUpdated();
 
     workerCheckForUpdate();
+    document.dispatchEvent(new Event("rendercomplete"));
   }
   Globals.state.observe(debounce(renderUI));
   callAfterRender(() => Globals.designer.restoreFocus());
