@@ -204,7 +204,7 @@ export class TreeBase {
         childObj.parent = result;
         result.children.push(childObj);
       } else {
-        TreeBase.fromObject(childObj, result);
+        TreeBase.fromObject(childObj, result, options);
       }
     }
 
