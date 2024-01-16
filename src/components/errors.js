@@ -32,23 +32,21 @@ export class Messages extends TreeBase {
 function reportInternalError(msg, trace) {
   const result = document.createElement("div");
   result.id = "ErrorReport";
-  render(
-    result,
-    html`<div id="ErrorReport">
-      <h1>Internal Error</h1>
+  function copyToClipboard() {
+    const html = document.getElementById("ErrorReportBody")?.innerHTML || "";
+    const blob = new Blob([html], { type: "text/html" });
+    const data = [new ClipboardItem({ "text/html": blob })];
+    navigator.clipboard.write(data);
+  }
+  function dismiss() {
+    document.getElementById("ErrorReport")?.remove();
+  }
+  result.innerHTML = `<h1>Internal Error</h1>
       <p>
         Your browser has detected an internal error in OS-DPI. It was very
         likely caused by our program bug. We hope you will help us by sending a
         report of the information below. Simply click this button
-        <button
-          @click=${() => {
-            const html =
-              document.getElementById("ErrorReportBody")?.innerHTML || "";
-            const blob = new Blob([html], { type: "text/html" });
-            const data = [new ClipboardItem({ "text/html": blob })];
-            navigator.clipboard.write(data);
-          }}
-        >
+        <button id="errorCopy">
           Copy report to clipboard
         </button>
         and then paste into an email to
@@ -57,11 +55,7 @@ function reportInternalError(msg, trace) {
           target="email"
           >gb@cs.unc.edu</a
         >.
-        <button
-          @click=${() => {
-            document.getElementById("ErrorReport")?.remove();
-          }}
-        >
+        <button id="errorDismiss">
           Dismiss this dialog
         </button>
       </p>
@@ -70,12 +64,15 @@ function reportInternalError(msg, trace) {
         <p>${msg}</p>
         <h2>Stack Trace</h2>
         <ul>
-          ${trace.map((s) => html`<li>${s}</li>`)}
+          ${trace.map((s) => `<li>${s}</li>`).join("")}
         </ul>
       </div>
-    </div>`,
-  );
+    </div>`;
   document.body.prepend(result);
+  document
+    .getElementById("errorCopy")
+    ?.addEventListener("click", copyToClipboard);
+  document.getElementById("errorDismiss")?.addEventListener("click", dismiss);
   document.dispatchEvent(new Event("internalerror"));
 }
 
