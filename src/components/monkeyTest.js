@@ -1,9 +1,8 @@
 /** Monkey test to find bugs */
 
 import { TreeBase } from "components/treebase";
-import { getPanelMenuItems, getComponentMenuItems } from "components/toolbar";
+import { getComponentMenuItems, getEditMenuItems } from "components/toolbar";
 import Globals from "app/globals";
-import { callAfterRender } from "app/render";
 
 const panelNames = ["Layout", "Actions", "Cues", "Patterns", "Methods"];
 
@@ -19,51 +18,12 @@ const MenuItemBlacklist = [
   "Paste Into",
 ];
 
-/** Seeded random number generator
- * @param {number} a
- */
-function splitmix32(a) {
-  return function () {
-    a |= 0;
-    a = (a + 0x9e3779b9) | 0;
-    var t = a ^ (a >>> 16);
-    t = Math.imul(t, 0x21f0aaad);
-    t = t ^ (t >>> 15);
-    t = Math.imul(t, 0x735a2d97);
-    return ((t = t ^ (t >>> 15)) >>> 0) / 4294967296;
-  };
-}
-
 const random = splitmix32(3);
-
-/** Choose one from an array
- * @template T
- * @param {T[]} items
- * @returns {T}
- */
-function choose(items) {
-  return items[Math.floor(random() * items.length)];
-}
-
-/** @param {TreeBase} component */
-function listChildren(component) {
-  /** @type {TreeBase[]} */
-  const result = [];
-  /** @param {TreeBase} node */
-  function walk(node) {
-    for (const child of node.children) {
-      result.push(child);
-      walk(child);
-    }
-  }
-  walk(component);
-  return result;
-}
 
 /** Implement the test
  */
 function* monkeyTest() {
-  let steps = 1000;
+  let steps = 500;
 
   while (steps-- > 0) {
     // console.log(steps);
@@ -79,23 +39,31 @@ function* monkeyTest() {
       if (components.length) {
         // choose one
         const component = choose(components);
+        // focus on it
+        panel.lastFocused = component.id;
+        Globals.designer.restoreFocus();
+        yield true;
+
         // get menu items
-        let menuItems = getComponentMenuItems(
-          component,
-          "all",
-          (/** @type {function} */ f) => {
-            return () => {
-              f();
-              panel.update();
-            };
-          },
-        );
+        let menuItems = [
+          ...getComponentMenuItems(
+            component,
+            "all",
+            (/** @type {function} */ f) => {
+              return () => {
+                f();
+                panel.update();
+              };
+            },
+          ),
+          ...getEditMenuItems(),
+        ];
         menuItems = menuItems.filter((item) => {
           return MenuItemBlacklist.indexOf(item.label) < 0;
         });
         // choose one
         const menuItem = choose(menuItems);
-        if (menuItem.callback) {
+        if (menuItem && menuItem.callback) {
           // console.log(menuItem.label, components.indexOf(component), component);
           menuItem.callback();
           yield true;
@@ -105,8 +73,10 @@ function* monkeyTest() {
   }
 
   // now undo all those changes
+  let undos = 0;
   for (const panel of Globals.designer.children) {
     while (panel.changeStack.canUndo) {
+      console.log(++undos);
       panel.undo();
       yield true;
     }
@@ -139,4 +109,43 @@ if (location.host.startsWith("localhost")) {
     "keydown",
     ({ key, ctrlKey }) => key == "m" && ctrlKey && monkey(),
   );
+}
+
+/** Seeded random number generator
+ * @param {number} a
+ */
+function splitmix32(a) {
+  return function () {
+    a |= 0;
+    a = (a + 0x9e3779b9) | 0;
+    var t = a ^ (a >>> 16);
+    t = Math.imul(t, 0x21f0aaad);
+    t = t ^ (t >>> 15);
+    t = Math.imul(t, 0x735a2d97);
+    return ((t = t ^ (t >>> 15)) >>> 0) / 4294967296;
+  };
+}
+
+/** Choose one from an array
+ * @template T
+ * @param {T[]} items
+ * @returns {T}
+ */
+function choose(items) {
+  return items[Math.floor(random() * items.length)];
+}
+
+/** @param {TreeBase} component */
+function listChildren(component) {
+  /** @type {TreeBase[]} */
+  const result = [];
+  /** @param {TreeBase} node */
+  function walk(node) {
+    for (const child of node.children) {
+      result.push(child);
+      walk(child);
+    }
+  }
+  walk(component);
+  return result;
 }
