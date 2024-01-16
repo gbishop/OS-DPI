@@ -61,7 +61,7 @@ export class Monitor extends TreeBase {
             ?accessed=${accessed.has(`_${key}`)}
           >
             <td>#${key}</td>
-            <td>${value}</td>
+            <td>${value || ""}</td>
           </tr>`;
         })}
       </tbody>

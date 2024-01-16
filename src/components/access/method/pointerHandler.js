@@ -50,6 +50,8 @@ export class PointerHandler extends Handler {
 
     const pattern = method.pattern;
 
+    if (!pattern) return;
+
     const inOutThreshold = method.PointerEnterDebounce.value * 1000;
     const upDownThreshold = method.PointerDownDebounce.value * 1000;
 

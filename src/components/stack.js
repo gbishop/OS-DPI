@@ -49,16 +49,18 @@ export class Stack extends TreeBase {
           backgroundColor: this.background.value,
         },
       },
-      this.children.map(
-        (child) =>
-          html`<div
-            style=${styleString({
-              [dimension]: `${(100 * getScale(child)) / scaleSum}%`,
-            })}
-          >
-            ${child.safeTemplate()}
-          </div>`,
-      ),
+      this.children.map((child) => {
+        let size = (100 * getScale(child)) / scaleSum;
+        if (Number.isNaN(size)) size = 0;
+
+        return html`<div
+          style=${styleString({
+            [dimension]: `${size}%`,
+          })}
+        >
+          ${child.safeTemplate()}
+        </div>`;
+      }),
     );
   }
 }
