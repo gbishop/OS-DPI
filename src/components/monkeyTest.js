@@ -3,6 +3,8 @@
 import { TreeBase } from "components/treebase";
 import { getComponentMenuItems, getEditMenuItems } from "components/toolbar";
 import Globals from "app/globals";
+import { MenuItem } from "components/menu";
+import * as Props from "./props";
 
 const panelNames = ["Layout", "Actions", "Cues", "Patterns", "Methods"];
 
@@ -23,7 +25,7 @@ const random = splitmix32(3);
 /** Implement the test
  */
 function* monkeyTest() {
-  let steps = 500;
+  let steps = 1000;
 
   while (steps-- > 0) {
     // console.log(steps);
@@ -56,6 +58,7 @@ function* monkeyTest() {
             },
           ),
           ...getEditMenuItems(),
+          ...getPropertyEdits(component),
         ];
         menuItems = menuItems.filter((item) => {
           return MenuItemBlacklist.indexOf(item.label) < 0;
@@ -75,7 +78,7 @@ function* monkeyTest() {
   let undos = 0;
   for (const panel of Globals.designer.children) {
     while (panel.changeStack.canUndo) {
-      console.log(++undos);
+      // console.log(++undos);
       panel.undo();
       yield true;
     }
@@ -147,4 +150,64 @@ function listChildren(component) {
   }
   walk(component);
   return result;
+}
+
+/**
+ * Fakeup menu items that diddle the property values 
+ 
+ * 
+ * @param {TreeBase} component 
+ * @returns {MenuItem[]} 
+ */
+function getPropertyEdits(component) {
+  const props = component.props;
+  /** @type {MenuItem[]} */
+  const items = [];
+
+  /** @type {function|undefined} */
+  let callback = undefined;
+  for (const name in props) {
+    const prop = props[name];
+    if (prop instanceof Props.String) {
+      callback = () => typeInto(prop, randomString());
+    } else if (prop instanceof Props.Integer) {
+      callback = () => typeInto(prop, randomInteger());
+    } else if (prop instanceof Props.Float) {
+      callback = () => typeInto(prop, randomFloat());
+    } else {
+      continue;
+    }
+    const item = new MenuItem({
+      label: `Change ${component.className}.${prop.label}`,
+      callback,
+    });
+    items.push(item);
+  }
+  return items;
+}
+
+function randomString() {
+  const n = 4 + Math.floor(random() * 4);
+  return random().toString(36).slice(2, n);
+}
+
+function randomInteger() {
+  return Math.floor(random() * 10).toString();
+}
+
+function randomFloat() {
+  return (random() * 10).toString();
+}
+
+/**
+ * @param {Props.Prop} prop
+ * @param {string} value
+ */
+function typeInto(prop, value) {
+  const input = document.getElementById(prop.id);
+  if (input instanceof HTMLInputElement) {
+    input.focus();
+    input.value = value;
+    input.dispatchEvent(new Event("change"));
+  }
 }
