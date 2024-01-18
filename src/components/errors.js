@@ -1,5 +1,5 @@
 import * as StackTrace from "stacktrace-js";
-import { html, render } from "uhtml";
+import { html } from "uhtml";
 import "css/errors.css";
 import { TreeBase } from "./treebase";
 
