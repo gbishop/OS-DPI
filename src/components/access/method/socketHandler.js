@@ -63,8 +63,7 @@ export class SocketHandler extends Handler {
    * @type {RxJs.Observable<EventLike> | undefined} */
   socket$ = undefined;
 
-  /** @param {RxJs.Subject} _stop$ */
-  configure(_stop$) {
+  configure() {
     const method = this.method;
     const streamName = "socket";
     // only create it once

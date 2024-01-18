@@ -244,7 +244,7 @@ export class Method extends TreeBase {
     if (this.Active.value) {
       this.streams = {};
       for (const child of this.handlers) {
-        child.configure(stop$);
+        child.configure();
       }
       const streams = Object.values(this.streams);
       if (streams.length > 0) {
@@ -345,10 +345,7 @@ export class Handler extends TreeBase {
     );
   }
 
-  /**
-   * @param {RxJs.Subject} _stop$
-   * */
-  configure(_stop$) {
+  configure() {
     throw new TypeError("Must override configure");
   }
 
