@@ -249,10 +249,8 @@ class Action extends TreeBase {
     super.init();
     if (this.children.length == 0) {
       // add a condition and update if none are present
-      // this.update();
-      // TreeBase.create(ActionCondition, this, {}).init();
-      // this.update();
-      // TreeBase.create(ActionUpdate, this, {}).init();
+      TreeBase.create(ActionCondition, this, {}).init();
+      TreeBase.create(ActionUpdate, this, {}).init();
     }
   }
 }
