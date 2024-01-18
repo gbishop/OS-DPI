@@ -42,7 +42,6 @@ function* monkeyTest() {
         // focus on it
         panel.lastFocused = component.id;
         Globals.designer.restoreFocus();
-        yield true;
 
         // get menu items
         let menuItems = [
