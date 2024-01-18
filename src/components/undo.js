@@ -62,6 +62,7 @@ export class ChangeStack {
       const next = TreeBase.fromObject(previous);
       current.children = next.children;
       current.children.forEach((child) => (child.parent = current));
+      next.update();
       // console.log("restored", current.toObject(), previous.className, previous);
       return true;
     }
