@@ -2,6 +2,7 @@ import { TreeBase } from "./treebase";
 import { Stack } from "./stack";
 import { PatternGroup } from "components/access/pattern";
 import { Page } from "components/page";
+import { Layout } from "components/layout";
 
 import "css/toolbar.css";
 import db from "app/db";
@@ -49,19 +50,18 @@ export function getComponentMenuItems(component, which = "all", wrapper) {
   }
   // delete
   if (which == "delete" || which == "all") {
-    if (component.allowDelete) {
-      result.push(
-        new MenuItem({
-          label: `Delete`,
-          title: `Delete ${friendlyName(component.className)}`,
-          callback: wrapper(() => {
-            // remove returns the id of the nearest neighbor or the parent
-            const nextId = component.remove();
-            return nextId;
-          }),
+    result.push(
+      new MenuItem({
+        label: `Delete`,
+        title: `Delete ${friendlyName(component.className)}`,
+        callback: wrapper(() => {
+          // remove returns the id of the nearest neighbor or the parent
+          const nextId = component.remove();
+          return nextId;
         }),
-      );
-    }
+        disable: !component.allowDelete,
+      }),
+    );
   }
 
   // move
@@ -80,6 +80,7 @@ export function getComponentMenuItems(component, which = "all", wrapper) {
               component.moveUpDown(true);
               return component.id;
             }),
+            disable: !component.allowDelete,
           }),
         );
       }
@@ -93,6 +94,7 @@ export function getComponentMenuItems(component, which = "all", wrapper) {
               component.moveUpDown(false);
               return component.id;
             }),
+            disable: !component.allowDelete,
           }),
         );
       }
@@ -122,6 +124,7 @@ export function getPanelMenuItems(type) {
     console.log("no component");
     return { child: [], parent: [] };
   }
+  if (component === panel) type = "add";
 
   /** @param {function():string} arg */
   function itemCallback(arg) {
@@ -152,9 +155,10 @@ export function getPanelMenuItems(type) {
     if (
       type !== "add" ||
       !parent ||
+      parent instanceof Designer ||
+      parent instanceof Layout ||
       (component instanceof Stack && parent instanceof Stack) ||
-      (component instanceof PatternGroup && parent instanceof PatternGroup) ||
-      parent instanceof Designer
+      (component instanceof PatternGroup && parent instanceof PatternGroup)
     ) {
       break;
     }
@@ -371,25 +375,32 @@ export function getEditMenuItems() {
   // Figure out which tab is active
   const { designer } = Globals;
   const panel = designer.currentPanel;
+  const component = Globals.designer.selectedComponent;
+
+  const canEdit = component && component.allowDelete;
 
   let items = [
     new MenuItem({
       label: "Undo",
       callback: panel?.changeStack.canUndo ? () => panel?.undo() : undefined,
+      disable: !canEdit,
     }),
     new MenuItem({
       label: "Redo",
       callback: panel?.changeStack.canRedo ? () => panel?.redo() : undefined,
+      disable: !canEdit,
     }),
     new MenuItem({
       label: "Copy",
       callback: copyComponent,
+      disable: !canEdit,
     }),
     new MenuItem({
       label: "Cut",
       callback: async () => {
         copyComponent(true);
       },
+      disable: !canEdit,
     }),
     new MenuItem({
       label: "Paste",
@@ -427,6 +438,7 @@ export function getEditMenuItems() {
           current = current.parent;
         }
       },
+      disable: !canEdit,
     }),
     new MenuItem({
       label: "Paste Into",
@@ -449,6 +461,7 @@ export function getEditMenuItems() {
           Globals.designer.currentPanel?.onUpdate();
         }
       },
+      disable: !canEdit,
     }),
   ];
   const deleteItems = getPanelMenuItems("delete");

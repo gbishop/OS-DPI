@@ -365,7 +365,7 @@ export class TypeSelect extends Select {
     /* Magic happens here! The replace method on a TreeBaseSwitchable replaces the
      * node with a new one to allow type switching in place
      * */
-    if (this.container instanceof TreeBaseSwitchable) {
+    if (this.container instanceof TreeBaseSwitchable && this._value) {
       this.container.replace(this._value);
     }
   }
