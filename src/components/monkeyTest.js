@@ -1,7 +1,7 @@
 /** Monkey test to find bugs */
 
 import { TreeBase } from "components/treebase";
-import { getComponentMenuItems, getEditMenuItems } from "components/toolbar";
+import { getEditMenuItems, getPanelMenuItems } from "components/toolbar";
 import Globals from "app/globals";
 import { MenuItem } from "components/menu";
 import * as Props from "./props";
@@ -20,14 +20,19 @@ const MenuItemBlacklist = [
   "Paste Into",
 ];
 
-const random = splitmix32(3);
+const seed = 4095; // set non-zero for repeatability
+const actualSeed = seed || Date.now() % 10000;
+console.log("actualSeed:", actualSeed);
+const random = splitmix32(actualSeed);
+
+let updates = 0; // count the number of changes to the interface
 
 /** Implement the test
  */
 function* monkeyTest() {
   let steps = 1000;
 
-  while (steps-- > 0) {
+  for (let step = 0; step < steps; step++) {
     // console.log(steps);
     // choose a panel
     const panelName = choose(panelNames);
@@ -36,40 +41,44 @@ function* monkeyTest() {
 
     // get the panel object
     const panel = Globals.designer.currentPanel;
+
     if (panel) {
       const components = listChildren(panel);
-      if (components.length) {
-        // choose one
-        const component = choose(components);
+      const component = choose(components);
+      if (component) {
         // focus on it
         panel.lastFocused = component.id;
         Globals.designer.restoreFocus();
+      } else {
+        panel.lastFocused = "";
+      }
 
-        // get menu items
-        let menuItems = [
-          ...getComponentMenuItems(
-            component,
-            "all",
-            (/** @type {function} */ f) => {
-              return () => {
-                f();
-                panel.update();
-              };
-            },
-          ),
-          ...getEditMenuItems(),
-          ...getPropertyEdits(component),
-        ];
-        menuItems = menuItems.filter((item) => {
-          return MenuItemBlacklist.indexOf(item.label) < 0;
-        });
-        // choose one
-        const menuItem = choose(menuItems);
-        if (menuItem && menuItem.callback) {
-          // console.log(menuItem.label, components.indexOf(component), component);
-          menuItem.callback();
-          yield true;
-        }
+      const { child } = getPanelMenuItems("add");
+
+      // get menu items
+      let menuItems = [
+        ...child,
+        ...getEditMenuItems(),
+        ...getPropertyEdits(component),
+      ];
+
+      menuItems = menuItems.filter((item) => {
+        return MenuItemBlacklist.indexOf(item.label) < 0;
+      });
+      menuItems = menuItems.filter((item) => item.callback && !item.disable);
+
+      console.assert(
+        !menuItems.find((item) => item.label == "Page"),
+        "Should not add Page",
+      );
+
+      // choose one
+      const menuItem = choose(menuItems);
+      if (menuItem && menuItem.callback) {
+        // console.log(menuItem.label, components.indexOf(component), component);
+        menuItem.callback();
+        updates++;
+        yield true;
       }
     }
   }
@@ -77,12 +86,22 @@ function* monkeyTest() {
   // now undo all those changes
   let undos = 0;
   for (const panel of Globals.designer.children) {
-    while (panel.changeStack.canUndo) {
-      // console.log(++undos);
-      panel.undo();
+    const panelName = panel.name.value;
+    if (panelNames.indexOf(panelName) >= 0) {
+      Globals.designer.switchTab(panelName);
       yield true;
+
+      while (panel.changeStack.canUndo) {
+        undos++;
+        panel.undo();
+        yield true;
+      }
     }
   }
+  console.log(
+    `Test complete: ${steps} steps ${updates} updates ${undos} undos`,
+  );
+
   yield false;
 }
 
@@ -111,6 +130,108 @@ if (location.host.startsWith("localhost")) {
     "keydown",
     ({ key, ctrlKey }) => key == "m" && ctrlKey && monkey(),
   );
+}
+
+/**
+ * Fakeup menu items that diddle the property values
+ *
+ * @param {TreeBase} component
+ * @returns {MenuItem[]}
+ */
+function getPropertyEdits(component) {
+  if (!component) return [];
+  const props = component.props;
+  /** @type {MenuItem[]} */
+  const items = [];
+
+  /** @type {function|undefined} */
+  let callback = undefined;
+  for (const name in props) {
+    const prop = props[name];
+    if (prop instanceof Props.String) {
+      callback = () => typeInto(prop, randomString());
+    } else if (prop instanceof Props.Integer) {
+      callback = () => typeInto(prop, randomInteger());
+    } else if (prop instanceof Props.Float) {
+      callback = () => typeInto(prop, randomFloat());
+    } else if (prop instanceof Props.Select) {
+      callback = () => {
+        const element = document.getElementById(prop.id);
+        if (element instanceof HTMLSelectElement) {
+          const options = element.options;
+          const option = choose([...options]);
+          if (option instanceof HTMLOptionElement) {
+            element.value = option.value;
+            element.dispatchEvent(new Event("change"));
+          }
+        }
+      };
+    } else if (prop instanceof Props.Color) {
+      callback = () => {
+        const element = document.getElementById(prop.id);
+        if (element instanceof HTMLInputElement) {
+          const list = document.getElementById("ColorNames");
+          if (list instanceof HTMLDataListElement) {
+            const color = choose([...list.options]);
+            if (color instanceof HTMLOptionElement) {
+              element.value = color.value;
+              element.dispatchEvent(new Event("change"));
+            }
+          }
+        }
+      };
+    } else if (
+      prop instanceof Props.Boolean ||
+      prop instanceof Props.OneOfGroup
+    ) {
+      callback = () => {
+        const element = document.getElementById(prop.id);
+        if (element instanceof HTMLInputElement && element.type == "checkbox") {
+          element.checked = !element.checked;
+          element.dispatchEvent(new Event("change"));
+        }
+      };
+    } else if (prop instanceof Props.Conditional) {
+      callback = () => typeInto(prop, choose(["true", "false"]));
+    } else if (prop instanceof Props.Expression) {
+      callback = () => typeInto(prop, choose(["1+1", "2*0"]));
+    } else {
+      continue;
+    }
+    const item = new MenuItem({
+      label: `Change ${component.className}.${prop.label}`,
+      callback,
+      disable: !component.allowDelete,
+    });
+    items.push(item);
+  }
+  return items;
+}
+
+function randomString() {
+  const n = 4 + Math.floor(random() * 4);
+  return random().toString(36).slice(2, n);
+}
+
+function randomInteger() {
+  return Math.floor(random() * 10).toString();
+}
+
+function randomFloat() {
+  return (random() * 10).toString();
+}
+
+/**
+ * @param {Props.Prop} prop
+ * @param {string} value
+ */
+function typeInto(prop, value) {
+  const input = document.getElementById(prop.id);
+  if (input instanceof HTMLInputElement) {
+    input.focus();
+    input.value = value;
+    input.dispatchEvent(new Event("change"));
+  }
 }
 
 /** Seeded random number generator
@@ -150,64 +271,4 @@ function listChildren(component) {
   }
   walk(component);
   return result;
-}
-
-/**
- * Fakeup menu items that diddle the property values 
- 
- * 
- * @param {TreeBase} component 
- * @returns {MenuItem[]} 
- */
-function getPropertyEdits(component) {
-  const props = component.props;
-  /** @type {MenuItem[]} */
-  const items = [];
-
-  /** @type {function|undefined} */
-  let callback = undefined;
-  for (const name in props) {
-    const prop = props[name];
-    if (prop instanceof Props.String) {
-      callback = () => typeInto(prop, randomString());
-    } else if (prop instanceof Props.Integer) {
-      callback = () => typeInto(prop, randomInteger());
-    } else if (prop instanceof Props.Float) {
-      callback = () => typeInto(prop, randomFloat());
-    } else {
-      continue;
-    }
-    const item = new MenuItem({
-      label: `Change ${component.className}.${prop.label}`,
-      callback,
-    });
-    items.push(item);
-  }
-  return items;
-}
-
-function randomString() {
-  const n = 4 + Math.floor(random() * 4);
-  return random().toString(36).slice(2, n);
-}
-
-function randomInteger() {
-  return Math.floor(random() * 10).toString();
-}
-
-function randomFloat() {
-  return (random() * 10).toString();
-}
-
-/**
- * @param {Props.Prop} prop
- * @param {string} value
- */
-function typeInto(prop, value) {
-  const input = document.getElementById(prop.id);
-  if (input instanceof HTMLInputElement) {
-    input.focus();
-    input.value = value;
-    input.dispatchEvent(new Event("change"));
-  }
 }
