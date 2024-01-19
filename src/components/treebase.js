@@ -541,7 +541,6 @@ export class TreeBaseSwitchable extends TreeBase {
     this.parent.children[index] = replacement;
     replacement.parent = this.parent;
     if (update) {
-      console.log("update");
       this.update();
     }
   }

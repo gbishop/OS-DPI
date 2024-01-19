@@ -122,7 +122,6 @@ export class Designer extends TreeBase {
 
     // Ask that tab which component is focused
     if (!panel?.lastFocused) {
-      console.log("no lastFocused");
       return null;
     }
     const component = TreeBase.componentFromId(panel.lastFocused);
