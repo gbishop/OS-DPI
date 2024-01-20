@@ -465,10 +465,10 @@ export class Integer extends Prop {
     function validate(value) {
       if (!/^[0-9]+$/.test(value)) return "Please enter a whole number";
       if (typeof options.min === "number" && parseInt(value) < options.min) {
-        return `Please enter a whole number at least ${this.options.min}`;
+        return `Please enter a whole number at least ${options.min}`;
       }
       if (typeof options.max === "number" && parseInt(value) > options.max) {
-        return `Please enter a whole number at most ${this.options.max}`;
+        return `Please enter a whole number at most ${options.max}`;
       }
       return "";
     }

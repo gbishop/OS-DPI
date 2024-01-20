@@ -1,6 +1,6 @@
-import { Stack } from "./stack";
+import { StackContainer } from "./stack";
 
-export class Page extends Stack {
+export class Page extends StackContainer {
   // you can't delete the page
   allowDelete = false;
 
@@ -12,8 +12,8 @@ export class Page extends Stack {
       "Logger",
       "ModalDialog",
       "Customize",
-      "HeadMouse"
+      "HeadMouse",
     );
   }
 }
-Stack.register(Page, "Page");
+StackContainer.register(Page, "Page");
