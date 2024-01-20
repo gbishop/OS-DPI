@@ -20,7 +20,7 @@ const MenuItemBlacklist = [
   "Paste Into",
 ];
 
-const seed = 4095; // set non-zero for repeatability
+const seed = 0; // set non-zero for repeatability
 const actualSeed = seed || Date.now() % 10000;
 console.log("actualSeed:", actualSeed);
 const random = splitmix32(actualSeed);
@@ -33,7 +33,6 @@ function* monkeyTest() {
   let steps = 1000;
 
   for (let step = 0; step < steps; step++) {
-    // console.log(steps);
     // choose a panel
     const panelName = choose(panelNames);
     Globals.designer.switchTab(panelName);
@@ -81,6 +80,22 @@ function* monkeyTest() {
         yield true;
       }
     }
+    // check for overflow
+    const UI = document.getElementById("UI");
+    let overflow = false; // report only once per occurance
+    if (
+      UI &&
+      (UI.scrollWidth > UI.clientWidth || UI.scrollHeight > UI.clientHeight)
+    ) {
+      if (!overflow) {
+        console.error(
+          `UI overflow on step ${step} scroll w=${UI.scrollWidth} h=${UI.scrollHeight} client w=${UI.clientWidth} h=${UI.clientHeight}`,
+        );
+        overflow = true;
+      }
+    } else {
+      overflow = false;
+    }
   }
 
   // now undo all those changes
@@ -112,13 +127,20 @@ export function monkey() {
   document.addEventListener("internalerror", () => test.return());
   // start the generator
   const test = monkeyTest();
+  // allow stopping the test with a key
+  const stopHandler = ({ key, ctrlKey }) =>
+    key == "q" && ctrlKey && test.return();
+  document.addEventListener("keyup", stopHandler);
   // delay if the render isnt complete but don't require it
   let wait = 0;
   document.addEventListener("rendercomplete", () => (wait = 0));
   const timer = setInterval(() => {
     if (wait <= 0) {
       wait = 5;
-      if (!test.next().value) clearTimeout(timer);
+      if (!test.next().value) {
+        clearTimeout(timer);
+        document.removeEventListener("keyup", stopHandler);
+      }
     } else {
       wait--;
     }
@@ -127,7 +149,7 @@ export function monkey() {
 
 if (location.host.startsWith("localhost")) {
   document.addEventListener(
-    "keydown",
+    "keyup",
     ({ key, ctrlKey }) => key == "m" && ctrlKey && monkey(),
   );
 }
