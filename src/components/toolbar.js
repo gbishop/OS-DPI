@@ -2,6 +2,7 @@ import { TreeBase } from "./treebase";
 import { Stack } from "./stack";
 import { PatternGroup } from "components/access/pattern";
 import { Page } from "components/page";
+import { Layout } from "components/layout";
 
 import "css/toolbar.css";
 import db from "app/db";
@@ -19,6 +20,7 @@ import { SaveLogs, ClearLogs } from "./logger";
 import { friendlyName, wikiName } from "./names";
 
 import { workerUpdateButton } from "components/serviceWorker";
+import { monkey } from "components/monkeyTest";
 
 /** Return a list of available Menu items on this component
  *
@@ -27,7 +29,7 @@ import { workerUpdateButton } from "components/serviceWorker";
  * @param {function} wrapper
  * @returns {MenuItem[]}
  */
-function getComponentMenuItems(component, which = "all", wrapper) {
+export function getComponentMenuItems(component, which = "all", wrapper) {
   /** @type {MenuItem[]} */
   const result = [];
 
@@ -48,19 +50,18 @@ function getComponentMenuItems(component, which = "all", wrapper) {
   }
   // delete
   if (which == "delete" || which == "all") {
-    if (component.allowDelete) {
-      result.push(
-        new MenuItem({
-          label: `Delete`,
-          title: `Delete ${friendlyName(component.className)}`,
-          callback: wrapper(() => {
-            // remove returns the id of the nearest neighbor or the parent
-            const nextId = component.remove();
-            return nextId;
-          }),
+    result.push(
+      new MenuItem({
+        label: `Delete`,
+        title: `Delete ${friendlyName(component.className)}`,
+        callback: wrapper(() => {
+          // remove returns the id of the nearest neighbor or the parent
+          const nextId = component.remove();
+          return nextId;
         }),
-      );
-    }
+        disable: !component.allowDelete,
+      }),
+    );
   }
 
   // move
@@ -79,6 +80,7 @@ function getComponentMenuItems(component, which = "all", wrapper) {
               component.moveUpDown(true);
               return component.id;
             }),
+            disable: !component.allowDelete,
           }),
         );
       }
@@ -92,6 +94,7 @@ function getComponentMenuItems(component, which = "all", wrapper) {
               component.moveUpDown(false);
               return component.id;
             }),
+            disable: !component.allowDelete,
           }),
         );
       }
@@ -105,7 +108,7 @@ function getComponentMenuItems(component, which = "all", wrapper) {
  * @param {"add" | "delete" | "move" | "all"} type
  * @return {{ child: MenuItem[], parent: MenuItem[]}}
  * */
-function getPanelMenuItems(type) {
+export function getPanelMenuItems(type) {
   // Figure out which tab is active
   const { designer } = Globals;
   const panel = designer.currentPanel;
@@ -121,6 +124,7 @@ function getPanelMenuItems(type) {
     console.log("no component");
     return { child: [], parent: [] };
   }
+  if (component === panel) type = "add";
 
   /** @param {function():string} arg */
   function itemCallback(arg) {
@@ -151,9 +155,10 @@ function getPanelMenuItems(type) {
     if (
       type !== "add" ||
       !parent ||
+      parent instanceof Designer ||
+      parent instanceof Layout ||
       (component instanceof Stack && parent instanceof Stack) ||
-      (component instanceof PatternGroup && parent instanceof PatternGroup) ||
-      parent instanceof Designer
+      (component instanceof PatternGroup && parent instanceof PatternGroup)
     ) {
       break;
     }
@@ -366,29 +371,36 @@ async function copyComponent(cut = false) {
   }
 }
 
-function getEditMenuItems() {
+export function getEditMenuItems() {
   // Figure out which tab is active
   const { designer } = Globals;
   const panel = designer.currentPanel;
+  const component = Globals.designer.selectedComponent;
+
+  const canEdit = component && component.allowDelete;
 
   let items = [
     new MenuItem({
       label: "Undo",
       callback: panel?.changeStack.canUndo ? () => panel?.undo() : undefined,
+      disable: !canEdit,
     }),
     new MenuItem({
       label: "Redo",
       callback: panel?.changeStack.canRedo ? () => panel?.redo() : undefined,
+      disable: !canEdit,
     }),
     new MenuItem({
       label: "Copy",
       callback: copyComponent,
+      disable: !canEdit,
     }),
     new MenuItem({
       label: "Cut",
       callback: async () => {
         copyComponent(true);
       },
+      disable: !canEdit,
     }),
     new MenuItem({
       label: "Paste",
@@ -407,7 +419,10 @@ function getEditMenuItems() {
         const className = obj.className;
         if (!className) return;
         // find a place that can accept it
-        const anchor = Globals.designer.selectedComponent;
+        const designer = Globals.designer;
+        const panel = designer.currentPanel;
+        if (!panel) return;
+        const anchor = designer.selectedComponent;
         if (!anchor) return;
         /** @type {TreeBase | null } */
         let current = anchor;
@@ -418,14 +433,16 @@ function getEditMenuItems() {
               anchor.parent === result.parent &&
               result.index != anchor.index + 1
             ) {
-              anchor.moveTo(anchor.index + 1);
+              result.moveTo(anchor.index + 1);
             }
-            Globals.designer.currentPanel?.onUpdate();
+            callAfterRender(() => designer.focusOn(result.id));
+            panel.onUpdate();
             return;
           }
           current = current.parent;
         }
       },
+      disable: !canEdit,
     }),
     new MenuItem({
       label: "Paste Into",
@@ -448,6 +465,7 @@ function getEditMenuItems() {
           Globals.designer.currentPanel?.onUpdate();
         }
       },
+      disable: !canEdit,
     }),
   ];
   const deleteItems = getPanelMenuItems("delete");
@@ -500,6 +518,15 @@ function getHelpMenuItems() {
       args: ["About-Project-Open"],
     }),
   );
+
+  if (location.host.startsWith("localhost")) {
+    items.push(
+      new MenuItem({
+        label: "Test",
+        callback: monkey,
+      }),
+    );
+  }
   return items;
 }
 
@@ -568,7 +595,7 @@ class DesignListDialog {
         ${names.map((name) => {
           let label;
           if (saved.includes(name)) {
-            label = html`${name}`;
+            label = html`<span>${name}</span>`;
           } else {
             label = html`<b>${name}</b> <b class="warning">Not saved</b>`;
           }

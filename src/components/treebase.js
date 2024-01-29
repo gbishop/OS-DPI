@@ -1,7 +1,6 @@
 import { html } from "uhtml";
 import * as Props from "./props";
 import "css/treebase.css";
-import WeakValue from "weak-value";
 import { styleString } from "./style";
 import { errorHandler } from "./errors";
 import { friendlyName } from "./names";
@@ -342,7 +341,7 @@ export class TreeBase {
    * Wrap the body of a component
    *
    * @param {ComponentAttrs} attrs
-   * @param {Hole} body
+   * @param {Hole|Hole[]} body
    * @returns {Hole}
    */
   component(attrs, body) {
@@ -351,6 +350,7 @@ export class TreeBase {
     if ("classes" in attrs) {
       classes = classes.concat(attrs.classes);
     }
+    if (!Array.isArray(body)) body = [body];
     return html`<div
       class=${classes.join(" ")}
       id=${this.id}
@@ -541,7 +541,6 @@ export class TreeBaseSwitchable extends TreeBase {
     this.parent.children[index] = replacement;
     replacement.parent = this.parent;
     if (update) {
-      console.log("update");
       this.update();
     }
   }

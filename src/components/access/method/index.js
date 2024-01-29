@@ -113,7 +113,7 @@ export class Method extends TreeBase {
   PointerEnterDebounce = new Props.Float(0, { label: "Pointer enter/leave" });
   PointerDownDebounce = new Props.Float(0, { label: "Pointer down/up" });
   Key = new Props.UID();
-  Active = new Props.OneOfGroup(false, { group: "ActiveMethod" });
+  Active = new Props.Boolean(false);
 
   allowedChildren = [
     "Timer",
@@ -244,7 +244,7 @@ export class Method extends TreeBase {
     if (this.Active.value) {
       this.streams = {};
       for (const child of this.handlers) {
-        child.configure(stop$);
+        child.configure();
       }
       const streams = Object.values(this.streams);
       if (streams.length > 0) {
@@ -345,10 +345,7 @@ export class Handler extends TreeBase {
     );
   }
 
-  /**
-   * @param {RxJs.Subject} _stop$
-   * */
-  configure(_stop$) {
+  configure() {
     throw new TypeError("Must override configure");
   }
 

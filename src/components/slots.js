@@ -38,7 +38,7 @@ export function formatSlottedString(msg) {
       if (m) {
         return html`<b>${m.groups?.value || ""}</b>`;
       } else {
-        return html`${part}`;
+        return html`<span>${part}</span>`;
       }
     });
   } else if (typeof msg === "object" && msg.type === "editor") {
@@ -53,10 +53,12 @@ export function formatSlottedString(msg) {
           // highlight the current slot
           return html`<b>${editor.slots[i++].value}</b>`;
         } else {
-          return html`${editor.slots[i++].value.replace(/^\*/, "")}`;
+          return html`<span
+            >${editor.slots[i++].value.replace(/^\*/, "")}</span
+          >`;
         }
       }
-      return html`${part}`;
+      return html`<span>${part}</span>`;
     });
   } else {
     return [];

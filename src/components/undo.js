@@ -49,6 +49,8 @@ export class ChangeStack {
     }
   }
 
+  useDiff = false;
+
   /**
    * restore the state of current to previous
    * @param {TreeBase} current
@@ -56,6 +58,14 @@ export class ChangeStack {
    * @returns {boolean}
    */
   restore(current, previous) {
+    if (!this.useDiff) {
+      const next = TreeBase.fromObject(previous);
+      current.children = next.children;
+      current.children.forEach((child) => (child.parent = current));
+      next.update();
+      // console.log("restored", current.toObject(), previous.className, previous);
+      return true;
+    }
     if (this.equal(current, previous)) {
       return false;
     }
@@ -65,6 +75,7 @@ export class ChangeStack {
       // I think this happens only for the components that dynamically change their class
       if (current instanceof TreeBaseSwitchable) {
         // switch the class and force the props to their old values
+        console.log("change class");
         current.replace(previous.className, previous.props);
       } else {
         throw new Error(
@@ -83,6 +94,7 @@ export class ChangeStack {
         current[propName].text != pprops[propName]
       ) {
         current[propName].set(pprops[propName]);
+        console.log("change prop");
         return true;
       }
     }
@@ -97,9 +109,15 @@ export class ChangeStack {
       for (let i = 0; i < pc.length; i++) {
         if (!this.equal(cc[i], pc[i])) {
           // pc[i] is the one that got deleted. Create it
+          console.log(
+            "undo delete",
+            current.toObject({ omittedProps: [], includeIds: true }),
+            pc[i],
+          );
           const deleted = TreeBase.fromObject(pc[i], current, { useId: true });
           if (i < pc.length) {
             // move it
+            console.log("move it", i);
             deleted.moveTo(i);
           }
           return true;
@@ -108,6 +126,7 @@ export class ChangeStack {
       throw new Error("Undo: delete failed");
     } else if (cc.length == pc.length + 1) {
       // the added one must be last
+      console.log("undo add", cc[cc.length - 1]);
       cc[cc.length - 1].remove();
       return true;
     } else if (cc.length == pc.length) {
@@ -118,6 +137,7 @@ export class ChangeStack {
       }
       if (diffs.length == 2) {
         // reordered
+        console.log("swap", diffs[0], diffs[1]);
         current.swap(diffs[0], diffs[1]);
         return true;
       } else if (diffs.length == 1) {

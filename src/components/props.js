@@ -235,7 +235,6 @@ export class Prop {
   get value() {
     if (this.compiled) {
       if (!this.formula) {
-        console.log(this.options);
         this._value = this.options.valueWhenEmpty ?? "";
       } else {
         const v = this.compiled();
@@ -366,7 +365,7 @@ export class TypeSelect extends Select {
     /* Magic happens here! The replace method on a TreeBaseSwitchable replaces the
      * node with a new one to allow type switching in place
      * */
-    if (this.container instanceof TreeBaseSwitchable) {
+    if (this.container instanceof TreeBaseSwitchable && this._value) {
       this.container.replace(this._value);
     }
   }
@@ -466,10 +465,10 @@ export class Integer extends Prop {
     function validate(value) {
       if (!/^[0-9]+$/.test(value)) return "Please enter a whole number";
       if (typeof options.min === "number" && parseInt(value) < options.min) {
-        return `Please enter a whole number at least ${this.options.min}`;
+        return `Please enter a whole number at least ${options.min}`;
       }
       if (typeof options.max === "number" && parseInt(value) > options.max) {
-        return `Please enter a whole number at most ${this.options.max}`;
+        return `Please enter a whole number at most ${options.max}`;
       }
       return "";
     }

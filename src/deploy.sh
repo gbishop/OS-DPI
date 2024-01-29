@@ -3,9 +3,9 @@
 # abort on errors
 set -e
 
-# get the origin username
-USERNAME=$(git config --get remote.origin.url | cut -d: -f2 | cut -d/ -f1)
-echo $USERNAME
+# get the origin 
+ORIGIN=$(git config --get remote.origin.url)
+echo $ORIGIN
 
 # build
 npm run build
@@ -27,7 +27,7 @@ git add -A
 git commit -m 'deploy'
 
 # if you are deploying to https://<USERNAME>.github.io/<REPO>
-git push -f git@github.com:$USERNAME/OS-DPI.git main:gh-pages
+git push -f $ORIGIN main:gh-pages
 
 cd -
 

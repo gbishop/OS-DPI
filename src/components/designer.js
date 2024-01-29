@@ -122,7 +122,6 @@ export class Designer extends TreeBase {
 
     // Ask that tab which component is focused
     if (!panel?.lastFocused) {
-      console.log("no lastFocused");
       return null;
     }
     const component = TreeBase.componentFromId(panel.lastFocused);
@@ -131,6 +130,20 @@ export class Designer extends TreeBase {
       return null;
     }
     return component;
+  }
+
+  /** @param {string} targetId */
+  focusOn(targetId) {
+    let elem = document.getElementById(targetId);
+    if (!elem) {
+      // perhaps this one is embeded, look for something that starts with it
+      const m = targetId.match(/^TreeBase-\d+/);
+      if (m) {
+        const prefix = m[0];
+        elem = document.querySelector(`[id^=${prefix}]`);
+      }
+    }
+    if (elem) elem.focus();
   }
 
   restoreFocus() {
@@ -421,6 +434,7 @@ export class DesignerPanel extends TreeBase {
   async onUpdate() {
     await this.doUpdate(true);
     this.configure();
+    Globals.designer.restoreFocus();
   }
 
   async doUpdate(save = true) {

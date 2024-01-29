@@ -44,8 +44,8 @@ export function imageOrVideo(src, title, onload = null) {
 
 class Grid extends TreeBase {
   fillItems = new Props.Boolean(false);
-  rows = new Props.Integer(3);
-  columns = new Props.Integer(3);
+  rows = new Props.Integer(3, { min: 1 });
+  columns = new Props.Integer(3, { min: 1 });
   scale = new Props.Float(1);
   name = new Props.String("grid");
   background = new Props.Color("white");
@@ -147,8 +147,8 @@ class Grid extends TreeBase {
     /** @type {Partial<CSSStyleDeclaration>} */
     const style = { backgroundColor: this.background.value };
     const { data } = Globals;
-    let rows = this.rows.value;
-    let columns = this.columns.value;
+    let rows = Math.max(1, this.rows.value);
+    let columns = Math.max(1, this.columns.value);
     let fillItems = this.fillItems.value;
     /** @type {Rows} */
     let items = data.getMatchingRows(this.children);

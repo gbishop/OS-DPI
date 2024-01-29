@@ -36,8 +36,7 @@ export class TimerHandler extends Handler {
     `;
   }
 
-  /** @param {RxJs.Subject} _stop$ */
-  configure(_stop$) {
+  configure() {
     const method = this.method;
     const timerName = this.TimerName.value;
     // there could be multiple timers active at once

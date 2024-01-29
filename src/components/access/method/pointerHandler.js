@@ -41,14 +41,15 @@ export class PointerHandler extends Handler {
     `;
   }
 
-  /** @param {RxJs.Subject} _ */
-  configure(_) {
+  configure() {
     const method = this.method;
     const streamName = "pointer";
     // only create it once
     if (method.streams[streamName]) return;
 
     const pattern = method.pattern;
+
+    if (!pattern) return;
 
     const inOutThreshold = method.PointerEnterDebounce.value * 1000;
     const upDownThreshold = method.PointerDownDebounce.value * 1000;
@@ -224,8 +225,6 @@ export class PointerHandler extends Handler {
           }),
         ),
       ),
-      // multicast the stream
-      RxJs.share(),
     );
 
     method.streams[streamName] = pointerStream$;
