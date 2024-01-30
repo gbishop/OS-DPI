@@ -147,7 +147,7 @@ export function monkey() {
   }, 20);
 }
 
-if (location.host.startsWith("localhost")) {
+if (location.host.match(/^localhost.*$|^bs-local.*$/)) {
   document.addEventListener(
     "keyup",
     ({ key, ctrlKey }) => key == "m" && ctrlKey && monkey(),
