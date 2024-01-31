@@ -1,3 +1,4 @@
+import "@ungap/custom-elements";
 import { Messages } from "./components/errors";
 import { Data } from "./data";
 import { State } from "./state";
