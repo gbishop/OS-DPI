@@ -8450,9 +8450,12 @@ class DB {
     const db = await this.dbPromise;
     const index = db.transaction("store5", "readonly").store.index("by-name");
     const result = [];
-    for await (const cursor of index.iterate(null, "nextunique")) {
-      result.push(/** @type {string} */ (cursor.key));
-    }
+    // work around a bug in Safari
+    const count = await db.count("store5");
+    if (count > 0)
+      for await (const cursor of index.iterate("", "nextunique")) {
+        result.push(/** @type {string} */ (cursor.key));
+      }
     return result;
   }
 
@@ -21195,7 +21198,7 @@ function monkey() {
   }, 20);
 }
 
-if (location.host.startsWith("localhost")) {
+if (location.host.match(/^localhost.*$|^bs-local.*$/)) {
   document.addEventListener(
     "keyup",
     ({ key, ctrlKey }) => key == "m" && ctrlKey && monkey(),
@@ -21840,7 +21843,7 @@ function getHelpMenuItems() {
     }),
   );
 
-  if (location.host.startsWith("localhost")) {
+  if (location.host.match(/^localhost.*$|^bs-local.*$/)) {
     items.push(
       new MenuItem({
         label: "Test",
