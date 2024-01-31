@@ -102,14 +102,8 @@ export class DB {
    */
   async names() {
     const db = await this.dbPromise;
-    const index = db.transaction("store5", "readonly").store.index("by-name");
-    const result = [];
-    // work around a bug in Safari
-    const count = await db.count("store5");
-    if (count > 0)
-      for await (const cursor of index.iterate("", "nextunique")) {
-        result.push(/** @type {string} */ (cursor.key));
-      }
+    const keys = await db.getAllKeysFromIndex("store5", "by-name");
+    const result = [...new Set(keys.map((key) => key.valueOf()[0]))];
     return result;
   }
 
@@ -237,48 +231,57 @@ export class DB {
    */
   async readDesignFromURL(url, name = "") {
     let design_url = url;
-
-    // allow for the url to point to HTML that contains the link
-    if (!url.match(/.*\.(osdpi|zip)$/)) {
-      const response = await fetch("https://gb.cs.unc.edu/cors/", {
-        headers: { "Target-URL": url },
-      });
-      if (!response.ok) {
-        throw new Error(`Fetching the URL (${url}) failed: ${response.status}`);
-      }
-      const html = await response.text();
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, "text/html");
-      // find the first link that matches the name
-      const link =
-        doc.querySelector(`a[href$="${name}.zip"]`) ||
-        doc.querySelector(`a[href$="${name}.osdpi"]`);
-      if (link instanceof HTMLAnchorElement) {
-        design_url = link.href;
-      } else {
-        throw new Error(`Invalid URL ${url}`);
-      }
-    }
+    /** @type {Response} */
+    let response;
     const db = await this.dbPromise;
-    // have we seen this url before?
-    const urlRecord = await db.get("url", design_url);
-    /** @type {HeadersInit} */
-    const headers = {}; // for the fetch
-    if (urlRecord) {
-      /** @type {string} */
-      const etag = urlRecord.etag;
-      // do we have any saved designs with this etag?
-      const savedKey = await db.getKeyFromIndex("saved", "by-etag", etag);
-      if (savedKey) {
-        // yes we have a previously saved design from this url
-        // set the headers to check if it has changed
-        headers["If-None-Match"] = etag;
-        name = savedKey.toString();
-      }
-    }
-    headers["Target-URL"] = design_url;
 
-    const response = await fetch("https://gb.cs.unc.edu/cors/", { headers });
+    // a local URL
+    if (!url.startsWith("http")) {
+      response = await fetch(url);
+    } else {
+      // allow for the url to point to HTML that contains the link
+      if (!url.match(/.*\.(osdpi|zip)$/)) {
+        response = await fetch("https://gb.cs.unc.edu/cors/", {
+          headers: { "Target-URL": url },
+        });
+        if (!response.ok) {
+          throw new Error(
+            `Fetching the URL (${url}) failed: ${response.status}`,
+          );
+        }
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        // find the first link that matches the name
+        const link =
+          doc.querySelector(`a[href$="${name}.zip"]`) ||
+          doc.querySelector(`a[href$="${name}.osdpi"]`);
+        if (link instanceof HTMLAnchorElement) {
+          design_url = link.href;
+        } else {
+          throw new Error(`Invalid URL ${url}`);
+        }
+      }
+      // have we seen this url before?
+      const urlRecord = await db.get("url", design_url);
+      /** @type {HeadersInit} */
+      const headers = {}; // for the fetch
+      if (urlRecord) {
+        /** @type {string} */
+        const etag = urlRecord.etag;
+        // do we have any saved designs with this etag?
+        const savedKey = await db.getKeyFromIndex("saved", "by-etag", etag);
+        if (savedKey) {
+          // yes we have a previously saved design from this url
+          // set the headers to check if it has changed
+          headers["If-None-Match"] = etag;
+          name = savedKey.toString();
+        }
+      }
+      headers["Target-URL"] = design_url;
+
+      response = await fetch("https://gb.cs.unc.edu/cors/", { headers });
+    }
     if (response.status == 304) {
       // we already have it
       this.designName = name;
