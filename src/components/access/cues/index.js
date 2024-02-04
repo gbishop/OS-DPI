@@ -68,7 +68,10 @@ export class CueList extends DesignerPanel {
     // update any CueCss entries to the new style interpolation
     if (obj.className == "CueList") {
       for (const child of obj.children) {
-        if (child.className == "CueCss") {
+        if (
+          child.className == "CueCss" &&
+          typeof child.props.Code === "string"
+        ) {
           child.props.Code = child.props.Code.replaceAll("{{Key}}", "$Key");
         }
       }
