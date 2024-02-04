@@ -96,8 +96,8 @@ export class TabPanel extends Stack {
   name = new Props.String("");
   label = new Props.String("");
 
-  /** @type {TabControl | null} */
-  parent = null;
+  /** @type {TabControl | undefined } */
+  parent = undefined;
 
   active = false;
   tabName = "";

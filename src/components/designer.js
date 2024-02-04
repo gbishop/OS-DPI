@@ -114,7 +114,7 @@ export class Designer extends TreeBase {
     }
   };
 
-  /** @returns {TreeBase | null} */
+  /** @returns {TreeBase | undefined } */
   get selectedComponent() {
     // Figure out which tab is active
     const { designer } = Globals;
@@ -122,12 +122,12 @@ export class Designer extends TreeBase {
 
     // Ask that tab which component is focused
     if (!panel?.lastFocused) {
-      return null;
+      return undefined;
     }
     const component = TreeBase.componentFromId(panel.lastFocused);
     if (!component) {
       console.log("no component");
-      return null;
+      return undefined;
     }
     return component;
   }
@@ -328,8 +328,8 @@ export class DesignerPanel extends TreeBase {
   name = new Props.String("");
   label = new Props.String("");
 
-  /** @type {Designer | null} */
-  parent = null;
+  /** @type {Designer | undefined } */
+  parent = undefined;
 
   active = false;
   tabName = "";

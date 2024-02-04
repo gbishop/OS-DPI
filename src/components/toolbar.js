@@ -421,7 +421,7 @@ export function getEditMenuItems() {
         // find a place that can accept it
         const anchor = Globals.designer.selectedComponent;
         if (!anchor) return;
-        /** @type {TreeBase | null } */
+        /** @type {TreeBase | undefined } */
         let current = anchor;
         while (current) {
           if (current.allowedChildren.indexOf(className) >= 0) {

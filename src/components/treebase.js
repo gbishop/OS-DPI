@@ -8,8 +8,8 @@ import { friendlyName } from "./names";
 export class TreeBase {
   /** @type {TreeBase[]} */
   children = [];
-  /** @type {TreeBase | null} */
-  parent = null;
+  /** @type {TreeBase | undefined } */
+  parent = undefined;
   /** @type {string[]} */
   allowedChildren = [];
   allowDelete = true;
@@ -224,7 +224,7 @@ export class TreeBase {
    */
   update() {
     let start = this;
-    /** @type {TreeBase | null} */
+    /** @type {TreeBase | undefined } */
     let p = start;
     while (p) {
       p.onUpdate(start);
@@ -414,7 +414,7 @@ export class TreeBase {
     const peers = this.parent.children;
     const index = peers.indexOf(this);
     const parent = this.parent;
-    this.parent = null;
+    this.parent = undefined;
     peers.splice(index, 1);
     // remove it and its children from the idMap
     TreeBase.removeFromIdMap(this);
