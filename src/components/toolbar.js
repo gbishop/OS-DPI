@@ -419,7 +419,10 @@ export function getEditMenuItems() {
         const className = obj.className;
         if (!className) return;
         // find a place that can accept it
-        const anchor = Globals.designer.selectedComponent;
+        const designer = Globals.designer;
+        const panel = designer.currentPanel;
+        if (!panel) return;
+        const anchor = designer.selectedComponent;
         if (!anchor) return;
         /** @type {TreeBase | undefined } */
         let current = anchor;
@@ -430,9 +433,10 @@ export function getEditMenuItems() {
               anchor.parent === result.parent &&
               result.index != anchor.index + 1
             ) {
-              anchor.moveTo(anchor.index + 1);
+              result.moveTo(anchor.index + 1);
             }
-            Globals.designer.currentPanel?.onUpdate();
+            callAfterRender(() => designer.focusOn(result.id));
+            panel.onUpdate();
             return;
           }
           current = current.parent;

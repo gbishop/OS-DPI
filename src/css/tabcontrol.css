@@ -8,6 +8,7 @@
 }
 .tabcontrol .panels {
   display: flex;
+  min-height: 0;
 }
 .tabcontrol .buttons {
   display: flex;

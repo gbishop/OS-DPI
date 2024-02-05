@@ -113,7 +113,7 @@ export class Method extends TreeBase {
   PointerEnterDebounce = new Props.Float(0, { label: "Pointer enter/leave" });
   PointerDownDebounce = new Props.Float(0, { label: "Pointer down/up" });
   Key = new Props.UID();
-  Active = new Props.OneOfGroup(false, { group: "ActiveMethod" });
+  Active = new Props.Boolean(false);
 
   allowedChildren = [
     "Timer",
