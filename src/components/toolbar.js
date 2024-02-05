@@ -519,7 +519,7 @@ function getHelpMenuItems() {
     }),
   );
 
-  if (location.host.startsWith("localhost")) {
+  if (location.host.match(/^localhost.*$|^bs-local.*$/)) {
     items.push(
       new MenuItem({
         label: "Test",
