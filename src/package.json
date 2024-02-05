@@ -1,6 +1,6 @@
 {
   "name": "os-dpi",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "",
   "scripts": {
     "start": "vite --port 8080 --host 0.0.0.0",
@@ -21,7 +21,6 @@
     "idb": "^8.0.0",
     "mergerino": "^0.4.0",
     "rxjs": "^7.5.6",
-    "sheetrock": "^1.2.0",
     "stacktrace-js": "^2.0.2",
     "tracky-mouse": "^1.0.0",
     "uhtml": "^4.4.1",
