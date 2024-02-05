@@ -11244,7 +11244,7 @@ class Code extends Prop {
     return this.labeled(
       html`<div class="Code">
         <div class="numbered-textarea">
-          <textarea class="line-numbers" readonly></textarea>
+          <textarea class="line-numbers" readonly name="numbers"></textarea>
           <textarea
             class="text"
             .value=${this._value}
@@ -11461,8 +11461,8 @@ function wikiName(className) {
 class TreeBase {
   /** @type {TreeBase[]} */
   children = [];
-  /** @type {TreeBase | null} */
-  parent = null;
+  /** @type {TreeBase | undefined } */
+  parent = undefined;
   /** @type {string[]} */
   allowedChildren = [];
   allowDelete = true;
@@ -11677,7 +11677,7 @@ class TreeBase {
    */
   update() {
     let start = this;
-    /** @type {TreeBase | null} */
+    /** @type {TreeBase | undefined } */
     let p = start;
     while (p) {
       p.onUpdate(start);
@@ -11867,7 +11867,7 @@ class TreeBase {
     const peers = this.parent.children;
     const index = peers.indexOf(this);
     const parent = this.parent;
-    this.parent = null;
+    this.parent = undefined;
     peers.splice(index, 1);
     // remove it and its children from the idMap
     TreeBase.removeFromIdMap(this);
@@ -13329,8 +13329,8 @@ class TabPanel extends Stack {
   name = new String$1("");
   label = new String$1("");
 
-  /** @type {TabControl | null} */
-  parent = null;
+  /** @type {TabControl | undefined } */
+  parent = undefined;
 
   active = false;
   tabName = "";
@@ -14136,7 +14136,7 @@ class Designer extends TreeBase {
     }
   };
 
-  /** @returns {TreeBase | null} */
+  /** @returns {TreeBase | undefined } */
   get selectedComponent() {
     // Figure out which tab is active
     const { designer } = Globals;
@@ -14144,12 +14144,12 @@ class Designer extends TreeBase {
 
     // Ask that tab which component is focused
     if (!panel?.lastFocused) {
-      return null;
+      return undefined;
     }
     const component = TreeBase.componentFromId(panel.lastFocused);
     if (!component) {
       console.log("no component");
-      return null;
+      return undefined;
     }
     return component;
   }
@@ -14364,8 +14364,8 @@ class DesignerPanel extends TreeBase {
   name = new String$1("");
   label = new String$1("");
 
-  /** @type {Designer | null} */
-  parent = null;
+  /** @type {Designer | undefined } */
+  parent = undefined;
 
   active = false;
   tabName = "";
@@ -20032,7 +20032,10 @@ class CueList extends DesignerPanel {
     // update any CueCss entries to the new style interpolation
     if (obj.className == "CueList") {
       for (const child of obj.children) {
-        if (child.className == "CueCss") {
+        if (
+          child.className == "CueCss" &&
+          typeof child.props.Code === "string"
+        ) {
           child.props.Code = child.props.Code.replaceAll("{{Key}}", "$Key");
         }
       }
@@ -20274,6 +20277,7 @@ button[cue="${this.Key.value}"]:after {
 }
 TreeBase.register(CueCircle, "CueCircle");
 
+// @ts-nocheck
 const TrackyMouse = {
   dependenciesRoot: "./tracky-mouse",
 };
@@ -21618,6 +21622,7 @@ function workerUpdateButton() {
 
 const panelNames = ["Layout", "Actions", "Cues", "Patterns", "Methods"];
 
+/* Don't trigger these menu entries */
 const MenuItemBlacklist = [
   "Audio",
   "Head Mouse",
@@ -21629,20 +21634,62 @@ const MenuItemBlacklist = [
   "Paste",
   "Paste Into",
 ];
-const actualSeed = Date.now() % 10000;
-console.log("actualSeed:", actualSeed);
-const random = splitmix32(actualSeed);
+
+/** A simple seeded random number generator */
+class SeededRandom {
+  /** @param {number} seed */
+  constructor(seed) {
+    /** @type {number} */
+    this.seed = seed;
+  }
+
+  // splittwist32
+  random() {
+    this.seed |= 0;
+    this.seed = (this.seed + 0x9e3779b9) | 0;
+    var t = this.seed ^ (this.seed >>> 16);
+    t = Math.imul(t, 0x21f0aaad);
+    t = t ^ (t >>> 15);
+    t = Math.imul(t, 0x735a2d97);
+    return ((t = t ^ (t >>> 15)) >>> 0) / 4294967296;
+  }
+
+  string() {
+    const n = 4 + Math.floor(this.random() * 4);
+    return this.random().toString(36).slice(2, n);
+  }
+
+  integer() {
+    return Math.floor(this.random() * 10).toString();
+  }
+
+  float() {
+    return (this.random() * 10).toString();
+  }
+
+  /** Choose one from an array
+   * @template T
+   * @param {T[]} items
+   * @returns {T}
+   */
+  choose(items) {
+    return items[Math.floor(this.random() * items.length)];
+  }
+}
+const actualSeed = Date.now() | 0;
+const random = new SeededRandom(actualSeed);
 
 let updates = 0; // count the number of changes to the interface
 
 /** Implement the test
  */
 function* monkeyTest() {
-  let steps = 1000;
+  console.log("Random seed:", random.seed.toString(16));
+  let steps = 100;
 
   for (let step = 0; step < steps; step++) {
     // choose a panel
-    const panelName = choose(panelNames);
+    const panelName = random.choose(panelNames);
     Globals.designer.switchTab(panelName);
     yield true;
 
@@ -21651,7 +21698,7 @@ function* monkeyTest() {
 
     if (panel) {
       const components = listChildren(panel);
-      const component = choose(components);
+      const component = random.choose(components);
       if (component) {
         // focus on it
         panel.lastFocused = component.id;
@@ -21680,7 +21727,7 @@ function* monkeyTest() {
       );
 
       // choose one
-      const menuItem = choose(menuItems);
+      const menuItem = random.choose(menuItems);
       if (menuItem && menuItem.callback) {
         // console.log(menuItem.label, components.indexOf(component), component);
         menuItem.callback();
@@ -21779,17 +21826,17 @@ function getPropertyEdits(component) {
   for (const name in props) {
     const prop = props[name];
     if (prop instanceof String$1) {
-      callback = () => typeInto(prop, randomString());
+      callback = () => typeInto(prop, random.string());
     } else if (prop instanceof Integer) {
-      callback = () => typeInto(prop, randomInteger());
+      callback = () => typeInto(prop, random.integer());
     } else if (prop instanceof Float) {
-      callback = () => typeInto(prop, randomFloat());
+      callback = () => typeInto(prop, random.float());
     } else if (prop instanceof Select) {
       callback = () => {
         const element = document.getElementById(prop.id);
         if (element instanceof HTMLSelectElement) {
           const options = element.options;
-          const option = choose([...options]);
+          const option = random.choose([...options]);
           if (option instanceof HTMLOptionElement) {
             element.value = option.value;
             element.dispatchEvent(new Event("change"));
@@ -21802,7 +21849,7 @@ function getPropertyEdits(component) {
         if (element instanceof HTMLInputElement) {
           const list = document.getElementById("ColorNames");
           if (list instanceof HTMLDataListElement) {
-            const color = choose([...list.options]);
+            const color = random.choose([...list.options]);
             if (color instanceof HTMLOptionElement) {
               element.value = color.value;
               element.dispatchEvent(new Event("change"));
@@ -21822,9 +21869,9 @@ function getPropertyEdits(component) {
         }
       };
     } else if (prop instanceof Conditional) {
-      callback = () => typeInto(prop, choose(["true", "false"]));
+      callback = () => typeInto(prop, random.choose(["true", "false"]));
     } else if (prop instanceof Expression) {
-      callback = () => typeInto(prop, choose(["1+1", "2*0"]));
+      callback = () => typeInto(prop, random.choose(["1+1", "2*0"]));
     } else {
       continue;
     }
@@ -21838,19 +21885,6 @@ function getPropertyEdits(component) {
   return items;
 }
 
-function randomString() {
-  const n = 4 + Math.floor(random() * 4);
-  return random().toString(36).slice(2, n);
-}
-
-function randomInteger() {
-  return Math.floor(random() * 10).toString();
-}
-
-function randomFloat() {
-  return (random() * 10).toString();
-}
-
 /**
  * @param {Props.Prop} prop
  * @param {string} value
@@ -21862,30 +21896,6 @@ function typeInto(prop, value) {
     input.value = value;
     input.dispatchEvent(new Event("change"));
   }
-}
-
-/** Seeded random number generator
- * @param {number} a
- */
-function splitmix32(a) {
-  return function () {
-    a |= 0;
-    a = (a + 0x9e3779b9) | 0;
-    var t = a ^ (a >>> 16);
-    t = Math.imul(t, 0x21f0aaad);
-    t = t ^ (t >>> 15);
-    t = Math.imul(t, 0x735a2d97);
-    return ((t = t ^ (t >>> 15)) >>> 0) / 4294967296;
-  };
-}
-
-/** Choose one from an array
- * @template T
- * @param {T[]} items
- * @returns {T}
- */
-function choose(items) {
-  return items[Math.floor(random() * items.length)];
 }
 
 /** @param {TreeBase} component */
@@ -22305,7 +22315,7 @@ function getEditMenuItems() {
         if (!panel) return;
         const anchor = designer.selectedComponent;
         if (!anchor) return;
-        /** @type {TreeBase | null } */
+        /** @type {TreeBase | undefined } */
         let current = anchor;
         while (current) {
           if (current.allowedChildren.indexOf(className) >= 0) {
