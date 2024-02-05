@@ -792,7 +792,7 @@ export class Code extends Prop {
     return this.labeled(
       html`<div class="Code">
         <div class="numbered-textarea">
-          <textarea class="line-numbers" readonly></textarea>
+          <textarea class="line-numbers" readonly name="numbers"></textarea>
           <textarea
             class="text"
             .value=${this._value}
