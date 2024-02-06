@@ -13765,7 +13765,7 @@ class VoiceSelect extends HTMLSelectElement {
       const item = document.createElement("option");
       item.value = voice.voiceURI;
       if (voice.voiceURI == current) item.setAttribute("selected", "");
-      item.innerText = voice.name;
+      item.innerText = `${voice.name} ${voice.lang}`;
       this.add(item);
     }
   }
