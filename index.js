@@ -13760,6 +13760,13 @@ class VoiceSelect extends HTMLSelectElement {
 
   async addVoices() {
     const voices = await getVoices();
+    /** @param {SpeechSynthesisVoice} a
+     * @param {SpeechSynthesisVoice} b
+     */
+    function compareVoices(a, b) {
+      return a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name);
+    }
+    voices.sort(compareVoices);
     const current = this.getAttribute("value");
     for (const voice of voices) {
       const item = document.createElement("option");
