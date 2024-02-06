@@ -41,6 +41,10 @@ div#UI {
   background-color: white;
   border: 1px solid var(--brand);
 }
+
+#timer:empty {
+  display: none;
+}
 div#ErrorReport:empty {
   display: none;
 }
