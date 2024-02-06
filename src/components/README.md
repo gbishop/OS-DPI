@@ -32,7 +32,6 @@ monitor.js: Show internal state in the designer.
 toolbar.js: The designer toolbar.
 treebase.js: Nearly every component is derived from TreeBase.
 wait.js: Display "Please Wait" during asynchronous operations that take too long.
-welcome.js: Display the welcome screen.
 
 ## Helpers
 
