@@ -1288,12 +1288,17 @@ body.HeadMouse .tracky-mouse-pointer {
   font-size: 2rem;
 }
 
-dialog#OpenDialog {
+dialog {
   margin: auto;
 }
 
-dialog#OpenDialog button {
+dialog button {
   margin-top: 1em;
+}
+
+dialog#ImportURL input {
+  width: 100%;
+  min-width: 50ch;
 }
 .Menu {
   display: inline-block;

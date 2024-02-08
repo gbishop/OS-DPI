@@ -9214,13 +9214,10 @@ class DB {
     return this.readDesignFromBlob(blob, name, etag);
   }
 
-  /**
-   * Reload the design from a URL if and only if:
-   * 1. It was loaded from a URL
-   * 2. It has not been edited
-   * 3. The ETag has changed
+  /** Return the URL (if any) this designed was imported from
+   * @returns {Promise<string>}
    */
-  async reloadDesignFromOriginalURL() {
+  async getDesignURL() {
     const db = await this.dbPromise;
 
     const name = this.designName;
@@ -9233,9 +9230,23 @@ class DB {
       const urlRecord = await db.getFromIndex("url", "by-etag", etag);
       if (urlRecord) {
         const url = urlRecord.page_url;
-        if (await this.readDesignFromURL(url)) {
-          Globals.restart();
-        }
+        return url;
+      }
+    }
+    return "";
+  }
+
+  /**
+   * Reload the design from a URL if and only if:
+   * 1. It was loaded from a URL
+   * 2. It has not been edited
+   * 3. The ETag has changed
+   */
+  async reloadDesignFromOriginalURL() {
+    const url = await this.getDesignURL();
+    if (url) {
+      if (await this.readDesignFromURL(url)) {
+        Globals.restart();
       }
     }
   }
@@ -9582,9 +9593,13 @@ const Functions = {
   if: (/** @type {boolean} */ c, /** @type {any} */ t, /** @type {any} */ f) =>
     c ? t : f,
   abs: (/** @type {number} */ v) => Math.abs(v),
-  reload_design: () => {
-    db.reloadDesignFromOriginalURL();
-    return "reloaded";
+  load_design: (url = "") => {
+    if (!url) db.reloadDesignFromOriginalURL();
+    else db.readDesignFromURL(url);
+    return "loaded";
+  },
+  open_editor: () => {
+    Globals.state.update({ editing: !Globals.state.get("editing") });
   },
 };
 
@@ -22098,6 +22113,10 @@ function getFileMenuItems(bar) {
       },
     }),
     new MenuItem({
+      label: "Import URL",
+      callback: () => bar.importURLDialog.open(),
+    }),
+    new MenuItem({
       label: "Export",
       callback: () => {
         db.saveDesign();
@@ -22243,6 +22262,14 @@ function getFileMenuItems(bar) {
       title: "Clear any stored logs",
       callback: async () => {
         ClearLogs();
+      },
+    }),
+    new MenuItem({
+      label: "Close editor",
+      title: "Return to User mode",
+      divider: "Editor",
+      callback: () => {
+        Globals.state.update({ editing: false });
       },
     }),
   ];
@@ -22510,8 +22537,46 @@ class DesignListDialog {
     }
     dialog.showModal();
   }
-  render() {
+  template() {
     return html`<dialog id="OpenDialog"></dialog>`;
+  }
+}
+
+class ImportURLDialog {
+  /** @type { HTMLDialogElement} */
+  current;
+
+  template() {
+    return html` <dialog id="ImportURL" ref=${this}>
+      <h1>Import from a URL</h1>
+      <input
+        type="url"
+        placeholder="Enter the URL to import"
+        name="DesignURL"
+      />
+      <button
+        @click=${() => {
+          const input = this.current.querySelector("input");
+          if (
+            input instanceof HTMLInputElement &&
+            !input.validationMessage &&
+            input.value
+          )
+            wait(db.readDesignFromURL(input.value));
+          this.current.close();
+        }}
+      >
+        Import
+      </button>
+      <button @click=${() => this.current.close()}>Cancel</button>
+    </dialog>`;
+  }
+
+  async open() {
+    const url = await db.getDesignURL();
+    const input = this.current.querySelector("input");
+    if (input instanceof HTMLInputElement) input.value = url;
+    this.current.showModal();
   }
 }
 
@@ -22533,6 +22598,7 @@ class ToolBar extends TreeBase {
     );
     this.helpMenu = new Menu("Help", getHelpMenuItems, this);
     this.designListDialog = new DesignListDialog();
+    this.importURLDialog = new ImportURLDialog();
   }
 
   template() {
@@ -22581,7 +22647,7 @@ class ToolBar extends TreeBase {
           </li>
           <li>${workerUpdateButton()}</li>
         </ul>
-        ${this.designListDialog.render()}
+        ${this.designListDialog.template()} ${this.importURLDialog.template()}
       </div>
     `;
   }
@@ -22671,8 +22737,8 @@ async function start() {
   );
 
   /* ToolBar */
-  const toolbar = ToolBar.create("ToolBar", null);
-  toolbar.init();
+  Globals.toolbar = ToolBar.create("ToolBar", null);
+  Globals.toolbar.init();
 
   /* Monitor */
   const monitor = Monitor.create("Monitor", null);
@@ -22698,7 +22764,7 @@ async function start() {
     safeRender("cues", Globals.cues);
     safeRender("UI", Globals.layout.children[0]);
     if (editing) {
-      safeRender("toolbar", toolbar);
+      safeRender("toolbar", Globals.toolbar);
       safeRender("tabs", Globals.designer);
       safeRender("monitor", monitor);
       safeRender("errors", Globals.error);
