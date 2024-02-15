@@ -230,6 +230,7 @@ export class DB {
    * @returns {Promise<boolean>}
    */
   async readDesignFromURL(url, name = "") {
+    if (!url) return false;
     let design_url = url;
     /** @type {Response} */
     let response;
@@ -314,13 +315,10 @@ export class DB {
     return this.readDesignFromBlob(blob, name, etag);
   }
 
-  /**
-   * Reload the design from a URL if and only if:
-   * 1. It was loaded from a URL
-   * 2. It has not been edited
-   * 3. The ETag has changed
+  /** Return the URL (if any) this design was imported from
+   * @returns {Promise<string>}
    */
-  async reloadDesignFromOriginalURL() {
+  async getDesignURL() {
     const db = await this.dbPromise;
 
     const name = this.designName;
@@ -333,9 +331,23 @@ export class DB {
       const urlRecord = await db.getFromIndex("url", "by-etag", etag);
       if (urlRecord) {
         const url = urlRecord.page_url;
-        if (await this.readDesignFromURL(url)) {
-          Globals.restart();
-        }
+        return url;
+      }
+    }
+    return "";
+  }
+
+  /**
+   * Reload the design from a URL if and only if:
+   * 1. It was loaded from a URL
+   * 2. It has not been edited
+   * 3. The ETag has changed
+   */
+  async reloadDesignFromOriginalURL() {
+    const url = await this.getDesignURL();
+    if (url) {
+      if (await this.readDesignFromURL(url)) {
+        Globals.restart();
       }
     }
   }
