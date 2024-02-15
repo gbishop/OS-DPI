@@ -1,6 +1,6 @@
 var GHPATH = "/OS-DPI";
 var APP_PREFIX = "osdpi_";
-var VERSION = "2024-1-15-8-53-11";
+var VERSION = "2024-1-15-9-1-46";
 var URLS = [
   `${GHPATH}/`,
   `${GHPATH}/index.html`,
@@ -15,7 +15,7 @@ var URLS = [
   `${GHPATH}/tracky-mouse/facemesh.worker.js`,
   `${GHPATH}/tracky-mouse/lib/facemesh/facemesh.js`,
   `${GHPATH}/tracky-mouse/lib/facemesh/facemesh/model.json`,
-  `${GHPATH}/tracky-mouse/lib/facemesh/facemesh/group1-shard1of`,
+  `${GHPATH}/tracky-mouse/lib/facemesh/facemesh/group1-shard1of.bin`,
   `${GHPATH}/tracky-mouse/lib/facemesh/blazeface/model.json`,
   `${GHPATH}/tracky-mouse/lib/facemesh/blazeface/group1-shard1of1.bin`
 ];
