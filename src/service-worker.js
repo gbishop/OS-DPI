@@ -7,6 +7,17 @@ var URLS = [
   `${GHPATH}/index.css`,
   `${GHPATH}/index.js`,
   `${GHPATH}/xlsx.js`,
+  `${GHPATH}/favicon.ico`,
+  `${GHPATH}/icon.png`,
+  `${GHPATH}/tracky-mouse/lib/clmtrackr.js`,
+  `${GHPATH}/tracky-mouse/lib/stats.js`,
+  `${GHPATH}/tracky-mouse/lib/tf.js`,
+  `${GHPATH}/tracky-mouse/facemesh.worker.js`,
+  `${GHPATH}/tracky-mouse/lib/facemesh/facemesh.js`,
+  `${GHPATH}/tracky-mouse/lib/facemesh/facemesh/model.json`,
+  `${GHPATH}/tracky-mouse/lib/facemesh/facemesh/group1-shard1of1.bin`,
+  `${GHPATH}/tracky-mouse/lib/facemesh/blazeface/model.json`,
+  `${GHPATH}/tracky-mouse/lib/facemesh/blazeface/group1-shard1of1.bin`,
 ];
 
 var CACHE_NAME = APP_PREFIX + VERSION;
