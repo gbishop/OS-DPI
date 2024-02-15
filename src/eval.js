@@ -44,9 +44,13 @@ export const Functions = {
   if: (/** @type {boolean} */ c, /** @type {any} */ t, /** @type {any} */ f) =>
     c ? t : f,
   abs: (/** @type {number} */ v) => Math.abs(v),
-  reload_design: () => {
-    db.reloadDesignFromOriginalURL();
-    return "reloaded";
+  load_design: (url = "") => {
+    if (!url) db.reloadDesignFromOriginalURL();
+    else db.readDesignFromURL(url);
+    return "loaded";
+  },
+  open_editor: () => {
+    Globals.state.update({ editing: !Globals.state.get("editing") });
   },
 };
 
