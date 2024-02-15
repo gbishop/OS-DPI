@@ -7534,7 +7534,6 @@ main.filters = filters;
  * @property {import('./components/access/cues').CueList} cues
  * @property {import('./components/access/method').MethodChooser} method
  * @property {import('./components/monitor').Monitor} monitor
- * @property {import('./components/toolbar').ToolBar} toolbar
  * @property {import('./components/designer').Designer} designer
  * @property {import('./components/errors').Messages} error
  * @property {function():Promise<void>} restart
@@ -9215,7 +9214,7 @@ class DB {
     return this.readDesignFromBlob(blob, name, etag);
   }
 
-  /** Return the URL (if any) this designed was imported from
+  /** Return the URL (if any) this design was imported from
    * @returns {Promise<string>}
    */
   async getDesignURL() {
@@ -9601,6 +9600,14 @@ const Functions = {
   },
   open_editor: () => {
     Globals.state.update({ editing: !Globals.state.get("editing") });
+  },
+  share: async (/** @type {string} */ text) => {
+    try {
+      await navigator.share({ text });
+      return "Shared";
+    } catch (err) {
+      return err.message;
+    }
   },
 };
 
@@ -12349,21 +12356,28 @@ let State$1 = class State {
    * update the state with a patch and invoke any listeners
    *
    * @param {Object} patch - the changes to make to the state
-   * @return {void}
+   * @return {Promise<void>}
    */
-  update(patch = {}) {
+  async update(patch = {}) {
+    // wait on any promises in the patch
+    const pvalues = await Promise.all(Object.values(patch));
+    const pentries = Object.keys(patch).map((k, i) => [k, pvalues[i]]);
+    patch = Object.fromEntries(pentries);
+
+    // note the keys that get changed
     for (const key in patch) {
       this.updated.add(key);
     }
+    // do the merge
     this.values = o(this.values, patch);
+    // call any listeners
     for (const callback of this.listeners) {
       callback();
     }
-
+    // persist the new state
     if (this.persistKey) {
       const persist = JSON.stringify(this.values);
       window.sessionStorage.setItem(this.persistKey, persist);
-      // console.trace("persist $tabControl", this.values["$tabControl"]);
     }
   }
 
@@ -22738,8 +22752,8 @@ async function start() {
   );
 
   /* ToolBar */
-  Globals.toolbar = ToolBar.create("ToolBar", null);
-  Globals.toolbar.init();
+  const toolbar = ToolBar.create("ToolBar", null);
+  toolbar.init();
 
   /* Monitor */
   const monitor = Monitor.create("Monitor", null);
@@ -22765,7 +22779,7 @@ async function start() {
     safeRender("cues", Globals.cues);
     safeRender("UI", Globals.layout.children[0]);
     if (editing) {
-      safeRender("toolbar", Globals.toolbar);
+      safeRender("toolbar", toolbar);
       safeRender("tabs", Globals.designer);
       safeRender("monitor", monitor);
       safeRender("errors", Globals.error);
