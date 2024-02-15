@@ -183,7 +183,7 @@ export function getPanelMenuItems(type) {
 function getFileMenuItems(bar) {
   return [
     new MenuItem({
-      label: "Import",
+      label: "Import File",
       callback: async () => {
         const local_db = new DB();
         fileOpen({
@@ -198,6 +198,10 @@ function getFileMenuItems(bar) {
           })
           .catch((e) => console.log(e));
       },
+    }),
+    new MenuItem({
+      label: "Import URL",
+      callback: () => bar.importURLDialog.open(),
     }),
     new MenuItem({
       label: "Export",
@@ -345,6 +349,14 @@ function getFileMenuItems(bar) {
       title: "Clear any stored logs",
       callback: async () => {
         ClearLogs();
+      },
+    }),
+    new MenuItem({
+      label: "Close editor",
+      title: "Return to User mode",
+      divider: "Editor",
+      callback: () => {
+        Globals.state.update({ editing: false });
       },
     }),
   ];
@@ -612,8 +624,46 @@ class DesignListDialog {
     }
     dialog.showModal();
   }
-  render() {
+  template() {
     return html`<dialog id="OpenDialog"></dialog>`;
+  }
+}
+
+class ImportURLDialog {
+  /** @type { HTMLDialogElement} */
+  current;
+
+  template() {
+    return html` <dialog id="ImportURL" ref=${this}>
+      <h1>Import from a URL</h1>
+      <input
+        type="url"
+        placeholder="Enter the URL to import"
+        name="DesignURL"
+      />
+      <button
+        @click=${() => {
+          const input = this.current.querySelector("input");
+          if (
+            input instanceof HTMLInputElement &&
+            !input.validationMessage &&
+            input.value
+          )
+            pleaseWait(db.readDesignFromURL(input.value));
+          this.current.close();
+        }}
+      >
+        Import
+      </button>
+      <button @click=${() => this.current.close()}>Cancel</button>
+    </dialog>`;
+  }
+
+  async open() {
+    const url = await db.getDesignURL();
+    const input = this.current.querySelector("input");
+    if (input instanceof HTMLInputElement) input.value = url;
+    this.current.showModal();
   }
 }
 
@@ -635,6 +685,7 @@ export class ToolBar extends TreeBase {
     );
     this.helpMenu = new Menu("Help", getHelpMenuItems, this);
     this.designListDialog = new DesignListDialog();
+    this.importURLDialog = new ImportURLDialog();
   }
 
   template() {
@@ -683,7 +734,7 @@ export class ToolBar extends TreeBase {
           </li>
           <li>${workerUpdateButton()}</li>
         </ul>
-        ${this.designListDialog.render()}
+        ${this.designListDialog.template()} ${this.importURLDialog.template()}
       </div>
     `;
   }
