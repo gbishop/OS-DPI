@@ -1,12 +1,23 @@
 var GHPATH = "/OS-DPI";
 var APP_PREFIX = "osdpi_";
-var VERSION = "2024-1-8-16-1-25";
+var VERSION = "2024-1-15-8-53-11";
 var URLS = [
   `${GHPATH}/`,
   `${GHPATH}/index.html`,
   `${GHPATH}/index.css`,
   `${GHPATH}/index.js`,
-  `${GHPATH}/xlsx.js`
+  `${GHPATH}/xlsx.js`,
+  `${GHPATH}/favicon.ico`,
+  `${GHPATH}/icon.png`,
+  `${GHPATH}/tracky-mouse/lib/clmtrackr.js`,
+  `${GHPATH}/tracky-mouse/lib/stats.js`,
+  `${GHPATH}/tracky-mouse/lib/tf.js`,
+  `${GHPATH}/tracky-mouse/facemesh.worker.js`,
+  `${GHPATH}/tracky-mouse/lib/facemesh/facemesh.js`,
+  `${GHPATH}/tracky-mouse/lib/facemesh/facemesh/model.json`,
+  `${GHPATH}/tracky-mouse/lib/facemesh/facemesh/group1-shard1of`,
+  `${GHPATH}/tracky-mouse/lib/facemesh/blazeface/model.json`,
+  `${GHPATH}/tracky-mouse/lib/facemesh/blazeface/group1-shard1of1.bin`
 ];
 var CACHE_NAME = APP_PREFIX + VERSION;
 self.addEventListener("fetch", function(e) {

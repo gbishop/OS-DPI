@@ -9130,6 +9130,7 @@ class DB {
    * @returns {Promise<boolean>}
    */
   async readDesignFromURL(url, name = "") {
+    if (!url) return false;
     let design_url = url;
     /** @type {Response} */
     let response;
@@ -22096,7 +22097,7 @@ function getPanelMenuItems(type) {
 function getFileMenuItems(bar) {
   return [
     new MenuItem({
-      label: "Import",
+      label: "Import File",
       callback: async () => {
         const local_db = new DB();
         n({
