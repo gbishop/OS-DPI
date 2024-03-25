@@ -61,5 +61,16 @@ class Display extends TreeBase {
     }
     this.current?.setAttribute("data--clicked-word", word);
   };
+
+  /**
+   * @param {SpeechSynthesisEvent} event
+   */
+  handleEvent(event) {
+    console.log(this, event);
+  }
+
+  init() {
+    document.addEventListener("boundary", this);
+  }
 }
 TreeBase.register(Display, "Display");
