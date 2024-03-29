@@ -27,7 +27,21 @@ class Speech extends TreeBase {
     utterance.rate = this.rate.value;
     utterance.volume = this.volume.value;
     utterance.addEventListener("boundary", (event) => {
-      document.dispatchEvent(new Event("boundary", event));
+      document.dispatchEvent(
+        new SpeechSynthesisEvent("boundary", {
+          utterance: event.utterance,
+          charIndex: event.charIndex,
+        }),
+      );
+    });
+    utterance.addEventListener("end", (event) => {
+      console.log("end");
+      document.dispatchEvent(
+        new SpeechSynthesisEvent("end", {
+          utterance: event.utterance,
+          charIndex: event.charIndex,
+        }),
+      );
     });
     speechSynthesis.cancel();
     speechSynthesis.speak(utterance);
@@ -36,7 +50,6 @@ class Speech extends TreeBase {
   template() {
     const { state } = Globals;
     if (state.hasBeenUpdated(this.stateName.value)) {
-      console.log("speak");
       this.speak();
     }
     return html`<div />`;

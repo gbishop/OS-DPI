@@ -11,6 +11,8 @@ class Display extends TreeBase {
   background = new Props.Color("white");
   fontSize = new Props.Float(2);
   scale = new Props.Float(1);
+  highlightWords = new Props.Boolean(false);
+  clearAfterSpeaking = new Props.Boolean(false);
 
   /** @type {HTMLDivElement | null} */
   current = null;
@@ -66,11 +68,36 @@ class Display extends TreeBase {
    * @param {SpeechSynthesisEvent} event
    */
   handleEvent(event) {
-    console.log(this, event);
+    console.log(event);
+    if (!this.highlightWords.value) return;
+    const element = document.getElementById(this.id);
+    if (!element) return;
+    const span = element.querySelector("button span");
+    if (!span) return;
+    const text = span.firstChild;
+    if (!text) return;
+    const selection = window.getSelection();
+    if (!selection) return;
+
+    if (event.type == "boundary") {
+      try {
+        selection.setBaseAndExtent(
+          text,
+          event.charIndex,
+          text,
+          event.charIndex,
+        );
+        selection.modify("extend", "forward", "word");
+      } catch (e) {}
+    } else if (event.type == "end") {
+      console.log("end");
+      Globals.state.update({ [this.stateName.value]: "" });
+    }
   }
 
   init() {
     document.addEventListener("boundary", this);
+    document.addEventListener("end", this);
   }
 }
 TreeBase.register(Display, "Display");
