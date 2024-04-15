@@ -1,17 +1,15 @@
 import { html } from "uhtml";
 import * as Props from "./props";
 import "css/treebase.css";
-import WeakValue from "weak-value";
 import { styleString } from "./style";
-import { session } from "./persist";
 import { errorHandler } from "./errors";
 import { friendlyName } from "./names";
 
 export class TreeBase {
   /** @type {TreeBase[]} */
   children = [];
-  /** @type {TreeBase | null} */
-  parent = null;
+  /** @type {TreeBase | undefined } */
+  parent = undefined;
   /** @type {string[]} */
   allowedChildren = [];
   allowDelete = true;
@@ -20,23 +18,31 @@ export class TreeBase {
   static treeBaseCounter = 0;
   id = `TreeBase-${TreeBase.treeBaseCounter++}`;
 
-  // values here are stored in sessionStorage
-  persisted = session(this.id, {
-    settingsDetailsOpen: false,
-  });
+  settingsDetailsOpen = false;
 
   // map from id to the component
-  static idMap = new WeakValue();
+  /** @type {Map<string, TreeBase>} */
+  static idMap = new Map();
 
   /** @param {string} id
-   * @returns {TreeBase | null} */
+   * @returns {TreeBase | undefined } */
   static componentFromId(id) {
     // strip off any added bits of the id
     const match = id.match(/TreeBase-\d+/);
     if (match) {
       return this.idMap.get(match[0]);
     }
-    return null;
+    return undefined;
+  }
+
+  /** Remove this component and its children from the idMap
+   * @param {TreeBase} component
+   */
+  static removeFromIdMap(component) {
+    this.idMap.delete(component.id);
+    for (const child of component.children) {
+      this.removeFromIdMap(child);
+    }
   }
 
   designer = {};
@@ -84,6 +90,7 @@ export class TreeBase {
    * Prepare a TreeBase tree for external storage by converting to simple objects and arrays
    * @param {Object} [options]
    * @param {string[]} options.omittedProps - class names of props to omit
+   * @param {boolean} [options.includeIds] - true to include the ids
    * @returns {Object}
    * */
   toObject(options = { omittedProps: [] }) {
@@ -102,6 +109,9 @@ export class TreeBase {
       props,
       children,
     };
+    if (options.includeIds) {
+      result.id = this.id;
+    }
     return result;
   }
 
@@ -129,15 +139,20 @@ export class TreeBase {
    *   @param {string|(new()=>TB)} constructorOrName
    *   @param {TreeBase | null} parent
    *   @param {Object<string,string|number|boolean>} props
+   *   @param {string} [id] - set the newly created id
    *   @returns {TB}
    *   */
-  static create(constructorOrName, parent = null, props = {}) {
+  static create(constructorOrName, parent = null, props = {}, id = "") {
     const constructor =
       typeof constructorOrName == "string"
         ? TreeBase.nameToClass.get(constructorOrName)
         : constructorOrName;
     /** @type {TB} */
     const result = new constructor();
+
+    if (id) {
+      result.id = id;
+    }
 
     // initialize the props
     for (const [name, prop] of Object.entries(result.props)) {
@@ -160,9 +175,11 @@ export class TreeBase {
    * Instantiate a TreeBase tree from its external representation
    * @param {Object} obj
    * @param {TreeBase | null} parent
+   * @param {Object} [options]
+   * @param {boolean} [options.useId]
    * @returns {TreeBase} - should be {this} but that isn't supported for some reason
    * */
-  static fromObject(obj, parent = null) {
+  static fromObject(obj, parent = null, options = { useId: false }) {
     // Get the constructor from the class map
     if (!obj) console.trace("fromObject", obj);
     const className = obj.className;
@@ -173,7 +190,12 @@ export class TreeBase {
     }
 
     // Create the object and link it to its parent
-    const result = this.create(constructor, parent, obj.props);
+    const result = this.create(
+      constructor,
+      parent,
+      obj.props,
+      options.useId ? obj.id || "" : "",
+    );
 
     // Link in the children
     for (const childObj of obj.children) {
@@ -181,7 +203,7 @@ export class TreeBase {
         childObj.parent = result;
         result.children.push(childObj);
       } else {
-        TreeBase.fromObject(childObj, result);
+        TreeBase.fromObject(childObj, result, options);
       }
     }
 
@@ -202,7 +224,7 @@ export class TreeBase {
    */
   update() {
     let start = this;
-    /** @type {TreeBase | null} */
+    /** @type {TreeBase | undefined } */
     let p = start;
     while (p) {
       p.onUpdate(start);
@@ -223,15 +245,38 @@ export class TreeBase {
   settings() {
     const detailsId = this.id + "-details";
     const settingsId = this.id + "-settings";
+    let focused = false; // suppress toggle when not focused
     return html`<div class="settings">
       <details
         class=${this.className}
         id=${detailsId}
-        ?open=${this.persisted.settingsDetailsOpen}
-        @toggle=${({ target }) =>
-          (this.persisted.settingsDetailsOpen = target.open)}
+        @click=${(/** @type {PointerEvent} */ event) => {
+          if (
+            !focused &&
+            event.target instanceof HTMLElement &&
+            event.target.parentElement instanceof HTMLDetailsElement &&
+            event.target.parentElement.open &&
+            event.pointerId >= 0 // not from the keyboard
+          ) {
+            /* When we click on the summary bar of a details element that is not focused,
+             * only focus it and prevent the toggle */
+            event.preventDefault();
+          }
+        }}
+        @toggle=${(/** @type {Event} */ event) => {
+          if (event.target instanceof HTMLDetailsElement)
+            this.settingsDetailsOpen = event.target.open;
+        }}
       >
-        <summary id=${settingsId}>${this.settingsSummary()}</summary>
+        <summary
+          id=${settingsId}
+          @pointerdown=${(/** @type {PointerEvent} */ event) => {
+            /** Record if the summary was focused before we clicked */
+            focused = event.target == document.activeElement;
+          }}
+        >
+          ${this.settingsSummary()}
+        </summary>
         ${this.settingsDetails()}
       </details>
       ${this.settingsChildren()}
@@ -296,7 +341,7 @@ export class TreeBase {
    * Wrap the body of a component
    *
    * @param {ComponentAttrs} attrs
-   * @param {Hole} body
+   * @param {Hole|Hole[]} body
    * @returns {Hole}
    */
   component(attrs, body) {
@@ -305,6 +350,7 @@ export class TreeBase {
     if ("classes" in attrs) {
       classes = classes.concat(attrs.classes);
     }
+    if (!Array.isArray(body)) body = [body];
     return html`<div
       class=${classes.join(" ")}
       id=${this.id}
@@ -368,8 +414,11 @@ export class TreeBase {
     const peers = this.parent.children;
     const index = peers.indexOf(this);
     const parent = this.parent;
-    this.parent = null;
+    this.parent = undefined;
     peers.splice(index, 1);
+    // remove it and its children from the idMap
+    TreeBase.removeFromIdMap(this);
+
     if (peers.length > index) {
       return peers[index].id;
     } else if (peers.length > 0) {
@@ -463,21 +512,36 @@ export class TreeBaseSwitchable extends TreeBase {
   }
 
   /** Replace this node with one of a compatible type
-   * @param {string} className */
-  replace(className) {
+   * @param {string} className
+   * @param {Object} [props] - used in undo to reset the props
+   * */
+  replace(className, props) {
     if (!this.parent) return;
     if (this.className == className) return;
+
+    let update = true;
     // extract the values of the old props
-    const props = Object.fromEntries(
-      Object.entries(this)
-        .filter(([_, prop]) => prop instanceof Props.Prop)
-        .map(([name, prop]) => [name, prop.value]),
-    );
+    if (!props) {
+      props = Object.fromEntries(
+        Object.entries(this)
+          .filter(([_, prop]) => prop instanceof Props.Prop)
+          .map(([name, prop]) => [name, prop.value]),
+      );
+    } else {
+      update = false;
+    }
     const replacement = TreeBase.create(className, null, props);
     replacement.init();
+    if (!(replacement instanceof TreeBaseSwitchable)) {
+      throw new Error(
+        `Invalid TreeBaseSwitchable replacement ${this.className} ${replacement.className}`,
+      );
+    }
     const index = this.parent.children.indexOf(this);
     this.parent.children[index] = replacement;
     replacement.parent = this.parent;
-    this.update();
+    if (update) {
+      this.update();
+    }
   }
 }

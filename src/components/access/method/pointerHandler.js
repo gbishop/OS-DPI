@@ -41,14 +41,15 @@ export class PointerHandler extends Handler {
     `;
   }
 
-  /** @param {RxJs.Subject} _ */
-  configure(_) {
+  configure() {
     const method = this.method;
     const streamName = "pointer";
     // only create it once
     if (method.streams[streamName]) return;
 
     const pattern = method.pattern;
+
+    if (!pattern) return;
 
     const inOutThreshold = method.PointerEnterDebounce.value * 1000;
     const upDownThreshold = method.PointerDownDebounce.value * 1000;
@@ -110,7 +111,7 @@ export class PointerHandler extends Handler {
       if (emittedEvents.length > 0 && over !== None) {
         const newOver = pattern.remapEventTarget({
           ...over,
-          target: over.originalTarget,
+          target: over.originalTarget || null,
         });
         if (newOver.target !== over.target) {
           // copy the accumulator to the new target
@@ -218,15 +219,12 @@ export class PointerHandler extends Handler {
             let w = {
               ...event,
               timeStamp: state.timeStamp,
-              access: event.access,
+              access: { ...event.access, eventType: event.type },
             };
-            w.access.eventType = event.type;
             return w;
           }),
         ),
       ),
-      // multicast the stream
-      RxJs.share(),
     );
 
     method.streams[streamName] = pointerStream$;

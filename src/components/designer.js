@@ -6,6 +6,7 @@ import Globals from "app/globals";
 import { TreeBase } from "./treebase";
 import { callAfterRender } from "app/render";
 import db from "app/db";
+import { ChangeStack } from "./undo";
 
 export class Designer extends TreeBase {
   stateName = new Props.String("$tabControl");
@@ -113,7 +114,7 @@ export class Designer extends TreeBase {
     }
   };
 
-  /** @returns {TreeBase | null} */
+  /** @returns {TreeBase | undefined } */
   get selectedComponent() {
     // Figure out which tab is active
     const { designer } = Globals;
@@ -121,15 +122,28 @@ export class Designer extends TreeBase {
 
     // Ask that tab which component is focused
     if (!panel?.lastFocused) {
-      console.log("no lastFocused");
-      return null;
+      return undefined;
     }
     const component = TreeBase.componentFromId(panel.lastFocused);
     if (!component) {
       console.log("no component");
-      return null;
+      return undefined;
     }
     return component;
+  }
+
+  /** @param {string} targetId */
+  focusOn(targetId) {
+    let elem = document.getElementById(targetId);
+    if (!elem) {
+      // perhaps this one is embeded, look for something that starts with it
+      const m = targetId.match(/^TreeBase-\d+/);
+      if (m) {
+        const prefix = m[0];
+        elem = document.querySelector(`[id^=${prefix}]`);
+      }
+    }
+    if (elem) elem.focus();
   }
 
   restoreFocus() {
@@ -193,45 +207,53 @@ export class Designer extends TreeBase {
    */
   panelKeyHandler(event) {
     if (event.target instanceof HTMLTextAreaElement) return;
-    if (event.key != "ArrowDown" && event.key != "ArrowUp") return;
-    if (event.shiftKey) {
-      // move the component
-      const component = Globals.designer.selectedComponent;
-      if (!component) return;
-      component.moveUpDown(event.key == "ArrowUp");
-      callAfterRender(() => Globals.designer.restoreFocus());
-      Globals.state.update();
-    } else {
-      event.preventDefault();
-      // get the components on this panel
-      // todo expand this to all components
-      const components = [
-        ...document.querySelectorAll(".DesignerPanel.ActivePanel .settings"),
-      ];
-      // determine which one contains the focus
-      const focusedComponent = document.querySelector(
-        '.DesignerPanel.ActivePanel .settings:has([aria-selected="true"]):not(:has(.settings [aria-selected="true"]))',
-      );
-      if (!focusedComponent) return;
-      // get its index
-      const index = components.indexOf(focusedComponent);
-      // get the next index
-      const nextIndex = Math.min(
-        components.length - 1,
-        Math.max(0, index + (event.key == "ArrowUp" ? -1 : 1)),
-      );
-      if (nextIndex != index) {
-        // focus on the first focusable in the next component
-        const focusable = /** @type {HTMLElement} */ (
-          components[nextIndex].querySelector(
-            "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), " +
-              'textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled]), ' +
-              "summary:not(:disabled)",
-          )
+    if (event.key == "ArrowDown" || event.key == "ArrowUp") {
+      if (event.shiftKey) {
+        // move the component
+        const component = Globals.designer.selectedComponent;
+        if (!component) return;
+        component.moveUpDown(event.key == "ArrowUp");
+        callAfterRender(() => Globals.designer.restoreFocus());
+        this.currentPanel?.update();
+        Globals.state.update();
+      } else {
+        event.preventDefault();
+        // get the components on this panel
+        // todo expand this to all components
+        const components = [
+          ...document.querySelectorAll(".DesignerPanel.ActivePanel .settings"),
+        ];
+        // determine which one contains the focus
+        const focusedComponent = document.querySelector(
+          '.DesignerPanel.ActivePanel .settings:has([aria-selected="true"]):not(:has(.settings [aria-selected="true"]))',
         );
-        if (focusable) {
-          focusable.focus();
+        if (!focusedComponent) return;
+        // get its index
+        const index = components.indexOf(focusedComponent);
+        // get the next index
+        const nextIndex = Math.min(
+          components.length - 1,
+          Math.max(0, index + (event.key == "ArrowUp" ? -1 : 1)),
+        );
+        if (nextIndex != index) {
+          // focus on the first focusable in the next component
+          const focusable = /** @type {HTMLElement} */ (
+            components[nextIndex].querySelector(
+              "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), " +
+                'textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled]), ' +
+                "summary:not(:disabled)",
+            )
+          );
+          if (focusable) {
+            focusable.focus();
+          }
         }
+      }
+    } else if (event.key == "z") {
+      if (event.ctrlKey && event.shiftKey) {
+        this.currentPanel?.redo();
+      } else if (event.ctrlKey) {
+        this.currentPanel?.undo();
       }
     }
   }
@@ -275,7 +297,7 @@ export class Designer extends TreeBase {
   /** Tweak the focus behavior in the designer
    * I want clicking on blank space to focus the nearest focusable element
 
-   * @param {KeyboardEvent} event
+   * @param {PointerEvent} event
    */
   designerClick = (event) => {
     // return if target is not an HTMLElement
@@ -320,12 +342,14 @@ export class DesignerPanel extends TreeBase {
   name = new Props.String("");
   label = new Props.String("");
 
-  /** @type {Designer | null} */
-  parent = null;
+  /** @type {Designer | undefined } */
+  parent = undefined;
 
   active = false;
   tabName = "";
   tabLabel = "";
+
+  settingsDetailsOpen = false;
   lastFocused = "";
 
   // where to store in the db
@@ -338,6 +362,8 @@ export class DesignerPanel extends TreeBase {
     // @ts-expect-error
     return this.constructor.tableName;
   }
+
+  changeStack = new ChangeStack();
 
   /**
    * Load a panel from the database.
@@ -356,6 +382,9 @@ export class DesignerPanel extends TreeBase {
     const result = this.fromObject(obj);
     if (result instanceof expected) {
       result.configure();
+      result.changeStack.save(
+        result.toObject({ omittedProps: [], includeIds: true }),
+      );
       return result;
     }
     // I don't think this happens
@@ -402,10 +431,18 @@ export class DesignerPanel extends TreeBase {
 
   configure() {}
 
-  onUpdate() {
+  async onUpdate() {
+    await this.doUpdate(true);
+    this.configure();
+    Globals.designer.restoreFocus();
+  }
+
+  async doUpdate(save = true) {
     const tableName = this.staticTableName;
     if (tableName) {
-      db.write(tableName, this.toObject());
+      const externalRep = this.toObject({ omittedProps: [], includeIds: true });
+      await db.write(tableName, externalRep);
+      if (save) this.changeStack.save(externalRep);
       Globals.state.update();
     }
   }
@@ -413,8 +450,18 @@ export class DesignerPanel extends TreeBase {
   async undo() {
     const tableName = this.staticTableName;
     if (tableName) {
-      await db.undo(tableName);
-      Globals.restart();
+      this.changeStack.undo(this);
+      await this.doUpdate(false);
+      Globals.designer.restoreFocus();
+    }
+  }
+
+  async redo() {
+    const tableName = this.staticTableName;
+    if (tableName) {
+      this.changeStack.redo(this);
+      await this.doUpdate(false);
+      Globals.designer.restoreFocus();
     }
   }
 

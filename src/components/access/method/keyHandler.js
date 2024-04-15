@@ -43,8 +43,7 @@ export class KeyHandler extends Handler {
     `;
   }
 
-  /** @param {RxJs.Subject} _stop$ */
-  configure(_stop$) {
+  configure() {
     const method = this.method;
     const streamName = "key";
 

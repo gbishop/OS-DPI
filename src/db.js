@@ -1,48 +1,48 @@
-import { openDB } from "idb/with-async-ittr";
+import { openDB } from "idb";
 import { zipSync, strToU8, unzipSync, strFromU8 } from "fflate";
 import { fileSave } from "browser-fs-access";
 import Globals from "./globals";
 
-const N_RECORDS_SAVE = 10;
-const N_RECORDS_MAX = 20;
-
 export class DB {
   constructor() {
-    this.dbPromise = openDB("os-dpi", 4, {
-      upgrade(db, oldVersion, newVersion) {
-        if (oldVersion && oldVersion < 3) {
-          for (const name of ["store", "media", "saved", "url"]) {
-            try {
-              db.deleteObjectStore(name);
-            } catch (e) {
-              // ignore the error
-            }
+    this.dbPromise = openDB("os-dpi", 5, {
+      async upgrade(db, oldVersion, _newVersion, transaction) {
+        let store5 = db.createObjectStore("store5", {
+          keyPath: ["name", "type"],
+        });
+        store5.createIndex("by-name", "name");
+        if (oldVersion == 4) {
+          // copy data from old store to new
+          const store4 = transaction.objectStore("store");
+          for await (const cursor of store4) {
+            const record4 = cursor.value;
+            store5.put(record4);
           }
-        } else if (oldVersion == 3) {
-          db.deleteObjectStore("images");
-        }
-        if (oldVersion < 3) {
-          let objectStore = db.createObjectStore("store", {
-            keyPath: "id",
-            autoIncrement: true,
-          });
-          objectStore.createIndex("by-name", "name");
-          objectStore.createIndex("by-name-type", ["name", "type"]);
-        }
-        if (newVersion && newVersion >= 4) {
+          db.deleteObjectStore("store");
+          // add an etag index to url store
+          transaction.objectStore("url").createIndex("by-etag", "etag");
+        } else if (oldVersion < 4) {
           db.createObjectStore("media");
-        }
-        if (oldVersion < 3) {
-          // keep track of the name and ETag (if any) of designs that have been saved
           let savedStore = db.createObjectStore("saved", {
             keyPath: "name",
           });
           savedStore.createIndex("by-etag", "etag");
           // track etags for urls
-          db.createObjectStore("url", {
+          const urlStore = db.createObjectStore("url", {
             keyPath: "url",
           });
+          // add an etag index to the url store
+          urlStore.createIndex("by-etag", "etag");
         }
+      },
+      blocked(currentVersion, blockedVersion, event) {
+        console.log("blocked", { currentVersion, blockedVersion, event });
+      },
+      blocking(_currentVersion, _blockedVersion, _event) {
+        window.location.reload();
+      },
+      terminated() {
+        console.log("terminated");
       },
     });
     this.updateListeners = [];
@@ -67,12 +67,12 @@ export class DB {
   async renameDesign(newName) {
     const db = await this.dbPromise;
     newName = await this.uniqueName(newName);
-    const tx = db.transaction(["store", "media", "saved"], "readwrite");
-    const index = tx.objectStore("store").index("by-name");
+    const tx = db.transaction(["store5", "media", "saved"], "readwrite");
+    const index = tx.objectStore("store5").index("by-name");
     for await (const cursor of index.iterate(this.designName)) {
-      const record = { ...cursor.value };
-      record.name = newName;
-      cursor.update(record);
+      const record = { ...cursor.value, name: newName };
+      cursor.delete();
+      tx.objectStore("store5").put(record);
     }
     const mst = tx.objectStore("media");
     for await (const cursor of mst.iterate()) {
@@ -102,11 +102,8 @@ export class DB {
    */
   async names() {
     const db = await this.dbPromise;
-    const index = db.transaction("store", "readonly").store.index("by-name");
-    const result = [];
-    for await (const cursor of index.iterate(null, "nextunique")) {
-      result.push(/** @type {string} */ (cursor.key));
-    }
+    const keys = await db.getAllKeysFromIndex("store5", "by-name");
+    const result = [...new Set(keys.map((key) => key.valueOf()[0]))];
     return result;
   }
 
@@ -159,21 +156,9 @@ export class DB {
    */
   async read(type, defaultValue = {}) {
     const db = await this.dbPromise;
-    const index = db
-      .transaction("store", "readonly")
-      .store.index("by-name-type");
-    const cursor = await index.openCursor([this.designName, type], "prev");
-    if (cursor) {
-      const data = cursor.value.data;
-      if (
-        (Array.isArray(defaultValue) && !Array.isArray(data)) ||
-        typeof data != typeof defaultValue
-      ) {
-        return defaultValue;
-      }
-      return data;
-    }
-    return defaultValue;
+    const record = await db.get("store5", [this.designName, type]);
+    const data = record ? record.data : defaultValue;
+    return data;
   }
 
   /**
@@ -183,17 +168,7 @@ export class DB {
    * @returns {Promise<Object[]>}
    */
   async readAll(type) {
-    const db = await this.dbPromise;
-    const index = db
-      .transaction("store", "readonly")
-      .store.index("by-name-type");
-    const key = [this.designName, type];
-    const result = [];
-    for await (const cursor of index.iterate(key)) {
-      const data = cursor.value.data;
-      result.push(data);
-    }
-    return result;
+    return [this.read(type)];
   }
 
   /** Add a new record
@@ -203,37 +178,12 @@ export class DB {
   async write(type, data) {
     const db = await this.dbPromise;
     // do all this in a transaction
-    const tx = db.transaction(["store", "saved"], "readwrite");
+    const tx = db.transaction(["store5", "saved"], "readwrite");
     // note that this design has been updated
     await tx.objectStore("saved").delete(this.designName);
     // add the record to the store
-    const store = tx.objectStore("store");
+    const store = tx.objectStore("store5");
     await store.put({ name: this.designName, type, data });
-
-    let n_max = N_RECORDS_MAX; // zero to prevent limiting
-    let n_save = N_RECORDS_SAVE;
-    if (type == "content") {
-      n_max = n_save = 1; // only save 1 content record
-    } else if (type == "log") {
-      n_max = n_save = 0; // don't limit log records
-    }
-
-    /* Only keep the last few records per type */
-    const index = store.index("by-name-type");
-    const key = [this.designName, type];
-    if (n_max > 0) {
-      // count how many we have
-      let count = await index.count(key);
-      if (count > n_max) {
-        // get the number to delete
-        let toDelete = count - n_save;
-        // we're getting them in order so this will delete the oldest ones
-        for await (const cursor of index.iterate(key)) {
-          if (--toDelete <= 0) break;
-          cursor.delete();
-        }
-      }
-    }
     await tx.done;
 
     this.notify({ action: "update", name: this.designName });
@@ -247,12 +197,7 @@ export class DB {
    */
   async clear(type) {
     const db = await this.dbPromise;
-    const tx = db.transaction("store", "readwrite");
-    const index = tx.store.index("by-name-type");
-    for await (const cursor of index.iterate([this.designName, type])) {
-      cursor.delete();
-    }
-    await tx.done;
+    return db.delete("store5", [this.designName, type]);
   }
 
   /** Undo by deleting the most recent record
@@ -262,7 +207,7 @@ export class DB {
     if (type == "content") return;
     const db = await this.dbPromise;
     const index = db
-      .transaction("store", "readwrite")
+      .transaction("store5", "readwrite")
       .store.index("by-name-type");
     const cursor = await index.openCursor([this.designName, type], "prev");
     if (cursor) await cursor.delete();
@@ -281,61 +226,139 @@ export class DB {
 
   /** Read a design from a URL
    * @param {string} url
+   * @param {string} [name]
+   * @returns {Promise<boolean>}
    */
-  async readDesignFromURL(url) {
+  async readDesignFromURL(url, name = "") {
+    if (!url) return false;
+    let design_url = url;
+    /** @type {Response} */
+    let response;
     const db = await this.dbPromise;
-    // have we seen this url before?
-    const urlRecord = await db.get("url", url);
-    /** @type {HeadersInit} */
-    const headers = {}; // for the fetch
-    let name = "";
-    if (urlRecord) {
-      /** @type {string} */
-      const etag = urlRecord.etag;
-      // do we have any saved designs with this etag?
-      const savedKey = await db.getKeyFromIndex("saved", "by-etag", etag);
-      if (savedKey) {
-        // yes we have a previously saved design from this url
-        // set the headers to check if it has changed
-        headers["If-None-Match"] = etag;
-        name = savedKey.toString();
-      }
-    }
 
-    const response = await fetch(url, { headers });
+    // a local URL
+    if (!url.startsWith("http")) {
+      response = await fetch(url);
+    } else {
+      // allow for the url to point to HTML that contains the link
+      if (!url.match(/.*\.(osdpi|zip)$/)) {
+        response = await fetch("https://gb.cs.unc.edu/cors/", {
+          headers: { "Target-URL": url },
+        });
+        if (!response.ok) {
+          throw new Error(
+            `Fetching the URL (${url}) failed: ${response.status}`,
+          );
+        }
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        // find the first link that matches the name
+        const link =
+          doc.querySelector(`a[href$="${name}.zip"]`) ||
+          doc.querySelector(`a[href$="${name}.osdpi"]`);
+        if (link instanceof HTMLAnchorElement) {
+          design_url = link.href;
+        } else {
+          throw new Error(`Invalid URL ${url}`);
+        }
+      }
+      // have we seen this url before?
+      const urlRecord = await db.get("url", design_url);
+      /** @type {HeadersInit} */
+      const headers = {}; // for the fetch
+      if (urlRecord) {
+        /** @type {string} */
+        const etag = urlRecord.etag;
+        // do we have any saved designs with this etag?
+        const savedKey = await db.getKeyFromIndex("saved", "by-etag", etag);
+        if (savedKey) {
+          // yes we have a previously saved design from this url
+          // set the headers to check if it has changed
+          headers["If-None-Match"] = etag;
+          name = savedKey.toString();
+        }
+      }
+      headers["Target-URL"] = design_url;
+
+      response = await fetch("https://gb.cs.unc.edu/cors/", { headers });
+    }
     if (response.status == 304) {
       // we already have it
       this.designName = name;
-      return;
+      return false;
     }
     if (!response.ok) {
       throw new Error(`Fetching the URL (${url}) failed: ${response.status}`);
     }
-    const etag = response.headers.get("ETag") || "";
-    await db.put("url", { url, etag });
 
-    const urlParts = new URL(url, window.location.origin);
-    const pathParts = urlParts.pathname.split("/");
-    if (
-      pathParts.length > 0 &&
-      pathParts[pathParts.length - 1].endsWith(".osdpi")
-    ) {
-      name = pathParts[pathParts.length - 1];
-    } else {
-      throw new Error(`Design files should have .osdpi suffix`);
+    const etag = response.headers.get("ETag") || "";
+    await db.put("url", { url: design_url, page_url: url, etag });
+
+    if (!name) {
+      const urlParts = new URL(design_url, window.location.origin);
+      const pathParts = urlParts.pathname.split("/");
+      if (
+        pathParts.length > 0 &&
+        (pathParts[pathParts.length - 1].endsWith(".osdpi") ||
+          pathParts[pathParts.length - 1].endsWith(".zip"))
+      ) {
+        name = pathParts[pathParts.length - 1];
+      } else {
+        throw new Error(`Design files should have .osdpi suffix`);
+      }
     }
 
     const blob = await response.blob();
+
     // parse the URL
     return this.readDesignFromBlob(blob, name, etag);
+  }
+
+  /** Return the URL (if any) this design was imported from
+   * @returns {Promise<string>}
+   */
+  async getDesignURL() {
+    const db = await this.dbPromise;
+
+    const name = this.designName;
+
+    // check saved
+    const savedRecord = await db.get("saved", name);
+    if (savedRecord && savedRecord.etag && savedRecord.etag != "none") {
+      // lookup the URL
+      const etag = savedRecord.etag;
+      const urlRecord = await db.getFromIndex("url", "by-etag", etag);
+      if (urlRecord) {
+        const url = urlRecord.page_url;
+        return url;
+      }
+    }
+    return "";
+  }
+
+  /**
+   * Reload the design from a URL if and only if:
+   * 1. It was loaded from a URL
+   * 2. It has not been edited
+   * 3. The ETag has changed
+   */
+  async reloadDesignFromOriginalURL() {
+    const url = await this.getDesignURL();
+    if (url) {
+      if (await this.readDesignFromURL(url)) {
+        Globals.restart();
+      }
+    }
   }
 
   /** Read a design from a zip file
    * @param {Blob} blob
    * @param {string} filename
    * @param {string} etag
+   * @returns {Promise<boolean>}
    */
-  async readDesignFromBlob(blob, filename, etag = "none") {
+  async readDesignFromBlob(blob, filename, etag = "") {
     const db = await this.dbPromise;
     this.fileName = filename;
 
@@ -346,7 +369,11 @@ export class DB {
     // normalize the fileName to make the design name
     let name = this.fileName;
     // make sure it is unique
-    name = await this.uniqueName(name);
+    if (!etag) {
+      name = await this.uniqueName(name);
+    } else {
+      name = name.replace(/\.(zip|osdpi)$/, "");
+    }
 
     this.designName = name;
 
@@ -383,14 +410,14 @@ export class DB {
     }
     await db.put("saved", { name: this.designName, etag });
     this.notify({ action: "update", name: this.designName });
-    return;
+    return true;
   }
 
   // do this part async to avoid file picker timeout
   async convertDesignToBlob() {
     const db = await this.dbPromise;
     // collect the parts of the design
-    const layout = Globals.tree.toObject();
+    const layout = Globals.layout.toObject();
     const actions = Globals.actions.toObject();
     const content = await this.read("content");
     const method = Globals.method.toObject();
@@ -451,7 +478,7 @@ export class DB {
    */
   async unload(name) {
     const db = await this.dbPromise;
-    const tx = db.transaction("store", "readwrite");
+    const tx = db.transaction("store5", "readwrite");
     const index = tx.store.index("by-name");
     for await (const cursor of index.iterate(name)) {
       cursor.delete();

@@ -142,7 +142,7 @@
 /**
  * @typedef {Object} EvalContext
  * @property {{[key: string]: string}} [states]
- * @property {{[key: string]: string}} [data]
+ * @property {{[key: string]: string} | DOMStringMap } [data]
  * @property {{[key: string]: function}} [Functions]
  */
 
@@ -151,4 +151,5 @@
  * @property {string} className
  * @property {Object<string, string | number | boolean>} props
  * @property {ExternalRep[]} children
+ * @property {string} [id]
  */

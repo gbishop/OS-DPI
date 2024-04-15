@@ -9,7 +9,6 @@ import { GridFilter } from "./gridFilter";
 class Option extends TreeBase {
   name = new Props.String("", { hiddenLabel: true });
   value = new Props.String("", { hiddenLabel: true });
-  cache = {};
 }
 TreeBase.register(Option, "Option");
 

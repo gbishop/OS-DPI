@@ -1,3 +1,4 @@
+// @ts-nocheck
 export const TrackyMouse = {
   dependenciesRoot: "./tracky-mouse",
 };

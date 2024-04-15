@@ -29,7 +29,6 @@ export function safeRender(id, component) {
   if (safe) {
     try {
       let what = component.safeTemplate();
-      if (Array.isArray(what)) what = html`${what}`;
       r = render(where, what);
     } catch (error) {
       if (error instanceof Error) {
@@ -41,7 +40,6 @@ export function safeRender(id, component) {
     }
   } else {
     let what = component.safeTemplate();
-    if (Array.isArray(what)) what = html`${what}`;
     r = render(where, what);
   }
   return r;

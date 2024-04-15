@@ -16,7 +16,7 @@ You can see a few simple and rough demos of the current capabilities by followin
 - <a href="https://unc-project-open-aac.github.io/OS-DPI/?fetch=examples/updated/utterance_Contact.osdpi">Contact-like utterance-based system</a>
 - <a href="https://unc-project-open-aac.github.io/OS-DPI/">Start a new design</a>
 
-**These demos are known to not work in Safari.** Please use Google Chrome or one if its variants.
+**These demos work in Safari 17+ but not in earlier versions.**
 
 In these demos you can switch between the developer mode and full-screen user-interface pressing the **Alt** or **Option** key followed by the **d** key.
 

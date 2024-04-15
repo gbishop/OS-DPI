@@ -1,5 +1,6 @@
 import expressions from "angular-expressions";
 import Globals from "./globals";
+import db from "./db";
 
 /** @param {function(string, string): string} f */
 function updateString(f) {
@@ -43,6 +44,14 @@ export const Functions = {
   if: (/** @type {boolean} */ c, /** @type {any} */ t, /** @type {any} */ f) =>
     c ? t : f,
   abs: (/** @type {number} */ v) => Math.abs(v),
+  load_design: (url = "") => {
+    if (!url) db.reloadDesignFromOriginalURL();
+    else db.readDesignFromURL(url);
+    return "loaded";
+  },
+  open_editor: () => {
+    Globals.state.update({ editing: !Globals.state.get("editing") });
+  },
 };
 
 /**

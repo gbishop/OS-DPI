@@ -13,20 +13,29 @@ export class MenuItem {
    * @param {Object} obj - argument object
    * @param {string} obj.label
    * @param {Function | null} [ obj.callback ]
+   * @param {boolean} [obj.disable]
    * @param {any[]} [ obj.args ]
    * @param {string} [ obj.title ]
    * @param {string} [ obj.divider ]
    */
-  constructor({ label, callback = null, args = [], title = "", divider = "" }) {
+  constructor({
+    label,
+    callback = null,
+    args = [],
+    title = "",
+    divider = "",
+    disable = false,
+  }) {
     this.label = label;
     this.callback = callback;
+    this.disable = !!disable;
     this.args = args;
     this.title = title;
     this.divider = divider;
   }
 
   apply() {
-    if (this.callback) this.callback(...this.args);
+    if (this.callback && !this.disable) this.callback(...this.args);
   }
 }
 
@@ -94,7 +103,7 @@ export class Menu {
           return html`<li role="menuitem" divider=${item.divider}>
             <button
               index=${index}
-              aria-disabled=${!item.callback}
+              aria-disabled=${!item.callback || item.disable}
               title=${item.title}
               @click=${() => {
                 if (item.callback) {

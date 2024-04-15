@@ -63,8 +63,7 @@ export class SocketHandler extends Handler {
    * @type {RxJs.Observable<EventLike> | undefined} */
   socket$ = undefined;
 
-  /** @param {RxJs.Subject} _stop$ */
-  configure(_stop$) {
+  configure() {
     const method = this.method;
     const streamName = "socket";
     // only create it once
@@ -101,7 +100,7 @@ export class SocketHandler extends Handler {
      */
     let dynamicRows = [];
     const fields = [];
-    for (const [key, value] of Object.entries(event.access)) {
+    for (const [key, value] of Object.entries(event.access || {})) {
       console.log(key, value);
       if (
         Array.isArray(value) &&

@@ -24,11 +24,6 @@ export class MethodChooser extends DesignerPanel {
   static tableName = "method";
   static defaultValue = defaultMethods;
 
-  onUpdate() {
-    super.onUpdate();
-    this.configure();
-  }
-
   configure() {
     // tear down the old configuration if any
     this.stop();
@@ -118,7 +113,7 @@ export class Method extends TreeBase {
   PointerEnterDebounce = new Props.Float(0, { label: "Pointer enter/leave" });
   PointerDownDebounce = new Props.Float(0, { label: "Pointer down/up" });
   Key = new Props.UID();
-  Active = new Props.OneOfGroup(false, { group: "ActiveMethod" });
+  Active = new Props.Boolean(false);
 
   allowedChildren = [
     "Timer",
@@ -249,7 +244,7 @@ export class Method extends TreeBase {
     if (this.Active.value) {
       this.streams = {};
       for (const child of this.handlers) {
-        child.configure(stop$);
+        child.configure();
       }
       const streams = Object.values(this.streams);
       if (streams.length > 0) {
@@ -272,7 +267,7 @@ export class Method extends TreeBase {
 
   /** Refresh the pattern and other state on redraw */
   refresh() {
-    this.pattern.refresh();
+    if (this.pattern) this.pattern.refresh();
   }
 }
 TreeBase.register(Method, "Method");
@@ -350,10 +345,7 @@ export class Handler extends TreeBase {
     );
   }
 
-  /**
-   * @param {RxJs.Subject} _stop$
-   * */
-  configure(_stop$) {
+  configure() {
     throw new TypeError("Must override configure");
   }
 
@@ -403,7 +395,11 @@ export class HandlerKeyCondition extends HandlerCondition {
 
   /** @param {EvalContext} context */
   eval(context) {
-    return this.Key.value == context.data.key;
+    return !!(
+      context.data &&
+      context.data.key &&
+      this.Key.value == context.data.key
+    );
   }
 }
 TreeBase.register(HandlerKeyCondition, "HandlerKeyCondition");

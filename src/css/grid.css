@@ -1,4 +1,9 @@
 .grid {
+  height: 100%;
+  width: 100%;
+}
+
+.grid > div {
   display: grid;
   grid-auto-rows: 1fr;
   height: 100%;
@@ -11,6 +16,7 @@
   border-radius: 5px;
   background-color: inherit;
   user-select: none;
+  border: 1px solid black;
 }
 .grid button div {
   display: flex;

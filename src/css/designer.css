@@ -87,12 +87,12 @@ details summary > * {
 #designer .settings[aria-selected="true"] {
   background-color: var(--surface1);
   color: var(--text1);
-  border: 4px dashed var(--brand);
+  outline: 4px dashed var(--brand);
 }
 #designer .settings:has(.settings [aria-selected="true"]) {
   background-color: var(--surface2);
   color: var(--text2);
-  border: 0px;
+  outline: 0px;
   box-shadow: none;
 }
 
