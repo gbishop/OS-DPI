@@ -9601,14 +9601,6 @@ const Functions = {
   open_editor: () => {
     Globals.state.update({ editing: !Globals.state.get("editing") });
   },
-  share: async (/** @type {string} */ text) => {
-    try {
-      await navigator.share({ text });
-      return "Shared";
-    } catch (err) {
-      return err.message;
-    }
-  },
 };
 
 /**
@@ -12356,28 +12348,21 @@ let State$1 = class State {
    * update the state with a patch and invoke any listeners
    *
    * @param {Object} patch - the changes to make to the state
-   * @return {Promise<void>}
+   * @return {void}
    */
-  async update(patch = {}) {
-    // wait on any promises in the patch
-    const pvalues = await Promise.all(Object.values(patch));
-    const pentries = Object.keys(patch).map((k, i) => [k, pvalues[i]]);
-    patch = Object.fromEntries(pentries);
-
-    // note the keys that get changed
+  update(patch = {}) {
     for (const key in patch) {
       this.updated.add(key);
     }
-    // do the merge
     this.values = o(this.values, patch);
-    // call any listeners
     for (const callback of this.listeners) {
       callback();
     }
-    // persist the new state
+
     if (this.persistKey) {
       const persist = JSON.stringify(this.values);
       window.sessionStorage.setItem(this.persistKey, persist);
+      // console.trace("persist $tabControl", this.values["$tabControl"]);
     }
   }
 
@@ -22228,7 +22213,7 @@ function getFileMenuItems(bar) {
       label: "Save sheet",
       title: "Save the content as a spreadsheet",
       callback: () => {
-        saveContent(db.designName, Globals.data.allrows, "xlsx");
+        saveContent(db.designName, Globals.data.contentRows, "xlsx");
       },
     }),
     new MenuItem({
