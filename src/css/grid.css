@@ -49,6 +49,10 @@ body:not(.designing) video[dbsrc]:not([src]) {
   height: 100%;
   min-height: 0;
 }
+
+.grid button span {
+  pointer-events: none;
+}
 .grid b {
   color: blue;
 }
