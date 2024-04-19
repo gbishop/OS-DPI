@@ -48,7 +48,6 @@ export class Data {
     /** @type {Set<string>} */
     this.allFields = new Set();
     this.updateAllFields();
-    this.loadTime = new Date();
   }
 
   get length() {
@@ -134,6 +133,5 @@ export class Data {
     if (!Array.isArray(rows)) return;
     this.dynamicRows = rows;
     this.updateAllFields();
-    this.loadTime = new Date();
   }
 }
