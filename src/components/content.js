@@ -151,7 +151,7 @@ export class Content extends DesignerPanel {
       <div>
         <h1>Content</h1>
         <p>
-          ${data.allrows.length} rows with these fields:
+          ${data.length} rows with these fields:
           ${String([...data.allFields].sort()).replaceAll(",", ", ")}
         </p>
         <h2>Media files</h2>

@@ -42,22 +42,34 @@ export class Data {
   /** @param {Rows} rows - rows coming from the spreadsheet */
   constructor(rows) {
     this.contentRows = (Array.isArray(rows) && rows) || [];
-    this.allrows = this.contentRows;
+    this.dynamicRows = [];
+    this.noteRows = [];
+    this.groups = ["dynamicRows", "contentRows", "noteRows"];
     /** @type {Set<string>} */
     this.allFields = new Set();
     this.updateAllFields();
     this.loadTime = new Date();
   }
 
+  get length() {
+    let result = 0;
+    for (const group of this.groups) {
+      result += this[group].length;
+    }
+    return result;
+  }
+
   updateAllFields() {
-    this.allFields = /** @type {Set<string>} */ (
-      this.contentRows.reduce((previous, current) => {
-        for (const field of Object.keys(current)) {
-          previous.add("#" + field);
+    /** @type {Set<string>} */
+    const allFields = new Set();
+    for (const group of this.groups) {
+      for (const row of this[group]) {
+        for (const field of Object.keys(row)) {
+          allFields.add("#" + field);
         }
-        return previous;
-      }, new Set())
-    );
+      }
+    }
+    this.allFields = allFields;
     this.clearFields = {};
     for (const field of this.allFields) {
       this.clearFields[field.slice(1)] = null;
@@ -78,9 +90,14 @@ export class Data {
       operator: filter.operator.value,
       value: filter.value.value,
     }));
-    let result = this.allrows.filter((row) =>
-      boundFilters.every((filter) => match(filter, row)),
-    );
+    let result = [];
+    for (const group of this.groups) {
+      for (const row of this[group]) {
+        if (boundFilters.every((filter) => match(filter, row))) {
+          result.push(row);
+        }
+      }
+    }
     if (clearFields)
       result = result.map((row) => ({ ...this.clearFields, ...row }));
     return result;
@@ -99,10 +116,14 @@ export class Data {
       operator: filter.operator.value,
       value: filter.value.valueInContext(context),
     }));
-    const result = this.allrows.some((row) =>
-      boundFilters.every((filter) => match(filter, row)),
-    );
-    return result;
+    for (const group of this.groups) {
+      for (const row of this[group]) {
+        if (boundFilters.every((filter) => match(filter, row))) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   /**
@@ -111,7 +132,7 @@ export class Data {
    */
   setDynamicRows(rows) {
     if (!Array.isArray(rows)) return;
-    this.allrows = rows.concat(this.contentRows);
+    this.dynamicRows = rows;
     this.updateAllFields();
     this.loadTime = new Date();
   }
