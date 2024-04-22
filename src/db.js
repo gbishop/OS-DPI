@@ -7,12 +7,14 @@ export class DB {
   constructor() {
     this.dbPromise = openDB("os-dpi", 6, {
       async upgrade(db, oldVersion, _newVersion, transaction) {
-        if (oldVersion == 5) {
-          let dataStore = db.createObjectStore("dataStore", {
+        if (oldVersion < 6) {
+          let logStore = db.createObjectStore("logstore", {
             keyPath: "id",
             autoIncrement: true,
           });
-        } else if (oldVersion < 5) {
+          logStore.createIndex("by-name", "name");
+        }
+        if (oldVersion < 5) {
           let store5 = db.createObjectStore("store5", {
             keyPath: ["name", "type"],
           });
@@ -169,16 +171,23 @@ export class DB {
   }
 
   /**
-   * Read all records of the given type
+   * Read log records
    *
-   * @param {string} type
    * @returns {Promise<Object[]>}
    */
-  async readAll(type) {
-    return [this.read(type)];
+  async readLog() {
+    const db = await this.dbPromise;
+    const index = db.transaction("logstore", "readonly").store.index("by-name");
+    const key = this.designName;
+    const result = [];
+    for await (const cursor of index.iterate(key)) {
+      const data = cursor.value.data;
+      result.push(data);
+    }
+    return result;
   }
 
-  /** Write a record
+  /** Write a design record
    * @param {string} type
    * @param {Object} data
    */
@@ -196,6 +205,16 @@ export class DB {
     this.notify({ action: "update", name: this.designName });
   }
 
+  /** Write a log record
+   * @param {Object} data
+   */
+  async writeLog(data) {
+    const db = await this.dbPromise;
+    const tx = db.transaction(["logstore"], "readwrite");
+    tx.objectStore("logstore").put({ name: this.designName, data });
+    await tx.done;
+  }
+
   /**
    * delete records of this type
    *
@@ -205,6 +224,21 @@ export class DB {
   async clear(type) {
     const db = await this.dbPromise;
     return db.delete("store5", [this.designName, type]);
+  }
+
+  /**
+   * delete log records
+   *
+   * @returns {Promise<void>}
+   */
+  async clearLog() {
+    const db = await this.dbPromise;
+    const tx = db.transaction("logstore", "readwrite");
+    const index = tx.store.index("by-name");
+    for await (const cursor of index.iterate(this.designName)) {
+      cursor.delete();
+    }
+    await tx.done;
   }
 
   /** Read a design from a local file

@@ -83,7 +83,7 @@ export class Logger extends TreeBase {
       second: "numeric",
     });
     record = { DateTime, ...record };
-    db.write("log", record);
+    db.writeLog(record);
   }
 
   init() {
@@ -140,8 +140,8 @@ export class Logger extends TreeBase {
 }
 TreeBase.register(Logger, "Logger");
 
-export async function SaveLogs() {
-  let toSave = await db.readAll("log");
+export async function SaveLog() {
+  let toSave = await db.readLog();
   if (toSave.length > 0) {
     await saveContent("log", toSave, "xlsx");
   } else {
@@ -150,6 +150,6 @@ export async function SaveLogs() {
   }
 }
 
-export async function ClearLogs() {
-  await db.clear("log");
+export async function ClearLog() {
+  await db.clearLog();
 }

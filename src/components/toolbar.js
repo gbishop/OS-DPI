@@ -16,7 +16,7 @@ import { DB } from "app/db";
 import { Designer } from "./designer";
 import { readSheetFromBlob, saveContent } from "./content";
 import { Data } from "app/data";
-import { SaveLogs, ClearLogs } from "./logger";
+import { SaveLog, ClearLog } from "./logger";
 import { friendlyName, wikiName } from "./names";
 
 import { workerUpdateButton } from "components/serviceWorker";
@@ -340,14 +340,14 @@ function getFileMenuItems(bar) {
       title: "Save any logs as spreadsheets",
       divider: "Logs",
       callback: async () => {
-        SaveLogs();
+        SaveLog();
       },
     }),
     new MenuItem({
       label: "Clear logs",
       title: "Clear any stored logs",
       callback: async () => {
-        ClearLogs();
+        ClearLog();
       },
     }),
     new MenuItem({
