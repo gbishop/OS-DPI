@@ -8904,34 +8904,43 @@ const e$1=(()=>{if("undefined"==typeof self)return !1;if("top"in self&&self!==to
 
 class DB {
   constructor() {
-    this.dbPromise = openDB("os-dpi", 5, {
+    this.dbPromise = openDB("os-dpi", 6, {
       async upgrade(db, oldVersion, _newVersion, transaction) {
-        let store5 = db.createObjectStore("store5", {
-          keyPath: ["name", "type"],
-        });
-        store5.createIndex("by-name", "name");
-        if (oldVersion == 4) {
-          // copy data from old store to new
-          const store4 = transaction.objectStore("store");
-          for await (const cursor of store4) {
-            const record4 = cursor.value;
-            store5.put(record4);
+        if (oldVersion < 6) {
+          let logStore = db.createObjectStore("logstore", {
+            keyPath: "id",
+            autoIncrement: true,
+          });
+          logStore.createIndex("by-name", "name");
+        }
+        if (oldVersion < 5) {
+          let store5 = db.createObjectStore("store5", {
+            keyPath: ["name", "type"],
+          });
+          store5.createIndex("by-name", "name");
+          if (oldVersion == 4) {
+            // copy data from old store to new
+            const store4 = transaction.objectStore("store");
+            for await (const cursor of store4) {
+              const record4 = cursor.value;
+              store5.put(record4);
+            }
+            db.deleteObjectStore("store");
+            // add an etag index to url store
+            transaction.objectStore("url").createIndex("by-etag", "etag");
+          } else if (oldVersion < 4) {
+            db.createObjectStore("media");
+            let savedStore = db.createObjectStore("saved", {
+              keyPath: "name",
+            });
+            savedStore.createIndex("by-etag", "etag");
+            // track etags for urls
+            const urlStore = db.createObjectStore("url", {
+              keyPath: "url",
+            });
+            // add an etag index to the url store
+            urlStore.createIndex("by-etag", "etag");
           }
-          db.deleteObjectStore("store");
-          // add an etag index to url store
-          transaction.objectStore("url").createIndex("by-etag", "etag");
-        } else if (oldVersion < 4) {
-          db.createObjectStore("media");
-          let savedStore = db.createObjectStore("saved", {
-            keyPath: "name",
-          });
-          savedStore.createIndex("by-etag", "etag");
-          // track etags for urls
-          const urlStore = db.createObjectStore("url", {
-            keyPath: "url",
-          });
-          // add an etag index to the url store
-          urlStore.createIndex("by-etag", "etag");
         }
       },
       blocked(currentVersion, blockedVersion, event) {
@@ -9048,7 +9057,7 @@ class DB {
     }
   }
 
-  /** Return the most recent record for the type
+  /** Return the record for type or the defaultValue
    * @param {string} type
    * @param {any} defaultValue
    * @returns {Promise<Object>}
@@ -9061,16 +9070,23 @@ class DB {
   }
 
   /**
-   * Read all records of the given type
+   * Read log records
    *
-   * @param {string} type
    * @returns {Promise<Object[]>}
    */
-  async readAll(type) {
-    return [this.read(type)];
+  async readLog() {
+    const db = await this.dbPromise;
+    const index = db.transaction("logstore", "readonly").store.index("by-name");
+    const key = this.designName;
+    const result = [];
+    for await (const cursor of index.iterate(key)) {
+      const data = cursor.value.data;
+      result.push(data);
+    }
+    return result;
   }
 
-  /** Add a new record
+  /** Write a design record
    * @param {string} type
    * @param {Object} data
    */
@@ -9088,6 +9104,16 @@ class DB {
     this.notify({ action: "update", name: this.designName });
   }
 
+  /** Write a log record
+   * @param {Object} data
+   */
+  async writeLog(data) {
+    const db = await this.dbPromise;
+    const tx = db.transaction(["logstore"], "readwrite");
+    tx.objectStore("logstore").put({ name: this.designName, data });
+    await tx.done;
+  }
+
   /**
    * delete records of this type
    *
@@ -9099,19 +9125,19 @@ class DB {
     return db.delete("store5", [this.designName, type]);
   }
 
-  /** Undo by deleting the most recent record
-   * @param {string} type
+  /**
+   * delete log records
+   *
+   * @returns {Promise<void>}
    */
-  async undo(type) {
-    if (type == "content") return;
+  async clearLog() {
     const db = await this.dbPromise;
-    const index = db
-      .transaction("store5", "readwrite")
-      .store.index("by-name-type");
-    const cursor = await index.openCursor([this.designName, type], "prev");
-    if (cursor) await cursor.delete();
-    await db.delete("saved", this.designName);
-    this.notify({ action: "update", name: this.designName });
+    const tx = db.transaction("logstore", "readwrite");
+    const index = tx.store.index("by-name");
+    for await (const cursor of index.iterate(this.designName)) {
+      cursor.delete();
+    }
+    await tx.done;
   }
 
   /** Read a design from a local file
@@ -9551,6 +9577,164 @@ function mime(fname) {
   return mimetypes[extension] || false;
 }
 
+const scriptRel = 'modulepreload';const assetsURL = function(dep) { return "/OS-DPI/"+dep };const seen = {};const __vitePreload = function preload(baseModule, deps, importerUrl) {
+    let promise = Promise.resolve();
+    // @ts-expect-error true will be replaced with boolean later
+    if (true && deps && deps.length > 0) {
+        const links = document.getElementsByTagName('link');
+        promise = Promise.all(deps.map((dep) => {
+            // @ts-expect-error assetsURL is declared before preload.toString()
+            dep = assetsURL(dep);
+            if (dep in seen)
+                return;
+            seen[dep] = true;
+            const isCss = dep.endsWith('.css');
+            const cssSelector = isCss ? '[rel="stylesheet"]' : '';
+            const isBaseRelative = !!importerUrl;
+            // check if the file is already preloaded by SSR markup
+            if (isBaseRelative) {
+                // When isBaseRelative is true then we have `importerUrl` and `dep` is
+                // already converted to an absolute URL by the `assetsURL` function
+                for (let i = links.length - 1; i >= 0; i--) {
+                    const link = links[i];
+                    // The `links[i].href` is an absolute URL thanks to browser doing the work
+                    // for us. See https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#reflecting-content-attributes-in-idl-attributes:idl-domstring-5
+                    if (link.href === dep && (!isCss || link.rel === 'stylesheet')) {
+                        return;
+                    }
+                }
+            }
+            else if (document.querySelector(`link[href="${dep}"]${cssSelector}`)) {
+                return;
+            }
+            const link = document.createElement('link');
+            link.rel = isCss ? 'stylesheet' : scriptRel;
+            if (!isCss) {
+                link.as = 'script';
+                link.crossOrigin = '';
+            }
+            link.href = dep;
+            document.head.appendChild(link);
+            if (isCss) {
+                return new Promise((res, rej) => {
+                    link.addEventListener('load', res);
+                    link.addEventListener('error', () => rej(new Error(`Unable to preload CSS for ${dep}`)));
+                });
+            }
+        }));
+    }
+    return promise
+        .then(() => baseModule())
+        .catch((err) => {
+        const e = new Event('vite:preloadError', { cancelable: true });
+        // @ts-expect-error custom payload
+        e.payload = err;
+        window.dispatchEvent(e);
+        if (!e.defaultPrevented) {
+            throw err;
+        }
+    });
+};
+
+async function readSheetFromBlob(blob) {
+  const XLSX = await __vitePreload(() => import('./xlsx.js'),true?__vite__mapDeps([]):void 0);
+  const data = await blob.arrayBuffer();
+  const workbook = XLSX.read(data, { codepage: 65001 });
+  /** @type {Rows} */
+  const dataArray = [];
+  for (const sheetName of workbook.SheetNames) {
+    const sheet = workbook.Sheets[sheetName];
+    const ref = sheet["!ref"];
+    if (!ref) continue;
+    const range = XLSX.utils.decode_range(ref);
+    const names = [];
+    const handlers = [];
+    const validColumns = [];
+    // process the header and choose a handler for each column
+    for (let c = range.s.c; c <= range.e.c; c++) {
+      let columnName = sheet[XLSX.utils.encode_cell({ r: 0, c })]?.v;
+      if (typeof columnName !== "string" || !columnName) {
+        continue;
+      }
+      columnName = columnName.toLowerCase();
+      names.push(columnName.trim(" "));
+      validColumns.push(c);
+      switch (columnName) {
+        case "row":
+        case "column":
+        case "page":
+          handlers.push("number");
+          break;
+        default:
+          handlers.push("string");
+          break;
+      }
+    }
+    // Process the rows
+    for (let r = range.s.r + 1; r <= range.e.r; r++) {
+      /** @type {Row} */
+      const row = { sheetName };
+      for (let i = 0; i < validColumns.length; i++) {
+        /** @type {string} */
+        const name = names[i];
+        const c = validColumns[i];
+        let value = sheet[XLSX.utils.encode_cell({ r, c })]?.v;
+        switch (handlers[i]) {
+          case "string":
+            if (typeof value === "undefined") {
+              value = "";
+            }
+            if (typeof value !== "string") {
+              value = value.toString(10);
+            }
+            if (value && typeof value === "string") {
+              row[name] = value;
+            }
+            break;
+          case "number":
+            if (typeof value === "number") {
+              row[name] = Math.floor(value);
+            } else if (value && typeof value === "string") {
+              value = parseInt(value, 10);
+              if (isNaN(value)) {
+                value = 0;
+              }
+              row[name] = value;
+            }
+            break;
+        }
+      }
+      if (Object.keys(row).length > 1) dataArray.push(row);
+    }
+  }
+  return dataArray;
+}
+
+/** Save Rows as a spreadsheet
+ * @param {string} name
+ * @param {Row[]} rows
+ * @param {string} type
+ */
+async function saveContent(name, rows, type) {
+  const XLSX = __vitePreload(() => import('./xlsx.js'),true?__vite__mapDeps([]):void 0);
+  const sheetNames = new Set(rows.map((row) => row.sheetName || "sheet1"));
+  const workbook = XLSX.utils.book_new();
+  for (const sheetName of sheetNames) {
+    let sheetRows = rows.filter(
+      (row) => sheetName == (row.sheetName || "sheet1"),
+    );
+    if (type != "csv") {
+      sheetRows = sheetRows.map((row) => {
+        const { sheetName, ...rest } = row;
+        return rest;
+      });
+    }
+    const worksheet = XLSX.utils.json_to_sheet(sheetRows);
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+  }
+  XLSX.writeFileXLSX(workbook, `${name}.${type}`);
+}
+
 /** @param {function(string, string): string} f */
 function updateString(f) {
   /** @param {string} value */
@@ -9600,6 +9784,19 @@ const Functions = {
   },
   open_editor: () => {
     Globals.state.update({ editing: !Globals.state.get("editing") });
+  },
+  Notes: (text = "", id = "") => {
+    const result = Globals.data.Notes(text, id);
+    db.write("notes", Globals.data.noteRows);
+    return result;
+  },
+  SaveNotes: () => {
+    saveContent("notes", Globals.data.noteRows, "xlsx");
+    return "saved";
+  },
+  Share: (/** @type {string} */ text) => {
+    console.log("sharing", text);
+    navigator.share && navigator.share({ text });
   },
 };
 
@@ -12233,23 +12430,60 @@ function match(filter, row) {
 class Data {
   /** @param {Rows} rows - rows coming from the spreadsheet */
   constructor(rows) {
-    this.contentRows = (Array.isArray(rows) && rows) || [];
-    this.allrows = this.contentRows;
+    this.contentRows = [];
+    this.dynamicRows = [];
+    this.noteRows = [];
+    this.groups = ["dynamicRows", "contentRows", "noteRows"];
     /** @type {Set<string>} */
     this.allFields = new Set();
+    this.setContent(rows);
+  }
+
+  /** @param {Rows} rows - rows coming from the spreadsheet */
+  setContent(rows) {
+    this.contentRows = (Array.isArray(rows) && rows) || [];
     this.updateAllFields();
-    this.loadTime = new Date();
+  }
+
+  /**
+   * Add rows from the socket interface
+   * @param {Rows} rows
+   */
+  setDynamicRows(rows) {
+    if (!Array.isArray(rows)) return;
+    this.dynamicRows = rows;
+    this.updateAllFields();
+  }
+
+  /**
+   * Add rows of notes
+   * @param {Rows} rows
+   */
+  setNoteRows(rows) {
+    if (!Array.isArray(rows)) return;
+    this.noteRows = rows;
+    this.updateAllFields();
+  }
+
+  get length() {
+    let result = 0;
+    for (const group of this.groups) {
+      result += this[group].length;
+    }
+    return result;
   }
 
   updateAllFields() {
-    this.allFields = /** @type {Set<string>} */ (
-      this.contentRows.reduce((previous, current) => {
-        for (const field of Object.keys(current)) {
-          previous.add("#" + field);
+    /** @type {Set<string>} */
+    const allFields = new Set();
+    for (const group of this.groups) {
+      for (const row of this[group]) {
+        for (const field of Object.keys(row)) {
+          allFields.add("#" + field);
         }
-        return previous;
-      }, new Set())
-    );
+      }
+    }
+    this.allFields = allFields;
     this.clearFields = {};
     for (const field of this.allFields) {
       this.clearFields[field.slice(1)] = null;
@@ -12270,9 +12504,14 @@ class Data {
       operator: filter.operator.value,
       value: filter.value.value,
     }));
-    let result = this.allrows.filter((row) =>
-      boundFilters.every((filter) => match(filter, row)),
-    );
+    let result = [];
+    for (const group of this.groups) {
+      for (const row of this[group]) {
+        if (boundFilters.every((filter) => match(filter, row))) {
+          result.push(row);
+        }
+      }
+    }
     if (clearFields)
       result = result.map((row) => ({ ...this.clearFields, ...row }));
     return result;
@@ -12291,21 +12530,46 @@ class Data {
       operator: filter.operator.value,
       value: filter.value.valueInContext(context),
     }));
-    const result = this.allrows.some((row) =>
-      boundFilters.every((filter) => match(filter, row)),
-    );
-    return result;
+    for (const group of this.groups) {
+      for (const row of this[group]) {
+        if (boundFilters.every((filter) => match(filter, row))) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   /**
-   * Add rows from the socket interface
-   * @param {Rows} rows
+   * Manipulate the Notes rows
+   * @param {string} text
+   * @param {string} id
+   * @returns {string} - the id
    */
-  setDynamicRows(rows) {
-    if (!Array.isArray(rows)) return;
-    this.allrows = rows.concat(this.contentRows);
-    this.updateAllFields();
-    this.loadTime = new Date();
+  Notes(text, id) {
+    if (text && !id) {
+      // create
+      const updated = new Date();
+      id = updated.toString();
+      this.noteRows.push({
+        Note: id,
+        updated,
+        text,
+      });
+    } else if (id) {
+      const index = this.noteRows.findIndex((row) => row.id == id);
+      if (index < 0) return ""; // not found
+      if (text) {
+        // update
+        this.noteRows[index].text = text;
+        this.noteRows[index].updated = new Date().toString();
+      } else {
+        // delete
+        this.noteRows.splice(index, 1);
+        id = "";
+      }
+    }
+    return id;
   }
 }
 
@@ -13010,6 +13274,8 @@ class Display extends TreeBase {
   background = new Color("white");
   fontSize = new Float(2);
   scale = new Float(1);
+  highlightWords = new Boolean$1(false);
+  clearAfterSpeaking = new Boolean$1(false);
 
   /** @type {HTMLDivElement | null} */
   current = null;
@@ -13060,6 +13326,42 @@ class Display extends TreeBase {
     }
     this.current?.setAttribute("data--clicked-word", word);
   };
+
+  /**
+   * @param {SpeechSynthesisEvent} event
+   */
+  handleEvent(event) {
+    console.log(event);
+    if (!this.highlightWords.value) return;
+    const element = document.getElementById(this.id);
+    if (!element) return;
+    const span = element.querySelector("button span");
+    if (!span) return;
+    const text = span.firstChild;
+    if (!text) return;
+    const selection = window.getSelection();
+    if (!selection) return;
+
+    if (event.type == "boundary") {
+      try {
+        selection.setBaseAndExtent(
+          text,
+          event.charIndex,
+          text,
+          event.charIndex,
+        );
+        selection.modify("extend", "forward", "word");
+      } catch (e) {}
+    } else if (event.type == "end") {
+      console.log("end");
+      Globals.state.update({ [this.stateName.value]: "" });
+    }
+  }
+
+  init() {
+    document.addEventListener("boundary", this);
+    document.addEventListener("end", this);
+  }
 }
 TreeBase.register(Display, "Display");
 
@@ -13731,6 +14033,23 @@ class Speech extends TreeBase {
     utterance.pitch = this.pitch.value;
     utterance.rate = this.rate.value;
     utterance.volume = this.volume.value;
+    utterance.addEventListener("boundary", (event) => {
+      document.dispatchEvent(
+        new SpeechSynthesisEvent("boundary", {
+          utterance: event.utterance,
+          charIndex: event.charIndex,
+        }),
+      );
+    });
+    utterance.addEventListener("end", (event) => {
+      console.log("end");
+      document.dispatchEvent(
+        new SpeechSynthesisEvent("end", {
+          utterance: event.utterance,
+          charIndex: event.charIndex,
+        }),
+      );
+    });
     speechSynthesis.cancel();
     speechSynthesis.speak(utterance);
   }
@@ -13813,64 +14132,194 @@ let Audio$1 = class Audio extends TreeBase {
 };
 TreeBase.register(Audio$1, "Audio");
 
-const scriptRel = 'modulepreload';const assetsURL = function(dep) { return "/OS-DPI/"+dep };const seen = {};const __vitePreload = function preload(baseModule, deps, importerUrl) {
-    let promise = Promise.resolve();
-    // @ts-expect-error true will be replaced with boolean later
-    if (true && deps && deps.length > 0) {
-        const links = document.getElementsByTagName('link');
-        promise = Promise.all(deps.map((dep) => {
-            // @ts-expect-error assetsURL is declared before preload.toString()
-            dep = assetsURL(dep);
-            if (dep in seen)
-                return;
-            seen[dep] = true;
-            const isCss = dep.endsWith('.css');
-            const cssSelector = isCss ? '[rel="stylesheet"]' : '';
-            const isBaseRelative = !!importerUrl;
-            // check if the file is already preloaded by SSR markup
-            if (isBaseRelative) {
-                // When isBaseRelative is true then we have `importerUrl` and `dep` is
-                // already converted to an absolute URL by the `assetsURL` function
-                for (let i = links.length - 1; i >= 0; i--) {
-                    const link = links[i];
-                    // The `links[i].href` is an absolute URL thanks to browser doing the work
-                    // for us. See https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#reflecting-content-attributes-in-idl-attributes:idl-domstring-5
-                    if (link.href === dep && (!isCss || link.rel === 'stylesheet')) {
-                        return;
-                    }
-                }
-            }
-            else if (document.querySelector(`link[href="${dep}"]${cssSelector}`)) {
-                return;
-            }
-            const link = document.createElement('link');
-            link.rel = isCss ? 'stylesheet' : scriptRel;
-            if (!isCss) {
-                link.as = 'script';
-                link.crossOrigin = '';
-            }
-            link.href = dep;
-            document.head.appendChild(link);
-            if (isCss) {
-                return new Promise((res, rej) => {
-                    link.addEventListener('load', res);
-                    link.addEventListener('error', () => rej(new Error(`Unable to preload CSS for ${dep}`)));
-                });
-            }
-        }));
-    }
-    return promise
-        .then(() => baseModule())
-        .catch((err) => {
-        const e = new Event('vite:preloadError', { cancelable: true });
-        // @ts-expect-error custom payload
-        e.payload = err;
-        window.dispatchEvent(e);
-        if (!e.defaultPrevented) {
-            throw err;
-        }
+/**
+ * Handle displaying a "please wait" message and error reporting for
+ * async functions that may take a while or throw errors
+ * @template T
+ * @param {Promise<T>} promise
+ * @param {string} message
+ * @returns {Promise<T>}
+ */
+async function wait(promise, message = "Please wait") {
+  const div = document.createElement("div");
+  div.id = "PleaseWait";
+  document.body.appendChild(div);
+  const timer = window.setTimeout(() => {
+    render(div, html`<div><p class="message">${message}</p></div>`);
+  }, 500);
+  try {
+    const result = await promise;
+    clearTimeout(timer);
+    div.remove();
+    return result;
+  } catch (e) {
+    console.trace("wait error");
+    clearTimeout(timer);
+    return new Promise((resolve) => {
+      render(
+        div,
+        html`<div>
+          <p class="error">${e.message}</p>
+          <button
+            @click=${() => {
+              div.remove();
+              resolve(e.message);
+            }}
+          >
+            OK
+          </button>
+        </div>`,
+      );
     });
-};
+  }
+}
+
+class Logger extends TreeBase {
+  // name = new Props.String("Log");
+  stateName = new String$1("$Log");
+  logUntil = new ADate();
+
+  // I expect a string like #field1 $state1 $state2 #field3
+  logThese = new TextArea("", {
+    validate: this.validate,
+    placeholder: "Enter state and field names to log",
+  });
+
+  // I expect a string listing event names to log
+  logTheseEvents = new TextArea("", {
+    validate: this.validateEventNames,
+    placeholder: "Enter names of events to log",
+  });
+
+  /**
+   * @param {string} s
+   * @returns {string}
+   */
+  validate(s) {
+    return /^(?:[#$]\w+\s*)*$/.test(s) ? "" : "Invalid input";
+  }
+
+  /**
+   * Check for strings that look like event names
+   *
+   * @param {string} s
+   * @returns {string}
+   */
+  validateEventNames(s) {
+    return /^(?:\w+\s*)*$/.test(s) ? "" : "Invalid input";
+  }
+
+  template() {
+    const { state, actions } = Globals;
+    const stateName = this.stateName.value;
+    const logUntil = this.logUntil.value;
+    const logThese = this.logThese.value;
+    const logging =
+      !!state.get(stateName) && logUntil && new Date() < new Date(logUntil);
+    const getValue = access(state, actions.last.data);
+
+    if (logging) {
+      const names = logThese.split(/\s+/);
+      const record = {};
+      for (const name of names) {
+        const value = getValue(name);
+        if (value) {
+          record[name] = value;
+        }
+      }
+      this.log(record);
+    }
+
+    return html`<div
+      class="logging-indicator"
+      ?logging=${logging}
+      title="Logging"
+    ></div>`;
+  }
+
+  /** Log a record to the database
+   * @param {Object} record
+   * @returns {void}
+   */
+  log(record) {
+    const DateTime = new Date().toLocaleDateString("en-US", {
+      fractionalSecondDigits: 2,
+      hour12: false,
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+    });
+    record = { DateTime, ...record };
+    db.writeLog(record);
+  }
+
+  init() {
+    super.init();
+    this.onUpdate();
+  }
+
+  /** @type {Set<string>} */
+  listeners = new Set();
+  onUpdate() {
+    const UI = document.getElementById("UI");
+    if (!UI) return;
+    // cancel any listeners that are currently active
+    for (const eventName of this.listeners) {
+      UI.removeEventListener(eventName, this);
+    }
+    this.listeners.clear();
+
+    // listen for each of the listed events
+    for (const match of this.logTheseEvents.value.matchAll(/\w+/g)) {
+      UI.addEventListener(match[0], this);
+      this.listeners.add(match[0]);
+    }
+  }
+
+  typesToInclude = new Set(["boolean", "number", "string"]);
+  propsToExclude = new Set([
+    "isTrusted",
+    "bubbles",
+    "cancelBubble",
+    "cancelable",
+    "defaultPrevented",
+    "eventPhase",
+    "returnValue",
+    "timeStamp",
+  ]);
+  /**
+   * Make this object a listener
+   * @param {Event} e
+   */
+  handleEvent(e) {
+    // grab all the fields of the event that are simple types
+    const record = {};
+    for (const prop in e) {
+      // skip all upper case and _
+      if (/^[A-Z_]+$/.test(prop)) continue;
+      const value = e[prop];
+      if (this.propsToExclude.has(prop)) continue;
+      if (!this.typesToInclude.has(typeof value)) continue;
+      record[prop] = value;
+    }
+    this.log(record);
+  }
+}
+TreeBase.register(Logger, "Logger");
+
+async function SaveLog() {
+  let toSave = await db.readLog();
+  if (toSave.length > 0) {
+    await wait(saveContent("log", toSave, "xlsx"));
+  } else {
+    Globals.error.report("No log records to be saved.");
+    Globals.state.update();
+  }
+}
+
+async function ClearLog() {
+  await db.clearLog();
+}
 
 /** Implement undo/redo for the designer by comparing the current and previous trees
  *
@@ -14521,148 +14970,6 @@ class DesignerPanel extends TreeBase {
   }
 }
 
-/**
- * Handle displaying a "please wait" message and error reporting for
- * async functions that may take a while or throw errors
- * @template T
- * @param {Promise<T>} promise
- * @param {string} message
- * @returns {Promise<T>}
- */
-async function wait(promise, message = "Please wait") {
-  const div = document.createElement("div");
-  div.id = "PleaseWait";
-  document.body.appendChild(div);
-  const timer = window.setTimeout(() => {
-    render(div, html`<div><p class="message">${message}</p></div>`);
-  }, 500);
-  try {
-    const result = await promise;
-    clearTimeout(timer);
-    div.remove();
-    return result;
-  } catch (e) {
-    console.trace("wait error");
-    clearTimeout(timer);
-    return new Promise((resolve) => {
-      render(
-        div,
-        html`<div>
-          <p class="error">${e.message}</p>
-          <button
-            @click=${() => {
-              div.remove();
-              resolve(e.message);
-            }}
-          >
-            OK
-          </button>
-        </div>`,
-      );
-    });
-  }
-}
-
-/** @param {Blob} blob */
-async function readSheetFromBlob(blob) {
-  const XLSX = await __vitePreload(() => import('./xlsx.js'),true?__vite__mapDeps([]):void 0);
-  const data = await blob.arrayBuffer();
-  const workbook = XLSX.read(data, { codepage: 65001 });
-  /** @type {Rows} */
-  const dataArray = [];
-  for (const sheetName of workbook.SheetNames) {
-    const sheet = workbook.Sheets[sheetName];
-    const ref = sheet["!ref"];
-    if (!ref) continue;
-    const range = XLSX.utils.decode_range(ref);
-    const names = [];
-    const handlers = [];
-    const validColumns = [];
-    // process the header and choose a handler for each column
-    for (let c = range.s.c; c <= range.e.c; c++) {
-      let columnName = sheet[XLSX.utils.encode_cell({ r: 0, c })]?.v;
-      if (typeof columnName !== "string" || !columnName) {
-        continue;
-      }
-      columnName = columnName.toLowerCase();
-      names.push(columnName.trim(" "));
-      validColumns.push(c);
-      switch (columnName) {
-        case "row":
-        case "column":
-        case "page":
-          handlers.push("number");
-          break;
-        default:
-          handlers.push("string");
-          break;
-      }
-    }
-    // Process the rows
-    for (let r = range.s.r + 1; r <= range.e.r; r++) {
-      /** @type {Row} */
-      const row = { sheetName };
-      for (let i = 0; i < validColumns.length; i++) {
-        /** @type {string} */
-        const name = names[i];
-        const c = validColumns[i];
-        let value = sheet[XLSX.utils.encode_cell({ r, c })]?.v;
-        switch (handlers[i]) {
-          case "string":
-            if (typeof value === "undefined") {
-              value = "";
-            }
-            if (typeof value !== "string") {
-              value = value.toString(10);
-            }
-            if (value && typeof value === "string") {
-              row[name] = value;
-            }
-            break;
-          case "number":
-            if (typeof value === "number") {
-              row[name] = Math.floor(value);
-            } else if (value && typeof value === "string") {
-              value = parseInt(value, 10);
-              if (isNaN(value)) {
-                value = 0;
-              }
-              row[name] = value;
-            }
-            break;
-        }
-      }
-      if (Object.keys(row).length > 1) dataArray.push(row);
-    }
-  }
-  return dataArray;
-}
-
-/** Save the content as a spreadsheet
- * @param {string} name
- * @param {Row[]} rows
- * @param {string} type
- */
-async function saveContent(name, rows, type) {
-  const XLSX = await wait(__vitePreload(() => import('./xlsx.js'),true?__vite__mapDeps([]):void 0));
-  const sheetNames = new Set(rows.map((row) => row.sheetName || "sheet1"));
-  const workbook = XLSX.utils.book_new();
-  for (const sheetName of sheetNames) {
-    let sheetRows = rows.filter(
-      (row) => sheetName == (row.sheetName || "sheet1"),
-    );
-    if (type != "csv") {
-      sheetRows = sheetRows.map((row) => {
-        const { sheetName, ...rest } = row;
-        return rest;
-      });
-    }
-    const worksheet = XLSX.utils.json_to_sheet(sheetRows);
-    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-  }
-  XLSX.writeFileXLSX(workbook, `${name}.${type}`);
-}
-
 class Content extends DesignerPanel {
   name = new String$1("Content");
 
@@ -14707,7 +15014,7 @@ class Content extends DesignerPanel {
       <div>
         <h1>Content</h1>
         <p>
-          ${data.allrows.length} rows with these fields:
+          ${data.length} rows with these fields:
           ${String([...data.allFields].sort()).replaceAll(",", ", ")}
         </p>
         <h2>Media files</h2>
@@ -14741,153 +15048,6 @@ class Content extends DesignerPanel {
   }
 }
 TreeBase.register(Content, "Content");
-
-class Logger extends TreeBase {
-  // name = new Props.String("Log");
-  stateName = new String$1("$Log");
-  logUntil = new ADate();
-
-  // I expect a string like #field1 $state1 $state2 #field3
-  logThese = new TextArea("", {
-    validate: this.validate,
-    placeholder: "Enter state and field names to log",
-  });
-
-  // I expect a string listing event names to log
-  logTheseEvents = new TextArea("", {
-    validate: this.validateEventNames,
-    placeholder: "Enter names of events to log",
-  });
-
-  /**
-   * @param {string} s
-   * @returns {string}
-   */
-  validate(s) {
-    return /^(?:[#$]\w+\s*)*$/.test(s) ? "" : "Invalid input";
-  }
-
-  /**
-   * Check for strings that look like event names
-   *
-   * @param {string} s
-   * @returns {string}
-   */
-  validateEventNames(s) {
-    return /^(?:\w+\s*)*$/.test(s) ? "" : "Invalid input";
-  }
-
-  template() {
-    const { state, actions } = Globals;
-    const stateName = this.stateName.value;
-    const logUntil = this.logUntil.value;
-    const logThese = this.logThese.value;
-    const logging =
-      !!state.get(stateName) && logUntil && new Date() < new Date(logUntil);
-    const getValue = access(state, actions.last.data);
-
-    if (logging) {
-      const names = logThese.split(/\s+/);
-      const record = {};
-      for (const name of names) {
-        const value = getValue(name);
-        if (value) {
-          record[name] = value;
-        }
-      }
-      this.log(record);
-    }
-
-    return html`<div
-      class="logging-indicator"
-      ?logging=${logging}
-      title="Logging"
-    ></div>`;
-  }
-
-  /** Log a record to the database
-   * @param {Object} record
-   * @returns {void}
-   */
-  log(record) {
-    const DateTime = new Date().toLocaleDateString("en-US", {
-      fractionalSecondDigits: 2,
-      hour12: false,
-      hour: "numeric",
-      minute: "numeric",
-      second: "numeric",
-    });
-    record = { DateTime, ...record };
-    db.write("log", record);
-  }
-
-  init() {
-    super.init();
-    this.onUpdate();
-  }
-
-  /** @type {Set<string>} */
-  listeners = new Set();
-  onUpdate() {
-    const UI = document.getElementById("UI");
-    if (!UI) return;
-    // cancel any listeners that are currently active
-    for (const eventName of this.listeners) {
-      UI.removeEventListener(eventName, this);
-    }
-    this.listeners.clear();
-
-    // listen for each of the listed events
-    for (const match of this.logTheseEvents.value.matchAll(/\w+/g)) {
-      UI.addEventListener(match[0], this);
-      this.listeners.add(match[0]);
-    }
-  }
-
-  typesToInclude = new Set(["boolean", "number", "string"]);
-  propsToExclude = new Set([
-    "isTrusted",
-    "bubbles",
-    "cancelBubble",
-    "cancelable",
-    "defaultPrevented",
-    "eventPhase",
-    "returnValue",
-    "timeStamp",
-  ]);
-  /**
-   * Make this object a listener
-   * @param {Event} e
-   */
-  handleEvent(e) {
-    // grab all the fields of the event that are simple types
-    const record = {};
-    for (const prop in e) {
-      // skip all upper case and _
-      if (/^[A-Z_]+$/.test(prop)) continue;
-      const value = e[prop];
-      if (this.propsToExclude.has(prop)) continue;
-      if (!this.typesToInclude.has(typeof value)) continue;
-      record[prop] = value;
-    }
-    this.log(record);
-  }
-}
-TreeBase.register(Logger, "Logger");
-
-async function SaveLogs() {
-  let toSave = await db.readAll("log");
-  if (toSave.length > 0) {
-    await saveContent("log", toSave, "xlsx");
-  } else {
-    Globals.error.report("No log records to be saved.");
-    Globals.state.update();
-  }
-}
-
-async function ClearLogs() {
-  await db.clear("log");
-}
 
 const emptyPage = {
   className: "Page",
@@ -22182,7 +22342,7 @@ function getFileMenuItems(bar) {
             sheet.handle = blob.handle;
             const result = await wait(readSheetFromBlob(blob));
             await db.write("content", result);
-            Globals.data = new Data(result);
+            Globals.data.setContent(result);
             Globals.state.update();
           }
         } catch (e) {
@@ -22202,8 +22362,7 @@ function getFileMenuItems(bar) {
           if (blob) {
             const result = await wait(readSheetFromBlob(blob));
             await db.write("content", result);
-            Globals.data = new Data(result);
-            Globals.state.update();
+            Globals.data.setContent(result);
           } else {
             console.log("no file to reload");
           }
@@ -22213,7 +22372,9 @@ function getFileMenuItems(bar) {
       label: "Save sheet",
       title: "Save the content as a spreadsheet",
       callback: () => {
-        saveContent(db.designName, Globals.data.contentRows, "xlsx");
+        wait(
+          saveContent(db.designName, Globals.data.contentRows, "xlsx"),
+        );
       },
     }),
     new MenuItem({
@@ -22254,14 +22415,14 @@ function getFileMenuItems(bar) {
       title: "Save any logs as spreadsheets",
       divider: "Logs",
       callback: async () => {
-        SaveLogs();
+        SaveLog();
       },
     }),
     new MenuItem({
       label: "Clear logs",
       title: "Clear any stored logs",
       callback: async () => {
-        ClearLogs();
+        ClearLog();
       },
     }),
     new MenuItem({
@@ -22689,9 +22850,11 @@ async function start() {
   }
   db.setDesignName(name);
   const dataArray = await db.read("content", []);
+  const noteArray = await db.read("notes", []);
   await pageLoaded;
 
   Globals.data = new Data(dataArray);
+  Globals.data.setNoteRows(noteArray);
   const layout = await Layout.load(Layout);
   Globals.layout = layout;
   Globals.state = new State$1(`UIState`);
