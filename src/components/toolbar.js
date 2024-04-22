@@ -269,7 +269,7 @@ function getFileMenuItems(bar) {
             sheet.handle = blob.handle;
             const result = await pleaseWait(readSheetFromBlob(blob));
             await db.write("content", result);
-            Globals.data = new Data(result);
+            Globals.data.setContent(result);
             Globals.state.update();
           }
         } catch (e) {
@@ -289,8 +289,7 @@ function getFileMenuItems(bar) {
           if (blob) {
             const result = await pleaseWait(readSheetFromBlob(blob));
             await db.write("content", result);
-            Globals.data = new Data(result);
-            Globals.state.update();
+            Globals.data.setContent(result);
           } else {
             console.log("no file to reload");
           }

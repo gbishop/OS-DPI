@@ -52,6 +52,11 @@ export const Functions = {
   open_editor: () => {
     Globals.state.update({ editing: !Globals.state.get("editing") });
   },
+  Notes: (id = "", text = "") => {
+    const result = Globals.data.Notes(id, text);
+    db.write("notes", Globals.data.noteRows);
+    return result;
+  },
 };
 
 /**

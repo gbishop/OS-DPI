@@ -41,12 +41,38 @@ for (let i = 0; i < 10; i++) {
 export class Data {
   /** @param {Rows} rows - rows coming from the spreadsheet */
   constructor(rows) {
-    this.contentRows = (Array.isArray(rows) && rows) || [];
+    this.contentRows = [];
     this.dynamicRows = [];
     this.noteRows = [];
     this.groups = ["dynamicRows", "contentRows", "noteRows"];
     /** @type {Set<string>} */
     this.allFields = new Set();
+    this.setContent(rows);
+  }
+
+  /** @param {Rows} rows - rows coming from the spreadsheet */
+  setContent(rows) {
+    this.contentRows = (Array.isArray(rows) && rows) || [];
+    this.updateAllFields();
+  }
+
+  /**
+   * Add rows from the socket interface
+   * @param {Rows} rows
+   */
+  setDynamicRows(rows) {
+    if (!Array.isArray(rows)) return;
+    this.dynamicRows = rows;
+    this.updateAllFields();
+  }
+
+  /**
+   * Add rows of notes
+   * @param {Rows} rows
+   */
+  setNoteRows(rows) {
+    if (!Array.isArray(rows)) return;
+    this.noteRows = rows;
     this.updateAllFields();
   }
 
@@ -126,12 +152,34 @@ export class Data {
   }
 
   /**
-   * Add rows from the socket interface
-   * @param {Rows} rows
+   * Manipulate the Notes rows
+   * @param {string} id
+   * @param {string} text
+   * @returns {string} - the id
    */
-  setDynamicRows(rows) {
-    if (!Array.isArray(rows)) return;
-    this.dynamicRows = rows;
-    this.updateAllFields();
+  Notes(id, text) {
+    if (id == "new") {
+      // create
+      const updated = new Date();
+      id = updated.toString();
+      this.noteRows.push({
+        Note: id,
+        updated,
+        text,
+      });
+    } else {
+      const index = this.noteRows.findIndex((row) => row.id == id);
+      if (index < 0) return ""; // not found
+      if (text) {
+        // update
+        this.noteRows[index].text = text;
+        this.noteRows[index].updated = new Date().toString();
+      } else {
+        // delete
+        this.noteRows.splice(index, 1);
+        id = "";
+      }
+    }
+    return id;
   }
 }
