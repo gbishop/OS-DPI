@@ -153,31 +153,33 @@ export class Data {
 
   /**
    * Manipulate the Notes rows
-   * @param {string} id
    * @param {string} text
+   * @param {string} id
    * @returns {string} - the id
    */
-  Notes(id, text) {
-    if (id == "new") {
+  Notes(text, id) {
+    if (text && !id) {
       // create
-      const updated = new Date();
-      id = updated.toString();
+      const date = new Date().toISOString();
       this.noteRows.push({
-        Note: id,
-        updated,
-        text,
+        sheetName: "Notes",
+        date,
+        updated: date,
+        label: text,
       });
-    } else {
-      const index = this.noteRows.findIndex((row) => row.id == id);
-      if (index < 0) return ""; // not found
-      if (text) {
-        // update
-        this.noteRows[index].text = text;
-        this.noteRows[index].updated = new Date().toString();
-      } else {
-        // delete
-        this.noteRows.splice(index, 1);
-        id = "";
+      id = date;
+    } else if (id) {
+      const index = this.noteRows.findIndex((row) => row.date == id);
+      if (index >= 0) {
+        if (text) {
+          // update
+          this.noteRows[index].label = text;
+          this.noteRows[index].updated = new Date().toISOString();
+        } else {
+          // delete
+          this.noteRows.splice(index, 1);
+          id = "";
+        }
       }
     }
     return id;

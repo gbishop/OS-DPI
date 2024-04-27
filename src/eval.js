@@ -3,7 +3,7 @@ import Globals from "./globals";
 import db from "./db";
 
 /** @param {function(string, string): string} f */
-function updateString(f) {
+export function updateString(f) {
   /** @param {string} value */
   return function (value) {
     /** @param {string | undefined} old */
@@ -51,11 +51,6 @@ export const Functions = {
   },
   open_editor: () => {
     Globals.state.update({ editing: !Globals.state.get("editing") });
-  },
-  Notes: (id = "", text = "") => {
-    const result = Globals.data.Notes(id, text);
-    db.write("notes", Globals.data.noteRows);
-    return result;
   },
 };
 

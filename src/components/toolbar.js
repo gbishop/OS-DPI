@@ -14,8 +14,7 @@ import { fileOpen } from "browser-fs-access";
 import pleaseWait from "components/wait";
 import { DB } from "app/db";
 import { Designer } from "./designer";
-import { readSheetFromBlob, saveContent } from "./content";
-import { Data } from "app/data";
+import { readSheetFromBlob, saveContent } from "app/spreadsheet";
 import { SaveLog, ClearLog } from "./logger";
 import { friendlyName, wikiName } from "./names";
 
@@ -299,7 +298,9 @@ function getFileMenuItems(bar) {
       label: "Save sheet",
       title: "Save the content as a spreadsheet",
       callback: () => {
-        saveContent(db.designName, Globals.data.contentRows, "xlsx");
+        pleaseWait(
+          saveContent(db.designName, Globals.data.contentRows, "xlsx"),
+        );
       },
     }),
     new MenuItem({
