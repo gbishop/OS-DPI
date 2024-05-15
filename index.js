@@ -9577,164 +9577,6 @@ function mime(fname) {
   return mimetypes[extension] || false;
 }
 
-const scriptRel = 'modulepreload';const assetsURL = function(dep) { return "/OS-DPI/"+dep };const seen = {};const __vitePreload = function preload(baseModule, deps, importerUrl) {
-    let promise = Promise.resolve();
-    // @ts-expect-error true will be replaced with boolean later
-    if (true && deps && deps.length > 0) {
-        const links = document.getElementsByTagName('link');
-        promise = Promise.all(deps.map((dep) => {
-            // @ts-expect-error assetsURL is declared before preload.toString()
-            dep = assetsURL(dep);
-            if (dep in seen)
-                return;
-            seen[dep] = true;
-            const isCss = dep.endsWith('.css');
-            const cssSelector = isCss ? '[rel="stylesheet"]' : '';
-            const isBaseRelative = !!importerUrl;
-            // check if the file is already preloaded by SSR markup
-            if (isBaseRelative) {
-                // When isBaseRelative is true then we have `importerUrl` and `dep` is
-                // already converted to an absolute URL by the `assetsURL` function
-                for (let i = links.length - 1; i >= 0; i--) {
-                    const link = links[i];
-                    // The `links[i].href` is an absolute URL thanks to browser doing the work
-                    // for us. See https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#reflecting-content-attributes-in-idl-attributes:idl-domstring-5
-                    if (link.href === dep && (!isCss || link.rel === 'stylesheet')) {
-                        return;
-                    }
-                }
-            }
-            else if (document.querySelector(`link[href="${dep}"]${cssSelector}`)) {
-                return;
-            }
-            const link = document.createElement('link');
-            link.rel = isCss ? 'stylesheet' : scriptRel;
-            if (!isCss) {
-                link.as = 'script';
-                link.crossOrigin = '';
-            }
-            link.href = dep;
-            document.head.appendChild(link);
-            if (isCss) {
-                return new Promise((res, rej) => {
-                    link.addEventListener('load', res);
-                    link.addEventListener('error', () => rej(new Error(`Unable to preload CSS for ${dep}`)));
-                });
-            }
-        }));
-    }
-    return promise
-        .then(() => baseModule())
-        .catch((err) => {
-        const e = new Event('vite:preloadError', { cancelable: true });
-        // @ts-expect-error custom payload
-        e.payload = err;
-        window.dispatchEvent(e);
-        if (!e.defaultPrevented) {
-            throw err;
-        }
-    });
-};
-
-async function readSheetFromBlob(blob) {
-  const XLSX = await __vitePreload(() => import('./xlsx.js'),true?__vite__mapDeps([]):void 0);
-  const data = await blob.arrayBuffer();
-  const workbook = XLSX.read(data, { codepage: 65001 });
-  /** @type {Rows} */
-  const dataArray = [];
-  for (const sheetName of workbook.SheetNames) {
-    const sheet = workbook.Sheets[sheetName];
-    const ref = sheet["!ref"];
-    if (!ref) continue;
-    const range = XLSX.utils.decode_range(ref);
-    const names = [];
-    const handlers = [];
-    const validColumns = [];
-    // process the header and choose a handler for each column
-    for (let c = range.s.c; c <= range.e.c; c++) {
-      let columnName = sheet[XLSX.utils.encode_cell({ r: 0, c })]?.v;
-      if (typeof columnName !== "string" || !columnName) {
-        continue;
-      }
-      columnName = columnName.toLowerCase();
-      names.push(columnName.trim(" "));
-      validColumns.push(c);
-      switch (columnName) {
-        case "row":
-        case "column":
-        case "page":
-          handlers.push("number");
-          break;
-        default:
-          handlers.push("string");
-          break;
-      }
-    }
-    // Process the rows
-    for (let r = range.s.r + 1; r <= range.e.r; r++) {
-      /** @type {Row} */
-      const row = { sheetName };
-      for (let i = 0; i < validColumns.length; i++) {
-        /** @type {string} */
-        const name = names[i];
-        const c = validColumns[i];
-        let value = sheet[XLSX.utils.encode_cell({ r, c })]?.v;
-        switch (handlers[i]) {
-          case "string":
-            if (typeof value === "undefined") {
-              value = "";
-            }
-            if (typeof value !== "string") {
-              value = value.toString(10);
-            }
-            if (value && typeof value === "string") {
-              row[name] = value;
-            }
-            break;
-          case "number":
-            if (typeof value === "number") {
-              row[name] = Math.floor(value);
-            } else if (value && typeof value === "string") {
-              value = parseInt(value, 10);
-              if (isNaN(value)) {
-                value = 0;
-              }
-              row[name] = value;
-            }
-            break;
-        }
-      }
-      if (Object.keys(row).length > 1) dataArray.push(row);
-    }
-  }
-  return dataArray;
-}
-
-/** Save Rows as a spreadsheet
- * @param {string} name
- * @param {Row[]} rows
- * @param {string} type
- */
-async function saveContent(name, rows, type) {
-  const XLSX = __vitePreload(() => import('./xlsx.js'),true?__vite__mapDeps([]):void 0);
-  const sheetNames = new Set(rows.map((row) => row.sheetName || "sheet1"));
-  const workbook = XLSX.utils.book_new();
-  for (const sheetName of sheetNames) {
-    let sheetRows = rows.filter(
-      (row) => sheetName == (row.sheetName || "sheet1"),
-    );
-    if (type != "csv") {
-      sheetRows = sheetRows.map((row) => {
-        const { sheetName, ...rest } = row;
-        return rest;
-      });
-    }
-    const worksheet = XLSX.utils.json_to_sheet(sheetRows);
-    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-  }
-  XLSX.writeFileXLSX(workbook, `${name}.${type}`);
-}
-
 /** @param {function(string, string): string} f */
 function updateString(f) {
   /** @param {string} value */
@@ -9784,19 +9626,6 @@ const Functions = {
   },
   open_editor: () => {
     Globals.state.update({ editing: !Globals.state.get("editing") });
-  },
-  Notes: (text = "", id = "") => {
-    const result = Globals.data.Notes(text, id);
-    db.write("notes", Globals.data.noteRows);
-    return result;
-  },
-  SaveNotes: () => {
-    saveContent("notes", Globals.data.noteRows, "xlsx");
-    return "saved";
-  },
-  Share: (/** @type {string} */ text) => {
-    console.log("sharing", text);
-    navigator.share && navigator.share({ text });
   },
 };
 
@@ -10781,7 +10610,6 @@ class Prop {
           @keydown=${this.onkeydown}
           @input=${this.oninput}
           @change=${this.onchange}
-          @focus=${this.onfocus}
         />${this.showValue()}`,
     );
   }
@@ -12542,34 +12370,50 @@ class Data {
 
   /**
    * Manipulate the Notes rows
-   * @param {string} text
-   * @param {string} id
+   * @param {string[]} args
    * @returns {string} - the id
    */
-  Notes(text, id) {
-    if (text && !id) {
-      // create
-      const updated = new Date();
-      id = updated.toString();
-      this.noteRows.push({
-        Note: id,
-        updated,
-        text,
-      });
-    } else if (id) {
-      const index = this.noteRows.findIndex((row) => row.id == id);
-      if (index < 0) return ""; // not found
-      if (text) {
-        // update
-        this.noteRows[index].text = text;
-        this.noteRows[index].updated = new Date().toString();
-      } else {
-        // delete
-        this.noteRows.splice(index, 1);
-        id = "";
-      }
+  Notes(args) {
+    if (args.length % 2 != 0) {
+      console.error("number of args must be multiple of 2");
+      return "";
     }
-    return id;
+    /** @type {Object<string,string>} */
+    const note = {};
+    for (let i = 0; i < args.length; i += 2) {
+      const field = args[i + 0];
+      if (!field.match(/^#\w+$/)) {
+        console.error("bad field", field);
+        return "";
+      }
+      const value = args[i + 1];
+      note[field.slice(1)] = value;
+    }
+    note["sheetName"] = "Notes";
+    let ID = note["ID"];
+    if (ID) {
+      const index = this.noteRows.findIndex((row) => row.ID == ID);
+      if (index >= 0) {
+        Object.assign(this.noteRows[index], note);
+      } else {
+        console.error("note not found");
+        return "";
+      }
+    } else if (note.DELETE) {
+      const index = this.noteRows.findIndex((row) => row.ID == note.DELETE);
+      if (index >= 0) {
+        this.noteRows.splice(index, 1);
+        return "";
+      } else {
+        console.error("delete id not found");
+        return "";
+      }
+    } else {
+      ID = new Date().toISOString();
+      note["ID"] = ID;
+      this.noteRows.push(note);
+    }
+    return ID;
   }
 }
 
@@ -13268,6 +13112,297 @@ class Grid extends TreeBase {
 }
 TreeBase.register(Grid, "Grid");
 
+const scriptRel = 'modulepreload';const assetsURL = function(dep) { return "/OS-DPI/"+dep };const seen = {};const __vitePreload = function preload(baseModule, deps, importerUrl) {
+    let promise = Promise.resolve();
+    // @ts-expect-error true will be replaced with boolean later
+    if (true && deps && deps.length > 0) {
+        const links = document.getElementsByTagName('link');
+        promise = Promise.all(deps.map((dep) => {
+            // @ts-expect-error assetsURL is declared before preload.toString()
+            dep = assetsURL(dep);
+            if (dep in seen)
+                return;
+            seen[dep] = true;
+            const isCss = dep.endsWith('.css');
+            const cssSelector = isCss ? '[rel="stylesheet"]' : '';
+            const isBaseRelative = !!importerUrl;
+            // check if the file is already preloaded by SSR markup
+            if (isBaseRelative) {
+                // When isBaseRelative is true then we have `importerUrl` and `dep` is
+                // already converted to an absolute URL by the `assetsURL` function
+                for (let i = links.length - 1; i >= 0; i--) {
+                    const link = links[i];
+                    // The `links[i].href` is an absolute URL thanks to browser doing the work
+                    // for us. See https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#reflecting-content-attributes-in-idl-attributes:idl-domstring-5
+                    if (link.href === dep && (!isCss || link.rel === 'stylesheet')) {
+                        return;
+                    }
+                }
+            }
+            else if (document.querySelector(`link[href="${dep}"]${cssSelector}`)) {
+                return;
+            }
+            const link = document.createElement('link');
+            link.rel = isCss ? 'stylesheet' : scriptRel;
+            if (!isCss) {
+                link.as = 'script';
+                link.crossOrigin = '';
+            }
+            link.href = dep;
+            document.head.appendChild(link);
+            if (isCss) {
+                return new Promise((res, rej) => {
+                    link.addEventListener('load', res);
+                    link.addEventListener('error', () => rej(new Error(`Unable to preload CSS for ${dep}`)));
+                });
+            }
+        }));
+    }
+    return promise
+        .then(() => baseModule())
+        .catch((err) => {
+        const e = new Event('vite:preloadError', { cancelable: true });
+        // @ts-expect-error custom payload
+        e.payload = err;
+        window.dispatchEvent(e);
+        if (!e.defaultPrevented) {
+            throw err;
+        }
+    });
+};
+
+async function readSheetFromBlob(blob) {
+  const XLSX = await __vitePreload(() => import('./xlsx.js'),true?__vite__mapDeps([]):void 0);
+  const data = await blob.arrayBuffer();
+  const workbook = XLSX.read(data, { codepage: 65001 });
+  /** @type {Rows} */
+  const dataArray = [];
+  for (const sheetName of workbook.SheetNames) {
+    const sheet = workbook.Sheets[sheetName];
+    const ref = sheet["!ref"];
+    if (!ref) continue;
+    const range = XLSX.utils.decode_range(ref);
+    const names = [];
+    const handlers = [];
+    const validColumns = [];
+    // process the header and choose a handler for each column
+    for (let c = range.s.c; c <= range.e.c; c++) {
+      let columnName = sheet[XLSX.utils.encode_cell({ r: 0, c })]?.v;
+      if (typeof columnName !== "string" || !columnName) {
+        continue;
+      }
+      columnName = columnName.toLowerCase();
+      names.push(columnName.trim(" "));
+      validColumns.push(c);
+      switch (columnName) {
+        case "row":
+        case "column":
+        case "page":
+          handlers.push("number");
+          break;
+        default:
+          handlers.push("string");
+          break;
+      }
+    }
+    // Process the rows
+    for (let r = range.s.r + 1; r <= range.e.r; r++) {
+      /** @type {Row} */
+      const row = { sheetName };
+      for (let i = 0; i < validColumns.length; i++) {
+        /** @type {string} */
+        const name = names[i];
+        const c = validColumns[i];
+        let value = sheet[XLSX.utils.encode_cell({ r, c })]?.v;
+        switch (handlers[i]) {
+          case "string":
+            if (typeof value === "undefined") {
+              value = "";
+            }
+            if (typeof value !== "string") {
+              value = value.toString(10);
+            }
+            if (value && typeof value === "string") {
+              row[name] = value;
+            }
+            break;
+          case "number":
+            if (typeof value === "number") {
+              row[name] = Math.floor(value);
+            } else if (value && typeof value === "string") {
+              value = parseInt(value, 10);
+              if (isNaN(value)) {
+                value = 0;
+              }
+              row[name] = value;
+            }
+            break;
+        }
+      }
+      if (Object.keys(row).length > 1) dataArray.push(row);
+    }
+  }
+  return dataArray;
+}
+
+/** Save Rows as a spreadsheet
+ * @param {string} name
+ * @param {Row[]} rows
+ * @param {string} type
+ */
+async function saveContent(name, rows, type) {
+  const XLSX = await __vitePreload(() => import('./xlsx.js'),true?__vite__mapDeps([]):void 0);
+  const sheetNames = new Set(rows.map((row) => row.sheetName || "sheet1"));
+  const workbook = XLSX.utils.book_new();
+  for (const sheetName of sheetNames) {
+    let sheetRows = rows.filter(
+      (row) => sheetName == (row.sheetName || "sheet1"),
+    );
+    if (type != "csv") {
+      sheetRows = sheetRows.map((row) => {
+        const { sheetName, ...rest } = row;
+        return rest;
+      });
+    }
+    const worksheet = XLSX.utils.json_to_sheet(sheetRows);
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+  }
+  XLSX.writeFileXLSX(workbook, `${name}.${type}`);
+}
+
+/** Add Notes related functions to Eval for use in Actions
+ */
+
+Object.assign(Functions, {
+  Notes: (/** @type {string[]} */ ...args) => {
+    const result = Globals.data.Notes(args);
+    db.write("notes", Globals.data.noteRows);
+    return result;
+  },
+  SaveNotes: () => {
+    saveContent("notes", Globals.data.noteRows, "xlsx");
+    return "saved";
+  },
+  /** @param {string} name
+   * @param {string} text
+   */
+  SaveText: (name, text) => {
+    const blob = new Blob([text], { type: "text/plain" });
+    o$1(blob, { fileName: name, extensions: [".txt"], id: "osdpi" });
+  },
+
+  add_letter: updateString(add_character),
+
+  ClipText: (text = "", length = 100) => {
+    const nl_index = text.indexOf("\n");
+    if (nl_index > 0 && nl_index < length) length = nl_index;
+    return text.slice(0, length);
+  },
+});
+
+/**
+ * insert a character at the index
+ * @param {string} old
+ * @param {number} index
+ * @param {string} char
+ * @returns {string}
+ */
+function insert(old, index, char) {
+  if (index < 0) {
+    // add it at the end
+    return old + char;
+  } else {
+    // insert it at the index
+    return old.slice(0, index) + char + old.slice(index);
+  }
+}
+
+const cursor = "\u2758";
+
+/**
+ * Add a keyboard character with backspace and arrow motions simulated
+ * by simulating the normal caret with a special character
+ * @param {string} old
+ * @param {string} char
+ * @returns {string}
+ */
+function add_character(old, char) {
+  let index = old.indexOf(cursor);
+  let result = old;
+  if (char.length == 1) {
+    result = insert(old, index, char);
+  } else {
+    // some special character, handle a few
+    switch (char) {
+      case "Enter":
+        result = insert(old, index, "\n");
+        break;
+      case "Tab":
+        result = insert(old, index, " ");
+        break;
+      case "Backspace":
+        if (index < 0) {
+          result = old.slice(0, old.length - 1);
+        } else {
+          result = old.slice(0, index - 1) + cursor + old.slice(index + 1);
+        }
+        break;
+      case "ArrowLeft":
+        if (index < 0) {
+          if (old.length > 0) {
+            result =
+              old.slice(0, old.length - 1) + cursor + old.slice(old.length - 1);
+          } else {
+            result = old;
+          }
+        } else if (index > 0) {
+          result =
+            old.slice(0, index - 1) +
+            cursor +
+            old[index - 1] +
+            old.slice(index + 1);
+        }
+        break;
+      case "ArrowRight":
+        console.log(index, old.length);
+        if (index == old.length - 1) {
+          result = old.slice(0, old.length - 1);
+        } else if (index >= 0) {
+          result =
+            old.slice(0, index) +
+            old[index + 1] +
+            cursor +
+            old.slice(index + 2);
+        }
+        break;
+      default:
+        result = old;
+    }
+  }
+  if (result[result.length - 1] == cursor) {
+    result = result.slice(0, result.length - 1);
+  }
+  return result;
+}
+
+/**
+ * @param {string} text
+ * @returns {Hole[]}
+ */
+
+function formatNote(text) {
+  const index = text.indexOf(cursor);
+  if (index < 0) {
+    return [html`${text}`];
+  } else {
+    return [
+      html`${text.slice(0, index)}<span class="caret"></span>${text.slice(
+          index + 1,
+        )}`,
+    ];
+  }
+}
+
 class Display extends TreeBase {
   stateName = new String$1("$Display");
   Name = new String$1("");
@@ -13285,7 +13420,8 @@ class Display extends TreeBase {
   template() {
     const { state } = Globals;
     let value = state.get(this.stateName.value) || "";
-    const content = formatSlottedString(value);
+    const content =
+      (hasSlots(value) && formatSlottedString(value)) || formatNote(value);
     return this.component(
       {
         style: {
@@ -13293,6 +13429,7 @@ class Display extends TreeBase {
           fontSize: this.fontSize.value + "rem",
         },
       },
+      // prettier-ignore
       html`<button
         ref=${this}
         @pointerup=${this.click}
@@ -13303,9 +13440,7 @@ class Display extends TreeBase {
           ComponentName: this.Name.value,
           ComponentType: this.className,
         }}
-      >
-        ${content}
-      </button>`,
+      >${content}</button>`,
     );
   }
 
