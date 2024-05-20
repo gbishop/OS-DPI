@@ -153,49 +153,35 @@ export class Data {
 
   /**
    * Manipulate the Notes rows
-   * @param {string[]} args
+   * @param {string} text
+   * @param {string} id
    * @returns {string} - the id
    */
-  Notes(args) {
-    if (args.length % 2 != 0) {
-      console.error("number of args must be multiple of 2");
-      return "";
-    }
-    /** @type {Object<string,string>} */
-    const note = {};
-    for (let i = 0; i < args.length; i += 2) {
-      const field = args[i + 0];
-      if (!field.match(/^#\w+$/)) {
-        console.error("bad field", field);
-        return "";
-      }
-      const value = args[i + 1];
-      note[field.slice(1)] = value;
-    }
-    note["sheetName"] = "Notes";
-    let ID = note["ID"];
-    if (ID) {
-      const index = this.noteRows.findIndex((row) => row.ID == ID);
+  Notes(text, id) {
+    if (text && !id) {
+      // create
+      const date = new Date().toISOString();
+      this.noteRows.push({
+        sheetName: "Notes",
+        date,
+        updated: date,
+        label: text,
+      });
+      id = date;
+    } else if (id) {
+      const index = this.noteRows.findIndex((row) => row.date == id);
       if (index >= 0) {
-        Object.assign(this.noteRows[index], note);
-      } else {
-        console.error("note not found");
-        return "";
+        if (text) {
+          // update
+          this.noteRows[index].label = text;
+          this.noteRows[index].updated = new Date().toISOString();
+        } else {
+          // delete
+          this.noteRows.splice(index, 1);
+          id = "";
+        }
       }
-    } else if (note.DELETE) {
-      const index = this.noteRows.findIndex((row) => row.ID == note.DELETE);
-      if (index >= 0) {
-        this.noteRows.splice(index, 1);
-        return "";
-      } else {
-        console.error("delete id not found");
-        return "";
-      }
-    } else {
-      ID = new Date().toISOString();
-      note["ID"] = ID;
-      this.noteRows.push(note);
     }
-    return ID;
+    return id;
   }
 }

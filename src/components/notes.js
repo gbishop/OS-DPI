@@ -9,8 +9,8 @@ import db from "app/db";
  */
 
 Object.assign(Functions, {
-  Notes: (/** @type {string[]} */ ...args) => {
-    const result = Globals.data.Notes(args);
+  Notes: (text = "", id = "") => {
+    const result = Globals.data.Notes(text, id);
     db.write("notes", Globals.data.noteRows);
     return result;
   },
@@ -27,12 +27,6 @@ Object.assign(Functions, {
   },
 
   add_letter: updateString(add_character),
-
-  ClipText: (text = "", length = 100) => {
-    const nl_index = text.indexOf("\n");
-    if (nl_index > 0 && nl_index < length) length = nl_index;
-    return text.slice(0, length);
-  },
 });
 
 /**
