@@ -100,7 +100,7 @@ export function toString(value) {
  * @param {string|Editor} message
  * @returns {boolean}
  */
-export function hasSlots(message) {
+function hasSlots(message) {
   if (message instanceof Object && message.type === "editor") {
     return message.slots.length > 0;
   } else if (typeof message == "string") return message.indexOf("$$") >= 0;

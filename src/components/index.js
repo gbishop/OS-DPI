@@ -28,4 +28,3 @@ import "./access/method/timerHandler";
 import "./access/cues";
 import "./access/pattern";
 import "./headmouse";
-import "./notes";

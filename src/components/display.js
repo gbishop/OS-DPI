@@ -3,8 +3,7 @@ import { TreeBase } from "./treebase";
 import * as Props from "./props";
 import "css/display.css";
 import Globals from "app/globals";
-import { formatSlottedString, hasSlots } from "./slots";
-import { formatNote } from "./notes";
+import { formatSlottedString } from "./slots";
 
 class Display extends TreeBase {
   stateName = new Props.String("$Display");
@@ -23,8 +22,7 @@ class Display extends TreeBase {
   template() {
     const { state } = Globals;
     let value = state.get(this.stateName.value) || "";
-    const content =
-      (hasSlots(value) && formatSlottedString(value)) || formatNote(value);
+    const content = formatSlottedString(value);
     return this.component(
       {
         style: {
@@ -32,7 +30,6 @@ class Display extends TreeBase {
           fontSize: this.fontSize.value + "rem",
         },
       },
-      // prettier-ignore
       html`<button
         ref=${this}
         @pointerup=${this.click}
@@ -43,7 +40,9 @@ class Display extends TreeBase {
           ComponentName: this.Name.value,
           ComponentType: this.className,
         }}
-      >${content}</button>`,
+      >
+        ${content}
+      </button>`,
     );
   }
 
