@@ -9627,6 +9627,11 @@ const Functions = {
   open_editor: () => {
     Globals.state.update({ editing: !Globals.state.get("editing") });
   },
+  Notes: (id = "", text = "") => {
+    const result = Globals.data.Notes(id, text);
+    db.write("notes", Globals.data.noteRows);
+    return result;
+  },
 };
 
 /**
@@ -10610,6 +10615,7 @@ class Prop {
           @keydown=${this.onkeydown}
           @input=${this.oninput}
           @change=${this.onchange}
+          @focus=${this.onfocus}
         />${this.showValue()}`,
     );
   }
@@ -12370,50 +12376,34 @@ class Data {
 
   /**
    * Manipulate the Notes rows
-   * @param {string[]} args
+   * @param {string} id
+   * @param {string} text
    * @returns {string} - the id
    */
-  Notes(args) {
-    if (args.length % 2 != 0) {
-      console.error("number of args must be multiple of 2");
-      return "";
-    }
-    /** @type {Object<string,string>} */
-    const note = {};
-    for (let i = 0; i < args.length; i += 2) {
-      const field = args[i + 0];
-      if (!field.match(/^#\w+$/)) {
-        console.error("bad field", field);
-        return "";
-      }
-      const value = args[i + 1];
-      note[field.slice(1)] = value;
-    }
-    note["sheetName"] = "Notes";
-    let ID = note["ID"];
-    if (ID) {
-      const index = this.noteRows.findIndex((row) => row.ID == ID);
-      if (index >= 0) {
-        Object.assign(this.noteRows[index], note);
-      } else {
-        console.error("note not found");
-        return "";
-      }
-    } else if (note.DELETE) {
-      const index = this.noteRows.findIndex((row) => row.ID == note.DELETE);
-      if (index >= 0) {
-        this.noteRows.splice(index, 1);
-        return "";
-      } else {
-        console.error("delete id not found");
-        return "";
-      }
+  Notes(id, text) {
+    if (id == "new") {
+      // create
+      const updated = new Date();
+      id = updated.toString();
+      this.noteRows.push({
+        Note: id,
+        updated,
+        text,
+      });
     } else {
-      ID = new Date().toISOString();
-      note["ID"] = ID;
-      this.noteRows.push(note);
+      const index = this.noteRows.findIndex((row) => row.id == id);
+      if (index < 0) return ""; // not found
+      if (text) {
+        // update
+        this.noteRows[index].text = text;
+        this.noteRows[index].updated = new Date().toString();
+      } else {
+        // delete
+        this.noteRows.splice(index, 1);
+        id = "";
+      }
     }
-    return ID;
+    return id;
   }
 }
 
@@ -13112,297 +13102,6 @@ class Grid extends TreeBase {
 }
 TreeBase.register(Grid, "Grid");
 
-const scriptRel = 'modulepreload';const assetsURL = function(dep) { return "/OS-DPI/"+dep };const seen = {};const __vitePreload = function preload(baseModule, deps, importerUrl) {
-    let promise = Promise.resolve();
-    // @ts-expect-error true will be replaced with boolean later
-    if (true && deps && deps.length > 0) {
-        const links = document.getElementsByTagName('link');
-        promise = Promise.all(deps.map((dep) => {
-            // @ts-expect-error assetsURL is declared before preload.toString()
-            dep = assetsURL(dep);
-            if (dep in seen)
-                return;
-            seen[dep] = true;
-            const isCss = dep.endsWith('.css');
-            const cssSelector = isCss ? '[rel="stylesheet"]' : '';
-            const isBaseRelative = !!importerUrl;
-            // check if the file is already preloaded by SSR markup
-            if (isBaseRelative) {
-                // When isBaseRelative is true then we have `importerUrl` and `dep` is
-                // already converted to an absolute URL by the `assetsURL` function
-                for (let i = links.length - 1; i >= 0; i--) {
-                    const link = links[i];
-                    // The `links[i].href` is an absolute URL thanks to browser doing the work
-                    // for us. See https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#reflecting-content-attributes-in-idl-attributes:idl-domstring-5
-                    if (link.href === dep && (!isCss || link.rel === 'stylesheet')) {
-                        return;
-                    }
-                }
-            }
-            else if (document.querySelector(`link[href="${dep}"]${cssSelector}`)) {
-                return;
-            }
-            const link = document.createElement('link');
-            link.rel = isCss ? 'stylesheet' : scriptRel;
-            if (!isCss) {
-                link.as = 'script';
-                link.crossOrigin = '';
-            }
-            link.href = dep;
-            document.head.appendChild(link);
-            if (isCss) {
-                return new Promise((res, rej) => {
-                    link.addEventListener('load', res);
-                    link.addEventListener('error', () => rej(new Error(`Unable to preload CSS for ${dep}`)));
-                });
-            }
-        }));
-    }
-    return promise
-        .then(() => baseModule())
-        .catch((err) => {
-        const e = new Event('vite:preloadError', { cancelable: true });
-        // @ts-expect-error custom payload
-        e.payload = err;
-        window.dispatchEvent(e);
-        if (!e.defaultPrevented) {
-            throw err;
-        }
-    });
-};
-
-async function readSheetFromBlob(blob) {
-  const XLSX = await __vitePreload(() => import('./xlsx.js'),true?__vite__mapDeps([]):void 0);
-  const data = await blob.arrayBuffer();
-  const workbook = XLSX.read(data, { codepage: 65001 });
-  /** @type {Rows} */
-  const dataArray = [];
-  for (const sheetName of workbook.SheetNames) {
-    const sheet = workbook.Sheets[sheetName];
-    const ref = sheet["!ref"];
-    if (!ref) continue;
-    const range = XLSX.utils.decode_range(ref);
-    const names = [];
-    const handlers = [];
-    const validColumns = [];
-    // process the header and choose a handler for each column
-    for (let c = range.s.c; c <= range.e.c; c++) {
-      let columnName = sheet[XLSX.utils.encode_cell({ r: 0, c })]?.v;
-      if (typeof columnName !== "string" || !columnName) {
-        continue;
-      }
-      columnName = columnName.toLowerCase();
-      names.push(columnName.trim(" "));
-      validColumns.push(c);
-      switch (columnName) {
-        case "row":
-        case "column":
-        case "page":
-          handlers.push("number");
-          break;
-        default:
-          handlers.push("string");
-          break;
-      }
-    }
-    // Process the rows
-    for (let r = range.s.r + 1; r <= range.e.r; r++) {
-      /** @type {Row} */
-      const row = { sheetName };
-      for (let i = 0; i < validColumns.length; i++) {
-        /** @type {string} */
-        const name = names[i];
-        const c = validColumns[i];
-        let value = sheet[XLSX.utils.encode_cell({ r, c })]?.v;
-        switch (handlers[i]) {
-          case "string":
-            if (typeof value === "undefined") {
-              value = "";
-            }
-            if (typeof value !== "string") {
-              value = value.toString(10);
-            }
-            if (value && typeof value === "string") {
-              row[name] = value;
-            }
-            break;
-          case "number":
-            if (typeof value === "number") {
-              row[name] = Math.floor(value);
-            } else if (value && typeof value === "string") {
-              value = parseInt(value, 10);
-              if (isNaN(value)) {
-                value = 0;
-              }
-              row[name] = value;
-            }
-            break;
-        }
-      }
-      if (Object.keys(row).length > 1) dataArray.push(row);
-    }
-  }
-  return dataArray;
-}
-
-/** Save Rows as a spreadsheet
- * @param {string} name
- * @param {Row[]} rows
- * @param {string} type
- */
-async function saveContent(name, rows, type) {
-  const XLSX = await __vitePreload(() => import('./xlsx.js'),true?__vite__mapDeps([]):void 0);
-  const sheetNames = new Set(rows.map((row) => row.sheetName || "sheet1"));
-  const workbook = XLSX.utils.book_new();
-  for (const sheetName of sheetNames) {
-    let sheetRows = rows.filter(
-      (row) => sheetName == (row.sheetName || "sheet1"),
-    );
-    if (type != "csv") {
-      sheetRows = sheetRows.map((row) => {
-        const { sheetName, ...rest } = row;
-        return rest;
-      });
-    }
-    const worksheet = XLSX.utils.json_to_sheet(sheetRows);
-    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-  }
-  XLSX.writeFileXLSX(workbook, `${name}.${type}`);
-}
-
-/** Add Notes related functions to Eval for use in Actions
- */
-
-Object.assign(Functions, {
-  Notes: (/** @type {string[]} */ ...args) => {
-    const result = Globals.data.Notes(args);
-    db.write("notes", Globals.data.noteRows);
-    return result;
-  },
-  SaveNotes: () => {
-    saveContent("notes", Globals.data.noteRows, "xlsx");
-    return "saved";
-  },
-  /** @param {string} name
-   * @param {string} text
-   */
-  SaveText: (name, text) => {
-    const blob = new Blob([text], { type: "text/plain" });
-    o$1(blob, { fileName: name, extensions: [".txt"], id: "osdpi" });
-  },
-
-  add_letter: updateString(add_character),
-
-  ClipText: (text = "", length = 100) => {
-    const nl_index = text.indexOf("\n");
-    if (nl_index > 0 && nl_index < length) length = nl_index;
-    return text.slice(0, length);
-  },
-});
-
-/**
- * insert a character at the index
- * @param {string} old
- * @param {number} index
- * @param {string} char
- * @returns {string}
- */
-function insert(old, index, char) {
-  if (index < 0) {
-    // add it at the end
-    return old + char;
-  } else {
-    // insert it at the index
-    return old.slice(0, index) + char + old.slice(index);
-  }
-}
-
-const cursor = "\u2758";
-
-/**
- * Add a keyboard character with backspace and arrow motions simulated
- * by simulating the normal caret with a special character
- * @param {string} old
- * @param {string} char
- * @returns {string}
- */
-function add_character(old, char) {
-  let index = old.indexOf(cursor);
-  let result = old;
-  if (char.length == 1) {
-    result = insert(old, index, char);
-  } else {
-    // some special character, handle a few
-    switch (char) {
-      case "Enter":
-        result = insert(old, index, "\n");
-        break;
-      case "Tab":
-        result = insert(old, index, " ");
-        break;
-      case "Backspace":
-        if (index < 0) {
-          result = old.slice(0, old.length - 1);
-        } else {
-          result = old.slice(0, index - 1) + cursor + old.slice(index + 1);
-        }
-        break;
-      case "ArrowLeft":
-        if (index < 0) {
-          if (old.length > 0) {
-            result =
-              old.slice(0, old.length - 1) + cursor + old.slice(old.length - 1);
-          } else {
-            result = old;
-          }
-        } else if (index > 0) {
-          result =
-            old.slice(0, index - 1) +
-            cursor +
-            old[index - 1] +
-            old.slice(index + 1);
-        }
-        break;
-      case "ArrowRight":
-        console.log(index, old.length);
-        if (index == old.length - 1) {
-          result = old.slice(0, old.length - 1);
-        } else if (index >= 0) {
-          result =
-            old.slice(0, index) +
-            old[index + 1] +
-            cursor +
-            old.slice(index + 2);
-        }
-        break;
-      default:
-        result = old;
-    }
-  }
-  if (result[result.length - 1] == cursor) {
-    result = result.slice(0, result.length - 1);
-  }
-  return result;
-}
-
-/**
- * @param {string} text
- * @returns {Hole[]}
- */
-
-function formatNote(text) {
-  const index = text.indexOf(cursor);
-  if (index < 0) {
-    return [html`${text}`];
-  } else {
-    return [
-      html`${text.slice(0, index)}<span class="caret"></span>${text.slice(
-          index + 1,
-        )}`,
-    ];
-  }
-}
-
 class Display extends TreeBase {
   stateName = new String$1("$Display");
   Name = new String$1("");
@@ -13420,8 +13119,7 @@ class Display extends TreeBase {
   template() {
     const { state } = Globals;
     let value = state.get(this.stateName.value) || "";
-    const content =
-      (hasSlots(value) && formatSlottedString(value)) || formatNote(value);
+    const content = formatSlottedString(value);
     return this.component(
       {
         style: {
@@ -13429,7 +13127,6 @@ class Display extends TreeBase {
           fontSize: this.fontSize.value + "rem",
         },
       },
-      // prettier-ignore
       html`<button
         ref=${this}
         @pointerup=${this.click}
@@ -13440,7 +13137,9 @@ class Display extends TreeBase {
           ComponentName: this.Name.value,
           ComponentType: this.className,
         }}
-      >${content}</button>`,
+      >
+        ${content}
+      </button>`,
     );
   }
 
@@ -14267,194 +13966,64 @@ let Audio$1 = class Audio extends TreeBase {
 };
 TreeBase.register(Audio$1, "Audio");
 
-/**
- * Handle displaying a "please wait" message and error reporting for
- * async functions that may take a while or throw errors
- * @template T
- * @param {Promise<T>} promise
- * @param {string} message
- * @returns {Promise<T>}
- */
-async function wait(promise, message = "Please wait") {
-  const div = document.createElement("div");
-  div.id = "PleaseWait";
-  document.body.appendChild(div);
-  const timer = window.setTimeout(() => {
-    render(div, html`<div><p class="message">${message}</p></div>`);
-  }, 500);
-  try {
-    const result = await promise;
-    clearTimeout(timer);
-    div.remove();
-    return result;
-  } catch (e) {
-    console.trace("wait error");
-    clearTimeout(timer);
-    return new Promise((resolve) => {
-      render(
-        div,
-        html`<div>
-          <p class="error">${e.message}</p>
-          <button
-            @click=${() => {
-              div.remove();
-              resolve(e.message);
-            }}
-          >
-            OK
-          </button>
-        </div>`,
-      );
-    });
-  }
-}
-
-class Logger extends TreeBase {
-  // name = new Props.String("Log");
-  stateName = new String$1("$Log");
-  logUntil = new ADate();
-
-  // I expect a string like #field1 $state1 $state2 #field3
-  logThese = new TextArea("", {
-    validate: this.validate,
-    placeholder: "Enter state and field names to log",
-  });
-
-  // I expect a string listing event names to log
-  logTheseEvents = new TextArea("", {
-    validate: this.validateEventNames,
-    placeholder: "Enter names of events to log",
-  });
-
-  /**
-   * @param {string} s
-   * @returns {string}
-   */
-  validate(s) {
-    return /^(?:[#$]\w+\s*)*$/.test(s) ? "" : "Invalid input";
-  }
-
-  /**
-   * Check for strings that look like event names
-   *
-   * @param {string} s
-   * @returns {string}
-   */
-  validateEventNames(s) {
-    return /^(?:\w+\s*)*$/.test(s) ? "" : "Invalid input";
-  }
-
-  template() {
-    const { state, actions } = Globals;
-    const stateName = this.stateName.value;
-    const logUntil = this.logUntil.value;
-    const logThese = this.logThese.value;
-    const logging =
-      !!state.get(stateName) && logUntil && new Date() < new Date(logUntil);
-    const getValue = access(state, actions.last.data);
-
-    if (logging) {
-      const names = logThese.split(/\s+/);
-      const record = {};
-      for (const name of names) {
-        const value = getValue(name);
-        if (value) {
-          record[name] = value;
+const scriptRel = 'modulepreload';const assetsURL = function(dep) { return "/OS-DPI/"+dep };const seen = {};const __vitePreload = function preload(baseModule, deps, importerUrl) {
+    let promise = Promise.resolve();
+    // @ts-expect-error true will be replaced with boolean later
+    if (true && deps && deps.length > 0) {
+        const links = document.getElementsByTagName('link');
+        promise = Promise.all(deps.map((dep) => {
+            // @ts-expect-error assetsURL is declared before preload.toString()
+            dep = assetsURL(dep);
+            if (dep in seen)
+                return;
+            seen[dep] = true;
+            const isCss = dep.endsWith('.css');
+            const cssSelector = isCss ? '[rel="stylesheet"]' : '';
+            const isBaseRelative = !!importerUrl;
+            // check if the file is already preloaded by SSR markup
+            if (isBaseRelative) {
+                // When isBaseRelative is true then we have `importerUrl` and `dep` is
+                // already converted to an absolute URL by the `assetsURL` function
+                for (let i = links.length - 1; i >= 0; i--) {
+                    const link = links[i];
+                    // The `links[i].href` is an absolute URL thanks to browser doing the work
+                    // for us. See https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#reflecting-content-attributes-in-idl-attributes:idl-domstring-5
+                    if (link.href === dep && (!isCss || link.rel === 'stylesheet')) {
+                        return;
+                    }
+                }
+            }
+            else if (document.querySelector(`link[href="${dep}"]${cssSelector}`)) {
+                return;
+            }
+            const link = document.createElement('link');
+            link.rel = isCss ? 'stylesheet' : scriptRel;
+            if (!isCss) {
+                link.as = 'script';
+                link.crossOrigin = '';
+            }
+            link.href = dep;
+            document.head.appendChild(link);
+            if (isCss) {
+                return new Promise((res, rej) => {
+                    link.addEventListener('load', res);
+                    link.addEventListener('error', () => rej(new Error(`Unable to preload CSS for ${dep}`)));
+                });
+            }
+        }));
+    }
+    return promise
+        .then(() => baseModule())
+        .catch((err) => {
+        const e = new Event('vite:preloadError', { cancelable: true });
+        // @ts-expect-error custom payload
+        e.payload = err;
+        window.dispatchEvent(e);
+        if (!e.defaultPrevented) {
+            throw err;
         }
-      }
-      this.log(record);
-    }
-
-    return html`<div
-      class="logging-indicator"
-      ?logging=${logging}
-      title="Logging"
-    ></div>`;
-  }
-
-  /** Log a record to the database
-   * @param {Object} record
-   * @returns {void}
-   */
-  log(record) {
-    const DateTime = new Date().toLocaleDateString("en-US", {
-      fractionalSecondDigits: 2,
-      hour12: false,
-      hour: "numeric",
-      minute: "numeric",
-      second: "numeric",
     });
-    record = { DateTime, ...record };
-    db.writeLog(record);
-  }
-
-  init() {
-    super.init();
-    this.onUpdate();
-  }
-
-  /** @type {Set<string>} */
-  listeners = new Set();
-  onUpdate() {
-    const UI = document.getElementById("UI");
-    if (!UI) return;
-    // cancel any listeners that are currently active
-    for (const eventName of this.listeners) {
-      UI.removeEventListener(eventName, this);
-    }
-    this.listeners.clear();
-
-    // listen for each of the listed events
-    for (const match of this.logTheseEvents.value.matchAll(/\w+/g)) {
-      UI.addEventListener(match[0], this);
-      this.listeners.add(match[0]);
-    }
-  }
-
-  typesToInclude = new Set(["boolean", "number", "string"]);
-  propsToExclude = new Set([
-    "isTrusted",
-    "bubbles",
-    "cancelBubble",
-    "cancelable",
-    "defaultPrevented",
-    "eventPhase",
-    "returnValue",
-    "timeStamp",
-  ]);
-  /**
-   * Make this object a listener
-   * @param {Event} e
-   */
-  handleEvent(e) {
-    // grab all the fields of the event that are simple types
-    const record = {};
-    for (const prop in e) {
-      // skip all upper case and _
-      if (/^[A-Z_]+$/.test(prop)) continue;
-      const value = e[prop];
-      if (this.propsToExclude.has(prop)) continue;
-      if (!this.typesToInclude.has(typeof value)) continue;
-      record[prop] = value;
-    }
-    this.log(record);
-  }
-}
-TreeBase.register(Logger, "Logger");
-
-async function SaveLog() {
-  let toSave = await db.readLog();
-  if (toSave.length > 0) {
-    await wait(saveContent("log", toSave, "xlsx"));
-  } else {
-    Globals.error.report("No log records to be saved.");
-    Globals.state.update();
-  }
-}
-
-async function ClearLog() {
-  await db.clearLog();
-}
+};
 
 /** Implement undo/redo for the designer by comparing the current and previous trees
  *
@@ -15105,6 +14674,148 @@ class DesignerPanel extends TreeBase {
   }
 }
 
+/**
+ * Handle displaying a "please wait" message and error reporting for
+ * async functions that may take a while or throw errors
+ * @template T
+ * @param {Promise<T>} promise
+ * @param {string} message
+ * @returns {Promise<T>}
+ */
+async function wait(promise, message = "Please wait") {
+  const div = document.createElement("div");
+  div.id = "PleaseWait";
+  document.body.appendChild(div);
+  const timer = window.setTimeout(() => {
+    render(div, html`<div><p class="message">${message}</p></div>`);
+  }, 500);
+  try {
+    const result = await promise;
+    clearTimeout(timer);
+    div.remove();
+    return result;
+  } catch (e) {
+    console.trace("wait error");
+    clearTimeout(timer);
+    return new Promise((resolve) => {
+      render(
+        div,
+        html`<div>
+          <p class="error">${e.message}</p>
+          <button
+            @click=${() => {
+              div.remove();
+              resolve(e.message);
+            }}
+          >
+            OK
+          </button>
+        </div>`,
+      );
+    });
+  }
+}
+
+/** @param {Blob} blob */
+async function readSheetFromBlob(blob) {
+  const XLSX = await __vitePreload(() => import('./xlsx.js'),true?__vite__mapDeps([]):void 0);
+  const data = await blob.arrayBuffer();
+  const workbook = XLSX.read(data, { codepage: 65001 });
+  /** @type {Rows} */
+  const dataArray = [];
+  for (const sheetName of workbook.SheetNames) {
+    const sheet = workbook.Sheets[sheetName];
+    const ref = sheet["!ref"];
+    if (!ref) continue;
+    const range = XLSX.utils.decode_range(ref);
+    const names = [];
+    const handlers = [];
+    const validColumns = [];
+    // process the header and choose a handler for each column
+    for (let c = range.s.c; c <= range.e.c; c++) {
+      let columnName = sheet[XLSX.utils.encode_cell({ r: 0, c })]?.v;
+      if (typeof columnName !== "string" || !columnName) {
+        continue;
+      }
+      columnName = columnName.toLowerCase();
+      names.push(columnName.trim(" "));
+      validColumns.push(c);
+      switch (columnName) {
+        case "row":
+        case "column":
+        case "page":
+          handlers.push("number");
+          break;
+        default:
+          handlers.push("string");
+          break;
+      }
+    }
+    // Process the rows
+    for (let r = range.s.r + 1; r <= range.e.r; r++) {
+      /** @type {Row} */
+      const row = { sheetName };
+      for (let i = 0; i < validColumns.length; i++) {
+        /** @type {string} */
+        const name = names[i];
+        const c = validColumns[i];
+        let value = sheet[XLSX.utils.encode_cell({ r, c })]?.v;
+        switch (handlers[i]) {
+          case "string":
+            if (typeof value === "undefined") {
+              value = "";
+            }
+            if (typeof value !== "string") {
+              value = value.toString(10);
+            }
+            if (value && typeof value === "string") {
+              row[name] = value;
+            }
+            break;
+          case "number":
+            if (typeof value === "number") {
+              row[name] = Math.floor(value);
+            } else if (value && typeof value === "string") {
+              value = parseInt(value, 10);
+              if (isNaN(value)) {
+                value = 0;
+              }
+              row[name] = value;
+            }
+            break;
+        }
+      }
+      if (Object.keys(row).length > 1) dataArray.push(row);
+    }
+  }
+  return dataArray;
+}
+
+/** Save the content as a spreadsheet
+ * @param {string} name
+ * @param {Row[]} rows
+ * @param {string} type
+ */
+async function saveContent(name, rows, type) {
+  const XLSX = await wait(__vitePreload(() => import('./xlsx.js'),true?__vite__mapDeps([]):void 0));
+  const sheetNames = new Set(rows.map((row) => row.sheetName || "sheet1"));
+  const workbook = XLSX.utils.book_new();
+  for (const sheetName of sheetNames) {
+    let sheetRows = rows.filter(
+      (row) => sheetName == (row.sheetName || "sheet1"),
+    );
+    if (type != "csv") {
+      sheetRows = sheetRows.map((row) => {
+        const { sheetName, ...rest } = row;
+        return rest;
+      });
+    }
+    const worksheet = XLSX.utils.json_to_sheet(sheetRows);
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+  }
+  XLSX.writeFileXLSX(workbook, `${name}.${type}`);
+}
+
 class Content extends DesignerPanel {
   name = new String$1("Content");
 
@@ -15183,6 +14894,153 @@ class Content extends DesignerPanel {
   }
 }
 TreeBase.register(Content, "Content");
+
+class Logger extends TreeBase {
+  // name = new Props.String("Log");
+  stateName = new String$1("$Log");
+  logUntil = new ADate();
+
+  // I expect a string like #field1 $state1 $state2 #field3
+  logThese = new TextArea("", {
+    validate: this.validate,
+    placeholder: "Enter state and field names to log",
+  });
+
+  // I expect a string listing event names to log
+  logTheseEvents = new TextArea("", {
+    validate: this.validateEventNames,
+    placeholder: "Enter names of events to log",
+  });
+
+  /**
+   * @param {string} s
+   * @returns {string}
+   */
+  validate(s) {
+    return /^(?:[#$]\w+\s*)*$/.test(s) ? "" : "Invalid input";
+  }
+
+  /**
+   * Check for strings that look like event names
+   *
+   * @param {string} s
+   * @returns {string}
+   */
+  validateEventNames(s) {
+    return /^(?:\w+\s*)*$/.test(s) ? "" : "Invalid input";
+  }
+
+  template() {
+    const { state, actions } = Globals;
+    const stateName = this.stateName.value;
+    const logUntil = this.logUntil.value;
+    const logThese = this.logThese.value;
+    const logging =
+      !!state.get(stateName) && logUntil && new Date() < new Date(logUntil);
+    const getValue = access(state, actions.last.data);
+
+    if (logging) {
+      const names = logThese.split(/\s+/);
+      const record = {};
+      for (const name of names) {
+        const value = getValue(name);
+        if (value) {
+          record[name] = value;
+        }
+      }
+      this.log(record);
+    }
+
+    return html`<div
+      class="logging-indicator"
+      ?logging=${logging}
+      title="Logging"
+    ></div>`;
+  }
+
+  /** Log a record to the database
+   * @param {Object} record
+   * @returns {void}
+   */
+  log(record) {
+    const DateTime = new Date().toLocaleDateString("en-US", {
+      fractionalSecondDigits: 2,
+      hour12: false,
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+    });
+    record = { DateTime, ...record };
+    db.writeLog(record);
+  }
+
+  init() {
+    super.init();
+    this.onUpdate();
+  }
+
+  /** @type {Set<string>} */
+  listeners = new Set();
+  onUpdate() {
+    const UI = document.getElementById("UI");
+    if (!UI) return;
+    // cancel any listeners that are currently active
+    for (const eventName of this.listeners) {
+      UI.removeEventListener(eventName, this);
+    }
+    this.listeners.clear();
+
+    // listen for each of the listed events
+    for (const match of this.logTheseEvents.value.matchAll(/\w+/g)) {
+      UI.addEventListener(match[0], this);
+      this.listeners.add(match[0]);
+    }
+  }
+
+  typesToInclude = new Set(["boolean", "number", "string"]);
+  propsToExclude = new Set([
+    "isTrusted",
+    "bubbles",
+    "cancelBubble",
+    "cancelable",
+    "defaultPrevented",
+    "eventPhase",
+    "returnValue",
+    "timeStamp",
+  ]);
+  /**
+   * Make this object a listener
+   * @param {Event} e
+   */
+  handleEvent(e) {
+    // grab all the fields of the event that are simple types
+    const record = {};
+    for (const prop in e) {
+      // skip all upper case and _
+      if (/^[A-Z_]+$/.test(prop)) continue;
+      const value = e[prop];
+      if (this.propsToExclude.has(prop)) continue;
+      if (!this.typesToInclude.has(typeof value)) continue;
+      record[prop] = value;
+    }
+    this.log(record);
+  }
+}
+TreeBase.register(Logger, "Logger");
+
+async function SaveLog() {
+  let toSave = await db.readLog();
+  if (toSave.length > 0) {
+    await saveContent("log", toSave, "xlsx");
+  } else {
+    Globals.error.report("No log records to be saved.");
+    Globals.state.update();
+  }
+}
+
+async function ClearLog() {
+  await db.clearLog();
+}
 
 const emptyPage = {
   className: "Page",
@@ -18716,12 +18574,14 @@ const defaultPatterns = {
 let animationNonce = 0;
 
 /** @param {Target} target
- * @param {string} defaultValue */
-function cueTarget(target, defaultValue) {
+ * @param {string} defaultValue
+ * @param {boolean} isGroup
+ * */
+function cueTarget(target, defaultValue, isGroup = false) {
   if (target instanceof HTMLButtonElement) {
     target.setAttribute("cue", defaultValue);
     const video = target.querySelector("video");
-    if (video && !video.hasAttribute("autoplay")) {
+    if (!isGroup && video && !video.hasAttribute("autoplay")) {
       if (video.hasAttribute("muted")) video.muted = true;
       const promise = video.play();
       if (promise !== undefined) {
@@ -18733,7 +18593,7 @@ function cueTarget(target, defaultValue) {
       }
     }
   } else if (target instanceof Group) {
-    target.cue();
+    target.cue(defaultValue);
   }
 }
 
@@ -18777,13 +18637,20 @@ class Group {
   }
 
   /** @param {string} value */
-  cue(value = "") {
+  cue(value = "", top = true) {
     if (!value) {
       value = this.access.Cue;
     }
+    const color = Globals.cues.cueName(value);
+    if (top) console.trace();
+    console.log("cue members", this.access.Name, color, this.members.length);
     for (const member of this.members) {
-      if (member instanceof HTMLButtonElement) cueTarget(member, value);
-      else if (member instanceof Group) member.cue(value);
+      if (member instanceof HTMLButtonElement)
+        cueTarget(member, value, !top || this.members.length > 1);
+      else if (member instanceof Group) {
+        console.log("cue sub group");
+        member.cue(value, false);
+      }
     }
   }
 
@@ -18880,7 +18747,7 @@ class PatternManager extends PatternBase {
   /**
    * Stack keeps track of the nesting as we walk the tree
    *
-   * @type {{ group: Group; index: number }[]}
+   * @type {{ group: Group; cue: string, index: number }[]}
    */
   stack = [];
 
@@ -18977,7 +18844,11 @@ class PatternManager extends PatternBase {
     }
     this.targets = new Group(members, { ...this.propsAsObject, Cycles: 1 });
     this.stack = [
-      { group: this.targets, index: this.StartVisible.value ? 0 : -1 },
+      {
+        group: this.targets,
+        cue: this.Cue.value,
+        index: this.StartVisible.value ? 0 : -1,
+      },
     ];
     this.cue();
 
@@ -19028,13 +18899,20 @@ class PatternManager extends PatternBase {
       }
     }
     let current = this.current;
+    this.stack[0].cue;
     if (!current) return;
+    while (current instanceof Group && current.members.length == 1) {
+      // manage currentCue while we walk through singleton groups
+      current = current.members[0];
+    }
     if (current instanceof Group) {
-      while (current.length == 1 && current.members[0] instanceof Group) {
-        current = current.members[0];
-      }
       // I need to work out the index here. Should be the group under the pointer
-      this.stack.unshift({ group: current, index: event?.groupIndex || 0 });
+      console.log("unshift", current);
+      this.stack.unshift({
+        group: current,
+        cue: current.access.Cue,
+        index: event?.groupIndex || 0,
+      });
     } else if (current instanceof HTMLButtonElement) {
       if (current.hasAttribute("click")) {
         current.dispatchEvent(new Event("Activate"));
@@ -19056,7 +18934,8 @@ class PatternManager extends PatternBase {
     const current = this.current;
     if (!current) return;
     this.cued = true;
-    cueTarget(current, this.Cue.value);
+    cueTarget(current, this.stack[0].cue);
+    console.log("stack", this.stack);
   }
 
   /** Return the access info for current
@@ -20342,6 +20221,11 @@ class CueList extends DesignerPanel {
 
   get defaultCue() {
     return this.children.find((cue) => cue.Default.value) || this.children[0];
+  }
+
+  /** @param {string} cue */
+  cueName(cue) {
+    return this.cueMap.get(cue);
   }
 
   /** @param {Object} obj */
@@ -22507,9 +22391,7 @@ function getFileMenuItems(bar) {
       label: "Save sheet",
       title: "Save the content as a spreadsheet",
       callback: () => {
-        wait(
-          saveContent(db.designName, Globals.data.contentRows, "xlsx"),
-        );
+        saveContent(db.designName, Globals.data.contentRows, "xlsx");
       },
     }),
     new MenuItem({
