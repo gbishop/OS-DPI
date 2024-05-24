@@ -11,12 +11,14 @@ import { toggleIndicator } from "app/components/helpers";
 let animationNonce = 0;
 
 /** @param {Target} target
- * @param {string} defaultValue */
-export function cueTarget(target, defaultValue) {
+ * @param {string} defaultValue
+ * @param {boolean} isGroup
+ * */
+export function cueTarget(target, defaultValue, isGroup = false) {
   if (target instanceof HTMLButtonElement) {
     target.setAttribute("cue", defaultValue);
     const video = target.querySelector("video");
-    if (video && !video.hasAttribute("autoplay")) {
+    if (!isGroup && video && !video.hasAttribute("autoplay")) {
       if (video.hasAttribute("muted")) video.muted = true;
       const promise = video.play();
       if (promise !== undefined) {
@@ -28,7 +30,7 @@ export function cueTarget(target, defaultValue) {
       }
     }
   } else if (target instanceof Group) {
-    target.cue();
+    target.cue(defaultValue);
   }
 }
 
@@ -72,13 +74,16 @@ export class Group {
   }
 
   /** @param {string} value */
-  cue(value = "") {
+  cue(value = "", top = true) {
     if (!value) {
       value = this.access.Cue;
     }
     for (const member of this.members) {
-      if (member instanceof HTMLButtonElement) cueTarget(member, value);
-      else if (member instanceof Group) member.cue(value);
+      if (member instanceof HTMLButtonElement)
+        cueTarget(member, value, !top || this.members.length > 1);
+      else if (member instanceof Group) {
+        member.cue(value, false);
+      }
     }
   }
 
@@ -175,7 +180,7 @@ export class PatternManager extends PatternBase {
   /**
    * Stack keeps track of the nesting as we walk the tree
    *
-   * @type {{ group: Group; index: number }[]}
+   * @type {{ group: Group; cue: string, index: number }[]}
    */
   stack = [];
 
@@ -272,7 +277,11 @@ export class PatternManager extends PatternBase {
     }
     this.targets = new Group(members, { ...this.propsAsObject, Cycles: 1 });
     this.stack = [
-      { group: this.targets, index: this.StartVisible.value ? 0 : -1 },
+      {
+        group: this.targets,
+        cue: this.Cue.value,
+        index: this.StartVisible.value ? 0 : -1,
+      },
     ];
     this.cue();
 
@@ -326,12 +335,17 @@ export class PatternManager extends PatternBase {
     }
     let current = this.current;
     if (!current) return;
+    while (current instanceof Group && current.members.length == 1) {
+      // manage currentCue while we walk through singleton groups
+      current = current.members[0];
+    }
     if (current instanceof Group) {
-      while (current.length == 1 && current.members[0] instanceof Group) {
-        current = current.members[0];
-      }
       // I need to work out the index here. Should be the group under the pointer
-      this.stack.unshift({ group: current, index: event?.groupIndex || 0 });
+      this.stack.unshift({
+        group: current,
+        cue: current.access.Cue,
+        index: event?.groupIndex || 0,
+      });
     } else if (current instanceof HTMLButtonElement) {
       if (current.hasAttribute("click")) {
         current.dispatchEvent(new Event("Activate"));
@@ -353,7 +367,7 @@ export class PatternManager extends PatternBase {
     const current = this.current;
     if (!current) return;
     this.cued = true;
-    cueTarget(current, this.Cue.value);
+    cueTarget(current, this.stack[0].cue);
   }
 
   /** Return the access info for current
