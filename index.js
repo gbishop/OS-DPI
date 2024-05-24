@@ -9057,7 +9057,7 @@ class DB {
     }
   }
 
-  /** Return the record for type or the defaultValue
+  /** Return the most recent record for the type
    * @param {string} type
    * @param {any} defaultValue
    * @returns {Promise<Object>}
@@ -9626,11 +9626,6 @@ const Functions = {
   },
   open_editor: () => {
     Globals.state.update({ editing: !Globals.state.get("editing") });
-  },
-  Notes: (id = "", text = "") => {
-    const result = Globals.data.Notes(id, text);
-    db.write("notes", Globals.data.noteRows);
-    return result;
   },
 };
 
@@ -12264,60 +12259,23 @@ function match(filter, row) {
 class Data {
   /** @param {Rows} rows - rows coming from the spreadsheet */
   constructor(rows) {
-    this.contentRows = [];
-    this.dynamicRows = [];
-    this.noteRows = [];
-    this.groups = ["dynamicRows", "contentRows", "noteRows"];
+    this.contentRows = (Array.isArray(rows) && rows) || [];
+    this.allrows = this.contentRows;
     /** @type {Set<string>} */
     this.allFields = new Set();
-    this.setContent(rows);
-  }
-
-  /** @param {Rows} rows - rows coming from the spreadsheet */
-  setContent(rows) {
-    this.contentRows = (Array.isArray(rows) && rows) || [];
     this.updateAllFields();
-  }
-
-  /**
-   * Add rows from the socket interface
-   * @param {Rows} rows
-   */
-  setDynamicRows(rows) {
-    if (!Array.isArray(rows)) return;
-    this.dynamicRows = rows;
-    this.updateAllFields();
-  }
-
-  /**
-   * Add rows of notes
-   * @param {Rows} rows
-   */
-  setNoteRows(rows) {
-    if (!Array.isArray(rows)) return;
-    this.noteRows = rows;
-    this.updateAllFields();
-  }
-
-  get length() {
-    let result = 0;
-    for (const group of this.groups) {
-      result += this[group].length;
-    }
-    return result;
+    this.loadTime = new Date();
   }
 
   updateAllFields() {
-    /** @type {Set<string>} */
-    const allFields = new Set();
-    for (const group of this.groups) {
-      for (const row of this[group]) {
-        for (const field of Object.keys(row)) {
-          allFields.add("#" + field);
+    this.allFields = /** @type {Set<string>} */ (
+      this.contentRows.reduce((previous, current) => {
+        for (const field of Object.keys(current)) {
+          previous.add("#" + field);
         }
-      }
-    }
-    this.allFields = allFields;
+        return previous;
+      }, new Set())
+    );
     this.clearFields = {};
     for (const field of this.allFields) {
       this.clearFields[field.slice(1)] = null;
@@ -12338,14 +12296,9 @@ class Data {
       operator: filter.operator.value,
       value: filter.value.value,
     }));
-    let result = [];
-    for (const group of this.groups) {
-      for (const row of this[group]) {
-        if (boundFilters.every((filter) => match(filter, row))) {
-          result.push(row);
-        }
-      }
-    }
+    let result = this.allrows.filter((row) =>
+      boundFilters.every((filter) => match(filter, row)),
+    );
     if (clearFields)
       result = result.map((row) => ({ ...this.clearFields, ...row }));
     return result;
@@ -12364,46 +12317,21 @@ class Data {
       operator: filter.operator.value,
       value: filter.value.valueInContext(context),
     }));
-    for (const group of this.groups) {
-      for (const row of this[group]) {
-        if (boundFilters.every((filter) => match(filter, row))) {
-          return true;
-        }
-      }
-    }
-    return false;
+    const result = this.allrows.some((row) =>
+      boundFilters.every((filter) => match(filter, row)),
+    );
+    return result;
   }
 
   /**
-   * Manipulate the Notes rows
-   * @param {string} id
-   * @param {string} text
-   * @returns {string} - the id
+   * Add rows from the socket interface
+   * @param {Rows} rows
    */
-  Notes(id, text) {
-    if (id == "new") {
-      // create
-      const updated = new Date();
-      id = updated.toString();
-      this.noteRows.push({
-        Note: id,
-        updated,
-        text,
-      });
-    } else {
-      const index = this.noteRows.findIndex((row) => row.id == id);
-      if (index < 0) return ""; // not found
-      if (text) {
-        // update
-        this.noteRows[index].text = text;
-        this.noteRows[index].updated = new Date().toString();
-      } else {
-        // delete
-        this.noteRows.splice(index, 1);
-        id = "";
-      }
-    }
-    return id;
+  setDynamicRows(rows) {
+    if (!Array.isArray(rows)) return;
+    this.allrows = rows.concat(this.contentRows);
+    this.updateAllFields();
+    this.loadTime = new Date();
   }
 }
 
@@ -13108,8 +13036,6 @@ class Display extends TreeBase {
   background = new Color("white");
   fontSize = new Float(2);
   scale = new Float(1);
-  highlightWords = new Boolean$1(false);
-  clearAfterSpeaking = new Boolean$1(false);
 
   /** @type {HTMLDivElement | null} */
   current = null;
@@ -13160,42 +13086,6 @@ class Display extends TreeBase {
     }
     this.current?.setAttribute("data--clicked-word", word);
   };
-
-  /**
-   * @param {SpeechSynthesisEvent} event
-   */
-  handleEvent(event) {
-    console.log(event);
-    if (!this.highlightWords.value) return;
-    const element = document.getElementById(this.id);
-    if (!element) return;
-    const span = element.querySelector("button span");
-    if (!span) return;
-    const text = span.firstChild;
-    if (!text) return;
-    const selection = window.getSelection();
-    if (!selection) return;
-
-    if (event.type == "boundary") {
-      try {
-        selection.setBaseAndExtent(
-          text,
-          event.charIndex,
-          text,
-          event.charIndex,
-        );
-        selection.modify("extend", "forward", "word");
-      } catch (e) {}
-    } else if (event.type == "end") {
-      console.log("end");
-      Globals.state.update({ [this.stateName.value]: "" });
-    }
-  }
-
-  init() {
-    document.addEventListener("boundary", this);
-    document.addEventListener("end", this);
-  }
 }
 TreeBase.register(Display, "Display");
 
@@ -13867,23 +13757,6 @@ class Speech extends TreeBase {
     utterance.pitch = this.pitch.value;
     utterance.rate = this.rate.value;
     utterance.volume = this.volume.value;
-    utterance.addEventListener("boundary", (event) => {
-      document.dispatchEvent(
-        new SpeechSynthesisEvent("boundary", {
-          utterance: event.utterance,
-          charIndex: event.charIndex,
-        }),
-      );
-    });
-    utterance.addEventListener("end", (event) => {
-      console.log("end");
-      document.dispatchEvent(
-        new SpeechSynthesisEvent("end", {
-          utterance: event.utterance,
-          charIndex: event.charIndex,
-        }),
-      );
-    });
     speechSynthesis.cancel();
     speechSynthesis.speak(utterance);
   }
@@ -14860,7 +14733,7 @@ class Content extends DesignerPanel {
       <div>
         <h1>Content</h1>
         <p>
-          ${data.length} rows with these fields:
+          ${data.allrows.length} rows with these fields:
           ${String([...data.allFields].sort()).replaceAll(",", ", ")}
         </p>
         <h2>Media files</h2>
@@ -18641,14 +18514,10 @@ class Group {
     if (!value) {
       value = this.access.Cue;
     }
-    const color = Globals.cues.cueName(value);
-    if (top) console.trace();
-    console.log("cue members", this.access.Name, color, this.members.length);
     for (const member of this.members) {
       if (member instanceof HTMLButtonElement)
         cueTarget(member, value, !top || this.members.length > 1);
       else if (member instanceof Group) {
-        console.log("cue sub group");
         member.cue(value, false);
       }
     }
@@ -18899,7 +18768,6 @@ class PatternManager extends PatternBase {
       }
     }
     let current = this.current;
-    this.stack[0].cue;
     if (!current) return;
     while (current instanceof Group && current.members.length == 1) {
       // manage currentCue while we walk through singleton groups
@@ -18907,7 +18775,6 @@ class PatternManager extends PatternBase {
     }
     if (current instanceof Group) {
       // I need to work out the index here. Should be the group under the pointer
-      console.log("unshift", current);
       this.stack.unshift({
         group: current,
         cue: current.access.Cue,
@@ -18935,7 +18802,6 @@ class PatternManager extends PatternBase {
     if (!current) return;
     this.cued = true;
     cueTarget(current, this.stack[0].cue);
-    console.log("stack", this.stack);
   }
 
   /** Return the access info for current
@@ -22361,7 +22227,7 @@ function getFileMenuItems(bar) {
             sheet.handle = blob.handle;
             const result = await wait(readSheetFromBlob(blob));
             await db.write("content", result);
-            Globals.data.setContent(result);
+            Globals.data = new Data(result);
             Globals.state.update();
           }
         } catch (e) {
@@ -22381,7 +22247,8 @@ function getFileMenuItems(bar) {
           if (blob) {
             const result = await wait(readSheetFromBlob(blob));
             await db.write("content", result);
-            Globals.data.setContent(result);
+            Globals.data = new Data(result);
+            Globals.state.update();
           } else {
             console.log("no file to reload");
           }
@@ -22867,11 +22734,9 @@ async function start() {
   }
   db.setDesignName(name);
   const dataArray = await db.read("content", []);
-  const noteArray = await db.read("notes", []);
   await pageLoaded;
 
   Globals.data = new Data(dataArray);
-  Globals.data.setNoteRows(noteArray);
   const layout = await Layout.load(Layout);
   Globals.layout = layout;
   Globals.state = new State$1(`UIState`);
