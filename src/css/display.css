@@ -30,7 +30,16 @@
 
 .display span.caret {
   display: inline-block;
-  width: 0.1ch;
-  height: 0.7lh;
+  width: 2px;
+  margin-right: -2px;
+  height: 0.8lh;
   background-color: red;
+  animation: blinker 1s linear infinite;
+  vertical-align: text-bottom;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
 }

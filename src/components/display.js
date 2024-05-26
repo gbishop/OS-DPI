@@ -4,7 +4,7 @@ import * as Props from "./props";
 import "css/display.css";
 import Globals from "app/globals";
 import { formatSlottedString, hasSlots } from "./slots";
-import { formatNote } from "./notes";
+import { formatNote, cursor } from "./notes";
 
 class Display extends TreeBase {
   stateName = new Props.String("$Display");

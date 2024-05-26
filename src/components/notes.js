@@ -52,7 +52,7 @@ function insert(old, index, char) {
   }
 }
 
-const cursor = "\u2758";
+export const cursor = "\ufeff";
 
 /**
  * Add a keyboard character with backspace and arrow motions simulated
