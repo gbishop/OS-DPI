@@ -648,9 +648,20 @@ class ImportURLDialog {
             input instanceof HTMLInputElement &&
             !input.validationMessage &&
             input.value
-          )
-            pleaseWait(db.readDesignFromURL(input.value));
-          this.current.close();
+          ) {
+            const local_db = new DB();
+            pleaseWait(local_db.readDesignFromURL(input.value)).then(
+              () => {
+                window.open(
+                  `#${local_db.designName}`,
+                  "_blank",
+                  `noopener=true`,
+                );
+              },
+              () => console.log("rejected"),
+            );
+            this.current.close();
+          }
         }}
       >
         Import
