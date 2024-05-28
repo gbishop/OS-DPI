@@ -68,21 +68,22 @@ function add_character(old, char) {
     result = insert(old, index, char);
   } else {
     // some special character, handle a few
-    switch (char) {
-      case "Enter":
+    switch (char.toLowerCase()) {
+      case "enter":
         result = insert(old, index, "\n");
         break;
-      case "Tab":
+      case "tab":
         result = insert(old, index, " ");
         break;
-      case "Backspace":
+      case "backspace":
+      case "delete":
         if (index < 0) {
           result = old.slice(0, old.length - 1);
         } else {
           result = old.slice(0, index - 1) + cursor + old.slice(index + 1);
         }
         break;
-      case "ArrowLeft":
+      case "arrowleft":
         if (index < 0) {
           if (old.length > 0) {
             result =
@@ -98,7 +99,7 @@ function add_character(old, char) {
             old.slice(index + 1);
         }
         break;
-      case "ArrowRight":
+      case "arrowright":
         console.log(index, old.length);
         if (index == old.length - 1) {
           result = old.slice(0, old.length - 1);
