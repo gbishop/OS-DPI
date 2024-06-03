@@ -70,6 +70,7 @@ function add_character(old, char) {
     // some special character, handle a few
     switch (char.toLowerCase()) {
       case "enter":
+      case "return":
         result = insert(old, index, "\n");
         break;
       case "tab":
