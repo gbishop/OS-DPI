@@ -12,6 +12,7 @@ export const comparators = {
   equals: (f, v) => collator.compare(f, v) === 0 || f === "*" || v === "*",
   "starts with": (f, v) => f.toUpperCase().startsWith(v.toUpperCase()),
   empty: (f) => !f,
+  contains: (f, v) => f.toLowerCase().includes(v.toLowerCase()),
   "not empty": (f) => !!f,
   "less than": (f, v) => collatorNumber.compare(f, v) < 0,
   "greater than": (f, v) => collatorNumber.compare(f, v) > 0,
@@ -157,6 +158,14 @@ export class Data {
    * @returns {string} - the id
    */
   Notes(args) {
+    /** @param {string} text
+     * @param {number} length
+     */
+    function ClipText(text, length = 100) {
+      const nl_index = text.indexOf("\n");
+      if (nl_index > 0 && nl_index < length) length = nl_index;
+      return text.slice(0, length);
+    }
     if (args.length % 2 != 0) {
       console.error("number of args must be multiple of 2");
       return "";
@@ -175,6 +184,9 @@ export class Data {
     note["sheetName"] = "Notes";
     let ID = note["ID"];
     if (ID) {
+      if (!note["label"] && note["text"]) {
+        note["label"] = ClipText(note["text"]);
+      }
       const index = this.noteRows.findIndex((row) => row.ID == ID);
       if (index >= 0) {
         Object.assign(this.noteRows[index], note);
@@ -194,6 +206,9 @@ export class Data {
     } else {
       ID = new Date().toISOString();
       note["ID"] = ID;
+      if (!note["label"] && note["text"]) {
+        note["label"] = ClipText(note["text"]);
+      }
       this.noteRows.push(note);
     }
     return ID;
