@@ -3,6 +3,7 @@ import { html } from "uhtml";
 import Globals from "app/globals";
 import * as Props from "./props";
 import { toString } from "./slots";
+import { cursor } from "./notes";
 
 class Speech extends TreeBase {
   stateName = new Props.String("$Speak");
@@ -14,7 +15,10 @@ class Speech extends TreeBase {
   async speak() {
     const { state } = Globals;
     const voiceURI = this.voiceURI.value;
-    const message = toString(state.get(this.stateName.value));
+    const message = toString(state.get(this.stateName.value)).replace(
+      cursor,
+      "",
+    );
     const voices = await getVoices();
     const voice =
       voiceURI && voices.find((voice) => voice.voiceURI == voiceURI);
@@ -35,7 +39,6 @@ class Speech extends TreeBase {
       );
     });
     utterance.addEventListener("end", (event) => {
-      console.log("end");
       document.dispatchEvent(
         new SpeechSynthesisEvent("end", {
           utterance: event.utterance,

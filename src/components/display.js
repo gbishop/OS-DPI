@@ -4,7 +4,7 @@ import * as Props from "./props";
 import "css/display.css";
 import Globals from "app/globals";
 import { formatSlottedString, hasSlots } from "./slots";
-import { formatNote, cursor } from "./notes";
+import { formatNote } from "./notes";
 
 class Display extends TreeBase {
   stateName = new Props.String("$Display");
@@ -69,30 +69,59 @@ class Display extends TreeBase {
    * @param {SpeechSynthesisEvent} event
    */
   handleEvent(event) {
-    console.log(event);
-    if (!this.highlightWords.value) return;
+    /**
+     * @param {HTMLElement} root
+     * @param {number} offset
+     * @returns {[Text|null, number]}
+     */
+    function getNodeAtOffset(root, offset) {
+      const treeWalker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+
+      while (treeWalker.nextNode()) {
+        const node = /** @type {Text} */ (treeWalker.currentNode);
+        if (node.parentElement instanceof HTMLSpanElement) {
+          const it = node.data;
+          if (offset > it.length) {
+            offset -= it.length;
+          } else {
+            return [node, offset];
+          }
+        }
+      }
+      return [null, -1];
+    }
+    if (!this.highlightWords.value) {
+      return;
+    }
     const element = document.getElementById(this.id);
-    if (!element) return;
+    if (!element) {
+      return;
+    }
     const span = element.querySelector("button span");
-    if (!span) return;
-    const text = span.firstChild;
-    if (!text) return;
+    if (!span) {
+      return;
+    }
+    const [text, offset] = getNodeAtOffset(element, event.charIndex);
+    if (!text) {
+      return;
+    }
     const selection = window.getSelection();
-    if (!selection) return;
+    if (!selection) {
+      return;
+    }
 
     if (event.type == "boundary") {
       try {
-        selection.setBaseAndExtent(
-          text,
-          event.charIndex,
-          text,
-          event.charIndex,
-        );
+        selection.setBaseAndExtent(text, offset, text, offset);
         selection.modify("extend", "forward", "word");
-      } catch (e) {}
+      } catch (e) {
+        console.error(e);
+      }
     } else if (event.type == "end") {
-      console.log("end");
-      Globals.state.update({ [this.stateName.value]: "" });
+      selection.empty();
+      if (this.clearAfterSpeaking.value) {
+        Globals.state.update({ [this.stateName.value]: "" });
+      }
     }
   }
 

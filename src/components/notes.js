@@ -130,12 +130,14 @@ function add_character(old, char) {
 export function formatNote(text) {
   const index = text.indexOf(cursor);
   if (index < 0) {
-    return [html`${text}`];
+    return [html`<span>${text}</span>`];
   } else {
     return [
-      html`${text.slice(0, index)}<span class="caret"></span>${text.slice(
+      html`<span
+        >${text.slice(0, index)}<span class="caret"></span>${text.slice(
           index + 1,
-        )}`,
+        )}</span
+      >`,
     ];
   }
 }
