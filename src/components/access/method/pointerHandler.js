@@ -55,14 +55,30 @@ export class PointerHandler extends Handler {
     const upDownThreshold = method.PointerDownDebounce.value * 1000;
 
     /**
+     * @typedef {PointerEvent & {realTarget: EventTarget}} MyPointerEvent
+     */
+    /**
      * Get the types correct
      *
      * @param {string} event
-     * @returns {RxJs.Observable<PointerEvent>}
+     * @returns {RxJs.Observable<MyPointerEvent>}
      */
     function fromPointerEvent(event) {
-      return /** @type {RxJs.Observable<PointerEvent>} */ (
-        RxJs.fromEvent(document, event)
+      return /** @type {RxJs.Observable<MyPointerEvent>} */ (
+        RxJs.fromEvent(document, event).pipe(
+          RxJs.map((/** @type {MyPointerEvent} */ e) => {
+            if (e.target instanceof HTMLButtonElement) {
+              e.realTarget = e.target;
+            } else {
+              if (e.target instanceof HTMLElement) {
+                const t = e.target.closest("button");
+                if (t) e.realTarget = t;
+                else e.realTarget = e.target;
+              }
+            }
+            return e;
+          }),
+        )
       );
     }
 
@@ -190,9 +206,9 @@ export class PointerHandler extends Handler {
       // keep only events related to buttons within the UI
       RxJs.filter(
         (e) =>
-          e.target instanceof HTMLButtonElement &&
-          e.target.closest("div#UI") !== null &&
-          !e.target.disabled,
+          e.realTarget instanceof HTMLButtonElement &&
+          e.realTarget.closest("div#UI") !== null &&
+          !e.realTarget.disabled,
       ),
       // kill contextmenu events
       RxJs.tap((e) => e.type === "contextmenu" && e.preventDefault()),

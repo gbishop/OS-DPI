@@ -33,6 +33,8 @@ Object.assign(Functions, {
     if (nl_index > 0 && nl_index < length) length = nl_index;
     return text.slice(0, length);
   },
+
+  Caret: updateString(setCaret),
 });
 
 /**
@@ -120,6 +122,17 @@ function add_character(old, char) {
     result = result.slice(0, result.length - 1);
   }
   return result;
+}
+
+/** @param {string} old
+ * @param {string} offset
+ */
+function setCaret(old, offset) {
+  const index = parseInt(offset);
+  const clean = old.replace(cursor, "");
+  console.log("setCaret", { old, offset, index, clean });
+  if (index < 0 || index > clean.length) return clean;
+  return clean.slice(0, index) + cursor + clean.slice(index);
 }
 
 /**

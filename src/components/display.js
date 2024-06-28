@@ -50,8 +50,43 @@ class Display extends TreeBase {
   /** Attempt to locate the word the user is touching
    */
   click = () => {
+    console.log("click");
+    /**
+     * @param {HTMLElement} root
+     * @param {Selection} s
+     * @returns {number}
+     */
+    function getOffsetToSelection(root, s) {
+      const treeWalker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+
+      let offset = 0;
+      while (treeWalker.nextNode()) {
+        const node = /** @type {Text} */ (treeWalker.currentNode);
+        if (node == s.focusNode) {
+          console.log("got node", offset, s.focusOffset);
+          return offset + s.focusOffset;
+        }
+        console.log("over", node, node.data, node.data.length);
+        offset += node.data.length;
+      }
+      return -1;
+    }
     const s = window.getSelection();
+    console.log({ s });
     if (!s) return;
+    let element = document.getElementById(this.id);
+    console.log({ element });
+    if (!element) {
+      return;
+    }
+    element = element.querySelector("button");
+    if (!element) {
+      return;
+    }
+    if (!element.contains(s.anchorNode)) {
+      console.log("selection not inside");
+      return;
+    }
     let word = "";
     if (s.isCollapsed) {
       s.modify("move", "forward", "character");
@@ -63,6 +98,11 @@ class Display extends TreeBase {
       word = s.toString();
     }
     this.current?.setAttribute("data--clicked-word", word);
+    this.current?.setAttribute(
+      "data--clicked-caret",
+      getOffsetToSelection(element, s).toString(),
+    );
+    s.empty();
   };
 
   /**
