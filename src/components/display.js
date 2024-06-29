@@ -50,7 +50,6 @@ class Display extends TreeBase {
   /** Attempt to locate the word the user is touching
    */
   click = () => {
-    console.log("click");
     /**
      * @param {HTMLElement} root
      * @param {Selection} s
@@ -63,19 +62,15 @@ class Display extends TreeBase {
       while (treeWalker.nextNode()) {
         const node = /** @type {Text} */ (treeWalker.currentNode);
         if (node == s.focusNode) {
-          console.log("got node", offset, s.focusOffset);
           return offset + s.focusOffset;
         }
-        console.log("over", node, node.data, node.data.length);
         offset += node.data.length;
       }
       return -1;
     }
     const s = window.getSelection();
-    console.log({ s });
     if (!s) return;
     let element = document.getElementById(this.id);
-    console.log({ element });
     if (!element) {
       return;
     }
@@ -84,7 +79,6 @@ class Display extends TreeBase {
       return;
     }
     if (!element.contains(s.anchorNode)) {
-      console.log("selection not inside");
       return;
     }
     let word = "";

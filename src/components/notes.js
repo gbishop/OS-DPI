@@ -103,7 +103,6 @@ function add_character(old, char) {
         }
         break;
       case "arrowright":
-        console.log(index, old.length);
         if (index == old.length - 1) {
           result = old.slice(0, old.length - 1);
         } else if (index >= 0) {
@@ -130,7 +129,6 @@ function add_character(old, char) {
 function setCaret(old, offset) {
   const index = parseInt(offset);
   const clean = old.replace(cursor, "");
-  console.log("setCaret", { old, offset, index, clean });
   if (index < 0 || index > clean.length) return clean;
   return clean.slice(0, index) + cursor + clean.slice(index);
 }
