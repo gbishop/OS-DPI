@@ -55,28 +55,25 @@ export class PointerHandler extends Handler {
     const upDownThreshold = method.PointerDownDebounce.value * 1000;
 
     /**
-     * @typedef {PointerEvent & {realTarget: EventTarget}} MyPointerEvent
-     */
-    /**
      * Get the types correct
      *
      * @param {string} event
-     * @returns {RxJs.Observable<MyPointerEvent>}
+     * @returns {RxJs.Observable<PointerEvent>}
      */
     function fromPointerEvent(event) {
-      return /** @type {RxJs.Observable<MyPointerEvent>} */ (
+      return /** @type {RxJs.Observable<PointerEvent>} */ (
         RxJs.fromEvent(document, event).pipe(
-          RxJs.map((/** @type {MyPointerEvent} */ e) => {
-            if (e.target instanceof HTMLButtonElement) {
-              e.realTarget = e.target;
-            } else {
-              if (e.target instanceof HTMLElement) {
-                const t = e.target.closest("button");
-                if (t) e.realTarget = t;
-                else e.realTarget = e.target;
+          // fudge the target to be the button and not any contained thing
+          RxJs.tap((/** @type {PointerEvent} */ e) => {
+            if (
+              !(e.target instanceof HTMLButtonElement) &&
+              e.target instanceof HTMLElement
+            ) {
+              const t = e.target.closest("button");
+              if (t) {
+                Object.defineProperty(e, "target", { value: t });
               }
             }
-            return e;
           }),
         )
       );
@@ -206,9 +203,9 @@ export class PointerHandler extends Handler {
       // keep only events related to buttons within the UI
       RxJs.filter(
         (e) =>
-          e.realTarget instanceof HTMLButtonElement &&
-          e.realTarget.closest("div#UI") !== null &&
-          !e.realTarget.disabled,
+          e.target instanceof HTMLButtonElement &&
+          e.target.closest("div#UI") !== null &&
+          !e.target.disabled,
       ),
       // kill contextmenu events
       RxJs.tap((e) => e.type === "contextmenu" && e.preventDefault()),
