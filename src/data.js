@@ -12,6 +12,7 @@ export const comparators = {
   equals: (f, v) => collator.compare(f, v) === 0 || f === "*" || v === "*",
   "starts with": (f, v) => f.toUpperCase().startsWith(v.toUpperCase()),
   empty: (f) => !f,
+  contains: (f, v) => f.toLowerCase().includes(v.toLowerCase()),
   "not empty": (f) => !!f,
   "less than": (f, v) => collatorNumber.compare(f, v) < 0,
   "greater than": (f, v) => collatorNumber.compare(f, v) > 0,
@@ -41,23 +42,60 @@ for (let i = 0; i < 10; i++) {
 export class Data {
   /** @param {Rows} rows - rows coming from the spreadsheet */
   constructor(rows) {
-    this.contentRows = (Array.isArray(rows) && rows) || [];
-    this.allrows = this.contentRows;
+    this.contentRows = [];
+    this.dynamicRows = [];
+    this.noteRows = [];
+    this.groups = ["dynamicRows", "contentRows", "noteRows"];
     /** @type {Set<string>} */
     this.allFields = new Set();
+    this.setContent(rows);
+  }
+
+  /** @param {Rows} rows - rows coming from the spreadsheet */
+  setContent(rows) {
+    this.contentRows = (Array.isArray(rows) && rows) || [];
     this.updateAllFields();
-    this.loadTime = new Date();
+  }
+
+  /**
+   * Add rows from the socket interface
+   * @param {Rows} rows
+   */
+  setDynamicRows(rows) {
+    if (!Array.isArray(rows)) return;
+    this.dynamicRows = rows;
+    this.updateAllFields();
+  }
+
+  /**
+   * Add rows of notes
+   * @param {Rows} rows
+   */
+  setNoteRows(rows) {
+    if (!Array.isArray(rows)) return;
+    this.noteRows = rows;
+    this.updateAllFields();
+  }
+
+  get length() {
+    let result = 0;
+    for (const group of this.groups) {
+      result += this[group].length;
+    }
+    return result;
   }
 
   updateAllFields() {
-    this.allFields = /** @type {Set<string>} */ (
-      this.contentRows.reduce((previous, current) => {
-        for (const field of Object.keys(current)) {
-          previous.add("#" + field);
+    /** @type {Set<string>} */
+    const allFields = new Set();
+    for (const group of this.groups) {
+      for (const row of this[group]) {
+        for (const field of Object.keys(row)) {
+          allFields.add("#" + field);
         }
-        return previous;
-      }, new Set())
-    );
+      }
+    }
+    this.allFields = allFields;
     this.clearFields = {};
     for (const field of this.allFields) {
       this.clearFields[field.slice(1)] = null;
@@ -78,9 +116,14 @@ export class Data {
       operator: filter.operator.value,
       value: filter.value.value,
     }));
-    let result = this.allrows.filter((row) =>
-      boundFilters.every((filter) => match(filter, row)),
-    );
+    let result = [];
+    for (const group of this.groups) {
+      for (const row of this[group]) {
+        if (boundFilters.every((filter) => match(filter, row))) {
+          result.push(row);
+        }
+      }
+    }
     if (clearFields)
       result = result.map((row) => ({ ...this.clearFields, ...row }));
     return result;
@@ -99,20 +142,75 @@ export class Data {
       operator: filter.operator.value,
       value: filter.value.valueInContext(context),
     }));
-    const result = this.allrows.some((row) =>
-      boundFilters.every((filter) => match(filter, row)),
-    );
-    return result;
+    for (const group of this.groups) {
+      for (const row of this[group]) {
+        if (boundFilters.every((filter) => match(filter, row))) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   /**
-   * Add rows from the socket interface
-   * @param {Rows} rows
+   * Manipulate the Notes rows
+   * @param {string[]} args
+   * @returns {string} - the id
    */
-  setDynamicRows(rows) {
-    if (!Array.isArray(rows)) return;
-    this.allrows = rows.concat(this.contentRows);
-    this.updateAllFields();
-    this.loadTime = new Date();
+  Notes(args) {
+    /** @param {string} text
+     * @param {number} length
+     */
+    function ClipText(text, length = 100) {
+      const nl_index = text.indexOf("\n");
+      if (nl_index > 0 && nl_index < length) length = nl_index;
+      return text.slice(0, length);
+    }
+    if (args.length % 2 != 0) {
+      console.error("number of args must be multiple of 2");
+      return "";
+    }
+    /** @type {Object<string,string>} */
+    const note = {};
+    for (let i = 0; i < args.length; i += 2) {
+      const field = args[i + 0];
+      if (!field.match(/^#\w+$/)) {
+        console.error("bad field", field);
+        return "";
+      }
+      const value = args[i + 1];
+      note[field.slice(1)] = value;
+    }
+    note["sheetName"] = "Notes";
+    let ID = note["ID"];
+    if (ID) {
+      if (!note["label"] && note["text"]) {
+        note["label"] = ClipText(note["text"]);
+      }
+      const index = this.noteRows.findIndex((row) => row.ID == ID);
+      if (index >= 0) {
+        Object.assign(this.noteRows[index], note);
+      } else {
+        console.error("note not found");
+        return "";
+      }
+    } else if (note.DELETE) {
+      const index = this.noteRows.findIndex((row) => row.ID == note.DELETE);
+      if (index >= 0) {
+        this.noteRows.splice(index, 1);
+        return "";
+      } else {
+        console.error("delete id not found");
+        return "";
+      }
+    } else {
+      ID = new Date().toISOString();
+      note["ID"] = ID;
+      if (!note["label"] && note["text"]) {
+        note["label"] = ClipText(note["text"]);
+      }
+      this.noteRows.push(note);
+    }
+    return ID;
   }
 }

@@ -24,7 +24,7 @@ export default async function wait(promise, message = "Please wait") {
   } catch (e) {
     console.trace("wait error");
     clearTimeout(timer);
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       render(
         div,
         html`<div>
@@ -32,7 +32,7 @@ export default async function wait(promise, message = "Please wait") {
           <button
             @click=${() => {
               div.remove();
-              resolve(e.message);
+              reject(e.message);
             }}
           >
             OK

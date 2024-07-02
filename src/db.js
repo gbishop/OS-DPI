@@ -158,7 +158,7 @@ export class DB {
     }
   }
 
-  /** Return the most recent record for the type
+  /** Return the record for type or the defaultValue
    * @param {string} type
    * @param {any} defaultValue
    * @returns {Promise<Object>}

@@ -55,9 +55,11 @@ export async function start() {
   }
   db.setDesignName(name);
   const dataArray = await db.read("content", []);
+  const noteArray = await db.read("notes", []);
   await pageLoaded;
 
   Globals.data = new Data(dataArray);
+  Globals.data.setNoteRows(noteArray);
   const layout = await Layout.load(Layout);
   Globals.layout = layout;
   Globals.state = new State(`UIState`);

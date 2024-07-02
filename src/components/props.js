@@ -117,7 +117,6 @@ export class Prop {
           @keydown=${this.onkeydown}
           @input=${this.oninput}
           @change=${this.onchange}
-          @focus=${this.onfocus}
         />${this.showValue()}`,
     );
   }

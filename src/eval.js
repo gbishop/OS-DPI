@@ -3,7 +3,7 @@ import Globals from "./globals";
 import db from "./db";
 
 /** @param {function(string, string): string} f */
-function updateString(f) {
+export function updateString(f) {
   /** @param {string} value */
   return function (value) {
     /** @param {string | undefined} old */
@@ -30,10 +30,10 @@ export const Functions = {
     if (old.length == 0 || old.endsWith(" ")) {
       return old + value;
     } else {
-      return old.replace(/\w+$/, value);
+      return old.replace(/\S+$/, value);
     }
   }),
-  replace_last: updateString((old, value) => old.replace(/\w*\s*$/, value)),
+  replace_last: updateString((old, value) => old.replace(/\S*\s*$/, value)),
   replace_last_letter: updateString((old, value) => old.slice(0, -1) + value),
   random: (/** @type {string} */ arg) => {
     let args = arg.split(",");
