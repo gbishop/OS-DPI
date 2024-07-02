@@ -72,15 +72,6 @@
  * */
 
 /**
- * @typedef {Object} RowCache
- * @property {Row[]} [rows]
- * @property {boolean} [result]
- * @property {string} [key]
- * @property {boolean} [updated]
- * @property {Date} [loadTime]
- */
-
-/**
  * @typedef {Row[]} Rows
  */
 

@@ -62,7 +62,20 @@ export class PointerHandler extends Handler {
      */
     function fromPointerEvent(event) {
       return /** @type {RxJs.Observable<PointerEvent>} */ (
-        RxJs.fromEvent(document, event)
+        RxJs.fromEvent(document, event).pipe(
+          // fudge the target to be the button and not any contained thing
+          RxJs.tap((/** @type {PointerEvent} */ e) => {
+            if (
+              !(e.target instanceof HTMLButtonElement) &&
+              e.target instanceof HTMLElement
+            ) {
+              const t = e.target.closest("button");
+              if (t) {
+                Object.defineProperty(e, "target", { value: t });
+              }
+            }
+          }),
+        )
       );
     }
 

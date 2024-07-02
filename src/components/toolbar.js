@@ -14,9 +14,8 @@ import { fileOpen } from "browser-fs-access";
 import pleaseWait from "components/wait";
 import { DB } from "app/db";
 import { Designer } from "./designer";
-import { readSheetFromBlob, saveContent } from "./content";
-import { Data } from "app/data";
-import { SaveLogs, ClearLogs } from "./logger";
+import { readSheetFromBlob, saveContent } from "app/spreadsheet";
+import { SaveLog, ClearLog } from "./logger";
 import { friendlyName, wikiName } from "./names";
 
 import { workerUpdateButton } from "components/serviceWorker";
@@ -269,7 +268,7 @@ function getFileMenuItems(bar) {
             sheet.handle = blob.handle;
             const result = await pleaseWait(readSheetFromBlob(blob));
             await db.write("content", result);
-            Globals.data = new Data(result);
+            Globals.data.setContent(result);
             Globals.state.update();
           }
         } catch (e) {
@@ -289,8 +288,7 @@ function getFileMenuItems(bar) {
           if (blob) {
             const result = await pleaseWait(readSheetFromBlob(blob));
             await db.write("content", result);
-            Globals.data = new Data(result);
-            Globals.state.update();
+            Globals.data.setContent(result);
           } else {
             console.log("no file to reload");
           }
@@ -300,7 +298,9 @@ function getFileMenuItems(bar) {
       label: "Save sheet",
       title: "Save the content as a spreadsheet",
       callback: () => {
-        saveContent(db.designName, Globals.data.contentRows, "xlsx");
+        pleaseWait(
+          saveContent(db.designName, Globals.data.contentRows, "xlsx"),
+        );
       },
     }),
     new MenuItem({
@@ -341,14 +341,14 @@ function getFileMenuItems(bar) {
       title: "Save any logs as spreadsheets",
       divider: "Logs",
       callback: async () => {
-        SaveLogs();
+        SaveLog();
       },
     }),
     new MenuItem({
       label: "Clear logs",
       title: "Clear any stored logs",
       callback: async () => {
-        ClearLogs();
+        ClearLog();
       },
     }),
     new MenuItem({
@@ -648,9 +648,20 @@ class ImportURLDialog {
             input instanceof HTMLInputElement &&
             !input.validationMessage &&
             input.value
-          )
-            pleaseWait(db.readDesignFromURL(input.value));
-          this.current.close();
+          ) {
+            const local_db = new DB();
+            pleaseWait(local_db.readDesignFromURL(input.value)).then(
+              () => {
+                window.open(
+                  `#${local_db.designName}`,
+                  "_blank",
+                  `noopener=true`,
+                );
+              },
+              () => console.log("rejected"),
+            );
+            this.current.close();
+          }
         }}
       >
         Import

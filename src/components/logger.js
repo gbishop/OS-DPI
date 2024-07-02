@@ -1,11 +1,12 @@
 import { html } from "uhtml";
-import { saveContent } from "./content";
+import { saveContent } from "app/spreadsheet";
 import { TreeBase } from "./treebase";
 import db from "app/db";
 import * as Props from "./props";
 import Globals from "app/globals";
 import { access } from "app/eval";
 import "css/logger.css";
+import pleaseWait from "./wait";
 
 export class Logger extends TreeBase {
   // name = new Props.String("Log");
@@ -83,7 +84,7 @@ export class Logger extends TreeBase {
       second: "numeric",
     });
     record = { DateTime, ...record };
-    db.write("log", record);
+    db.writeLog(record);
   }
 
   init() {
@@ -140,16 +141,16 @@ export class Logger extends TreeBase {
 }
 TreeBase.register(Logger, "Logger");
 
-export async function SaveLogs() {
-  let toSave = await db.readAll("log");
+export async function SaveLog() {
+  let toSave = await db.readLog();
   if (toSave.length > 0) {
-    await saveContent("log", toSave, "xlsx");
+    await pleaseWait(saveContent("log", toSave, "xlsx"));
   } else {
     Globals.error.report("No log records to be saved.");
     Globals.state.update();
   }
 }
 
-export async function ClearLogs() {
-  await db.clear("log");
+export async function ClearLog() {
+  await db.clearLog();
 }

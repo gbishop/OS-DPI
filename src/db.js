@@ -5,34 +5,43 @@ import Globals from "./globals";
 
 export class DB {
   constructor() {
-    this.dbPromise = openDB("os-dpi", 5, {
+    this.dbPromise = openDB("os-dpi", 6, {
       async upgrade(db, oldVersion, _newVersion, transaction) {
-        let store5 = db.createObjectStore("store5", {
-          keyPath: ["name", "type"],
-        });
-        store5.createIndex("by-name", "name");
-        if (oldVersion == 4) {
-          // copy data from old store to new
-          const store4 = transaction.objectStore("store");
-          for await (const cursor of store4) {
-            const record4 = cursor.value;
-            store5.put(record4);
+        if (oldVersion < 6) {
+          let logStore = db.createObjectStore("logstore", {
+            keyPath: "id",
+            autoIncrement: true,
+          });
+          logStore.createIndex("by-name", "name");
+        }
+        if (oldVersion < 5) {
+          let store5 = db.createObjectStore("store5", {
+            keyPath: ["name", "type"],
+          });
+          store5.createIndex("by-name", "name");
+          if (oldVersion == 4) {
+            // copy data from old store to new
+            const store4 = transaction.objectStore("store");
+            for await (const cursor of store4) {
+              const record4 = cursor.value;
+              store5.put(record4);
+            }
+            db.deleteObjectStore("store");
+            // add an etag index to url store
+            transaction.objectStore("url").createIndex("by-etag", "etag");
+          } else if (oldVersion < 4) {
+            db.createObjectStore("media");
+            let savedStore = db.createObjectStore("saved", {
+              keyPath: "name",
+            });
+            savedStore.createIndex("by-etag", "etag");
+            // track etags for urls
+            const urlStore = db.createObjectStore("url", {
+              keyPath: "url",
+            });
+            // add an etag index to the url store
+            urlStore.createIndex("by-etag", "etag");
           }
-          db.deleteObjectStore("store");
-          // add an etag index to url store
-          transaction.objectStore("url").createIndex("by-etag", "etag");
-        } else if (oldVersion < 4) {
-          db.createObjectStore("media");
-          let savedStore = db.createObjectStore("saved", {
-            keyPath: "name",
-          });
-          savedStore.createIndex("by-etag", "etag");
-          // track etags for urls
-          const urlStore = db.createObjectStore("url", {
-            keyPath: "url",
-          });
-          // add an etag index to the url store
-          urlStore.createIndex("by-etag", "etag");
         }
       },
       blocked(currentVersion, blockedVersion, event) {
@@ -149,7 +158,7 @@ export class DB {
     }
   }
 
-  /** Return the most recent record for the type
+  /** Return the record for type or the defaultValue
    * @param {string} type
    * @param {any} defaultValue
    * @returns {Promise<Object>}
@@ -162,16 +171,23 @@ export class DB {
   }
 
   /**
-   * Read all records of the given type
+   * Read log records
    *
-   * @param {string} type
    * @returns {Promise<Object[]>}
    */
-  async readAll(type) {
-    return [this.read(type)];
+  async readLog() {
+    const db = await this.dbPromise;
+    const index = db.transaction("logstore", "readonly").store.index("by-name");
+    const key = this.designName;
+    const result = [];
+    for await (const cursor of index.iterate(key)) {
+      const data = cursor.value.data;
+      result.push(data);
+    }
+    return result;
   }
 
-  /** Add a new record
+  /** Write a design record
    * @param {string} type
    * @param {Object} data
    */
@@ -189,6 +205,16 @@ export class DB {
     this.notify({ action: "update", name: this.designName });
   }
 
+  /** Write a log record
+   * @param {Object} data
+   */
+  async writeLog(data) {
+    const db = await this.dbPromise;
+    const tx = db.transaction(["logstore"], "readwrite");
+    tx.objectStore("logstore").put({ name: this.designName, data });
+    await tx.done;
+  }
+
   /**
    * delete records of this type
    *
@@ -200,19 +226,19 @@ export class DB {
     return db.delete("store5", [this.designName, type]);
   }
 
-  /** Undo by deleting the most recent record
-   * @param {string} type
+  /**
+   * delete log records
+   *
+   * @returns {Promise<void>}
    */
-  async undo(type) {
-    if (type == "content") return;
+  async clearLog() {
     const db = await this.dbPromise;
-    const index = db
-      .transaction("store5", "readwrite")
-      .store.index("by-name-type");
-    const cursor = await index.openCursor([this.designName, type], "prev");
-    if (cursor) await cursor.delete();
-    await db.delete("saved", this.designName);
-    this.notify({ action: "update", name: this.designName });
+    const tx = db.transaction("logstore", "readwrite");
+    const index = tx.store.index("by-name");
+    for await (const cursor of index.iterate(this.designName)) {
+      cursor.delete();
+    }
+    await tx.done;
   }
 
   /** Read a design from a local file

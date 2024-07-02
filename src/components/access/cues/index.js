@@ -63,6 +63,11 @@ export class CueList extends DesignerPanel {
     return this.children.find((cue) => cue.Default.value) || this.children[0];
   }
 
+  /** @param {string} cue */
+  cueName(cue) {
+    return this.cueMap.get(cue);
+  }
+
   /** @param {Object} obj */
   static upgrade(obj) {
     // update any CueCss entries to the new style interpolation
