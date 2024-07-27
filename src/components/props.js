@@ -23,6 +23,8 @@ import { getColor, isValidColor, styleString } from "./style";
  * @property {string} [datalist]
  * @property {number} [min]
  * @property {number} [max]
+ * @property {boolean} [notRequired]
+ * @property {string[]} [addedFields]
  */
 
 /**
@@ -303,14 +305,14 @@ export class Select extends Prop {
     return this.labeled(
       html`<select
         id=${this.id}
-        required
+        ?required=${!this.options.notRequired}
         title=${this.options.title}
         @change=${({ target }) => {
           this._value = target.value;
           this.update();
         }}
       >
-        <option value="" disabled ?selected=${!choices.has(this._value)}>
+        <option value="" ?selected=${!choices.has(this._value)}>
           ${this.options.placeholder || "Choose one..."}
         </option>
         ${[...choices.entries()].map(
@@ -334,8 +336,12 @@ export class Field extends Select {
    * @param {PropOptions} options
    */
   constructor(options = {}) {
+    const addedFields = options.addedFields || [];
     super(
-      () => toMap([...Globals.data.allFields, "#ComponentName"].sort()),
+      () =>
+        toMap(
+          [...Globals.data.allFields, "#ComponentName", ...addedFields].sort(),
+        ),
       options,
     );
   }

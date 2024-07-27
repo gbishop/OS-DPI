@@ -68,6 +68,13 @@ export class CueList extends DesignerPanel {
     return this.cueMap.get(cue);
   }
 
+  /** @param {string} key
+   * @returns {Cue | undefined}
+   */
+  keyToCue(key) {
+    return this.children.find((child) => child.Key.value == key);
+  }
+
   /** @param {Object} obj */
   static upgrade(obj) {
     // update any CueCss entries to the new style interpolation
@@ -99,6 +106,19 @@ class Cue extends TreeBaseSwitchable {
   Key = new Props.UID();
   CueType = new Props.TypeSelect(CueTypes);
   Default = new Props.OneOfGroup(false, { group: "DefaultCue" });
+  SpeechField = new Props.Field({
+    placeholder: "None selected",
+    notRequired: true,
+    addedFields: ["#GroupName"],
+  });
+  voiceURI = new Props.Voice("", { label: "Voice" });
+  pitch = new Props.Float(1);
+  rate = new Props.Float(1);
+  volume = new Props.Float(1);
+  AudioField = new Props.Field({
+    placeholder: "None selected",
+    notRequired: true,
+  });
 
   settingsSummary() {
     return html`<h3>
@@ -110,7 +130,7 @@ class Cue extends TreeBaseSwitchable {
     return [
       html`<div class="Cue">
         ${this.Name.input()} ${this.Default.input()} ${this.CueType.input()}
-        ${this.subTemplate()}
+        ${this.subTemplate()} ${this.audibleTemplate()}
       </div>`,
     ];
   }
@@ -118,6 +138,15 @@ class Cue extends TreeBaseSwitchable {
   /** @returns {Hole[]} */
   subTemplate() {
     return [];
+  }
+
+  /** @returns {Hole[]} */
+  audibleTemplate() {
+    return [
+      html`${this.SpeechField.input()} ${this.voiceURI.input()}
+      ${this.volume.input()} ${this.rate.input()} ${this.pitch.input()}
+      ${this.AudioField.input()}`,
+    ];
   }
 
   get css() {

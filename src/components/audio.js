@@ -5,19 +5,20 @@ import { html } from "uhtml";
 
 import Globals from "app/globals";
 
+/** @param {string} filename */
+export async function playAudio(filename) {
+  const sound = await db.getAudio(filename);
+  sound.play();
+}
+
 class Audio extends TreeBase {
   stateName = new Props.String("$Audio");
-
-  async playAudio() {
-    const { state } = Globals;
-    const fileName = state.get(this.stateName.value) || "";
-    (await db.getAudio(fileName)).play();
-  }
 
   template() {
     const { state } = Globals;
     if (state.hasBeenUpdated(this.stateName.value)) {
-      this.playAudio();
+      const filename = state.get(this.stateName.value) || "";
+      playAudio(filename);
     }
     return html`<div />`;
   }
