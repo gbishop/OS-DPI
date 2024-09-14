@@ -373,7 +373,7 @@ export class PatternManager extends PatternBase {
         current.dispatchEvent(new Event("Activate"));
       } else {
         const name = current.dataset.ComponentName;
-        Globals.actions.applyRules(name || "", "press", current.dataset);
+        Globals.actions.applyRules(name || "", "press", { ...current.dataset });
       }
     }
     this.cue();
