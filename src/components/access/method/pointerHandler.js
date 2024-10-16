@@ -147,7 +147,7 @@ export class PointerHandler extends Handler {
       accumulators.set(over.target, sum);
       const threshold = inOutThreshold;
       // exceeding the threshold triggers production of events
-      if (sum > threshold) {
+      if (sum >= threshold) {
         // clamp it at the threshold value
         accumulators.set(over.target, threshold);
         if (over.target != current.target) {

@@ -6,6 +6,8 @@ import { TreeBase } from "components/treebase";
 import defaultPatterns from "./defaultPatterns";
 import { DesignerPanel } from "components/designer";
 import { toggleIndicator } from "app/components/helpers";
+import { speak } from "components/speech";
+import { playAudio } from "components/audio";
 
 // only run one animation at a time
 let animationNonce = 0;
@@ -15,6 +17,7 @@ let animationNonce = 0;
  * @param {boolean} isGroup
  * */
 export function cueTarget(target, defaultValue, isGroup = false) {
+  let fields = {};
   if (target instanceof HTMLButtonElement) {
     target.setAttribute("cue", defaultValue);
     const video = target.querySelector("video");
@@ -29,8 +32,27 @@ export function cueTarget(target, defaultValue, isGroup = false) {
           });
       }
     }
+    fields = target.dataset;
   } else if (target instanceof Group) {
     target.cue(defaultValue);
+    fields = target.access;
+  }
+  const cue = Globals.cues.keyToCue(defaultValue);
+  if (!isGroup && cue) {
+    if (cue.SpeechField.value) {
+      const message = fields[cue.SpeechField.value.slice(1)];
+      speak(
+        message,
+        cue.voiceURI.value,
+        cue.pitch.value,
+        cue.rate.value,
+        cue.volume.value,
+      );
+    }
+    if (cue.AudioField.value) {
+      const file = fields[cue.AudioField.value.slice(1)] || "";
+      playAudio(file);
+    }
   }
 }
 
@@ -57,7 +79,7 @@ export class Group {
   constructor(members, props) {
     /** @type {Target[]} */
     this.members = members;
-    this.access = props;
+    this.access = { GroupName: props.Name, ...props };
   }
 
   get length() {
@@ -351,7 +373,7 @@ export class PatternManager extends PatternBase {
         current.dispatchEvent(new Event("Activate"));
       } else {
         const name = current.dataset.ComponentName;
-        Globals.actions.applyRules(name || "", "press", current.dataset);
+        Globals.actions.applyRules(name || "", "press", { ...current.dataset });
       }
     }
     this.cue();

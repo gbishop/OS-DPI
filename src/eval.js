@@ -8,7 +8,7 @@ export function updateString(f) {
   return function (value) {
     /** @param {string | undefined} old */
     return function (old) {
-      return f(old || "", value);
+      return f(old || "", value || "");
     };
   };
 }
@@ -18,7 +18,7 @@ function updateNumber(f) {
   return function (value) {
     /** @param {number | undefined} old */
     return function (old) {
-      return f(old || 0, value);
+      return f(old || 0, value || 0);
     };
   };
 }
@@ -151,7 +151,7 @@ const variableHandler = {
     if (prop.startsWith("$")) {
       return Object.getOwnPropertyDescriptor(target.states, prop);
     } else if (prop.startsWith("_")) {
-      return Object.getOwnPropertyDescriptor(target.data, prop.slice(1));
+      return { configurable: true, enumerable: true };
     } else {
       return Object.getOwnPropertyDescriptor(Functions, prop);
     }
@@ -175,7 +175,7 @@ export function compileExpression(expression) {
           "states" in context
             ? { ...Globals.state.values, ...context.states }
             : Globals.state.values;
-        let data = context.data ?? [];
+        let data = context.data ?? {};
         const r = exp(
           new Proxy(
             {

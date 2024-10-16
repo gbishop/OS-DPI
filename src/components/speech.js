@@ -5,6 +5,29 @@ import * as Props from "./props";
 import { toString } from "./slots";
 import { cursor } from "./notes";
 
+/**
+ * @param {string} message
+ * @param {string} voiceURI
+ * @param {number} pitch
+ * @param {number} rate
+ * @param {number} volume
+ */
+export async function speak(message, voiceURI, pitch, rate, volume) {
+  if (!message) return;
+  const voices = await getVoices();
+  const voice = voiceURI && voices.find((voice) => voice.voiceURI == voiceURI);
+  const utterance = new SpeechSynthesisUtterance(message);
+  if (voice) {
+    utterance.voice = voice;
+    utterance.lang = voice.lang;
+  }
+  utterance.pitch = pitch;
+  utterance.rate = rate;
+  utterance.volume = volume;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(utterance);
+}
+
 class Speech extends TreeBase {
   stateName = new Props.String("$Speak");
   voiceURI = new Props.Voice("", { label: "Voice" });
@@ -53,7 +76,14 @@ class Speech extends TreeBase {
   template() {
     const { state } = Globals;
     if (state.hasBeenUpdated(this.stateName.value)) {
-      this.speak();
+      const message = toString(state.get(this.stateName.value));
+      speak(
+        message,
+        this.voiceURI.value,
+        this.pitch.value,
+        this.rate.value,
+        this.volume.value,
+      );
     }
     return html`<div />`;
   }

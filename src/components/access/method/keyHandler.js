@@ -67,7 +67,7 @@ export class KeyHandler extends Handler {
     }
 
     // build the debounced key event stream
-    const keyEvents$ = /** @type RxJs.Observable<KeyboardEvent> */ (
+    let events$ = /** @type RxJs.Observable<KeyboardEvent> */ (
       // start with the key down stream
       keyDown$.pipe(
         // merge with the key up stream
@@ -78,6 +78,12 @@ export class KeyHandler extends Handler {
         RxJs.tap((e) => e.preventDefault()),
         // remove any repeats
         RxJs.filter((e) => !e.repeat),
+      )
+    );
+
+    // Only debounce when required
+    if (debounceInterval > 0) {
+      events$ = events$.pipe(
         // group by the key
         RxJs.groupBy((e) => e.key),
         // process each group and merge the results
@@ -91,26 +97,29 @@ export class KeyHandler extends Handler {
             RxJs.distinctUntilKeyChanged("type"),
           ),
         ),
-        RxJs.map((e) => {
-          // add context info to event for use in the conditions and response
-          /** @type {EventLike} */
-          let kw = {
-            type: e.type,
-            target: null,
-            timeStamp: e.timeStamp,
-            access: {
-              key: e.key,
-              altKey: e.altKey,
-              ctrlKey: e.ctrlKey,
-              metaKey: e.metaKey,
-              shiftKey: e.shiftKey,
-              eventType: e.type,
-              ...method.pattern.getCurrentAccess(),
-            },
-          };
-          return kw;
-        }),
-      )
+      );
+    }
+
+    const keyEvents$ = events$.pipe(
+      RxJs.map((e) => {
+        // add context info to event for use in the conditions and response
+        /** @type {EventLike} */
+        let kw = {
+          type: e.type,
+          target: null,
+          timeStamp: e.timeStamp,
+          access: {
+            key: e.key,
+            altKey: e.altKey,
+            ctrlKey: e.ctrlKey,
+            metaKey: e.metaKey,
+            shiftKey: e.shiftKey,
+            eventType: e.type,
+            ...method.pattern.getCurrentAccess(),
+          },
+        };
+        return kw;
+      }),
     );
     method.streams[streamName] = keyEvents$;
   }

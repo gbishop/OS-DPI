@@ -13,6 +13,7 @@ export const comparators = {
   "starts with": (f, v) => f.toUpperCase().startsWith(v.toUpperCase()),
   empty: (f) => !f,
   contains: (f, v) => f.toLowerCase().includes(v.toLowerCase()),
+  is_contained_in: (f, v) => v.toLowerCase().includes(f.toLowerCase()),
   "not empty": (f) => !!f,
   "less than": (f, v) => collatorNumber.compare(f, v) < 0,
   "greater than": (f, v) => collatorNumber.compare(f, v) > 0,
