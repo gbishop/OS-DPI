@@ -202,6 +202,10 @@ export class Data {
         return "";
       }
     } else if (note.DELETE) {
+      if (note.DELETE == "*") {
+        this.noteRows = [];
+        return "";
+      }
       const index = this.noteRows.findIndex((row) => row.ID == note.DELETE);
       if (index >= 0) {
         this.noteRows.splice(index, 1);
