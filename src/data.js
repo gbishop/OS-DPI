@@ -118,6 +118,15 @@ export class Data {
       value: filter.value.value,
     }));
     let result = [];
+    if (boundFilters.length) {
+      let rows = [...this.dynamicRows, ...this.contentRows, ...this.noteRows];
+      let index = 0;
+      for (const filter of boundFilters) {
+        if (filter.operator === "limit to first") {
+          rows = rows.slice(0, filter.value);
+        }
+      }
+    }
     for (const group of this.groups) {
       for (const row of this[group]) {
         if (boundFilters.every((filter) => match(filter, row))) {
