@@ -19,7 +19,7 @@ export const comparators = {
   "greater than": (f, v) => collatorNumber.compare(f, v) > 0,
   "less or equal": (f, v) => collatorNumber.compare(f, v) <= 0,
   "greater or equal": (f, v) => collatorNumber.compare(f, v) >= 0,
-  "only first": (_f, _v) => true,
+  "only first": (_f, _v) => true, // nop so I can handle these separately
   "only last": (_f, _v) => true,
 };
 
@@ -35,11 +35,6 @@ function match(filter, row) {
   if (!comparator) return true;
   let r = comparator(field.toString(), value.toString());
   return r;
-}
-
-const testRows = [];
-for (let i = 0; i < 10; i++) {
-  testRows.push({ label: "" + i });
 }
 
 export class Data {
@@ -138,6 +133,8 @@ export class Data {
 
   /**
    * Test if any rows exist after filtering
+   *
+   * This doesn't handle only first and only last, should it?
    *
    * @param {GridFilter[]} filters
    * @param {EvalContext} context
