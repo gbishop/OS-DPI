@@ -147,7 +147,7 @@ export default {
       children: [
         {
           className: "PointerHandler",
-          props: { Signal: "pointerdown" },
+          props: { Signal: "pointerup" },
           children: [
             {
               className: "ResponderActivate",
