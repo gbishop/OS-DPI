@@ -19,6 +19,8 @@ export const comparators = {
   "greater than": (f, v) => collatorNumber.compare(f, v) > 0,
   "less or equal": (f, v) => collatorNumber.compare(f, v) <= 0,
   "greater or equal": (f, v) => collatorNumber.compare(f, v) >= 0,
+  "only first": (_f, _v) => true,
+  "only last": (_f, _v) => true,
 };
 
 /** Test a row with a filter
@@ -117,12 +119,16 @@ export class Data {
       operator: filter.operator.value,
       value: filter.value.value,
     }));
-    let result = [];
-    for (const group of this.groups) {
-      for (const row of this[group]) {
-        if (boundFilters.every((filter) => match(filter, row))) {
-          result.push(row);
-        }
+    let result = [...this.dynamicRows, ...this.contentRows, ...this.noteRows];
+    for (const filter of boundFilters) {
+      if (filter.operator == "only first") {
+        const limit = filter.value;
+        if (typeof limit == "number") result = result.slice(0, limit);
+      } else if (filter.operator == "only last") {
+        const limit = filter.value;
+        if (typeof limit == "number") result = result.slice(-limit);
+      } else {
+        result = result.filter((row) => match(filter, row));
       }
     }
     if (clearFields)
