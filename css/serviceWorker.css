@@ -1,8 +1,0 @@
-#update-available-button {
-  display: none;
-}
-
-.update-available #update-available-button {
-  display: inline;
-  background-color: var(--primary-bg);
-}
