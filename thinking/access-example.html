@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Example IDE access</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="css/style.css" rel="stylesheet">
+  </head>
+  <body>
+    <fieldset class="toolbar" tabindex="0">
+      <legend>Toolbar</legend>
+      <button tabindex="-1">Button 1</button>
+      <button tabindex="-1">Button 2</button>
+    </fieldset>
+
+    <fieldset class="widget" tabindex=0>
+      <legend>Widget 1</legend>
+
+      <label>An simple input that doesn't need arrows
+        <input type="checkbox" tabindex="-1"/>
+      </label>
+
+      <label>An input that needs arrows
+        <select tabindex="-1"/>
+          <option>choice 1</option>
+          <option>choice 2</option>
+        </select>
+      </label>
+
+    </fieldset>
+  
+  </body>
+</html>

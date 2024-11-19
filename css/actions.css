@@ -1,0 +1,70 @@
+div.actions div.scroll {
+  overflow-y: auto;
+}
+
+.actions table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.actions tr[used] {
+  font-weight: bold;
+}
+
+.actions td {
+  border-left: 1px solid #999;
+  padding: 0.2em;
+}
+
+.actions th {
+  border: 1px solid #999;
+  border-top: 0px;
+  padding: 0.5em;
+}
+
+.actions td.conditions {
+  overflow-wrap: anywhere;
+}
+
+.actions div.condition + div.condition {
+  margin-top: 0.2em;
+}
+
+.actions div.condition label.labeledInput {
+  width: 100%;
+}
+
+.actions td.update label.labeledInput {
+  width: 100%;
+}
+
+.actions td.update {
+  overflow-wrap: anywhere;
+}
+
+.actions td.update input {
+  min-width: 100%;
+}
+
+.actions thead tr {
+  background: white;
+}
+
+#designer .actions tbody.settings {
+  border-top: 2px solid black;
+  border-left: 2px solid black;
+  border-right: 2px solid black;
+}
+.actions thead {
+  border-top: 0px;
+}
+
+#designer .actions tbody[highlight] {
+  background-color: var(--secondary-fg);
+}
+
+.actions input[type="text"] {
+  min-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}

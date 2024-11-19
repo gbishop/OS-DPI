@@ -1,0 +1,500 @@
+[
+  {
+    "type": "a-hstack",
+    "props": {},
+    "children": [
+      {
+        "type": "a-vstack",
+        "props": { "scale": "5" },
+        "children": [
+          {
+            "type": "a-display",
+            "props": { "state": "$Display", "slots": "$Slots" },
+            "children": []
+          },
+          {
+            "type": "a-tab-control",
+            "props": { "state": "$tab", "scale": "7" },
+            "children": [
+              {
+                "type": "a-tab-panel",
+                "props": { "name": "Chat Menu", "background": "#ffffbb" },
+                "children": [
+                  {
+                    "type": "a-grid",
+                    "props": {
+                      "name": "chatMenu",
+                      "rows": "6",
+                      "columns": "6",
+                      "tags": "MENU CHAT",
+                      "background": "palegreen"
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "type": "a-tab-panel",
+                "props": { "name": "Task Menu", "background": "#ffffbb" },
+                "children": [
+                  {
+                    "type": "a-grid",
+                    "props": {
+                      "name": "taskMenu",
+                      "rows": "6",
+                      "columns": "6",
+                      "tags": "MENU TASK",
+                      "background": "pink"
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "type": "a-tab-panel",
+                "props": { "name": "Story Menu", "background": "#ffffbb" },
+                "children": [
+                  {
+                    "type": "a-grid",
+                    "props": {
+                      "name": "storyMenu",
+                      "rows": "6",
+                      "columns": "6",
+                      "tags": "MENU STORY",
+                      "background": "#f8d8b1"
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "type": "a-tab-panel",
+                "props": {
+                  "name": "Chat $ChatTopic",
+                  "label": "Chat $ChatTopic",
+                  "background": "#ddffdd"
+                },
+                "children": [
+                  {
+                    "type": "a-hstack",
+                    "props": {},
+                    "children": [
+                      {
+                        "type": "a-vstack",
+                        "props": { "scale": "1" },
+                        "children": [
+                          {
+                            "type": "a-choose-one",
+                            "props": {
+                              "kind": "radio",
+                              "state": "$ChatPerson",
+                              "tags": "CHAT $ChatTopic",
+                              "scale": "1"
+                            },
+                            "children": [
+                              {
+                                "type": "a-choice",
+                                "props": { "value": "Person.Me" },
+                                "children": ["Me"]
+                              },
+                              {
+                                "type": "a-choice",
+                                "props": { "value": "Person.You" },
+                                "children": ["You"]
+                              }
+                            ]
+                          },
+                          {
+                            "type": "a-gap",
+                            "props": { "scale": "0.2" },
+                            "children": []
+                          },
+                          {
+                            "type": "a-choose-one",
+                            "props": {
+                              "kind": "radio",
+                              "state": "$ChatTime",
+                              "tags": "CHAT $ChatTopic",
+                              "scale": "2"
+                            },
+                            "children": [
+                              {
+                                "type": "a-choice",
+                                "props": { "value": "Time.Present" },
+                                "children": ["Present"]
+                              },
+                              {
+                                "type": "a-choice",
+                                "props": { "value": "Time.Past" },
+                                "children": ["Past"]
+                              },
+                              {
+                                "type": "a-choice",
+                                "props": { "value": "Time.Future" },
+                                "children": ["Future"]
+                              }
+                            ]
+                          },
+                          {
+                            "type": "a-gap",
+                            "props": { "scale": "0.2" },
+                            "children": []
+                          },
+                          {
+                            "type": "a-choose-one",
+                            "props": {
+                              "state": "$ChatAspect",
+                              "tags": "CHAT $ChatTopic",
+                              "scale": "4"
+                            },
+                            "children": [
+                              {
+                                "type": "a-choice",
+                                "props": { "value": "Aspect.Who" },
+                                "children": ["Who"]
+                              },
+                              {
+                                "type": "a-choice",
+                                "props": { "value": "Aspect.What" },
+                                "children": ["What"]
+                              },
+                              {
+                                "type": "a-choice",
+                                "props": { "value": "Aspect.When" },
+                                "children": ["When"]
+                              },
+                              {
+                                "type": "a-choice",
+                                "props": { "value": "Aspect.Where" },
+                                "children": ["Where"]
+                              },
+                              {
+                                "type": "a-choice",
+                                "props": { "value": "Aspect.Why" },
+                                "children": ["Why"]
+                              },
+                              {
+                                "type": "a-choice",
+                                "props": { "value": "Aspect.How" },
+                                "children": ["How"]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "type": "a-grid",
+                        "props": {
+                          "name": "TalkGrid",
+                          "rows": "6",
+                          "columns": "4",
+                          "tags": "CHAT $ChatTopic $ChatPerson $ChatTime $ChatAspect",
+                          "scale": "4",
+                          "background": "white"
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "a-tab-panel",
+                "props": {
+                  "name": "Task $TaskTopic",
+                  "label": "Task $TaskTopic",
+                  "background": "#ffdddd"
+                },
+                "children": [
+                  {
+                    "type": "a-hstack",
+                    "props": {},
+                    "children": [
+                      {
+                        "type": "a-vstack",
+                        "props": { "scale": "1" },
+                        "children": [
+                          {
+                            "type": "a-choose-one",
+                            "props": {
+                              "state": "$TaskRole",
+                              "tags": "TASK $TaskTopic",
+                              "scale": "1"
+                            },
+                            "children": [
+                              {
+                                "type": "a-choice",
+                                "props": { "value": "Role.Seek" },
+                                "children": ["Seek"]
+                              },
+                              {
+                                "type": "a-choice",
+                                "props": { "value": "Role.Assist" },
+                                "children": ["Assist"]
+                              }
+                            ]
+                          },
+                          {
+                            "type": "a-gap",
+                            "props": { "scale": "0.2" },
+                            "children": []
+                          },
+                          {
+                            "type": "a-choose-one",
+                            "props": {
+                              "state": "$TaskTime",
+                              "tags": "TASK $TaskTopic",
+                              "scale": "2"
+                            },
+                            "children": [
+                              {
+                                "type": "a-choice",
+                                "props": { "value": "Time.Present" },
+                                "children": ["Present"]
+                              },
+                              {
+                                "type": "a-choice",
+                                "props": { "value": "Time.Past" },
+                                "children": ["Past"]
+                              },
+                              {
+                                "type": "a-choice",
+                                "props": { "value": "Time.Future" },
+                                "children": ["Future"]
+                              }
+                            ]
+                          },
+                          {
+                            "type": "a-gap",
+                            "props": { "scale": "0.2" },
+                            "children": []
+                          },
+                          {
+                            "type": "a-choose-one",
+                            "props": {
+                              "state": "$TaskAspect",
+                              "tags": "TASK $TaskTopic",
+                              "scale": "3"
+                            },
+                            "children": [
+                              {
+                                "type": "a-choice",
+                                "props": { "value": "Aspect.Who" },
+                                "children": ["Who"]
+                              },
+                              {
+                                "type": "a-choice",
+                                "props": { "value": "Aspect.What" },
+                                "children": ["What"]
+                              },
+                              {
+                                "type": "a-choice",
+                                "props": { "value": "Aspect.When" },
+                                "children": ["When"]
+                              },
+                              {
+                                "type": "a-choice",
+                                "props": { "value": "Aspect.Where" },
+                                "children": ["Where"]
+                              },
+                              {
+                                "type": "a-choice",
+                                "props": { "value": "Aspect.Why" },
+                                "children": ["Why"]
+                              },
+                              {
+                                "type": "a-choice",
+                                "props": { "value": "Aspect.How" },
+                                "children": ["How"]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "type": "a-grid",
+                        "props": {
+                          "name": "TalkGrid",
+                          "rows": "6",
+                          "columns": "4",
+                          "tags": "TASK $TaskTopic $TaskRole $TaskTime $TaskAspect",
+                          "scale": "4",
+                          "background": "white"
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "a-tab-panel",
+                "props": {
+                  "name": "Story $StoryTopic",
+                  "label": "Story $StoryTopic",
+                  "background": "peachpuff"
+                },
+                "children": [
+                  {
+                    "type": "a-grid",
+                    "props": {
+                      "name": "TalkGrid",
+                      "rows": "6",
+                      "columns": "6",
+                      "tags": "STORY $StoryTopic",
+                      "background": "white"
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "type": "a-tab-panel",
+                "props": { "name": "My Page", "background": "peachpuff" },
+                "children": [
+                  {
+                    "type": "a-grid",
+                    "props": {
+                      "name": "TalkGrid",
+                      "rows": "6",
+                      "columns": "5",
+                      "tags": "GREET $tab",
+                      "background": "white"
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "type": "a-tab-panel",
+                "props": {
+                  "name": "Choose Quickfire",
+                  "background": "lavender"
+                },
+                "children": [
+                  {
+                    "type": "a-grid",
+                    "props": {
+                      "name": "TalkGrid",
+                      "rows": "6",
+                      "columns": "6",
+                      "tags": "Quick.Popup $Quick",
+                      "background": "#bdf"
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "type": "a-tab-panel",
+                "props": { "name": "Keyboard", "background": "lemonchiffon" },
+                "children": [
+                  { "type": "p", "props": {}, "children": ["Keyboard"] }
+                ]
+              },
+              {
+                "type": "a-tab-panel",
+                "props": { "name": "Popup", "label": "UNLABELED" },
+                "children": [
+                  { "type": "p", "props": {}, "children": ["Popup"] }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "a-vstack",
+        "props": { "scale": "1", "background": "lavender" },
+        "children": [
+          {
+            "type": "a-grid",
+            "props": {
+              "name": "QuickGrid",
+              "rows": "8",
+              "columns": "3",
+              "tags": "QUICK Quick.Random $Tone",
+              "scale": "8",
+              "background": "#bdf"
+            },
+            "children": []
+          },
+          {
+            "type": "a-choose-one",
+            "props": {
+              "state": "$Tone",
+              "scale": "1",
+              "initial": "Tone.Normal"
+            },
+            "children": [
+              {
+                "type": "a-choice",
+                "props": { "value": "Tone.Casual" },
+                "children": ["Casual"]
+              },
+              {
+                "type": "a-choice",
+                "props": { "value": "Tone.Normal" },
+                "children": ["Normal"]
+              },
+              {
+                "type": "a-choice",
+                "props": { "value": "Tone.Formal" },
+                "children": ["Formal"]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "a-modal-dialog",
+    "props": { "state": "$SlotsPopup" },
+    "children": [
+      {
+        "type": "a-hstack",
+        "props": {},
+        "children": [
+          {
+            "type": "a-grid",
+            "props": {
+              "rows": "5",
+              "columns": "5",
+              "tags": "LIST $Display.slotName",
+              "name": "SlotGrid",
+              "scale": "5"
+            },
+            "children": []
+          },
+          {
+            "type": "a-vstack",
+            "props": { "scale": "1" },
+            "children": [
+              {
+                "type": "a-button",
+                "props": { "name": "nextSlot" },
+                "children": ["Next Slot"]
+              },
+              {
+                "type": "a-button",
+                "props": { "name": "duplicateSlot" },
+                "children": ["Duplicate Slot"]
+              },
+              {
+                "type": "a-button",
+                "props": { "name": "okSlot" },
+                "children": ["OK"]
+              },
+              {
+                "type": "a-button",
+                "props": { "name": "cancelSlot" },
+                "children": ["Cancel"]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

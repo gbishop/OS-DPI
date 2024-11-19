@@ -1,0 +1,9 @@
+table.GridFilter td:nth-child(4) input {
+  width: 100% !important;
+}
+table.GridFilter td:nth-child(4) {
+  width: 100% !important;
+}
+table.GridFilter td:nth-child(4) label.labeledInput {
+  width: 100% !important;
+}
