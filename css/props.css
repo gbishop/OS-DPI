@@ -1,0 +1,128 @@
+input:focus ~ span.propValue {
+  position: absolute;
+  top: -1.5em;
+  right: 0;
+  padding: 0.2em;
+  background-color: var(--surface2);
+  display: inline-block;
+  font-size: 75%;
+}
+span.propValue {
+  display: none;
+}
+label[hiddenLabel]:has(div.Code) {
+  display: block;
+  flex-basis: 100%;
+}
+label.labeledInput {
+  white-space: nowrap;
+  line-height: 1.7em;
+  position: relative;
+}
+label.labeledInput[hiddenLabel] span.labelText {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+}
+label.labeledInput input[type="checkbox"] {
+  vertical-align: middle;
+}
+select:required:invalid {
+  color: gray;
+  border-color: red;
+}
+input[type="text"] {
+  min-width: 10ch;
+}
+input[type="text"][inputmode="numeric"],
+input[type="text"][inputmode="decimal"] {
+  width: 3ch;
+  min-width: 3ch;
+}
+input[inputmode="numeric"]:invalid {
+  color: red;
+  border-color: red;
+}
+input:invalid,
+textarea:invalid,
+textarea[invalid] {
+  border-color: red;
+  background-color: var(--warning);
+}
+input,
+select {
+  min-height: 1.5rem;
+}
+
+option[value=""][disabled] {
+  display: none;
+}
+option {
+  color: black;
+}
+
+div.Code {
+  width: 100%;
+}
+
+div.Code div.numbered-textarea {
+  width: 100%;
+  display: inline-flex;
+  gap: 10px;
+  font-family: monospace;
+  border-radius: 2px;
+  padding: 5px 10px 10px;
+  border: 1px solid var(--text2);
+}
+
+div.Code textarea {
+  padding: 0;
+  border: 0;
+  outline: none;
+  resize: none;
+  line-height: 1.2em;
+  padding: 4px;
+}
+
+div.Code textarea.text {
+  width: 100%;
+  background-color: var(--surface1);
+}
+
+div.Code textarea.line-numbers {
+  width: 2em;
+  text-align: right;
+  padding-top: 4px;
+  background-color: var(--surface2);
+  color: var(--text2);
+  scrollbar-width: none;
+  overflow: hidden;
+}
+
+div.Code div.errors {
+  color: red;
+  white-space: pre;
+}
+
+div.Key input[readonly] {
+  background: #eee;
+}
+/*
+div.Code textarea.line-numbers::-webkit-scrollbar {
+  display: none;
+}
+*/
+
+.swatch {
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  border: 1px solid black;
+  vertical-align: middle;
+  margin-left: 0.2em;
+}

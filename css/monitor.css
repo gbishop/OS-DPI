@@ -1,0 +1,37 @@
+#monitor {
+  margin-top: 1em;
+  margin-left: 1em;
+  overflow: auto;
+}
+
+#monitor div {
+  display: flex;
+  overflow-y: auto;
+  font-size: 10px;
+  margin-top: 0.2em;
+}
+
+#monitor table {
+  border-collapse: collapse;
+  border: 1px solid black;
+  height: max-content;
+  margin-right: 1em;
+}
+
+#monitor table td,
+#monitor table th {
+  border: 1px solid black;
+  padding: 0.5em;
+}
+
+#monitor table tr[updated] {
+  font-weight: bold;
+}
+
+#monitor table tr[undefined] {
+  color: var(--failure);
+}
+
+#monitor table tr[accessed] {
+  background-color: var(--surface2);
+}
