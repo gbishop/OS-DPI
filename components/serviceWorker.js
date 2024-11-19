@@ -26,7 +26,7 @@ function signalUpdateAvailable() {
 // only start the service worker in production mode
 if (import.meta.env.PROD && navigator.serviceWorker) {
   window.addEventListener("load", async () => {
-    registration = await navigator.serviceWorker.register("service-worker.js", {
+    registration = await navigator.serviceWorker.register("/OS-DPI/service-worker.js", {
       scope: "/OS-DPI/",
     });
     // ensure the case when the updatefound event was missed is also handled
