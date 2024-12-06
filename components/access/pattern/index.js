@@ -1,3 +1,4 @@
+// index.js
 import { html } from "uhtml";
 import "css/pattern.css";
 import Globals from "app/globals";
@@ -6,16 +7,23 @@ import { TreeBase } from "components/treebase";
 import defaultPatterns from "./defaultPatterns";
 import { DesignerPanel } from "components/designer";
 import { toggleIndicator } from "app/components/helpers";
-import { speak } from "components/speech";
+// Remove the old speak import
+// import { speak } from "components/speech";
 import { playAudio } from "components/audio";
+// Update the import to use the default export
+import Speech from "components/speech.js"; // Ensure the path is correct
 
-// only run one animation at a time
+// Create a singleton instance of Speech
+const speechInstance = new Speech();
+
+// Only run one animation at a time
 let animationNonce = 0;
 
-/** @param {Target} target
+/**
+ * @param {Target} target
  * @param {string} defaultValue
  * @param {boolean} isGroup
- * */
+ */
 export function cueTarget(target, defaultValue, isGroup = false) {
   let fields = {};
   if (target instanceof HTMLButtonElement) {
@@ -41,13 +49,11 @@ export function cueTarget(target, defaultValue, isGroup = false) {
   if (!isGroup && cue) {
     if (cue.SpeechField.value) {
       const message = fields[cue.SpeechField.value.slice(1)];
-      speak(
-        message,
-        cue.voiceURI.value,
-        cue.pitch.value,
-        cue.rate.value,
-        cue.volume.value,
-      );
+      // Trigger speech synthesis using the Speech class instance
+      // Update the global state to notify the Speech component
+      Globals.state.set("$Speak", message);
+      Globals.state.set("$VoiceURI", cue.voiceURI.value);
+      Globals.state.set("$ExpressStyle", cue.expressStyle.value || "friendly"); // Default style if not provided
     }
     if (cue.AudioField.value) {
       const file = fields[cue.AudioField.value.slice(1)] || "";
@@ -55,6 +61,8 @@ export function cueTarget(target, defaultValue, isGroup = false) {
     }
   }
 }
+
+
 
 export function clearCues() {
   for (const element of document.querySelectorAll("#UI [cue]")) {

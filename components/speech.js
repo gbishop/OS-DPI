@@ -1,140 +1,216 @@
+// speech.js
+import * as sdk from "microsoft-cognitiveservices-speech-sdk";
 import { TreeBase } from "./treebase";
 import { html } from "uhtml";
 import Globals from "app/globals";
 import * as Props from "./props";
-import { toString } from "./slots";
-import { cursor } from "./notes";
 
 /**
- * @param {string} message
- * @param {string} voiceURI
- * @param {number} pitch
- * @param {number} rate
- * @param {number} volume
+ * Speech component using Microsoft Cognitive Services Speech SDK.
  */
-export async function speak(message, voiceURI, pitch, rate, volume) {
-  if (!message) return;
-  const voices = await getVoices();
-  const voice = voiceURI && voices.find((voice) => voice.voiceURI == voiceURI);
-  const utterance = new SpeechSynthesisUtterance(message);
-  if (voice) {
-    utterance.voice = voice;
-    utterance.lang = voice.lang;
-  }
-  utterance.pitch = pitch;
-  utterance.rate = rate;
-  utterance.volume = volume;
-  speechSynthesis.cancel();
-  speechSynthesis.speak(utterance);
-}
-
 class Speech extends TreeBase {
+  // Define properties with default values
   stateName = new Props.String("$Speak");
-  voiceURI = new Props.Voice("", { label: "Voice" });
-  pitch = new Props.Float(1);
-  rate = new Props.Float(1);
-  volume = new Props.Float(1);
+  voiceURI = new Props.String("$VoiceURI", "en-US-DavisNeural"); // Default to DavisNeural
+  expressStyle = new Props.String("$ExpressStyle", "friendly"); // Default expression style
+  isSpeaking = false; // Track if currently speaking
 
-  async speak() {
-    const { state } = Globals;
-    const voiceURI = this.voiceURI.value;
-    const message = toString(state.get(this.stateName.value)).replace(
-      cursor,
-      "",
-    );
-    const voices = await getVoices();
-    const voice =
-      voiceURI && voices.find((voice) => voice.voiceURI == voiceURI);
-    const utterance = new SpeechSynthesisUtterance(message);
-    if (voice) {
-      utterance.voice = voice;
-      utterance.lang = voice.lang;
-    }
-    utterance.pitch = this.pitch.value;
-    utterance.rate = this.rate.value;
-    utterance.volume = this.volume.value;
-    utterance.addEventListener("boundary", (event) => {
-      document.dispatchEvent(
-        new SpeechSynthesisEvent("boundary", {
-          utterance: event.utterance,
-          charIndex: event.charIndex,
-        }),
-      );
-    });
-    utterance.addEventListener("end", (event) => {
-      document.dispatchEvent(
-        new SpeechSynthesisEvent("end", {
-          utterance: event.utterance,
-          charIndex: event.charIndex,
-        }),
-      );
-    });
-    speechSynthesis.cancel();
-    speechSynthesis.speak(utterance);
+  constructor() {
+    super();
+    this.initSynthesizer();
   }
 
+  /**
+   * Logs messages with a timestamp for debugging purposes.
+   * @param {string} message - The message to log.
+   */
+  logWithTimestamp(message) {
+    console.log(`[${new Date().toISOString()}] ${message}`);
+  }
+
+  /**
+   * Initializes the Speech Synthesizer with the Microsoft SDK.
+   */
+  initSynthesizer() {
+    // Initialize Speech Configuration with your subscription key and region
+    this.speechConfig = sdk.SpeechConfig.fromSubscription(
+      'c7d8e36fdf414cbaae05819919fd416d', // Replace with your actual subscription key
+      'eastus'            // Replace with your service region, e.g., 'eastus'
+    );
+
+    // Set desired synthesis output format
+    this.speechConfig.speechSynthesisOutputFormat =
+      sdk.SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3;
+
+    // Initialize Audio Config to output to default speaker
+    this.audioConfig = sdk.AudioConfig.fromDefaultSpeakerOutput();
+
+    // Create a Speech Synthesizer instance
+    this.synthesizer = new sdk.SpeechSynthesizer(
+      this.speechConfig,
+      this.audioConfig
+    );
+
+    // Attach event handlers for synthesis events
+    this.synthesizer.synthesisStarted = (s, e) =>
+      this.logWithTimestamp("Synthesis started");
+    this.synthesizer.synthesisCompleted = (s, e) => {
+      this.logWithTimestamp("Synthesis completed");
+      this.isSpeaking = false;
+      this.initSynthesizer(); // Re-initialize after completion
+    };
+    this.synthesizer.synthesisCanceled = (s, e) => {
+      this.logWithTimestamp(`Synthesis canceled: ${e.reason}`);
+      this.isSpeaking = false;
+      this.initSynthesizer(); // Re-initialize after cancellation
+    };
+  }
+
+  /**
+   * Initiates speech synthesis for the given message.
+   */
+  async speak() {
+    if (this.isSpeaking) {
+      this.logWithTimestamp("Cancelling current speech synthesis.");
+      this.synthesizer.close();
+      this.isSpeaking = false;
+    }
+
+    this.isSpeaking = true;
+
+    const { state } = Globals;
+    const message = state.get(this.stateName.value);
+    const voice = state.get(this.voiceURI.value) || "en-US-DavisNeural"; // Default voice
+    const style = state.get(this.expressStyle.value) || "friendly";
+
+    if (!message) {
+      this.logWithTimestamp("No message to speak.");
+      this.isSpeaking = false;
+      return;
+    }
+
+    this.logWithTimestamp(`Using voice: ${voice}, style: ${style}, message: ${message}`);
+
+    // Construct SSML for speech synthesis
+    const ssml = `
+      <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="en-US">
+        <voice name="${voice}">
+          <mstts:express-as style="${style}">
+            ${this.escapeSSML(message)}
+          </mstts:express-as>
+        </voice>
+      </speak>`;
+
+    try {
+      this.synthesizer.speakSsmlAsync(
+        ssml,
+        (result) => {
+          if (result.reason === sdk.ResultReason.SynthesizingAudioCompleted) {
+            this.logWithTimestamp("Speech synthesized successfully");
+          } else if (result.reason === sdk.ResultReason.Canceled) {
+            const cancellationDetails = sdk.SpeechSynthesisCancellationDetails.fromResult(result);
+            this.logWithTimestamp(
+              `Speech synthesis canceled: ${cancellationDetails.reason}, ${cancellationDetails.errorDetails}`
+            );
+          }
+          this.isSpeaking = false;
+          this.initSynthesizer();
+        },
+        (error) => {
+          this.logWithTimestamp(`An error occurred: ${error}`);
+          this.isSpeaking = false;
+          this.initSynthesizer();
+        }
+      );
+    } catch (error) {
+      this.logWithTimestamp(`Error in speak method: ${error}`);
+      this.isSpeaking = false;
+      this.initSynthesizer();
+    }
+  }
+
+  /**
+   * Escapes special characters in SSML.
+   * @param {string} text - The text to escape.
+   * @returns {string} - Escaped text.
+   */
+  escapeSSML(text) {
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  /**
+   * Handles component disconnection by closing the synthesizer if speaking.
+   */
+  disconnectedCallback() {
+    if (this.isSpeaking) {
+      this.synthesizer.close();
+      this.isSpeaking = false;
+      this.logWithTimestamp("Synthesizer stopped on component disconnect");
+    }
+  }
+
+  /**
+   * Renders the component's template.
+   * @returns {TemplateResult} - The HTML template.
+   */
   template() {
     const { state } = Globals;
     if (state.hasBeenUpdated(this.stateName.value)) {
-      const message = toString(state.get(this.stateName.value));
-      speak(
-        message,
-        this.voiceURI.value,
-        this.pitch.value,
-        this.rate.value,
-        this.volume.value,
-      );
+      this.speak();
     }
     return html`<div />`;
   }
 }
+
+// Register the Speech class with the component framework
 TreeBase.register(Speech, "Speech");
 
-/** @type{SpeechSynthesisVoice[]} */
-let voices = [];
-
 /**
- * Promise to return voices
- *
- * @return {Promise<SpeechSynthesisVoice[]>} Available voices
+ * Optional: VoiceSelect component for Microsoft Voices
+ * Note: Microsoft Speech SDK manages voices differently. 
+ * You may need to fetch available voices from a server or predefined list.
+ * Below is a basic implementation assuming a predefined list.
  */
-function getVoices() {
-  return new Promise(function (resolve) {
-    // iOS won't fire the voiceschanged event so we have to poll for them
-    function f() {
-      voices = (voices.length && voices) || speechSynthesis.getVoices();
-      if (voices.length) resolve(voices);
-      else setTimeout(f, 100);
-    }
-    f();
-  });
-}
 
 class VoiceSelect extends HTMLSelectElement {
   constructor() {
     super();
   }
+
   connectedCallback() {
     this.addVoices();
   }
 
   async addVoices() {
-    const voices = await getVoices();
-    /** @param {SpeechSynthesisVoice} a
-     * @param {SpeechSynthesisVoice} b
-     */
-    function compareVoices(a, b) {
-      return a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name);
-    }
-    voices.sort(compareVoices);
-    const current = this.getAttribute("value");
+    // Define available Microsoft voices
+    const voices = [
+      { name: "en-US-DavisNeural", lang: "en-US" },
+      { name: "en-US-JennyNeural", lang: "en-US" },
+      { name: "en-GB-RyanNeural", lang: "en-GB" },
+      // Add more voices as needed
+    ];
+
+    const current = this.getAttribute("value") || "en-US-DavisNeural";
+
+    // Clear existing options
+    this.innerHTML = '';
+
+    // Populate select with voices
     for (const voice of voices) {
-      const item = document.createElement("option");
-      item.value = voice.voiceURI;
-      if (voice.voiceURI == current) item.setAttribute("selected", "");
-      item.innerText = `${voice.name} ${voice.lang}`;
-      this.add(item);
+      const option = document.createElement("option");
+      option.value = voice.name;
+      if (voice.name === current) option.selected = true;
+      option.textContent = `${voice.name} (${voice.lang})`;
+      this.appendChild(option);
     }
   }
 }
+
+// Define the custom element for voice selection
 customElements.define("select-voice", VoiceSelect, { extends: "select" });
+
+// **Add this line to export Speech as default**
+export default Speech;

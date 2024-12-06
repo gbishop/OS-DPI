@@ -6,18 +6,26 @@ import "css/radio.css";
 import Globals from "app/globals";
 import { GridFilter } from "./gridFilter";
 
+// Option Class
 class Option extends TreeBase {
-  name = new Props.String("", { hiddenLabel: true });
-  value = new Props.String("", { hiddenLabel: true });
+  name = new Props.String("", { hiddenLabel: true }); // Hide label in settings
+  value = new Props.String("", { hiddenLabel: true }); // Hide label in settings
+  selectedColor = new Props.Color("pink"); // Per-Option selected color
+  unselectedColor = new Props.Color("lightgray"); // Per-Option unselected color
+  cache = {}; // Cache for performance or state management
 }
 TreeBase.register(Option, "Option");
 
+// Radio Class
 class Radio extends TreeBase {
-  scale = new Props.Float(1);
-  label = new Props.String("");
-  stateName = new Props.String("$radio");
-  unselected = new Props.Color("lightgray");
-  selected = new Props.Color("pink");
+  // General Properties
+  scale = new Props.Float(1); // Scale property
+  label = new Props.String(""); // Label for the Radio group
+
+  // State Management Properties
+  primaryStateName = new Props.String("$radio"); // Primary state name
+  secondaryStateName = new Props.String("$secondaryRadio"); // Secondary state name
+  lastClickedStateName = new Props.String("$LastClicked"); // Tracks the last clicked button
 
   allowedChildren = ["Option", "GridFilter"];
 
@@ -29,86 +37,156 @@ class Radio extends TreeBase {
   }
 
   /**
-   * true if there exist rows with the this.filters and the value
-   * @arg {Option} option
+   * Determines if an option is valid based on current filters and data.
+   * @param {Option} option
    * @returns {boolean}
    */
   valid(option) {
-    const { data } = Globals;
+    const { data, state } = Globals;
     const filters = this.filterChildren(GridFilter);
     return (
       !filters.length ||
-      data.hasMatchingRows(filters, {
-        states: {
-          [this.stateName.value]: option.value.value,
-        },
-      })
+      data.hasMatchingRows(
+        filters,
+        state.clone({
+          [this.primaryStateName.value]: option.value.value,
+          [this.secondaryStateName.value]: option.value.value,
+        }),
+        option.cache || {}
+      )
     );
   }
 
   /**
-   * handle clicks on the chooser
+   * Handles click events on the radio buttons.
+   * Defined as an arrow function to preserve 'this' context.
    * @param {MouseEvent} event
    */
-  handleClick({ target }) {
+  handleClick = ({ target }) => {
     if (target instanceof HTMLButtonElement) {
       const value = target.value;
-      const name = this.stateName.value;
-      Globals.state.update({ [name]: value });
+      const primaryState = this.primaryStateName.value;
+      const secondaryState = this.secondaryStateName.value;
+      const lastClickedState = this.lastClickedStateName.value;
+      const lastClicked = Globals.state.get(lastClickedState);
+      const stateUpdates = {};
+
+      if (lastClicked === value) {
+        // Toggle off if the same button is clicked again
+        stateUpdates[primaryState] = null;
+        stateUpdates[secondaryState] = null;
+        stateUpdates[lastClickedState] = null; // Optionally reset last clicked
+      } else {
+        // Set the new value for both primary and secondary states
+        stateUpdates[primaryState] = value;
+        stateUpdates[secondaryState] = value;
+        stateUpdates[lastClickedState] = value; // Update last clicked button
+      }
+
+      Globals.state.update(stateUpdates);
+    }
+  };
+
+  /**
+   * Initializes the primary and secondary states if they are not already set.
+   * This method should be called once after the component is mounted.
+   */
+  initializeStates() {
+    const { state } = Globals;
+    const primaryStateName = this.primaryStateName.value;
+    const secondaryStateName = this.secondaryStateName.value;
+
+    if (!state.get(primaryStateName)) {
+      const firstValidOption = this.options.find((option) => this.valid(option));
+      if (firstValidOption) {
+        const value = firstValidOption.value.value;
+        state.update({
+          [primaryStateName]: value,
+          [secondaryStateName]: value,
+        });
+      } else {
+        console.warn("No valid options available to initialize the Radio component.");
+      }
     }
   }
 
+  /**
+   * Generates the HTML template for the Radio component.
+   * @returns {HTMLElement}
+   */
   template() {
     const { state } = Globals;
-    const stateName = this.stateName.value;
-    const selected = this.selected.value;
-    const unselected = this.unselected.value;
+    const primaryStateName = this.primaryStateName.value;
+    const secondaryStateName = this.secondaryStateName.value;
     const radioLabel = this.label.value;
-    let currentValue = state.get(stateName);
+
+    // Initialize states if not already set
+    this.initializeStates();
+
+    const currentPrimary = state.get(primaryStateName);
+    const currentSecondary = state.get(secondaryStateName);
+
     const choices = this.options.map((choice, index) => {
       const choiceDisabled = !this.valid(choice);
       const choiceValue = choice.value.value;
       const choiceName = choice.name.value;
-      if (stateName && !currentValue && !choiceDisabled && choiceValue) {
-        currentValue = choiceValue;
-        state.define(stateName, choiceValue);
-      }
-      const color =
-        choiceValue == currentValue || (!currentValue && index == 0)
-          ? selected
-          : unselected;
+
+      // Determine if the current choice is selected in either state
+      const isSelectedPrimary = choiceValue === currentPrimary;
+      const isSelectedSecondary = choiceValue === currentSecondary;
+      const isSelected = isSelectedPrimary || isSelectedSecondary;
+      const color = isSelected
+        ? choice.selectedColor.value
+        : choice.unselectedColor.value;
+
       return html`<button
         style=${styleString({ backgroundColor: color })}
         value=${choiceValue}
         ?disabled=${choiceDisabled}
         data=${{
           ComponentType: this.className,
-          ComponentName: radioLabel || stateName,
+          ComponentName: radioLabel || primaryStateName,
           label: choiceName,
         }}
-        click
-        @Activate=${() => state.update({ [stateName]: choice.value.value })}
-      >
+       >
         ${choiceName}
       </button>`;
     });
 
     return this.component(
       {},
-      html`<fieldset class="flex">
-        ${(radioLabel && [html`<legend>${radioLabel}</legend>`]) || []}
+      html`<fieldset class="flex" role="radiogroup">
+        ${radioLabel ? html`<legend>${radioLabel}</legend>` : null}
         ${choices}
-      </fieldset>`,
+      </fieldset>`
     );
   }
 
+  /**
+   * Generates the settings UI for the Radio component.
+   * @returns {HTMLElement[]}
+   */
   settingsDetails() {
     const props = this.props;
-    const inputs = Object.values(props).map((prop) => prop.input());
+
+    // Exclude properties handled in specific fieldsets to prevent duplication
+    const excludedProps = new Set([
+      "primaryStateName",
+      "secondaryStateName",
+      "lastClickedStateName",
+      // Color properties are handled within each Option
+    ]);
+
+    // Include only props not in excludedProps
+    const generalInputs = Object.entries(props)
+      .filter(([key]) => !excludedProps.has(key))
+      .map(([, prop]) => prop.input());
+
     const filters = this.filterChildren(GridFilter);
-    const editFilters = !filters.length
-      ? []
-      : [GridFilter.FilterSettings(filters)];
+    const editFilters = filters.length
+      ? [GridFilter.FilterSettings(filters)]
+      : [];
+
     const options = this.filterChildren(Option);
     const editOptions = html`<fieldset>
       <legend>Options</legend>
@@ -118,6 +196,8 @@ class Radio extends TreeBase {
             <th>#</th>
             <th>Name</th>
             <th>Value</th>
+            <th>Selected Color</th>
+            <th>Unselected Color</th>
           </tr>
         </thead>
         <tbody>
@@ -127,15 +207,46 @@ class Radio extends TreeBase {
                 <td>${index + 1}</td>
                 <td>${option.name.input()}</td>
                 <td>${option.value.input()}</td>
+                <td>${option.selectedColor.input()}</td> <!-- Selected Color Input -->
+                <td>${option.unselectedColor.input()}</td> <!-- Unselected Color Input -->
               </tr>
-            `,
+            `
           )}
         </tbody>
       </table>
     </fieldset>`;
-    return [html`<div>${editFilters}${editOptions}${inputs}</div>`];
+
+    // State Management Settings with Descriptive Labels
+    const stateSettings = html`<fieldset>
+      <legend>State Management</legend>
+      <label>
+        Primary State Name:
+        ${this.primaryStateName.input()}
+      </label>
+      <label>
+        Secondary State Name:
+        ${this.secondaryStateName.input()}
+      </label>
+      <label>
+        Last Clicked State Name:
+        ${this.lastClickedStateName.input()}
+      </label>
+    </fieldset>`;
+
+    return [
+      html`<div>
+        ${editFilters}
+        ${editOptions}
+        ${stateSettings}
+        ${generalInputs}
+      </div>`,
+    ];
   }
 
+  /**
+   * Returns the children settings, currently empty.
+   * @returns {HTMLElement}
+   */
   settingsChildren() {
     return html`<div />`;
   }

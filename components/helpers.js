@@ -1,5 +1,4 @@
 import { html } from "uhtml";
-
 /**
  * Interpolate values into a string using {{name}} for values to replace
  * @param {string} template - string to edit
@@ -38,3 +37,4 @@ export function toggleIndicator(toggle, title) {
     return html`<!--empty-->`;
   }
 }
+

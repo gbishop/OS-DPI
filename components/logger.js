@@ -9,40 +9,47 @@ import "css/logger.css";
 import pleaseWait from "./wait";
 
 export class Logger extends TreeBase {
-  // name = new Props.String("Log");
+  // Define properties
   stateName = new Props.String("$Log");
   logUntil = new Props.ADate();
 
-  // I expect a string like #field1 $state1 $state2 #field3
+  // Text area for specifying state and field names to log (e.g., #field1 $state1)
   logThese = new Props.TextArea("", {
     validate: this.validate,
     placeholder: "Enter state and field names to log",
   });
 
-  // I expect a string listing event names to log
+  // Text area for specifying event names to log
   logTheseEvents = new Props.TextArea("", {
     validate: this.validateEventNames,
     placeholder: "Enter names of events to log",
   });
 
   /**
+   * Validate input for state and field names.
+   * Expected format: #field1 $state1 $state2 #field3
    * @param {string} s
-   * @returns {string}
+   * @returns {string} Error message or empty string if valid
    */
   validate(s) {
     return /^(?:[#$]\w+\s*)*$/.test(s) ? "" : "Invalid input";
   }
 
   /**
-   * Check for strings that look like event names
-   *
+   * Validate input for event names.
+   * Expected format: eventName1 eventName2
    * @param {string} s
-   * @returns {string}
+   * @returns {string} Error message or empty string if valid
    */
   validateEventNames(s) {
     return /^(?:\w+\s*)*$/.test(s) ? "" : "Invalid input";
   }
 
+  /**
+   * Render the logging indicator.
+   * If logging is active, capture and log the specified fields.
+   * @returns {TemplateResult}
+   */
   template() {
     const { state, actions } = Globals;
     const stateName = this.stateName.value;
@@ -53,14 +60,16 @@ export class Logger extends TreeBase {
     const getValue = access(state, actions.last.data);
 
     if (logging) {
-      const names = logThese.split(/\s+/);
+      const names = logThese.split(/\s+/).filter(Boolean);
       const record = {};
-      for (const name of names) {
+
+      names.forEach((name) => {
         const value = getValue(name);
-        if (value) {
+        if (value !== undefined) {
           record[name] = value;
         }
-      }
+      });
+
       this.log(record);
     }
 
@@ -71,46 +80,58 @@ export class Logger extends TreeBase {
     ></div>`;
   }
 
-  /** Log a record to the database
+  /**
+   * Log a record to the database with a timestamp.
    * @param {Object} record
-   * @returns {void}
    */
   log(record) {
-    const DateTime = new Date().toLocaleDateString("en-US", {
+    const dateTime = new Date().toLocaleString("en-US", {
       fractionalSecondDigits: 2,
       hour12: false,
       hour: "numeric",
       minute: "numeric",
       second: "numeric",
     });
-    record = { DateTime, ...record };
-    db.writeLog(record);
+    const logRecord = { DateTime: dateTime, ...record };
+    db.writeLog(logRecord);
   }
 
+  /**
+   * Initialize the Logger by setting up event listeners.
+   */
   init() {
     super.init();
     this.onUpdate();
   }
 
-  /** @type {Set<string>} */
+  /** @type {Set<string>} Set of active event listeners */
   listeners = new Set();
+
+  /**
+   * Update event listeners based on the current configuration.
+   */
   onUpdate() {
     const UI = document.getElementById("UI");
     if (!UI) return;
-    // cancel any listeners that are currently active
-    for (const eventName of this.listeners) {
+
+    // Remove existing listeners
+    this.listeners.forEach((eventName) => {
       UI.removeEventListener(eventName, this);
-    }
+    });
     this.listeners.clear();
 
-    // listen for each of the listed events
-    for (const match of this.logTheseEvents.value.matchAll(/\w+/g)) {
-      UI.addEventListener(match[0], this);
-      this.listeners.add(match[0]);
-    }
+    // Add new listeners
+    const eventNames = this.logTheseEvents.value.match(/\w+/g) || [];
+    eventNames.forEach((eventName) => {
+      UI.addEventListener(eventName, this);
+      this.listeners.add(eventName);
+    });
   }
 
+  /** Types of properties to include in logs */
   typesToInclude = new Set(["boolean", "number", "string"]);
+
+  /** Properties to exclude from event logs */
   propsToExclude = new Set([
     "isTrusted",
     "bubbles",
@@ -121,36 +142,89 @@ export class Logger extends TreeBase {
     "returnValue",
     "timeStamp",
   ]);
+
   /**
-   * Make this object a listener
+   * Handle events and log relevant properties.
    * @param {Event} e
    */
   handleEvent(e) {
-    // grab all the fields of the event that are simple types
     const record = {};
+
     for (const prop in e) {
-      // skip all upper case and _
+      // Skip properties with all uppercase or starting with _
       if (/^[A-Z_]+$/.test(prop)) continue;
+
       const value = e[prop];
       if (this.propsToExclude.has(prop)) continue;
       if (!this.typesToInclude.has(typeof value)) continue;
+
       record[prop] = value;
     }
+
     this.log(record);
   }
 }
+
+// Register the Logger class
 TreeBase.register(Logger, "Logger");
 
+/**
+ * Save the log records to an XLSX file.
+ */
 export async function SaveLog() {
-  let toSave = await db.readLog();
-  if (toSave.length > 0) {
-    await pleaseWait(saveContent("log", toSave, "xlsx"));
-  } else {
-    Globals.error.report("No log records to be saved.");
+  try {
+    const toSave = await db.readLog();
+    if (toSave.length > 0) {
+      await pleaseWait(saveContent("log", toSave, "xlsx"));
+      Globals.error.report("Log successfully saved.");
+    } else {
+      Globals.error.report("No log records to be saved.");
+    }
     Globals.state.update();
+  } catch (error) {
+    Globals.error.report(`Failed to save log: ${error.message}`);
   }
 }
 
+/**
+ * Clear all log records from the database.
+ */
 export async function ClearLog() {
-  await db.clearLog();
+  try {
+    await db.clearLog();
+    Globals.error.report("Log successfully cleared.");
+    Globals.state.update();
+  } catch (error) {
+    Globals.error.report(`Failed to clear log: ${error.message}`);
+  }
+}
+
+/**
+ * Download the conversation history as a CSV file.
+ */
+export async function DownloadCSV() {
+  const serverUrl = "http://34.118.128.211:5678/download_csv"; // Adjust if necessary
+
+  try {
+    const response = await fetch(serverUrl);
+    if (!response.ok) {
+      throw new Error(`Network response was not ok: ${response.statusText}`);
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "conversation_history.csv"; // Desired file name
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+
+    Globals.error.report("CSV download initiated.");
+  } catch (error) {
+    console.error("Error downloading CSV:", error);
+    Globals.error.report("Failed to download CSV.");
+    // Optionally, you can implement a more user-friendly notification here
+  }
 }
