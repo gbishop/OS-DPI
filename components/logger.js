@@ -203,7 +203,7 @@ export async function ClearLog() {
  * Download the conversation history as a CSV file.
  */
 export async function DownloadCSV() {
-  const serverUrl = "http://34.118.128.211:5678/download_csv"; // Adjust if necessary
+  const serverUrl = "http://34.136.166.29:5678/download_csv"; // Adjust if necessary
 
   try {
     const response = await fetch(serverUrl);
