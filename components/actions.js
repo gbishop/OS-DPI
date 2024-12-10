@@ -4,6 +4,8 @@ import * as Props from "./props";
 import { DesignerPanel } from "./designer";
 import "css/actions.css";
 import Globals from "app/globals";
+import { Functions } from "app/eval";
+import { DownloadCSV } from "./logger"; // Import the DownloadCSV function
 
 export class Actions extends DesignerPanel {
   name = new Props.String("Actions");
@@ -81,6 +83,10 @@ export class Actions extends DesignerPanel {
             ]),
           );
           Globals.state.update(patch);
+          // Trigger the DownloadCSV function if $triggerDownloadCSV state is updated
+          if (patch['$triggerDownloadCSV'] === true || patch['$triggerDownloadCSV'] === 1) {
+            DownloadCSV();
+          }
           break;
         }
       }
