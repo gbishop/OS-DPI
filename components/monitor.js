@@ -1,6 +1,6 @@
 // Monitor.js
 
-import { html } from "./UHTML.js"; 
+import { html } from "./UHTML"; 
 import { TreeBase } from "./treebase";
 import "css/monitor.css";
 import Globals from "app/globals";
