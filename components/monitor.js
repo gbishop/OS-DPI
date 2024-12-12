@@ -1,6 +1,6 @@
 // Monitor.js
 
-import { html } from "./UHTML"; 
+import { html } from "uhtml"; // Direct import from uhtml
 import { TreeBase } from "./treebase";
 import "css/monitor.css";
 import Globals from "app/globals";
@@ -101,3 +101,4 @@ export class Monitor extends TreeBase {
   }
 }
 TreeBase.register(Monitor, "Monitor");
+
