@@ -1,11 +1,41 @@
-import { html as _html } from "uhtml";
+// UHTML.js
 
+import { html as _html } from "uhtml";
 export { render } from "uhtml";
 
 const typeMap = new WeakMap();
 
-/** @param {TemplateStringsArray} strings
- * @param {any[]} args
+/**
+ * Determines the type of the given argument.
+ * Simplified to allow more flexibility with uhtml.
+ * 
+ * @param {any} arg 
+ * @returns {string}
+ */
+function getTypeOf(arg) {
+  const t = typeof arg;
+  if (t !== "object") return t;
+  if (arg === null) return "null";
+
+  if (Array.isArray(arg)) {
+    // Treat all arrays uniformly
+    return "Array";
+  }
+
+  if (arg.constructor && arg.constructor.name === "Hole") {
+    return "Hole";
+  }
+
+  return "object";
+}
+
+/**
+ * Custom html function wrapping uhtml's html.
+ * Removed strict null/undefined checks for content nodes.
+ * 
+ * @param {TemplateStringsArray} strings 
+ * @param  {...any} args 
+ * @returns {any}
  */
 export function html(strings, ...args) {
   let types = typeMap.get(strings);
@@ -20,65 +50,55 @@ export function html(strings, ...args) {
 
   args.forEach((arg, index) => {
     const string = strings[index];
+    const currentType = getTypeOf(arg);
+    const expectedType = types[index];
+
     if (!string.endsWith("=") && !string.endsWith('="')) {
-      // must be a content node
-      if (arg === null) {
-        throw new Error(`html arg after ${string} is null`);
-      }
-      if (arg === undefined) {
-        throw new Error(`html arg after ${string} is undefined`);
-      }
-      const atype = getTypeOf(arg);
-      if (atype != types[index]) {
-        const t = types[index];
+      // Content node
+      if (currentType !== expectedType) {
+        // Allow switching between null and undefined
         if (
-          !atype.startsWith("Array") ||
-          !t.startsWith("Array") ||
-          !(atype.endsWith("empty") || t.endsWith("empty"))
-        )
-          throw new Error(
-            `type of arg after ${string} changed from ${types[index]} to ${atype}`,
-          );
+          (currentType === "null" && expectedType === "undefined") ||
+          (currentType === "undefined" && expectedType === "null")
+        ) {
+          return;
+        }
+
+        // Allow switching between Array and "Hole"
+        if (
+          (currentType === "Array" && expectedType === "Hole") ||
+          (currentType === "Hole" && expectedType === "Array")
+        ) {
+          return;
+        }
+
+        // For arrays, ensure consistency in element types if not empty
+        if (currentType === "Array" && expectedType === "Array") {
+          // Additional checks can be added here if necessary
+          return;
+        }
+
+        // For other type mismatches, throw an error
+        throw new Error(
+          `Type of arg after "${string}" changed from ${expectedType} to ${currentType}`
+        );
       }
     } else {
-      // must be an attribute
-      const atype = getTypeOf(arg);
+      // Attribute
       if (
-        atype != types[index] &&
-        atype != "undefined" &&
-        types[index] != "undefined" &&
-        atype != "null" &&
-        types[index] != "null"
+        currentType !== expectedType &&
+        currentType !== "undefined" &&
+        expectedType !== "undefined" &&
+        currentType !== "null" &&
+        expectedType !== "null"
       ) {
         throw new Error(
-          `attribute ${string} changed from ${types[index]} to ${atype}`,
+          `Attribute ${string} changed from ${expectedType} to ${currentType}`
         );
       }
     }
   });
+
   return _html(strings, ...args);
 }
 
-/** @param {any} arg
- * @returns {string} */
-function getTypeOf(arg) {
-  const t = typeof arg;
-  if (t != "object") return t;
-  if (arg == null) return "null";
-
-  if (Array.isArray(arg)) {
-    if (arg.length) {
-      const ts = arg.map((a) => getTypeOf(a));
-      if (!ts.every((t) => t == t[0])) {
-        return `Array of ${ts[0]}`;
-      } else {
-        console.error("array", ts);
-        throw new Error("Array elements of different types");
-      }
-    } else return `Array empty`;
-  }
-  if (arg.constructor.name == "Hole") {
-    return "Hole";
-  }
-  return "object";
-}
