@@ -103,6 +103,20 @@ export class MethodChooser extends DesignerPanel {
     }
     return obj;
   }
+
+  /**
+   * Merge an object into the panel contents
+   * @param {ExternalRep} obj
+   * @returns {Promise<void>}
+   */
+  async merge(obj) {
+    console.assert(obj.className == "MethodChooser", obj);
+    const toMerge = obj.children;
+    for (let newChild of toMerge) {
+      TreeBase.fromObject(newChild, this);
+    }
+    this.onUpdate();
+  }
 }
 TreeBase.register(MethodChooser, "MethodChooser");
 

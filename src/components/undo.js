@@ -13,6 +13,7 @@ export class ChangeStack {
   top = 0;
 
   get canUndo() {
+    console.log("canUndo", this.top > 1);
     return this.top > 1;
   }
 

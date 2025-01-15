@@ -191,6 +191,20 @@ export class PatternList extends DesignerPanel {
     }
     return result;
   }
+
+  /**
+   * Merge an object into the panel contents
+   * @param {ExternalRep} obj
+   * @returns {Promise<void>}
+   */
+  async merge(obj) {
+    console.assert(obj.className == "PatternList", obj);
+    const toMerge = obj.children;
+    for (let newChild of toMerge) {
+      TreeBase.fromObject(newChild, this);
+    }
+    this.onUpdate();
+  }
 }
 TreeBase.register(PatternList, "PatternList");
 

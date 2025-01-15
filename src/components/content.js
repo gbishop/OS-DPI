@@ -83,5 +83,17 @@ export class Content extends DesignerPanel {
       </div>
     </div>`;
   }
+  /**
+   * Merge an object into the panel contents
+   * @param {ExternalRep} obj
+   * @returns {Promise<void>}
+   */
+  async merge(obj) {
+    console.assert(obj.className == "Content", obj);
+    const toMerge = obj.children;
+    Globals.data.setContent(Globals.data.contentRows.concat(toMerge));
+    db.write("content", Globals.data.contentRows);
+    this.onUpdate();
+  }
 }
 TreeBase.register(Content, "Content");

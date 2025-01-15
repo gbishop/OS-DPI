@@ -90,6 +90,20 @@ export class CueList extends DesignerPanel {
     }
     return obj;
   }
+
+  /**
+   * Merge an object into the panel contents
+   * @param {ExternalRep} obj
+   * @returns {Promise<void>}
+   */
+  async merge(obj) {
+    console.assert(obj.className == "CueList", obj);
+    const toMerge = obj.children;
+    for (let newChild of toMerge) {
+      TreeBase.fromObject(newChild, this);
+    }
+    this.onUpdate();
+  }
 }
 TreeBase.register(CueList, "CueList");
 

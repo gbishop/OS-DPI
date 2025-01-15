@@ -335,6 +335,29 @@ export class Designer extends TreeBase {
       }
     }
   };
+
+  /**
+   * Merge a design in
+   * @param {DesignObject} design
+   * @returns {Promise<void>}
+   */
+  async merge(design) {
+    for (let panel in design) {
+      if (panel == "media") {
+        for (const media of design.media) {
+          await db.addMedia(media.content, media.name);
+        }
+      } else if (panel == "content") {
+        await Globals.content.merge({
+          className: "Content",
+          props: {},
+          children: design[panel],
+        });
+      } else {
+        await Globals[panel].merge(design[panel]);
+      }
+    }
+  }
 }
 TreeBase.register(Designer, "Designer");
 
@@ -389,6 +412,16 @@ export class DesignerPanel extends TreeBase {
     }
     // I don't think this happens
     return this.create(expected);
+  }
+
+  /**
+   * Merge an object into the panel contents
+   * @param {ExternalRep} _obj
+   * @returns {Promise<void>}
+   *
+   */
+  async merge(_obj) {
+    console.log("override me");
   }
 
   /**

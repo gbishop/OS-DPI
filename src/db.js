@@ -378,7 +378,7 @@ export class DB {
     }
   }
 
-  /** Read a design from a zip file
+  /** Read design from the blob
    * @param {Blob} blob
    * @param {string} filename
    * @param {string} etag
@@ -387,10 +387,6 @@ export class DB {
   async readDesignFromBlob(blob, filename, etag = "") {
     const db = await this.dbPromise;
     this.fileName = filename;
-
-    const zippedBuf = await readAsArrayBuffer(blob);
-    const zippedArray = new Uint8Array(zippedBuf);
-    const unzipped = unzipSync(zippedArray);
 
     // normalize the fileName to make the design name
     let name = this.fileName;
@@ -403,37 +399,18 @@ export class DB {
 
     this.designName = name;
 
-    for (const fname in unzipped) {
-      const mimetype = mime(fname) || "application/octet-stream";
-      if (mimetype == "application/json") {
-        const text = strFromU8(unzipped[fname]);
-        let obj = {};
-        try {
-          obj = JSON.parse(text);
-        } catch (e) {
-          obj = {};
-          console.trace(e);
+    const design = await unPackDesign(blob);
+    // copy the design into the db
+    for (const [key, value] of Object.entries(design)) {
+      if (key == "media") {
+        for (const media of design.media) {
+          await this.addMedia(media.content, media.name);
         }
-        const type = fname.split(".")[0];
-        await this.write(type, obj);
-      } else if (
-        mimetype.startsWith("image") ||
-        mimetype.startsWith("audio") ||
-        mimetype.startsWith("video")
-      ) {
-        const blob = new Blob([unzipped[fname]], {
-          type: mimetype,
-        });
-        await db.put(
-          "media",
-          {
-            name: fname,
-            content: blob,
-          },
-          [name, fname],
-        );
+      } else {
+        await this.write(key, value);
       }
     }
+
     await db.put("saved", { name: this.designName, etag });
     this.notify({ action: "update", name: this.designName });
     return true;
@@ -446,7 +423,7 @@ export class DB {
     const layout = Globals.layout.toObject();
     const actions = Globals.actions.toObject();
     const content = await this.read("content");
-    const method = Globals.method.toObject();
+    const method = Globals.methods.toObject();
     const pattern = Globals.patterns.toObject();
     const cues = Globals.cues.toObject();
 
@@ -646,6 +623,54 @@ function readAsArrayBuffer(blob) {
     fr.onloadend = () => fr.result instanceof ArrayBuffer && resolve(fr.result);
     fr.readAsArrayBuffer(blob);
   });
+}
+
+/** Unpack a design from a blob
+ *
+ * @param {Blob} blob
+ * @returns {Promise<DesignObject>}
+ */
+export async function unPackDesign(blob) {
+  const zippedBuf = await readAsArrayBuffer(blob);
+  const zippedArray = new Uint8Array(zippedBuf);
+  const unzipped = unzipSync(zippedArray);
+
+  /** @type {DesignObject} result */
+  const result = {
+    layout: {},
+    actions: {},
+    content: {},
+    cues: {},
+    patterns: {},
+    methods: {},
+    media: [],
+  };
+  for (const fname in unzipped) {
+    const mimetype = mime(fname) || "application/octet-stream";
+    if (mimetype == "application/json") {
+      const text = strFromU8(unzipped[fname]);
+      let obj = {};
+      try {
+        obj = JSON.parse(text);
+        let type = fname.split(".")[0];
+        if (type == "method") type = "methods";
+        if (type == "pattern") type = "patterns";
+        result[type] = obj;
+      } catch (e) {
+        console.trace(e);
+      }
+    } else if (
+      mimetype.startsWith("image") ||
+      mimetype.startsWith("audio") ||
+      mimetype.startsWith("video")
+    ) {
+      const blob = new Blob([unzipped[fname]], {
+        type: mimetype,
+      });
+      result.media.push({ name: fname, content: blob });
+    }
+  }
+  return result;
 }
 
 const mimetypes = {
