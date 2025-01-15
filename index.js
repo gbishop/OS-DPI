@@ -7458,10 +7458,11 @@ main.filters = filters;
  * @property {State} state
  * @property {import("./data").Data} data
  * @property {import("./components/actions").Actions} actions
+ * @property {import("./components/content").Content} content
  * @property {import('./components/layout').Layout} layout
  * @property {import('./components/access/pattern').PatternList} patterns
  * @property {import('./components/access/cues').CueList} cues
- * @property {import('./components/access/method').MethodChooser} method
+ * @property {import('./components/access/method').MethodChooser} methods
  * @property {import('./components/monitor').Monitor} monitor
  * @property {import('./components/designer').Designer} designer
  * @property {import('./components/errors').Messages} error
@@ -9195,7 +9196,7 @@ class DB {
     }
   }
 
-  /** Read a design from a zip file
+  /** Read design from the blob
    * @param {Blob} blob
    * @param {string} filename
    * @param {string} etag
@@ -9204,10 +9205,6 @@ class DB {
   async readDesignFromBlob(blob, filename, etag = "") {
     const db = await this.dbPromise;
     this.fileName = filename;
-
-    const zippedBuf = await readAsArrayBuffer(blob);
-    const zippedArray = new Uint8Array(zippedBuf);
-    const unzipped = unzipSync(zippedArray);
 
     // normalize the fileName to make the design name
     let name = this.fileName;
@@ -9220,37 +9217,18 @@ class DB {
 
     this.designName = name;
 
-    for (const fname in unzipped) {
-      const mimetype = mime(fname) || "application/octet-stream";
-      if (mimetype == "application/json") {
-        const text = strFromU8(unzipped[fname]);
-        let obj = {};
-        try {
-          obj = JSON.parse(text);
-        } catch (e) {
-          obj = {};
-          console.trace(e);
+    const design = await unPackDesign(blob);
+    // copy the design into the db
+    for (const [key, value] of Object.entries(design)) {
+      if (key == "media") {
+        for (const media of design.media) {
+          await this.addMedia(media.content, media.name);
         }
-        const type = fname.split(".")[0];
-        await this.write(type, obj);
-      } else if (
-        mimetype.startsWith("image") ||
-        mimetype.startsWith("audio") ||
-        mimetype.startsWith("video")
-      ) {
-        const blob = new Blob([unzipped[fname]], {
-          type: mimetype,
-        });
-        await db.put(
-          "media",
-          {
-            name: fname,
-            content: blob,
-          },
-          [name, fname],
-        );
+      } else {
+        await this.write(key, value);
       }
     }
+
     await db.put("saved", { name: this.designName, etag });
     this.notify({ action: "update", name: this.designName });
     return true;
@@ -9263,7 +9241,7 @@ class DB {
     const layout = Globals.layout.toObject();
     const actions = Globals.actions.toObject();
     const content = await this.read("content");
-    const method = Globals.method.toObject();
+    const method = Globals.methods.toObject();
     const pattern = Globals.patterns.toObject();
     const cues = Globals.cues.toObject();
 
@@ -9463,6 +9441,54 @@ function readAsArrayBuffer(blob) {
     fr.onloadend = () => fr.result instanceof ArrayBuffer && resolve(fr.result);
     fr.readAsArrayBuffer(blob);
   });
+}
+
+/** Unpack a design from a blob
+ *
+ * @param {Blob} blob
+ * @returns {Promise<DesignObject>}
+ */
+async function unPackDesign(blob) {
+  const zippedBuf = await readAsArrayBuffer(blob);
+  const zippedArray = new Uint8Array(zippedBuf);
+  const unzipped = unzipSync(zippedArray);
+
+  /** @type {DesignObject} result */
+  const result = {
+    layout: {},
+    actions: {},
+    content: {},
+    cues: {},
+    patterns: {},
+    methods: {},
+    media: [],
+  };
+  for (const fname in unzipped) {
+    const mimetype = mime(fname) || "application/octet-stream";
+    if (mimetype == "application/json") {
+      const text = strFromU8(unzipped[fname]);
+      let obj = {};
+      try {
+        obj = JSON.parse(text);
+        let type = fname.split(".")[0];
+        if (type == "method") type = "methods";
+        if (type == "pattern") type = "patterns";
+        result[type] = obj;
+      } catch (e) {
+        console.trace(e);
+      }
+    } else if (
+      mimetype.startsWith("image") ||
+      mimetype.startsWith("audio") ||
+      mimetype.startsWith("video")
+    ) {
+      const blob = new Blob([unzipped[fname]], {
+        type: mimetype,
+      });
+      result.media.push({ name: fname, content: blob });
+    }
+  }
+  return result;
 }
 
 const mimetypes = {
@@ -14531,6 +14557,7 @@ class ChangeStack {
   top = 0;
 
   get canUndo() {
+    console.log("canUndo", this.top > 1);
     return this.top > 1;
   }
 
@@ -15025,6 +15052,29 @@ class Designer extends TreeBase {
       }
     }
   };
+
+  /**
+   * Merge a design in
+   * @param {DesignObject} design
+   * @returns {Promise<void>}
+   */
+  async merge(design) {
+    for (let panel in design) {
+      if (panel == "media") {
+        for (const media of design.media) {
+          await db.addMedia(media.content, media.name);
+        }
+      } else if (panel == "content") {
+        await Globals.content.merge({
+          className: "Content",
+          props: {},
+          children: design[panel],
+        });
+      } else {
+        await Globals[panel].merge(design[panel]);
+      }
+    }
+  }
 }
 TreeBase.register(Designer, "Designer");
 
@@ -15079,6 +15129,16 @@ class DesignerPanel extends TreeBase {
     }
     // I don't think this happens
     return this.create(expected);
+  }
+
+  /**
+   * Merge an object into the panel contents
+   * @param {ExternalRep} _obj
+   * @returns {Promise<void>}
+   *
+   */
+  async merge(_obj) {
+    console.log("override me");
   }
 
   /**
@@ -15243,6 +15303,18 @@ class Content extends DesignerPanel {
       </div>
     </div>`;
   }
+  /**
+   * Merge an object into the panel contents
+   * @param {ExternalRep} obj
+   * @returns {Promise<void>}
+   */
+  async merge(obj) {
+    console.assert(obj.className == "Content", obj);
+    const toMerge = obj.children;
+    Globals.data.setContent(Globals.data.contentRows.concat(toMerge));
+    db.write("content", Globals.data.contentRows);
+    this.onUpdate();
+  }
 }
 TreeBase.register(Content, "Content");
 
@@ -15404,6 +15476,21 @@ class Layout extends DesignerPanel {
       callAfterRender(() => this.highlight());
       Globals.state.update(patch);
     }
+  }
+  /**
+   * Merge an object into the panel contents
+   * @param {ExternalRep} obj
+   * @returns {Promise<void>}
+   */
+  async merge(obj) {
+    console.assert(obj.className == "Layout", obj);
+    const toMerge = obj.children[0].children;
+    const page = this.children[0];
+    for (let newChild of toMerge) {
+      if (newChild.className == "Speech") continue;
+      TreeBase.fromObject(newChild, page);
+    }
+    this.onUpdate();
   }
 }
 TreeBase.register(Layout, "Layout");
@@ -15629,6 +15716,20 @@ class Actions extends DesignerPanel {
       };
     }
     return actions;
+  }
+
+  /**
+   * Merge an object into the panel contents
+   * @param {ExternalRep} obj
+   * @returns {Promise<void>}
+   */
+  async merge(obj) {
+    console.assert(obj.className == "Actions", obj);
+    const toMerge = obj.children;
+    for (let newChild of toMerge) {
+      TreeBase.fromObject(newChild, this);
+    }
+    this.onUpdate();
   }
 }
 TreeBase.register(Actions, "Actions");
@@ -18109,7 +18210,7 @@ const defaultMethods = {
       children: [
         {
           className: "PointerHandler",
-          props: { Signal: "pointerdown" },
+          props: { Signal: "pointerup" },
           children: [
             {
               className: "ResponderActivate",
@@ -18253,6 +18354,20 @@ class MethodChooser extends DesignerPanel {
       }
     }
     return obj;
+  }
+
+  /**
+   * Merge an object into the panel contents
+   * @param {ExternalRep} obj
+   * @returns {Promise<void>}
+   */
+  async merge(obj) {
+    console.assert(obj.className == "MethodChooser", obj);
+    const toMerge = obj.children;
+    for (let newChild of toMerge) {
+      TreeBase.fromObject(newChild, this);
+    }
+    this.onUpdate();
   }
 }
 TreeBase.register(MethodChooser, "MethodChooser");
@@ -18918,6 +19033,20 @@ class PatternList extends DesignerPanel {
       result = this.activePattern;
     }
     return result;
+  }
+
+  /**
+   * Merge an object into the panel contents
+   * @param {ExternalRep} obj
+   * @returns {Promise<void>}
+   */
+  async merge(obj) {
+    console.assert(obj.className == "PatternList", obj);
+    const toMerge = obj.children;
+    for (let newChild of toMerge) {
+      TreeBase.fromObject(newChild, this);
+    }
+    this.onUpdate();
   }
 }
 TreeBase.register(PatternList, "PatternList");
@@ -20451,6 +20580,20 @@ class CueList extends DesignerPanel {
       }
     }
     return obj;
+  }
+
+  /**
+   * Merge an object into the panel contents
+   * @param {ExternalRep} obj
+   * @returns {Promise<void>}
+   */
+  async merge(obj) {
+    console.assert(obj.className == "CueList", obj);
+    const toMerge = obj.children;
+    for (let newChild of toMerge) {
+      TreeBase.fromObject(newChild, this);
+    }
+    this.onUpdate();
   }
 }
 TreeBase.register(CueList, "CueList");
@@ -22578,6 +22721,19 @@ function getFileMenuItems(bar) {
       },
     }),
     new MenuItem({
+      label: "Load Plugin",
+      callback: async () => {
+        const file = await n({
+          mimeTypes: ["application/octet-stream"],
+          extensions: [".osdpi", ".zip"],
+          description: "OS-DPI designs",
+          id: "os-dpi",
+        });
+        const design = await wait(unPackDesign(file));
+        await Globals.designer.merge(design);
+      },
+    }),
+    new MenuItem({
       label: "Load Sheet",
       title: "Load a spreadsheet of content",
       divider: "Content",
@@ -22719,12 +22875,12 @@ function getEditMenuItems() {
     new MenuItem({
       label: "Undo",
       callback: panel?.changeStack.canUndo ? () => panel?.undo() : undefined,
-      disable: !canEdit,
+      disable: !panel?.changeStack.canUndo,
     }),
     new MenuItem({
       label: "Redo",
       callback: panel?.changeStack.canRedo ? () => panel?.redo() : undefined,
-      disable: !canEdit,
+      disable: !panel?.changeStack.canRedo,
     }),
     new MenuItem({
       label: "Copy",
@@ -23120,12 +23276,19 @@ async function start() {
   Globals.layout = layout;
   Globals.state = new State$1(`UIState`);
   Globals.actions = await Actions.load(Actions);
+  Globals.content = /** @type {Content} */ (
+    Content.fromObject({
+      className: "Content",
+      props: {},
+      children: [],
+    })
+  );
   Globals.cues = await CueList.load(CueList);
   Globals.patterns = await PatternList.load(PatternList);
-  Globals.method = await MethodChooser.load(MethodChooser);
+  Globals.methods = await MethodChooser.load(MethodChooser);
   Globals.restart = async () => {
     // tear down any existing event handlers before restarting
-    Globals.method.stop();
+    Globals.methods.stop();
     start();
   };
   Globals.error = new Messages();
@@ -23147,15 +23310,11 @@ async function start() {
       props: { tabEdge: "top", stateName: "designerTab" },
       children: [
         layout,
-        {
-          className: "Content",
-          props: {},
-          children: [],
-        },
         Globals.actions,
+        Globals.content,
         Globals.cues,
         Globals.patterns,
-        Globals.method,
+        Globals.methods,
       ],
     })
   );
@@ -23194,7 +23353,7 @@ async function start() {
       safeRender("errors", Globals.error);
     }
     postRender();
-    Globals.method.refresh();
+    Globals.methods.refresh();
     // clear the accessed bits for the next cycle
     accessed.clear();
     // clear the updated bits for the next cycle
