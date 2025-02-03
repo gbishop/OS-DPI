@@ -227,6 +227,20 @@ export class Actions extends DesignerPanel {
     }
     return actions;
   }
+
+  /**
+   * Merge an object into the panel contents
+   * @param {ExternalRep} obj
+   * @returns {Promise<void>}
+   */
+  async merge(obj) {
+    console.assert(obj.className == "Actions", obj);
+    const toMerge = obj.children;
+    for (let newChild of toMerge) {
+      TreeBase.fromObject(newChild, this);
+    }
+    this.onUpdate();
+  }
 }
 TreeBase.register(Actions, "Actions");
 

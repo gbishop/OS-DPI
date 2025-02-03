@@ -17,6 +17,7 @@ import { CueList } from "./components/access/cues";
 import { Actions } from "./components/actions";
 import { callAfterRender, safeRender, postRender } from "./render";
 import { Designer } from "components/designer";
+import { Content } from "components/content";
 import { workerCheckForUpdate } from "components/serviceWorker";
 import { accessed } from "./eval";
 
@@ -64,12 +65,19 @@ export async function start() {
   Globals.layout = layout;
   Globals.state = new State(`UIState`);
   Globals.actions = await Actions.load(Actions);
+  Globals.content = /** @type {Content} */ (
+    Content.fromObject({
+      className: "Content",
+      props: {},
+      children: [],
+    })
+  );
   Globals.cues = await CueList.load(CueList);
   Globals.patterns = await PatternList.load(PatternList);
-  Globals.method = await MethodChooser.load(MethodChooser);
+  Globals.methods = await MethodChooser.load(MethodChooser);
   Globals.restart = async () => {
     // tear down any existing event handlers before restarting
-    Globals.method.stop();
+    Globals.methods.stop();
     start();
   };
   Globals.error = new Messages();
@@ -91,15 +99,11 @@ export async function start() {
       props: { tabEdge: "top", stateName: "designerTab" },
       children: [
         layout,
-        {
-          className: "Content",
-          props: {},
-          children: [],
-        },
         Globals.actions,
+        Globals.content,
         Globals.cues,
         Globals.patterns,
-        Globals.method,
+        Globals.methods,
       ],
     })
   );
@@ -138,7 +142,7 @@ export async function start() {
       safeRender("errors", Globals.error);
     }
     postRender();
-    Globals.method.refresh();
+    Globals.methods.refresh();
     // clear the accessed bits for the next cycle
     accessed.clear();
     // clear the updated bits for the next cycle

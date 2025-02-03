@@ -39,7 +39,11 @@ export class GridFilter extends TreeBase {
               (filter, index) => html`
                 <tr id=${filter.id + "-settings"}>
                   <td>${index + 1}</td>
-                  <td>${filter.field.input()}</td>
+                  <td>
+                    ${filter.operator.value.startsWith("only")
+                      ? ""
+                      : filter.field.input()}
+                  </td>
                   <td>${filter.operator.input()}</td>
                   <td>${filter.value.input()}</td>
                 </tr>

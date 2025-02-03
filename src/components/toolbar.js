@@ -12,7 +12,7 @@ import { Menu, MenuItem } from "./menu";
 import { callAfterRender } from "app/render";
 import { fileOpen } from "browser-fs-access";
 import pleaseWait from "components/wait";
-import { DB } from "app/db";
+import { DB, unPackDesign } from "app/db";
 import { Designer } from "./designer";
 import { readSheetFromBlob, saveContent } from "app/spreadsheet";
 import { SaveLog, ClearLog } from "./logger";
@@ -254,6 +254,19 @@ function getFileMenuItems(bar) {
       },
     }),
     new MenuItem({
+      label: "Load Plugin",
+      callback: async () => {
+        const file = await fileOpen({
+          mimeTypes: ["application/octet-stream"],
+          extensions: [".osdpi", ".zip"],
+          description: "OS-DPI designs",
+          id: "os-dpi",
+        });
+        const design = await pleaseWait(unPackDesign(file));
+        await Globals.designer.merge(design);
+      },
+    }),
+    new MenuItem({
       label: "Load Sheet",
       title: "Load a spreadsheet of content",
       divider: "Content",
@@ -395,12 +408,12 @@ export function getEditMenuItems() {
     new MenuItem({
       label: "Undo",
       callback: panel?.changeStack.canUndo ? () => panel?.undo() : undefined,
-      disable: !canEdit,
+      disable: !panel?.changeStack.canUndo,
     }),
     new MenuItem({
       label: "Redo",
       callback: panel?.changeStack.canRedo ? () => panel?.redo() : undefined,
-      disable: !canEdit,
+      disable: !panel?.changeStack.canRedo,
     }),
     new MenuItem({
       label: "Copy",

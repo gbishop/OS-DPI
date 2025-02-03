@@ -53,10 +53,14 @@
  */
 
 /**
- * @typedef {Object} Design
- * @property {string} type
- * @property {SomeProps} props
- * @property {Design[]} children
+ * @typedef {Object} DesignObject
+ * @property {Object} layout
+ * @property {Object} actions
+ * @property {Object} content
+ * @property {Object} cues
+ * @property {Object} patterns
+ * @property {Object} methods
+ * @property {{name: string, content: Blob}[]} media
  */
 
 /**

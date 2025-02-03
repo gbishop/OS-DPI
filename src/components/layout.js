@@ -166,5 +166,20 @@ export class Layout extends DesignerPanel {
       Globals.state.update(patch);
     }
   }
+  /**
+   * Merge an object into the panel contents
+   * @param {ExternalRep} obj
+   * @returns {Promise<void>}
+   */
+  async merge(obj) {
+    console.assert(obj.className == "Layout", obj);
+    const toMerge = obj.children[0].children;
+    const page = this.children[0];
+    for (let newChild of toMerge) {
+      if (newChild.className == "Speech") continue;
+      TreeBase.fromObject(newChild, page);
+    }
+    this.onUpdate();
+  }
 }
 TreeBase.register(Layout, "Layout");

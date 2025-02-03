@@ -197,6 +197,9 @@ export class Prop {
    * @returns {T}
    * */
   cast(value) {
+    if (typeof value == "string") {
+      value = value.normalize("NFC");
+    }
     return value;
   }
 
@@ -211,6 +214,7 @@ export class Prop {
       (this.isFormulaByDefault || value.startsWith("="))
     ) {
       // compile it here
+      value = value.normalize("NFC");
       let error;
       [this.compiled, error] = compileExpression(value);
       if (error) {
@@ -308,7 +312,7 @@ export class Select extends Prop {
         ?required=${!this.options.notRequired}
         title=${this.options.title}
         @change=${({ target }) => {
-          this._value = target.value;
+          this._value = this.cast(target.value);
           this.update();
         }}
       >
@@ -327,7 +331,7 @@ export class Select extends Prop {
 
   /** @param {any} value */
   set(value) {
-    this._value = value;
+    this._value = this.cast(value);
   }
 }
 
@@ -412,7 +416,7 @@ export class KeyName extends Prop {
           } else if (!target.hasAttribute("readonly")) {
             event.stopPropagation();
             event.preventDefault();
-            this._value = event.key;
+            this._value = this.cast(event.key);
             target.value = mapKey(event.key);
             target.setAttribute("readonly", "");
           }
@@ -447,7 +451,7 @@ export class TextArea extends Prop {
         }}
         @change=${({ target }) => {
           if (target.checkValidity()) {
-            this._value = target.value;
+            this._value = this.cast(target.value);
             this.update();
           }
         }}
@@ -803,7 +807,7 @@ export class Code extends Prop {
             .value=${this._value}
             id=${this.id}
             @change=${({ target }) => {
-              this._value = target.value;
+              this._value = this.cast(target.value);
               this.editCSS();
               this.update();
             }}

@@ -55,7 +55,8 @@ export class Monitor extends TreeBase {
       </thead>
       <tbody>
         ${rowKeys.map((key) => {
-          const value = row[key];
+          let value = row[key];
+          if (typeof value !== "string") value = String(value || "");
           return html`<tr
             ?undefined=${accessed.get(`_${key}`) === false}
             ?accessed=${accessed.has(`_${key}`)}
