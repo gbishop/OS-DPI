@@ -166,7 +166,16 @@ export class DB {
   async read(type, defaultValue = {}) {
     const db = await this.dbPromise;
     const record = await db.get("store5", [this.designName, type]);
-    const data = record ? record.data : defaultValue;
+    let data = record ? record.data : defaultValue;
+    data = JSON.parse(
+      JSON.stringify(data, (_key, value) => {
+        if (typeof value === "string") {
+          return value.normalize("NFC"); // Use NFC normalization form
+        }
+        return value;
+      }),
+    );
+
     return data;
   }
 
@@ -193,6 +202,16 @@ export class DB {
    */
   async write(type, data) {
     const db = await this.dbPromise;
+    // normalize the data for unicode issues
+    data = JSON.parse(
+      JSON.stringify(data, (_key, value) => {
+        if (typeof value === "string") {
+          return value.normalize("NFC"); // Use NFC normalization form
+        }
+        return value;
+      }),
+    );
+
     // do all this in a transaction
     const tx = db.transaction(["store5", "saved"], "readwrite");
     // note that this design has been updated
@@ -537,6 +556,7 @@ export class DB {
    */
   async getMediaURL(name) {
     const db = await this.dbPromise;
+    name = name.normalize("NFC");
     const record = await db.get("media", [this.designName, name]);
     if (record) return URL.createObjectURL(record.content);
     else return "";
@@ -548,6 +568,7 @@ export class DB {
    */
   async addMedia(blob, name) {
     const db = await this.dbPromise;
+    name = name.normalize("NFC");
     return await db.put(
       "media",
       {
