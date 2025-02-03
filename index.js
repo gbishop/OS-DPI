@@ -8984,7 +8984,16 @@ class DB {
   async read(type, defaultValue = {}) {
     const db = await this.dbPromise;
     const record = await db.get("store5", [this.designName, type]);
-    const data = record ? record.data : defaultValue;
+    let data = record ? record.data : defaultValue;
+    data = JSON.parse(
+      JSON.stringify(data, (_key, value) => {
+        if (typeof value === "string") {
+          return value.normalize("NFC"); // Use NFC normalization form
+        }
+        return value;
+      }),
+    );
+
     return data;
   }
 
@@ -9011,6 +9020,16 @@ class DB {
    */
   async write(type, data) {
     const db = await this.dbPromise;
+    // normalize the data for unicode issues
+    data = JSON.parse(
+      JSON.stringify(data, (_key, value) => {
+        if (typeof value === "string") {
+          return value.normalize("NFC"); // Use NFC normalization form
+        }
+        return value;
+      }),
+    );
+
     // do all this in a transaction
     const tx = db.transaction(["store5", "saved"], "readwrite");
     // note that this design has been updated
@@ -9355,6 +9374,7 @@ class DB {
    */
   async getMediaURL(name) {
     const db = await this.dbPromise;
+    name = name.normalize("NFC");
     const record = await db.get("media", [this.designName, name]);
     if (record) return URL.createObjectURL(record.content);
     else return "";
@@ -9366,6 +9386,7 @@ class DB {
    */
   async addMedia(blob, name) {
     const db = await this.dbPromise;
+    name = name.normalize("NFC");
     return await db.put(
       "media",
       {
@@ -10634,6 +10655,9 @@ class Prop {
    * @returns {T}
    * */
   cast(value) {
+    if (typeof value == "string") {
+      value = value.normalize("NFC");
+    }
     return value;
   }
 
@@ -10648,6 +10672,7 @@ class Prop {
       (this.isFormulaByDefault || value.startsWith("="))
     ) {
       // compile it here
+      value = value.normalize("NFC");
       let error;
       [this.compiled, error] = compileExpression(value);
       if (error) {
@@ -10745,7 +10770,7 @@ class Select extends Prop {
         ?required=${!this.options.notRequired}
         title=${this.options.title}
         @change=${({ target }) => {
-          this._value = target.value;
+          this._value = this.cast(target.value);
           this.update();
         }}
       >
@@ -10764,7 +10789,7 @@ class Select extends Prop {
 
   /** @param {any} value */
   set(value) {
-    this._value = value;
+    this._value = this.cast(value);
   }
 }
 
@@ -10849,7 +10874,7 @@ class KeyName extends Prop {
           } else if (!target.hasAttribute("readonly")) {
             event.stopPropagation();
             event.preventDefault();
-            this._value = event.key;
+            this._value = this.cast(event.key);
             target.value = mapKey(event.key);
             target.setAttribute("readonly", "");
           }
@@ -10884,7 +10909,7 @@ class TextArea extends Prop {
         }}
         @change=${({ target }) => {
           if (target.checkValidity()) {
-            this._value = target.value;
+            this._value = this.cast(target.value);
             this.update();
           }
         }}
@@ -11240,7 +11265,7 @@ class Code extends Prop {
             .value=${this._value}
             id=${this.id}
             @change=${({ target }) => {
-              this._value = target.value;
+              this._value = this.cast(target.value);
               this.editCSS();
               this.update();
             }}
@@ -14176,7 +14201,8 @@ class Monitor extends TreeBase {
       </thead>
       <tbody>
         ${rowKeys.map((key) => {
-          const value = row[key];
+          let value = row[key];
+          if (typeof value !== "string") value = String(value || "");
           return html`<tr
             ?undefined=${accessed.get(`_${key}`) === false}
             ?accessed=${accessed.has(`_${key}`)}
