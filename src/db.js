@@ -421,7 +421,7 @@ export class DB {
     const design = await unPackDesign(blob);
     // copy the design into the db
     for (const [key, value] of Object.entries(design)) {
-      if (key == "media") {
+      if (key == "media" && design.media) {
         for (const media of design.media) {
           await this.addMedia(media.content, media.name);
         }
