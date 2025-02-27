@@ -667,8 +667,6 @@ export async function unPackDesign(blob) {
       try {
         obj = JSON.parse(text);
         let type = fname.split(".")[0];
-        if (type == "method") type = "methods";
-        if (type == "pattern") type = "patterns";
         result[type] = obj;
       } catch (e) {
         console.trace(e);
