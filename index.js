@@ -9354,6 +9354,16 @@ class DB {
     return img;
   }
 
+  /** Return an image blob from the database
+   * @param {string} name
+   * @returns {Promise<Blob>}
+   */
+  async getImageBlob(name) {
+    const db = await this.dbPromise;
+    const record = await db.get("media", [this.designName, name]);
+    return record.content;
+  }
+
   /** Return an audio file from the database
    * @param {string} name
    * @returns {Promise<HTMLAudioElement>}
@@ -15079,19 +15089,23 @@ class Designer extends TreeBase {
    * @returns {Promise<void>}
    */
   async merge(design) {
-    for (let panel in design) {
-      if (panel == "media") {
+    for (let key in design) {
+      if (key == "media" && design.media) {
         for (const media of design.media) {
           await db.addMedia(media.content, media.name);
         }
-      } else if (panel == "content") {
+      } else if (key == "content") {
         await Globals.content.merge({
           className: "Content",
           props: {},
-          children: design[panel],
+          children: design[key],
         });
+      } else if (key == "method") {
+        await Globals["methods"].merge(design["method"]);
+      } else if (key == "pattern") {
+        await Globals["patterns"].merge(design["pattern"]);
       } else {
-        await Globals[panel].merge(design[panel]);
+        await Globals[key].merge(design[key]);
       }
     }
   }
@@ -20314,7 +20328,17 @@ class SocketHandler extends Handler {
     if (method.streams[streamName]) return;
 
     // this is the socket object
-    this.socket = webSocket(this.URL.value);
+    this.socket = webSocket({
+      url: this.URL.value,
+      serializer: (msg) => {
+        if (msg instanceof Blob) {
+          return msg;
+        } else {
+          return JSON.stringify(msg);
+        }
+      },
+      binaryType: "blob",
+    });
 
     // this is the stream of events from it
     this.socket$ = this.socket.pipe(
@@ -20330,22 +20354,19 @@ class SocketHandler extends Handler {
         };
         return wrapped;
       }),
-      tap((e) => console.log("socket", e)),
+      // RxJs.tap((e) => console.log("socket", e)),
     );
     method.streams[streamName] = this.socket$;
   }
 
   /** @param {EventLike} event */
   respond(event) {
-    console.log("socket respond", event.type);
-
     /* Incoming data arrives here in the .access property. This code will filter any arrays of objects and
      * include them in the dynamic data
      */
     let dynamicRows = [];
     const fields = [];
     for (const [key, value] of Object.entries(event.access || {})) {
-      console.log(key, value);
       if (
         Array.isArray(value) &&
         value.length > 0 &&
@@ -20353,6 +20374,8 @@ class SocketHandler extends Handler {
         value[0] !== null
       ) {
         dynamicRows = dynamicRows.concat(value);
+      } else if (key == "FetchImageFromDB") {
+        this.sendImage(value);
       } else {
         fields.push([key, value]);
       }
@@ -20385,6 +20408,15 @@ class SocketHandler extends Handler {
       message["content"] = content;
     }
     this.socket.next(message);
+  }
+
+  /** @param {string} name */
+  async sendImage(name) {
+    if (!this.socket) return;
+
+    // send the image over the websocket
+    const imgBlob = await db.getImageBlob(name);
+    this.socket.next(imgBlob);
   }
 }
 TreeBase.register(SocketHandler, "SocketHandler");
