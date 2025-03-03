@@ -536,6 +536,16 @@ export class DB {
     return img;
   }
 
+  /** Return an image blob from the database
+   * @param {string} name
+   * @returns {Promise<Blob>}
+   */
+  async getImageBlob(name) {
+    const db = await this.dbPromise;
+    const record = await db.get("media", [this.designName, name]);
+    return record.content;
+  }
+
   /** Return an audio file from the database
    * @param {string} name
    * @returns {Promise<HTMLAudioElement>}
