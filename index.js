@@ -9056,8 +9056,27 @@ function translate(expression) {
   let exp = expression.replace(/^=/, "");
   // translate single = to ==
   exp = exp.replaceAll(/(?<![=<>!])=/g, "==");
+  /* for Safari before 17
+  exp.replace(/([=<>!])=|=/g, (match, group1) => {
+    if (group1) {
+      return match; // If it's preceded by =, <, >, or !, keep the original match
+    } else {
+      return "=="; // Otherwise, replace with ==
+    }
+  });
+  */
   // translate words
   exp = exp.replaceAll(/(?<!['"])[#](\w+)/g, "_$1");
+  /* for Safari before 17
+  exp.replace(/(['"]#\w+)|(#\w+)/g, (match, group1, group2) => {
+    if (group1) {
+      return match; // If it matches quote + #..., keep the original
+    } else {
+      return "_" + group2.substring(1); // Otherwise, replace #... with _...
+    }
+  });
+  */
+
   return exp;
 }
 
@@ -22795,6 +22814,8 @@ class ToolBar extends TreeBase {
 }
 TreeBase.register(ToolBar, "ToolBar");
 
+console.log("starting");
+
 /** let me wait for the page to load */
 const pageLoaded = new Promise((resolve) => {
   window.addEventListener("load", () => {
@@ -22806,7 +22827,7 @@ const pageLoaded = new Promise((resolve) => {
 /** Load page and data then go
  */
 async function start() {
-  let editing = true;
+  let editing = false;
   if (window.location.search) {
     const params = new URLSearchParams(window.location.search);
     const fetch = params.get("fetch");
