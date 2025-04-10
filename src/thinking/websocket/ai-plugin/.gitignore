@@ -1,0 +1,8 @@
+# Python
+__pycache__/
+
+# Local development
+image-db/
+
+# System files
+.DS_Store
