@@ -27,7 +27,7 @@ export class State {
     if (name && name.length) {
       return name
         .split(".")
-        .reduce((o, p) => (o ? o[p] : defaultValue), this.values);
+        .reduce((o, p) => (o ? o[p.trim()] : defaultValue), this.values);
     } else {
       return undefined;
     }
