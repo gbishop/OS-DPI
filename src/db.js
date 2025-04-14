@@ -436,6 +436,15 @@ export class DB {
   }
 
   // do this part async to avoid file picker timeout
+  /**
+   * Converts the current design data into a Blob object containing a zipped archive.
+   * The archive includes layout, actions, content, method, pattern, cues, and associated media files.
+   *
+   * @async
+   * @function convertDesignToBlob
+   * @returns {Promise<Blob>} A Promise that resolves with a Blob object representing the zipped design data.
+   * @throws {Error} Will throw an error if database operations fail or if zipping encounters an issue.
+   */
   async convertDesignToBlob() {
     const db = await this.dbPromise;
     // collect the parts of the design
@@ -476,7 +485,15 @@ export class DB {
     return blob;
   }
 
-  /** Save a design into a zip file
+  /**
+   * Saves the current design as a .osdpi or .zip file using the fileSave library.
+   * The design is first converted into a Blob object containing a zipped archive,
+   * then saved to the user's file system.  Also saves the design name in the "saved" table of the db.
+   *
+   * @async
+   * @function saveDesign
+   * @returns {Promise<void>} A Promise that resolves when the design is successfully saved.
+   * @throws {Error} Logs an error to the console if the export fails.
    */
   async saveDesign() {
     const db = await this.dbPromise;
