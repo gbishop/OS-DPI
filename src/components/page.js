@@ -13,6 +13,7 @@ export class Page extends StackContainer {
       "ModalDialog",
       "Customize",
       "HeadMouse",
+      "Microphone",
     );
   }
 }

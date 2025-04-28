@@ -29,3 +29,4 @@ import "./access/cues";
 import "./access/pattern";
 import "./headmouse";
 import "./notes";
+import "./microphone";
