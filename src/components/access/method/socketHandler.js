@@ -6,6 +6,7 @@ import * as RxJs from "rxjs";
 import { webSocket } from "rxjs/webSocket";
 import Globals from "app/globals";
 import { GridFilter } from "components/gridFilter";
+import db from "app/db";
 
 export class SocketHandler extends Handler {
   allowedChildren = ["HandlerCondition", "HandlerResponse", "GridFilter"];
@@ -70,7 +71,17 @@ export class SocketHandler extends Handler {
     if (method.streams[streamName]) return;
 
     // this is the socket object
-    this.socket = webSocket(this.URL.value);
+    this.socket = webSocket({
+      url: this.URL.value,
+      serializer: (msg) => {
+        if (msg instanceof Blob) {
+          return msg;
+        } else {
+          return JSON.stringify(msg);
+        }
+      },
+      binaryType: "blob",
+    });
 
     // this is the stream of events from it
     this.socket$ = this.socket.pipe(
@@ -86,22 +97,19 @@ export class SocketHandler extends Handler {
         };
         return wrapped;
       }),
-      RxJs.tap((e) => console.log("socket", e)),
+      // RxJs.tap((e) => console.log("socket", e)),
     );
     method.streams[streamName] = this.socket$;
   }
 
   /** @param {EventLike} event */
   respond(event) {
-    console.log("socket respond", event.type);
-
     /* Incoming data arrives here in the .access property. This code will filter any arrays of objects and
      * include them in the dynamic data
      */
     let dynamicRows = [];
     const fields = [];
     for (const [key, value] of Object.entries(event.access || {})) {
-      console.log(key, value);
       if (
         Array.isArray(value) &&
         value.length > 0 &&
@@ -109,6 +117,8 @@ export class SocketHandler extends Handler {
         value[0] !== null
       ) {
         dynamicRows = dynamicRows.concat(value);
+      } else if (key == "FetchImageFromDB") {
+        this.sendImage(value);
       } else {
         fields.push([key, value]);
       }
@@ -141,6 +151,15 @@ export class SocketHandler extends Handler {
       message["content"] = content;
     }
     this.socket.next(message);
+  }
+
+  /** @param {string} name */
+  async sendImage(name) {
+    if (!this.socket) return;
+
+    // send the image over the websocket
+    const imgBlob = await db.getImageBlob(name);
+    this.socket.next(imgBlob);
   }
 }
 TreeBase.register(SocketHandler, "SocketHandler");

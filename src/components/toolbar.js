@@ -302,6 +302,7 @@ function getFileMenuItems(bar) {
             const result = await pleaseWait(readSheetFromBlob(blob));
             await db.write("content", result);
             Globals.data.setContent(result);
+            Globals.state.update();
           } else {
             console.log("no file to reload");
           }

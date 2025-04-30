@@ -351,10 +351,19 @@ export class TreeBase {
       classes = classes.concat(attrs.classes);
     }
     if (!Array.isArray(body)) body = [body];
+    const props = this.props;
+    const data = {
+      ComponentType: this.className,
+    };
+    const name = ("name" in props && props["name"].value) || "";
+    if (name) {
+      data["ComponentName"] = name;
+    }
     return html`<div
       class=${classes.join(" ")}
       id=${this.id}
       style=${styleString(attrs.style)}
+      data=${data}
     >
       ${body}
     </div>`;

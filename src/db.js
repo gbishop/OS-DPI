@@ -421,7 +421,7 @@ export class DB {
     const design = await unPackDesign(blob);
     // copy the design into the db
     for (const [key, value] of Object.entries(design)) {
-      if (key == "media") {
+      if (key == "media" && design.media) {
         for (const media of design.media) {
           await this.addMedia(media.content, media.name);
         }
@@ -436,6 +436,15 @@ export class DB {
   }
 
   // do this part async to avoid file picker timeout
+  /**
+   * Converts the current design data into a Blob object containing a zipped archive.
+   * The archive includes layout, actions, content, method, pattern, cues, and associated media files.
+   *
+   * @async
+   * @function convertDesignToBlob
+   * @returns {Promise<Blob>} A Promise that resolves with a Blob object representing the zipped design data.
+   * @throws {Error} Will throw an error if database operations fail or if zipping encounters an issue.
+   */
   async convertDesignToBlob() {
     const db = await this.dbPromise;
     // collect the parts of the design
@@ -476,7 +485,15 @@ export class DB {
     return blob;
   }
 
-  /** Save a design into a zip file
+  /**
+   * Saves the current design as a .osdpi or .zip file using the fileSave library.
+   * The design is first converted into a Blob object containing a zipped archive,
+   * then saved to the user's file system.  Also saves the design name in the "saved" table of the db.
+   *
+   * @async
+   * @function saveDesign
+   * @returns {Promise<void>} A Promise that resolves when the design is successfully saved.
+   * @throws {Error} Logs an error to the console if the export fails.
    */
   async saveDesign() {
     const db = await this.dbPromise;
@@ -534,6 +551,16 @@ export class DB {
     }
     img.title = record.name;
     return img;
+  }
+
+  /** Return an image blob from the database
+   * @param {string} name
+   * @returns {Promise<Blob>}
+   */
+  async getImageBlob(name) {
+    const db = await this.dbPromise;
+    const record = await db.get("media", [this.designName, name]);
+    return record.content;
   }
 
   /** Return an audio file from the database
@@ -656,16 +683,9 @@ export async function unPackDesign(blob) {
   const zippedArray = new Uint8Array(zippedBuf);
   const unzipped = unzipSync(zippedArray);
 
-  /** @type {DesignObject} result */
-  const result = {
-    layout: {},
-    actions: {},
-    content: {},
-    cues: {},
-    patterns: {},
-    methods: {},
-    media: [],
-  };
+  /** @type {DesignObject} */
+  const result = {};
+  const media = [];
   for (const fname in unzipped) {
     const mimetype = mime(fname) || "application/octet-stream";
     if (mimetype == "application/json") {
@@ -674,8 +694,6 @@ export async function unPackDesign(blob) {
       try {
         obj = JSON.parse(text);
         let type = fname.split(".")[0];
-        if (type == "method") type = "methods";
-        if (type == "pattern") type = "patterns";
         result[type] = obj;
       } catch (e) {
         console.trace(e);
@@ -688,8 +706,11 @@ export async function unPackDesign(blob) {
       const blob = new Blob([unzipped[fname]], {
         type: mimetype,
       });
-      result.media.push({ name: fname, content: blob });
+      media.push({ name: fname, content: blob });
     }
+  }
+  if (media.length > 0) {
+    result.media = media;
   }
   return result;
 }
