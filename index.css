@@ -325,23 +325,15 @@ table.GridFilter td:nth-child(4) label.labeledInput {
   margin-inline-start: 0;
   margin-inline-end: 0;
   justify-content: center;
-  min-height: 0;
 }
-body:not(.designing) img-db[dbsrc]img:not([src]),
-body:not(.designing) video-db[dbsrc]video:not([src]) {
+body:not(.designing) img[dbsrc]:not([src]),
+body:not(.designing) video[dbsrc]:not([src]) {
   display: none;
 }
 .grid button figure figcaption {
   width: 100%;
 }
-.grid button figure img-db {
-  display: flex;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  min-height: 0;
-}
-.grid button figure img-db img,
+.grid button figure img,
 .grid button figure video {
   object-fit: contain;
   width: 100%;
