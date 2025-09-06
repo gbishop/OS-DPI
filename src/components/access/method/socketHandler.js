@@ -70,34 +70,66 @@ export class SocketHandler extends Handler {
     // only create it once
     if (method.streams[streamName]) return;
 
-    // this is the socket object
-    this.socket = webSocket({
-      url: this.URL.value,
-      serializer: (msg) => {
-        if (msg instanceof Blob) {
-          return msg;
-        } else {
-          return JSON.stringify(msg);
-        }
-      },
-      binaryType: "blob",
-    });
+    /** Construct an event from the message
+     * @param {Object} msg
+     * @returns {EventLike}
+     */
+    function wrap(msg = {}) {
+      const event = new Event("socket");
+      const wrapped = {
+        type: "socket",
+        timeStamp: event.timeStamp,
+        access: msg,
+        target: null,
+      };
+      return wrapped;
+    }
 
-    // this is the stream of events from it
-    this.socket$ = this.socket.pipe(
-      RxJs.retry({ count: 10, delay: 5000 }),
-      RxJs.map((msg) => {
-        const event = new Event("socket");
-        /** @type {EventLike} */
-        const wrapped = {
-          type: "socket",
-          timeStamp: event.timeStamp,
-          access: msg,
-          target: null,
-        };
-        return wrapped;
+    // this is the stream of events from the socket
+    this.socket$ = RxJs.defer(() => {
+      // this is the socket object
+      this.socket = webSocket({
+        url: this.URL.value,
+        serializer: (msg) => {
+          if (msg instanceof Blob) {
+            return msg;
+          } else {
+            return JSON.stringify(msg);
+          }
+        },
+        binaryType: "blob",
+      });
+      return this.socket.pipe(RxJs.startWith({ SocketStatus: "connected" }));
+    }).pipe(
+      RxJs.endWith({ SocketStatus: "closed" }),
+      RxJs.catchError((error, _) => {
+        return RxJs.concat(
+          RxJs.of({ SocketStatus: "error" }),
+          RxJs.throwError(() => error),
+        );
       }),
-      // RxJs.tap((e) => console.log("socket", e)),
+      RxJs.retry({
+        // retry after errors
+        count: 10,
+        delay: (error, index) => {
+          console.log("socket error", error, index);
+          return RxJs.timer(5000);
+        },
+      }),
+      RxJs.repeat({
+        // reconnect after close
+        count: 10,
+        delay: (index) => {
+          console.log("socket closed", index);
+          return RxJs.timer(5000);
+        },
+      }),
+      RxJs.catchError((_) => {
+        // when we run out of retries
+        return RxJs.of({ SocketStatus: "failed" });
+      }),
+      RxJs.tap((msg) => console.log(msg)),
+      RxJs.map(wrap),
     );
     method.streams[streamName] = this.socket$;
   }
