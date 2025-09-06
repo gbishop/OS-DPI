@@ -2,8 +2,12 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "app/*": ["./*"],
-      "components/*": ["./components/*"]
+      "app/*": [
+        "./*"
+      ],
+      "components/*": [
+        "./components/*"
+      ]
     },
     "moduleResolution": "bundler",
     "checkJs": true,
@@ -11,7 +15,12 @@
     "module": "ESNext",
     "strictNullChecks": true,
     "resolveJsonModule": true,
-    "lib": ["dom", "dom.iterable", "esnext", "WebWorker"]
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext",
+      "WebWorker"
+    ]
   },
   "exclude": [
     "node_modules",
@@ -19,6 +28,7 @@
     "thinking",
     "OS-DPI",
     "public",
-    "components/headmouse/tracky-mouse"
+    "components/headmouse/tracky-mouse",
+    "dist"
   ]
 }
