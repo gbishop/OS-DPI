@@ -481,7 +481,9 @@ export class DB {
     // zip it
     const zip = zipSync(zipargs);
     // create a blob from the zipped result
-    const blob = new Blob([zip], { type: "application/octet-stream" });
+    const blob = new Blob([new Uint8Array(zip)], {
+      type: "application/octet-stream",
+    });
     return blob;
   }
 
@@ -703,7 +705,7 @@ export async function unPackDesign(blob) {
       mimetype.startsWith("audio") ||
       mimetype.startsWith("video")
     ) {
-      const blob = new Blob([unzipped[fname]], {
+      const blob = new Blob([new Uint8Array(unzipped[fname])], {
         type: mimetype,
       });
       media.push({ name: fname, content: blob });
