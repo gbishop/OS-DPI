@@ -183,10 +183,11 @@ export class TreeBase {
     // Get the constructor from the class map
     if (!obj) console.trace("fromObject", obj);
     const className = obj.className;
-    const constructor = this.nameToClass.get(className);
+    let constructor = this.nameToClass.get(className);
     if (!constructor) {
       console.trace("className not found", className, obj);
-      throw new Error("className not found");
+      constructor = this.nameToClass.get("Gap");
+      obj.children = [];
     }
 
     // Create the object and link it to its parent
