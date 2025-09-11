@@ -2499,7 +2499,7 @@ if(!use_typed_arrays) {
 				var match = -1, mlen = 0;
 
 				if((match = addrs[hash])) {
-					match |= boff & ~0x7FFF;
+					match |= boff & -32768;
 					if(match > boff) match -= 0x8000;
 					if(match < boff) while(data[match + mlen] == data[boff + mlen] && mlen < 250) ++mlen;
 				}
@@ -3855,9 +3855,7 @@ var XMLNS = ({
 	'dc': 'http://purl.org/dc/elements/1.1/',
 	'dcterms': 'http://purl.org/dc/terms/',
 	'dcmitype': 'http://purl.org/dc/dcmitype/',
-	'mx': 'http://schemas.microsoft.com/office/mac/excel/2008/main',
 	'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
-	'sjs': 'http://schemas.openxmlformats.org/package/2006/sheetjs/core-properties',
 	'vt': 'http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes',
 	'xsi': 'http://www.w3.org/2001/XMLSchema-instance',
 	'xsd': 'http://www.w3.org/2001/XMLSchema'
@@ -4511,7 +4509,7 @@ function write_BrtCommentText(str/*:XLString*/, o/*:?Block*/)/*:Block*/ {
 	o.write_shift(1, 1);
 	write_XLWideString(str.t, o);
 	o.write_shift(4, 1);
-	write_StrRun({ ich: 0, ifnt: 0 }, o);
+	write_StrRun({ }, o);
 	return _null ? o.slice(0, o.l) : o;
 }
 
@@ -4581,8 +4579,8 @@ function parse_RkNumber(data)/*:number*/ {
 function write_RkNumber(data/*:number*/, o) {
 	if (o == null) o = new_buf(4);
 	var fX100 = 0, fInt = 0, d100 = data * 100;
-	if ((data == (data | 0)) && (data >= -(1 << 29)) && (data < (1 << 29))) { fInt = 1; }
-	else if ((d100 == (d100 | 0)) && (d100 >= -(1 << 29)) && (d100 < (1 << 29))) { fInt = 1; fX100 = 1; }
+	if ((data == (data | 0)) && (data >= -536870912) && (data < (1 << 29))) { fInt = 1; }
+	else if ((d100 == (d100 | 0)) && (d100 >= -536870912) && (d100 < (1 << 29))) { fInt = 1; fX100 = 1; }
 	if (fInt) o.write_shift(-4, ((fX100 ? d100 : data) << 2) + (fX100 + 2));
 	else throw new Error("unsupported RkNumber " + data); // TODO
 }
@@ -6502,7 +6500,7 @@ function write_Hyperlink(hl) {
 	if(Target.slice(0,7) == "file://") Target = Target.slice(7);
 	var hashidx = Target.indexOf("#");
 	var F = hashidx > -1 ? 0x1f : 0x17;
-	switch(Target.charAt(0)) { case "#": F=0x1c; break; case ".": F&=~2; break; }
+	switch(Target.charAt(0)) { case "#": F=0x1c; break; case ".": F&=-3; break; }
 	out.write_shift(4,2); out.write_shift(4, F);
 	var data = [8,6815827,6619237,4849780,83]; for(i = 0; i < data.length; ++i) out.write_shift(4, data[i]);
 	if(F == 0x1C) {
@@ -6937,7 +6935,7 @@ function write_Font(data, opts) {
 	var name = data.name || "Arial";
 	var b5 = (opts && (opts.biff == 5)), w = (b5 ? (15 + name.length) : (16 + 2 * name.length));
 	var o = new_buf(w);
-	o.write_shift(2, (data.sz || 12) * 20);
+	o.write_shift(2, (data.sz) * 20);
 	o.write_shift(4, 0);
 	o.write_shift(2, 400);
 	o.write_shift(4, 0);
@@ -9083,7 +9081,7 @@ var WK_ = /*#__PURE__*/(function() {
 
 	function wk1_parse_rc(B, V, col) {
 		var rel = V & 0x8000;
-		V &= ~0x8000;
+		V &= -32769;
 		V = (rel ? B : 0) + ((V >= 0x2000) ? V - 0x4000 : V);
 		return (rel ? "" : "$") + (col ? encode_col(V) : encode_row(V));
 	}
@@ -11070,8 +11068,7 @@ function write_BrtFont(font/*:any*/, o) {
 	o.write_shift(1, 0);
 	write_BrtColor(font.color, o);
 	var scheme = 0;
-	if(font.scheme == "major") scheme = 1;
-	if(font.scheme == "minor") scheme = 2;
+	scheme = 2;
 	o.write_shift(1, scheme);
 	write_XLWideString(font.name, o);
 	return o.length > o.l ? o.slice(0, o.l) : o;
@@ -11184,7 +11181,7 @@ function write_BrtStyle(style, o) {
 	if(!o) o = new_buf(12+4*10);
 	o.write_shift(4, style.xfId);
 	o.write_shift(2, 1);
-	o.write_shift(1, +style.builtinId);
+	o.write_shift(1, 0);
 	o.write_shift(1, 0); /* iLevel */
 	write_XLNullableWideString(style.name || "", o);
 	return o.length > o.l ? o.slice(0, o.l) : o;
@@ -11286,9 +11283,7 @@ function write_FONTS_bin(ba/*::, data*/) {
 		sz:12,
 		color: {theme:1},
 		name: "Calibri",
-		family: 2,
-		scheme: "minor"
-	}));
+		family: 2}));
 	/* 1*65491BrtFont [ACFONTS] */
 	write_record(ba, 0x0264 /* BrtEndFonts */);
 }
@@ -11314,11 +11309,7 @@ function write_CELLSTYLEXFS_bin(ba/*::, data*/) {
 	var cnt = 1;
 	write_record(ba, 0x0272 /* BrtBeginCellStyleXFs */, write_UInt32LE(cnt));
 	write_record(ba, 0x002F /* BrtXF */, write_BrtXF({
-		numFmtId: 0,
-		fontId:   0,
-		fillId:   0,
-		borderId: 0
-	}, 0xFFFF));
+		numFmtId: 0}, 0xFFFF));
 	/* 1*65430(BrtXF *FRT) */
 	write_record(ba, 0x0273 /* BrtEndCellStyleXFs */);
 }
@@ -11336,7 +11327,6 @@ function write_STYLES_bin(ba/*::, data*/) {
 	write_record(ba, 0x026B /* BrtBeginStyles */, write_UInt32LE(cnt));
 	write_record(ba, 0x0030 /* BrtStyle */, write_BrtStyle({
 		xfId:0,
-		builtinId:0,
 		name:"Normal"
 	}));
 	/* 1*65430(BrtStyle *FRT) */
@@ -13249,7 +13239,7 @@ function get_ixti(supbooks, ixti/*:number*/, opts)/*:string*/ {
 }
 function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks, opts)/*:string*/ {
 	var biff = (opts && opts.biff) || 8;
-	var _range = /*range != null ? range :*/ {s:{c:0, r:0},e:{c:0, r:0}};
+	var _range = /*range != null ? range :*/ {s:{c:0, r:0}};
 	var stack/*:Array<string>*/ = [], e1, e2, /*::type,*/ c/*:CellAddress*/, ixti=0, nameidx=0, r, sname="";
 	if(!formula[0] || !formula[0][0]) return "";
 	var last_sp = -1, sp = "";
@@ -15946,8 +15936,8 @@ function write_BrtWsProp(str, outl, o) {
 	if(o == null) o = new_buf(84+4*str.length);
 	var f = 0xC0;
 	if(outl) {
-		if(outl.above) f &= ~0x40;
-		if(outl.left)  f &= ~0x80;
+		if(outl.above) f &= -65;
+		if(outl.left)  f &= -129;
 	}
 	o.write_shift(1, f);
 	for(var i = 1; i < 3; ++i) o.write_shift(1,0);
@@ -16688,7 +16678,7 @@ function write_ws_bin_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:num
 			return true;
 		case 'n':
 			/* TODO: determine threshold for Real vs RK */
-			if(cell.v == (cell.v | 0) && cell.v > -1000 && cell.v < 1000) {
+			if(cell.v == (cell.v | 0) && cell.v > -1e3 && cell.v < 1000) {
 				if(last_seen) write_record(ba, 0x000D /* BrtShortRk */, write_BrtShortRk(cell, o));
 				else write_record(ba, 0x0002 /* BrtCellRk */, write_BrtCellRk(cell, o));
 			} else {
@@ -21265,11 +21255,7 @@ function write_biff2_buf(wb/*:Workbook*/, opts/*:WriteOpts*/) {
 function write_FONTS_biff8(ba, data, opts) {
 	write_biff_rec(ba, 0x0031 /* Font */, write_Font({
 		sz:12,
-		color: {theme:1},
-		name: "Arial",
-		family: 2,
-		scheme: "minor"
-	}, opts));
+		name: "Arial"}, opts));
 }
 
 
