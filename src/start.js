@@ -151,7 +151,7 @@ export async function start() {
     workerCheckForUpdate();
     document.dispatchEvent(new Event("rendercomplete"));
   }
-  Globals.state.observe(debounce(renderUI));
+  Globals.state.observe(debounce(renderUI), "UI");
   callAfterRender(() => Globals.designer.restoreFocus());
   renderUI();
 }

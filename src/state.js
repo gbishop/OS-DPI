@@ -3,8 +3,8 @@ import merge from "mergerino";
 export class State {
   constructor(persistKey = "") {
     this.persistKey = persistKey;
-    /** @type {Set<function>} */
-    this.listeners = new Set();
+    /** @type {Object<string, [Function, string]>} */
+    this.listeners = {};
     /** @type {Object} */
     this.values = {};
     /** @type {Set<string>} */
@@ -44,8 +44,10 @@ export class State {
       this.updated.add(key);
     }
     this.values = merge(this.values, patch);
-    for (const callback of this.listeners) {
-      callback();
+    for (const [callback, stateName] of Object.values(this.listeners)) {
+      if (stateName == "*" || this.updated.has(stateName)) {
+        callback();
+      }
     }
 
     if (this.persistKey) {
@@ -80,9 +82,11 @@ export class State {
 
   /** observe - call this function when the state updates
    * @param {Function} callback
+   * @param {string} name
+   * @param {string} stateName
    */
-  observe(callback) {
-    this.listeners.add(callback);
+  observe(callback, name, stateName = "*") {
+    this.listeners[name] = [callback, stateName];
   }
 
   /** return true if the given state has been upated on this cycle

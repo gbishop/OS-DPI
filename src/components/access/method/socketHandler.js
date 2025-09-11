@@ -44,16 +44,20 @@ export class SocketHandler extends Handler {
 
     // arrange to watch for state changes
     // TODO: figure out how to remove these or make them weak
-    Globals.state.observe(() => {
-      if (Globals.state.hasBeenUpdated(this.StateName.value)) {
-        if (!this.socket) {
-          // the connect wasn't successfully opened, try again
-          console.error("socket is not active");
-          return;
+    Globals.state.observe(
+      () => {
+        if (Globals.state.hasBeenUpdated(this.StateName.value)) {
+          if (!this.socket) {
+            // the connect wasn't successfully opened, try again
+            console.error("socket is not active");
+            return;
+          }
+          this.sendData();
         }
-        this.sendData();
-      }
-    });
+      },
+      "socket-" + this.StateName.value,
+      this.StateName.value,
+    );
   }
 
   /** The websocket wrapper object
