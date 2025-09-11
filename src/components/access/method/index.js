@@ -132,6 +132,7 @@ export class Method extends TreeBase {
   allowedChildren = [
     "Timer",
     "KeyHandler",
+    "LocationHandler",
     "PointerHandler",
     "TimerHandler",
     "SocketHandler",

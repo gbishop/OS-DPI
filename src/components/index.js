@@ -22,6 +22,7 @@ import "./video-db";
 import "./access/method";
 import "./access/method/responses";
 import "./access/method/keyHandler";
+import "./access/method/locationHandler";
 import "./access/method/pointerHandler";
 import "./access/method/socketHandler";
 import "./access/method/timerHandler";

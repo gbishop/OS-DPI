@@ -32,6 +32,7 @@ const namesMap = {
   HeadMouse: ["Head Mouse", "Head Mouse"],
   KeyHandler: ["Key Handler", "Methods#Key Handler"],
   Layout: ["Layout", "Layout"],
+  LocationHandler: ["Location Handler", "Methods#Location Handler"],
   Logger: ["Logger", "Logger"],
   Method: ["Method", "Methods"],
   MethodChooser: ["Methods", "Methods"],
