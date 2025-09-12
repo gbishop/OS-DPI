@@ -22699,7 +22699,7 @@ class Menu {
 let registration;
 function workerCheckForUpdate() {
   if (registration) {
-    registration.update();
+    registration.update().catch((error) => console.error(error));
   }
 }
 function signalUpdateAvailable() {
