@@ -54,16 +54,20 @@ async function getAddressFromPosition(position) {
     },
   };
 
-  const response = await fetch(url, { cache: "force-cache" });
-  if (response.ok) {
-    /** @type {NominatimReverseResult} */
-    const r = await response.json();
-    // console.log("response from nominatim", r);
-    result.access = {
-      ...result.access,
-      ...r.address,
-      display_name: r.display_name,
-    };
+  try {
+    const response = await fetch(url, { cache: "force-cache" });
+    if (response.ok) {
+      /** @type {NominatimReverseResult} */
+      const r = await response.json();
+      // console.log("response from nominatim", r);
+      result.access = {
+        ...result.access,
+        ...r.address,
+        display_name: r.display_name,
+      };
+    }
+  } catch (error) {
+    console.error("Error fetching address", error);
   }
 
   return result;

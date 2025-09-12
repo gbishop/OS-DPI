@@ -12,7 +12,7 @@ let registration;
  */
 export function workerCheckForUpdate() {
   if (registration) {
-    registration.update();
+    registration.update().catch((error) => console.error(error));
   }
 }
 
