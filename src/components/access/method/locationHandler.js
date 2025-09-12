@@ -54,7 +54,7 @@ async function getAddressFromPosition(position) {
     },
   };
 
-  const response = await fetch(url);
+  const response = await fetch(url, { cache: "force-cache" });
   if (response.ok) {
     /** @type {NominatimReverseResult} */
     const r = await response.json();
