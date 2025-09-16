@@ -23824,9 +23824,11 @@ async function start() {
   }
   let name = window.location.hash.slice(1);
   if (!name) {
-    editing = true;
     name = await db.uniqueName("new");
     window.location.hash = `#${name}`;
+  }
+  if (name.startsWith("new")) {
+    editing = true;
   }
   db.setDesignName(name);
   const dataArray = await db.read("content", []);
