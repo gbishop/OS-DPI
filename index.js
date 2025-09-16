@@ -20244,7 +20244,7 @@ class LocationHandler extends Handler {
             };
           }).pipe(
             // retry on error
-            retry({ delay: 10000 }),
+            retry({ delay: 1000 }),
             // don't hammer the geolocation service
             throttleTime(10000, undefined, {
               leading: true,
@@ -23805,7 +23805,7 @@ const pageLoaded = new Promise((resolve) => {
 /** Load page and data then go
  */
 async function start() {
-  let editing = true;
+  let editing = false;
   if (window.location.search) {
     const params = new URLSearchParams(window.location.search);
     const fetch = params.get("fetch");
@@ -23824,6 +23824,7 @@ async function start() {
   }
   let name = window.location.hash.slice(1);
   if (!name) {
+    editing = true;
     name = await db.uniqueName("new");
     window.location.hash = `#${name}`;
   }
