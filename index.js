@@ -20203,7 +20203,7 @@ class LocationHandler extends Handler {
 
     const options = {
       enableHighAccuracy: true,
-      timeout: 10000, // 10 seconds
+      timeout: 1000, // 1 second
       maximumAge: 0,
     };
 
