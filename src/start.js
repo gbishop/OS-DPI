@@ -32,7 +32,7 @@ const pageLoaded = new Promise((resolve) => {
 /** Load page and data then go
  */
 export async function start() {
-  let editing = true;
+  let editing = false;
   if (window.location.search) {
     const params = new URLSearchParams(window.location.search);
     const fetch = params.get("fetch");
@@ -53,6 +53,9 @@ export async function start() {
   if (!name) {
     name = await db.uniqueName("new");
     window.location.hash = `#${name}`;
+  }
+  if (name.startsWith("new")) {
+    editing = true;
   }
   db.setDesignName(name);
   const dataArray = await db.read("content", []);
