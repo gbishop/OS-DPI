@@ -117,7 +117,7 @@ export class LocationHandler extends Handler {
 
     const options = {
       enableHighAccuracy: true,
-      timeout: 10000, // 10 seconds
+      timeout: 1000, // 1 second
       maximumAge: 0,
     };
 
@@ -158,7 +158,7 @@ export class LocationHandler extends Handler {
             };
           }).pipe(
             // retry on error
-            RxJs.retry({ delay: 10000 }),
+            RxJs.retry({ delay: 1000 }),
             // don't hammer the geolocation service
             RxJs.throttleTime(10000, undefined, {
               leading: true,
