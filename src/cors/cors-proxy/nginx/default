@@ -1,0 +1,53 @@
+server {
+    proxy_busy_buffers_size   512k;
+    proxy_buffers   4 512k;
+    proxy_buffer_size   256k;
+    proxy_http_version      1.1;
+    proxy_send_timeout      60;
+    proxy_read_timeout      60;
+    proxy_connect_timeout   60;
+
+    root /var/www;
+    index index.html index.htm;
+
+    server_name localhost yourhost;
+
+    location /cors/ {
+        include uwsgi_params;
+        uwsgi_pass unix:/run/uwsgi/app/cors/socket;
+        # Ensure Nginx passes the original Host header to Flask
+        uwsgi_param Host $host;
+        uwsgi_param X-Real-IP $remote_addr;
+        uwsgi_param X-Forwarded-For $proxy_add_x_forwarded_for;
+        uwsgi_param X-Forwarded-Proto $scheme;
+    }
+
+    location / {
+        # First attempt to serve request as file, then
+        # as directory, then fall back to displaying a 404.
+        try_files $uri $uri/ =404;
+        index /www/index.html;
+        # try_files $uri $uri/ /app/consoleapp.html;
+        # Uncomment to enable naxsi on this location
+        # include /etc/nginx/naxsi.rules
+    }
+
+    listen [::]:443 ssl ipv6only=on; # managed by Certbot
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/tarheelgameplay.org/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/tarheelgameplay.org/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+}
+server {
+    if ($host = yourhost) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    listen 80 default_server;
+    listen [::]:80 default_server ipv6only=on;
+    server_name localhost yourhost;
+    return 404; # managed by Certbot
+}
