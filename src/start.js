@@ -17,9 +17,10 @@ import { CueList } from "./components/access/cues";
 import { Actions } from "./components/actions";
 import { callAfterRender, safeRender, postRender } from "./render";
 import { Designer } from "components/designer";
-import { Content } from "components/content";
 import { workerCheckForUpdate } from "components/serviceWorker";
 import { accessed } from "./eval";
+import LocationTracker from "./components/locationTracker.js";
+
 
 /** let me wait for the page to load */
 const pageLoaded = new Promise((resolve) => {
@@ -65,19 +66,12 @@ export async function start() {
   Globals.layout = layout;
   Globals.state = new State(`UIState`);
   Globals.actions = await Actions.load(Actions);
-  Globals.content = /** @type {Content} */ (
-    Content.fromObject({
-      className: "Content",
-      props: {},
-      children: [],
-    })
-  );
   Globals.cues = await CueList.load(CueList);
   Globals.patterns = await PatternList.load(PatternList);
-  Globals.methods = await MethodChooser.load(MethodChooser);
+  Globals.method = await MethodChooser.load(MethodChooser);
   Globals.restart = async () => {
     // tear down any existing event handlers before restarting
-    Globals.methods.stop();
+    Globals.method.stop();
     start();
   };
   Globals.error = new Messages();
@@ -99,11 +93,15 @@ export async function start() {
       props: { tabEdge: "top", stateName: "designerTab" },
       children: [
         layout,
+        {
+          className: "Content",
+          props: {},
+          children: [],
+        },
         Globals.actions,
-        Globals.content,
         Globals.cues,
         Globals.patterns,
-        Globals.methods,
+        Globals.method,
       ],
     })
   );
@@ -142,7 +140,7 @@ export async function start() {
       safeRender("errors", Globals.error);
     }
     postRender();
-    Globals.methods.refresh();
+    Globals.method.refresh();
     // clear the accessed bits for the next cycle
     accessed.clear();
     // clear the updated bits for the next cycle
@@ -154,6 +152,9 @@ export async function start() {
   Globals.state.observe(debounce(renderUI));
   callAfterRender(() => Globals.designer.restoreFocus());
   renderUI();
+
+  /* ---------- Location ---------- */
+  Globals.locationTracker = new LocationTracker();
 }
 
 /* Watch for updates happening in other tabs */
