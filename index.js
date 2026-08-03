@@ -9464,9 +9464,7 @@ class DB {
     // zip it
     const zip = zipSync(zipargs);
     // create a blob from the zipped result
-    const blob = new Blob([new Uint8Array(zip)], {
-      type: "application/octet-stream",
-    });
+    const blob = new Blob([zip], { type: "application/octet-stream" });
     return blob;
   }
 
@@ -9688,7 +9686,7 @@ async function unPackDesign(blob) {
       mimetype.startsWith("audio") ||
       mimetype.startsWith("video")
     ) {
-      const blob = new Blob([new Uint8Array(unzipped[fname])], {
+      const blob = new Blob([unzipped[fname]], {
         type: mimetype,
       });
       media.push({ name: fname, content: blob });
@@ -11616,7 +11614,6 @@ const namesMap = {
   HeadMouse: ["Head Mouse", "Head Mouse"],
   KeyHandler: ["Key Handler", "Methods#Key Handler"],
   Layout: ["Layout", "Layout"],
-  LocationHandler: ["Location Handler", "Methods#Location Handler"],
   Logger: ["Logger", "Logger"],
   Method: ["Method", "Methods"],
   MethodChooser: ["Methods", "Methods"],
@@ -11840,11 +11837,10 @@ class TreeBase {
     // Get the constructor from the class map
     if (!obj) console.trace("fromObject", obj);
     const className = obj.className;
-    let constructor = this.nameToClass.get(className);
+    const constructor = this.nameToClass.get(className);
     if (!constructor) {
       console.trace("className not found", className, obj);
-      constructor = this.nameToClass.get("Gap");
-      obj.children = [];
+      throw new Error("className not found");
     }
 
     // Create the object and link it to its parent
@@ -12622,8 +12618,8 @@ const e=Object.assign||((e,t)=>(t&&Object.keys(t).forEach(o=>e[o]=t[o]),e)),t=(e
 let State$1 = class State {
   constructor(persistKey = "") {
     this.persistKey = persistKey;
-    /** @type {Object<string, [Function, string]>} */
-    this.listeners = {};
+    /** @type {Set<function>} */
+    this.listeners = new Set();
     /** @type {Object} */
     this.values = {};
     /** @type {Set<string>} */
@@ -12663,10 +12659,8 @@ let State$1 = class State {
       this.updated.add(key);
     }
     this.values = o(this.values, patch);
-    for (const [callback, stateName] of Object.values(this.listeners)) {
-      if (stateName == "*" || this.updated.has(stateName)) {
-        callback();
-      }
+    for (const callback of this.listeners) {
+      callback();
     }
 
     if (this.persistKey) {
@@ -12701,11 +12695,9 @@ let State$1 = class State {
 
   /** observe - call this function when the state updates
    * @param {Function} callback
-   * @param {string} name
-   * @param {string} stateName
    */
-  observe(callback, name, stateName = "*") {
-    this.listeners[name] = [callback, stateName];
+  observe(callback) {
+    this.listeners.add(callback);
   }
 
   /** return true if the given state has been upated on this cycle
@@ -17685,12 +17677,6 @@ function of() {
     return from(args, scheduler);
 }
 
-function throwError(errorOrErrorFactory, scheduler) {
-    var errorFactory = isFunction(errorOrErrorFactory) ? errorOrErrorFactory : function () { return errorOrErrorFactory; };
-    var init = function (subscriber) { return subscriber.error(errorFactory()); };
-    return new Observable(init);
-}
-
 function isValidDate(value) {
     return value instanceof Date && !isNaN(value);
 }
@@ -17776,24 +17762,6 @@ function mergeMap(project, resultSelector, concurrent) {
 function mergeAll(concurrent) {
     if (concurrent === void 0) { concurrent = Infinity; }
     return mergeMap(identity, concurrent);
-}
-
-function concatAll() {
-    return mergeAll(1);
-}
-
-function concat() {
-    var args = [];
-    for (var _i = 0; _i < arguments.length; _i++) {
-        args[_i] = arguments[_i];
-    }
-    return concatAll()(from(args, popScheduler(args)));
-}
-
-function defer(observableFactory) {
-    return new Observable(function (subscriber) {
-        innerFrom(observableFactory()).subscribe(subscriber);
-    });
 }
 
 var nodeEventEmitterMethods = ['addListener', 'removeListener'];
@@ -17898,36 +17866,10 @@ function merge$1() {
                 mergeAll(concurrent)(from(sources, scheduler));
 }
 
-var NEVER = new Observable(noop);
-
 function filter(predicate, thisArg) {
     return operate(function (source, subscriber) {
         var index = 0;
         source.subscribe(createOperatorSubscriber(subscriber, function (value) { return predicate.call(thisArg, value, index++) && subscriber.next(value); }));
-    });
-}
-
-function catchError(selector) {
-    return operate(function (source, subscriber) {
-        var innerSub = null;
-        var syncUnsub = false;
-        var handledResult;
-        innerSub = source.subscribe(createOperatorSubscriber(subscriber, undefined, undefined, function (err) {
-            handledResult = innerFrom(selector(err, catchError(selector)(source)));
-            if (innerSub) {
-                innerSub.unsubscribe();
-                innerSub = null;
-                handledResult.subscribe(subscriber);
-            }
-            else {
-                syncUnsub = true;
-            }
-        }));
-        if (syncUnsub) {
-            innerSub.unsubscribe();
-            innerSub = null;
-            handledResult.subscribe(subscriber);
-        }
     });
 }
 
@@ -18044,14 +17986,6 @@ function distinctUntilKeyChanged(key, compare) {
     return distinctUntilChanged(function (x, y) { return (x[key] === y[key]); });
 }
 
-function endWith() {
-    var values = [];
-    for (var _i = 0; _i < arguments.length; _i++) {
-        values[_i] = arguments[_i];
-    }
-    return function (source) { return concat(source, of.apply(void 0, __spreadArray([], __read(values)))); };
-}
-
 function groupBy(keySelector, elementOrOptions, duration, connector) {
     return operate(function (source, subscriber) {
         var element;
@@ -18125,61 +18059,6 @@ function mergeWith() {
         otherSources[_i] = arguments[_i];
     }
     return merge.apply(void 0, __spreadArray([], __read(otherSources)));
-}
-
-function repeat(countOrConfig) {
-    var _a;
-    var count = Infinity;
-    var delay;
-    if (countOrConfig != null) {
-        if (typeof countOrConfig === 'object') {
-            (_a = countOrConfig.count, count = _a === void 0 ? Infinity : _a, delay = countOrConfig.delay);
-        }
-        else {
-            count = countOrConfig;
-        }
-    }
-    return count <= 0
-        ? function () { return EMPTY; }
-        : operate(function (source, subscriber) {
-            var soFar = 0;
-            var sourceSub;
-            var resubscribe = function () {
-                sourceSub === null || sourceSub === void 0 ? void 0 : sourceSub.unsubscribe();
-                sourceSub = null;
-                if (delay != null) {
-                    var notifier = typeof delay === 'number' ? timer(delay) : innerFrom(delay(soFar));
-                    var notifierSubscriber_1 = createOperatorSubscriber(subscriber, function () {
-                        notifierSubscriber_1.unsubscribe();
-                        subscribeToSource();
-                    });
-                    notifier.subscribe(notifierSubscriber_1);
-                }
-                else {
-                    subscribeToSource();
-                }
-            };
-            var subscribeToSource = function () {
-                var syncUnsub = false;
-                sourceSub = source.subscribe(createOperatorSubscriber(subscriber, undefined, function () {
-                    if (++soFar < count) {
-                        if (sourceSub) {
-                            resubscribe();
-                        }
-                        else {
-                            syncUnsub = true;
-                        }
-                    }
-                    else {
-                        subscriber.complete();
-                    }
-                }));
-                if (syncUnsub) {
-                    resubscribe();
-                }
-            };
-            subscribeToSource();
-        });
 }
 
 function retry(configOrCount) {
@@ -18258,17 +18137,6 @@ function skipWhile(predicate) {
     });
 }
 
-function startWith() {
-    var values = [];
-    for (var _i = 0; _i < arguments.length; _i++) {
-        values[_i] = arguments[_i];
-    }
-    var scheduler = popScheduler(values);
-    return operate(function (source, subscriber) {
-        (scheduler ? concat(values, source, scheduler) : concat(values, source)).subscribe(subscriber);
-    });
-}
-
 function switchMap(project, resultSelector) {
     return operate(function (source, subscriber) {
         var innerSubscriber = null;
@@ -18297,7 +18165,7 @@ function takeUntil(notifier) {
     });
 }
 
-function tap(observerOrNext, error, complete) {
+function tap$1(observerOrNext, error, complete) {
     var tapObserver = isFunction(observerOrNext) || error || complete
         ?
             { next: observerOrNext, error: error, complete: complete }
@@ -18704,7 +18572,6 @@ class Method extends TreeBase {
   allowedChildren = [
     "Timer",
     "KeyHandler",
-    "LocationHandler",
     "PointerHandler",
     "TimerHandler",
     "SocketHandler",
@@ -20019,7 +19886,7 @@ class KeyHandler extends Handler {
         // ignore events from the designer
         filter((e) => notDesigner(e)),
         // prevent default actions
-        tap((e) => e.preventDefault()),
+        tap$1((e) => e.preventDefault()),
         // remove any repeats
         filter((e) => !e.repeat),
       )
@@ -20093,192 +19960,6 @@ class KeyHandler extends Handler {
 TreeBase.register(KeyHandler, "KeyHandler");
 
 /**
-Type of the object returned by nominatim
-
-@typedef {Object} NominatimReverseResult
-  @property {number} place_id
-  @property {string} licence
-  @property {string} osm_type
-  @property {number} osm_id
-  @property {string} lat
-  @property {string} lon
-  @property {string} display_name
-  @property {object} address
-  @property {string} address.amenity
-  @property {string} address.road
-  @property {string} address.suburb
-  @property {string} address.city_district
-  @property {string} address.city
-  @property {string} address.county
-  @property {string} address.state
-  @property {string} address.postcode
-  @property {string} country
-  @property {string} country_code
-  @property {string[]} boundingbox
-}
-*/
-
-/**
- * Fetches a human-readable address for a given geographic position using the
- * Nominatim API.
- * @param {GeolocationPosition} position
- */
-async function getAddressFromPosition(position) {
-  const { latitude, longitude } = position.coords;
-  const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
-
-  // construct the result I want
-  /** @type {EventLike} */
-  let result = {
-    type: "location",
-    target: null,
-    timeStamp: position.timestamp,
-    access: {
-      latitude: position.coords.latitude.toString(),
-      longitude: position.coords.longitude.toString(),
-      accuracy: position.coords.accuracy.toString(),
-    },
-  };
-
-  try {
-    const response = await fetch(url, { cache: "force-cache" });
-    if (response.ok) {
-      /** @type {NominatimReverseResult} */
-      const r = await response.json();
-      // console.log("response from nominatim", r);
-      result.access = {
-        ...result.access,
-        ...r.address,
-        display_name: r.display_name,
-      };
-    }
-  } catch (error) {
-    console.error("Error fetching address", error);
-  }
-
-  return result;
-}
-
-class LocationHandler extends Handler {
-  /** @type {string[]} */
-  allowedChildren = ["HandlerResponse"];
-
-  StateName = new String$1("$location");
-
-  /**
-   * The value of the controlling state variable enters here
-   * @type {RxJs.Subject<boolean>} */
-  tracking$ = new Subject();
-
-  settings() {
-    const { StateName } = this;
-    return html`
-      <fieldset class="Handler">
-        <legend>Location Handler</legend>
-        ${StateName.input()}
-      </fieldset>
-      <fieldset class="Responses">
-        <legend>Responses</legend>
-        ${this.unorderedChildren(this.responses)}
-      </fieldset>
-    `;
-  }
-
-  init() {
-    super.init();
-    this.Signal.set("location");
-  }
-
-  observer() {
-    if (!this) return; // just in case
-    // enable or disable tracking
-    this.tracking$.next(
-      Globals.state.get(this.StateName.value, "") == "tracking",
-    );
-  }
-
-  configure() {
-    const method = this.method;
-    const streamName = "location";
-
-    const options = {
-      enableHighAccuracy: true,
-      timeout: 1000, // 1 second
-      maximumAge: 0,
-    };
-
-    if (!navigator.geolocation) {
-      console.error("Location not supported");
-      return;
-    }
-
-    /** @type {RxJs.Observable<EventLike>} */
-    this.location$ = this.tracking$.pipe(
-      // RxJs.tap(console.log),
-      // only act on changes
-      distinctUntilChanged(),
-      // RxJs.tap(console.log),
-      switchMap((tracking) => {
-        // console.log("sm", tracking);
-        if (tracking) {
-          // activate tracking with watchPosition
-          return new Observable((subscriber) => {
-            // console.log("obs");
-            let watchId = navigator.geolocation.watchPosition(
-              // The success callback: this is called with the position object.
-              /** @param {GeolocationPosition} position */
-              (position) => {
-                // console.log("next", position);
-                subscriber.next(position);
-              },
-              // The error callback: this is called when an error occurs.
-              /** @param {GeolocationPositionError} error */
-              (error) => {
-                subscriber.error(error);
-              },
-              // The options object to configure the request.
-              options,
-            );
-            return () => {
-              navigator.geolocation.clearWatch(watchId);
-            };
-          }).pipe(
-            // retry on error
-            retry({ delay: 1000 }),
-            // don't hammer the geolocation service
-            throttleTime(10000, undefined, {
-              leading: true,
-              trailing: false,
-            }),
-            // RxJs.tap(console.log),
-            // map the lat/lon to an address if possible
-            switchMap((position) =>
-              from(getAddressFromPosition(position)),
-            ),
-            // RxJs.tap(console.log),
-          );
-        } else {
-          return NEVER;
-        }
-      }),
-    );
-    method.streams[streamName] = this.location$;
-
-    const observer = this.observer.bind(this);
-
-    Globals.state.observe(observer, "location", this.StateName.value);
-    callAfterRender(observer);
-  }
-
-  /** @param {EventLike} event */
-  respond(event) {
-    super.respond(event);
-  }
-}
-
-TreeBase.register(LocationHandler, "LocationHandler");
-
-/**
  * Handle pointer events integrated with Pattern.Groups
  *
  * TODO: we should be "over" the current button after activate. We are
@@ -20339,7 +20020,7 @@ class PointerHandler extends Handler {
       return /** @type {RxJs.Observable<PointerEvent>} */ (
         fromEvent(document, event).pipe(
           // fudge the target to be the button and not any contained thing
-          tap((/** @type {PointerEvent} */ e) => {
+          tap$1((/** @type {PointerEvent} */ e) => {
             if (
               !(e.target instanceof HTMLButtonElement) &&
               e.target instanceof HTMLElement
@@ -20356,7 +20037,7 @@ class PointerHandler extends Handler {
 
     const pointerDown$ = fromPointerEvent("pointerdown").pipe(
       // disable pointer capture
-      tap(
+      tap$1(
         (x) =>
           x.target instanceof Element &&
           x.target.hasPointerCapture(x.pointerId) &&
@@ -20483,7 +20164,7 @@ class PointerHandler extends Handler {
           !e.target.disabled,
       ),
       // kill contextmenu events
-      tap((e) => e.type === "contextmenu" && e.preventDefault()),
+      tap$1((e) => e.type === "contextmenu" && e.preventDefault()),
 
       // Add the timer events
       mergeWith(
@@ -20774,20 +20455,16 @@ class SocketHandler extends Handler {
 
     // arrange to watch for state changes
     // TODO: figure out how to remove these or make them weak
-    Globals.state.observe(
-      () => {
-        if (Globals.state.hasBeenUpdated(this.StateName.value)) {
-          if (!this.socket) {
-            // the connect wasn't successfully opened, try again
-            console.error("socket is not active");
-            return;
-          }
-          this.sendData();
+    Globals.state.observe(() => {
+      if (Globals.state.hasBeenUpdated(this.StateName.value)) {
+        if (!this.socket) {
+          // the connect wasn't successfully opened, try again
+          console.error("socket is not active");
+          return;
         }
-      },
-      "socket-" + this.StateName.value,
-      this.StateName.value,
-    );
+        this.sendData();
+      }
+    });
   }
 
   /** The websocket wrapper object
@@ -20804,66 +20481,34 @@ class SocketHandler extends Handler {
     // only create it once
     if (method.streams[streamName]) return;
 
-    /** Construct an event from the message
-     * @param {Object} msg
-     * @returns {EventLike}
-     */
-    function wrap(msg = {}) {
-      const event = new Event("socket");
-      const wrapped = {
-        type: "socket",
-        timeStamp: event.timeStamp,
-        access: msg,
-        target: null,
-      };
-      return wrapped;
-    }
+    // this is the socket object
+    this.socket = webSocket({
+      url: this.URL.value,
+      serializer: (msg) => {
+        if (msg instanceof Blob) {
+          return msg;
+        } else {
+          return JSON.stringify(msg);
+        }
+      },
+      binaryType: "blob",
+    });
 
-    // this is the stream of events from the socket
-    this.socket$ = defer(() => {
-      // this is the socket object
-      this.socket = webSocket({
-        url: this.URL.value,
-        serializer: (msg) => {
-          if (msg instanceof Blob) {
-            return msg;
-          } else {
-            return JSON.stringify(msg);
-          }
-        },
-        binaryType: "blob",
-      });
-      return this.socket.pipe(startWith({ SocketStatus: "connected" }));
-    }).pipe(
-      endWith({ SocketStatus: "closed" }),
-      catchError((error, _) => {
-        return concat(
-          of({ SocketStatus: "error" }),
-          throwError(() => error),
-        );
+    // this is the stream of events from it
+    this.socket$ = this.socket.pipe(
+      retry({ count: 10, delay: 5000 }),
+      map((msg) => {
+        const event = new Event("socket");
+        /** @type {EventLike} */
+        const wrapped = {
+          type: "socket",
+          timeStamp: event.timeStamp,
+          access: msg,
+          target: null,
+        };
+        return wrapped;
       }),
-      retry({
-        // retry after errors
-        count: 10,
-        delay: (error, index) => {
-          console.log("socket error", error, index);
-          return timer(5000);
-        },
-      }),
-      repeat({
-        // reconnect after close
-        count: 10,
-        delay: (index) => {
-          console.log("socket closed", index);
-          return timer(5000);
-        },
-      }),
-      catchError((_) => {
-        // when we run out of retries
-        return of({ SocketStatus: "failed" });
-      }),
-      tap((msg) => console.log(msg)),
-      map(wrap),
+      // RxJs.tap((e) => console.log("socket", e)),
     );
     method.streams[streamName] = this.socket$;
   }
@@ -22703,7 +22348,7 @@ class Menu {
 let registration;
 function workerCheckForUpdate() {
   if (registration) {
-    registration.update().catch((error) => console.error(error));
+    registration.update();
   }
 }
 function signalUpdateAvailable() {
@@ -23049,6 +22694,193 @@ function listChildren(component) {
   return result;
 }
 
+const GALLERY = {
+  owner: "UNC-Project-Open-AAC",
+  repo: "OS-DPI",
+  branch: "main",
+  // Repo path where contributed boards live (used in PR upload links).
+  repoDir: "src/public/gallery",
+  // Served path under BASE_URL.
+  publicPath: "gallery"
+};
+function galleryIndexURL() {
+  return `${"/OS-DPI/"}${GALLERY.publicPath}/index.json`;
+}
+function loadURL(item, edit = false) {
+  const board = item.board || `${GALLERY.publicPath}/${item.slug}/board.osdpi`;
+  return `${"/OS-DPI/"}?fetch=${board}${edit ? "&edit" : ""}#${item.slug}`;
+}
+function uploadURL(slug) {
+  const { owner, repo, branch, repoDir } = GALLERY;
+  return `https://github.com/${owner}/${repo}/upload/${branch}/${repoDir}/${slug}`;
+}
+function slugify(title) {
+  return (title || "").toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
+}
+
+// Share to Gallery: export the current board and meta.json, then open GitHub's
+// upload page for a new folder so the user can open a pull request. No backend.
+
+const DIALOG_ID = "ShareDialog";
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+class ShareDialog {
+  template() {
+    return html`<dialog id=${DIALOG_ID} class="share-dialog"></dialog>`;
+  }
+
+  /** @returns {HTMLDialogElement} */
+  get dialog() {
+    return /** @type {HTMLDialogElement} */ (
+      document.getElementById(DIALOG_ID)
+    );
+  }
+
+  open() {
+    this.renderForm();
+    this.dialog.showModal();
+  }
+
+  renderForm() {
+    const dialog = this.dialog;
+    render(
+      dialog,
+      html`<form class="share-form" @submit=${(e) => this.onSubmit(e)}>
+        <h1>Share to gallery</h1>
+        <p class="share-hint">
+          Contribute this board to the example gallery as a GitHub pull request.
+        </p>
+        <label
+          >Title
+          <input name="title" type="text" required .value=${db.designName} />
+        </label>
+        <label
+          >Description
+          <textarea
+            name="description"
+            rows="2"
+            placeholder="What is this board for?"
+          ></textarea>
+        </label>
+        <label
+          >Tags (comma separated)
+          <input name="tags" type="text" placeholder="grid, beginner" />
+        </label>
+        <label
+          >Your name
+          <input name="author" type="text" placeholder="Optional" />
+        </label>
+        <div class="share-actions">
+          <button type="submit" class="share-btn share-btn--primary">
+            Prepare files &amp; open GitHub
+          </button>
+          <button
+            type="button"
+            class="share-btn"
+            @click=${() => dialog.close()}
+          >
+            Cancel
+          </button>
+        </div>
+      </form>`,
+    );
+  }
+
+  /** @param {SubmitEvent} event */
+  async onSubmit(event) {
+    event.preventDefault();
+    const data = new FormData(/** @type {HTMLFormElement} */ (event.target));
+    const title = String(data.get("title") || "").trim();
+    if (!title) return;
+    const slug = slugify(title) || slugify(db.designName) || "my-board";
+
+    const meta = {
+      title,
+      description: String(data.get("description") || "").trim(),
+      tags: String(data.get("tags") || "")
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean),
+      author: String(data.get("author") || "").trim(),
+      createdAt: new Date().toISOString().slice(0, 10),
+    };
+
+    const board = await db.convertDesignToBlob();
+    const metaBlob = new Blob([JSON.stringify(meta, null, 2) + "\n"], {
+      type: "application/json",
+    });
+    downloadBlob(board, "board.osdpi");
+    setTimeout(() => downloadBlob(metaBlob, "meta.json"), 400);
+    window.open(uploadURL(slug), "_blank", "noopener=true");
+
+    this.renderInstructions(slug, meta);
+  }
+
+  renderInstructions(slug, meta) {
+    const dialog = this.dialog;
+    const metaText = JSON.stringify(meta, null, 2);
+    const folder = `${GALLERY.repoDir}/${slug}`;
+    render(
+      dialog,
+      html`<div class="share-form share-instructions">
+        <h1>Almost there</h1>
+        <p class="share-hint">
+          Two files were downloaded and a GitHub page opened for a new folder
+          <code>${folder}</code>.
+        </p>
+        <ol>
+          <li>
+            On the GitHub page, drag in <code>board.osdpi</code> and
+            <code>meta.json</code>.
+          </li>
+          <li>
+            Click <strong>Commit changes</strong> /
+            <strong>Propose changes</strong>.
+          </li>
+          <li>Confirm to open your pull request.</li>
+        </ol>
+        <p class="share-hint">
+          If a download was blocked, copy <code>meta.json</code>:
+        </p>
+        <textarea class="share-meta" readonly rows="7">${metaText}</textarea>
+        <div class="share-actions">
+          <button
+            type="button"
+            class="share-btn"
+            @click=${() => navigator.clipboard.writeText(metaText)}
+          >
+            Copy meta.json
+          </button>
+          <button
+            type="button"
+            class="share-btn"
+            @click=${() => window.open(uploadURL(slug), "_blank", "noopener=true")}
+          >
+            Reopen GitHub page
+          </button>
+          <button
+            type="button"
+            class="share-btn share-btn--primary"
+            @click=${() => dialog.close()}
+          >
+            Done
+          </button>
+        </div>
+      </div>`,
+    );
+  }
+}
+
 /** Return a list of available Menu items on this component
  *
  * @param {TreeBase} component
@@ -23237,6 +23069,11 @@ function getFileMenuItems(bar) {
       },
     }),
     new MenuItem({
+      label: "Share to Gallery",
+      title: "Contribute this board to the example gallery",
+      callback: () => bar.shareDialog.open(),
+    }),
+    new MenuItem({
       label: "New",
       callback: async () => {
         const name = await db.uniqueName("new");
@@ -23247,6 +23084,13 @@ function getFileMenuItems(bar) {
       label: "Open",
       callback: () => {
         bar.designListDialog.open();
+      },
+    }),
+    new MenuItem({
+      label: "Gallery",
+      title: "Browse the example gallery",
+      callback: () => {
+        window.open("#gallery", "_blank", `noopener=true`);
       },
     }),
     new MenuItem({
@@ -23739,6 +23583,7 @@ class ToolBar extends TreeBase {
     this.helpMenu = new Menu("Help", getHelpMenuItems, this);
     this.designListDialog = new DesignListDialog();
     this.importURLDialog = new ImportURLDialog();
+    this.shareDialog = new ShareDialog();
   }
 
   template() {
@@ -23788,11 +23633,381 @@ class ToolBar extends TreeBase {
           <li>${workerUpdateButton()}</li>
         </ul>
         ${this.designListDialog.template()} ${this.importURLDialog.template()}
+        ${this.shareDialog.template()}
       </div>
     `;
   }
 }
 TreeBase.register(ToolBar, "ToolBar");
+
+/**
+ * iOS Safari blocks speech/audio that isn't started from within a user
+ * gesture, but OS-DPI speaks/plays from the deferred render cycle. Prime both
+ * subsystems once on the first gesture so later playback is allowed for the
+ * rest of the session. Bind on gesture completion (pointerup/touchend/keydown).
+ */
+const EVENTS = ["pointerup", "touchend", "keydown"];
+let primed = false;
+
+function prime() {
+  if (primed) return;
+  primed = true;
+  try {
+    // A non-empty utterance is required; iOS treats "" as a no-op.
+    const u = new SpeechSynthesisUtterance(".");
+    u.volume = 0;
+    speechSynthesis.speak(u);
+  } catch (e) {
+    /* ignore */
+  }
+  try {
+    // 0.05s of silence to prime the HTMLAudio path.
+    const a = new Audio(
+      "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=",
+    );
+    a.play().catch(() => {});
+  } catch (e) {
+    /* ignore */
+  }
+  for (const ev of EVENTS) window.removeEventListener(ev, prime, true);
+}
+
+/** Install the one-time media unlock. Call once at startup. */
+function installIOSMediaUnlock() {
+  for (const ev of EVENTS) {
+    window.addEventListener(ev, prime, { capture: true, passive: true });
+  }
+}
+
+/** Floating button: tap for full screen, hold 3s (or press Esc) to return to
+ * the editor. The hold stops a stray tap from dropping a communicator out of
+ * their board. Lives on <body>, clear of the uhtml render that rewrites #UI. */
+
+const HOLD_MS = 3000;
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+const RING = `<svg xmlns="${SVG_NS}" class="fsx-ring" viewBox="0 0 48 48" aria-hidden="true">
+  <circle class="fsx-ring-track" cx="24" cy="24" r="21" pathLength="100" />
+  <circle class="fsx-ring-progress" cx="24" cy="24" r="21" pathLength="100" />
+</svg>`;
+const EXPAND_ICON = `<svg xmlns="${SVG_NS}" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="M8 3H5a2 2 0 0 0-2 2v3" /><path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+  <path d="M3 16v3a2 2 0 0 0 2 2h3" /><path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+</svg>`;
+const COMPRESS_ICON = `<svg xmlns="${SVG_NS}" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="M8 3v3a2 2 0 0 1-2 2H3" /><path d="M21 8h-3a2 2 0 0 1-2-2V3" />
+  <path d="M3 16h3a2 2 0 0 1 2 2v3" /><path d="M16 21v-3a2 2 0 0 1 2-2h3" />
+</svg>`;
+
+// Parse a trusted static SVG string into a node (keeps us off innerHTML).
+function svgFrom(markup) {
+  const doc = new DOMParser().parseFromString(markup, "image/svg+xml");
+  return document.importNode(doc.documentElement, true);
+}
+
+// iPadOS/iOS Safari now supports the Fullscreen API, but entering it hands the
+// page to the OS full-screen chrome (the "swipe down to exit" banner and native
+// buttons). That chrome sits over our button near the safe-area inset so the
+// hold can't fire, and its one-tap exit defeats the whole point of the hold:
+// stopping a stray tap from dropping a communicator out of their board. So on
+// iOS we don't use the native API at all; hiding the editor IS the full-screen
+// view, and the button keeps working. (An earlier comment assumed iOS would
+// reject the request, but modern iPadOS does not.)
+const isIOS =
+  typeof navigator !== "undefined" &&
+  (/iP(ad|hone|od)/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
+
+const inFullscreen = () => !!document.fullscreenElement;
+const inEditor = () => !!(Globals.state && Globals.state.get("editing"));
+
+async function requestFullscreen() {
+  if (isIOS) return; // hidden-editor view is the full-screen experience here
+  try {
+    await document.documentElement.requestFullscreen?.();
+  } catch {
+    /* ignore */
+  }
+}
+
+async function dropFullscreen() {
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+  } catch {
+    /* ignore */
+  }
+}
+
+/** @param {boolean} on */
+function setEditing(on) {
+  if (Globals.state) Globals.state.update({ editing: on });
+}
+
+// Tap: enter full screen. In full screen a tap does nothing; leaving is the
+// hold or Esc, so a stray tap can't exit and there's no windowed in-between.
+function tap() {
+  if (inFullscreen()) return;
+  setEditing(false);
+  requestFullscreen();
+}
+
+// Hold complete: leave full screen first (awaited, so the editor paints into
+// the windowed layout without flashing), then open the editor.
+async function hold() {
+  await dropFullscreen();
+  setEditing(true);
+}
+
+function installFullscreenExit() {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "fsx-btn";
+  btn.setAttribute("aria-label", "Full screen. Hold to return to the editor.");
+  btn.title = "Tap for full screen • hold to edit";
+
+  const expand = document.createElement("span");
+  expand.className = "fsx-icon fsx-icon-expand";
+  expand.appendChild(svgFrom(EXPAND_ICON));
+  const compress = document.createElement("span");
+  compress.className = "fsx-icon fsx-icon-compress";
+  compress.appendChild(svgFrom(COMPRESS_ICON));
+  btn.append(svgFrom(RING), expand, compress);
+
+  /** @type {ReturnType<typeof setTimeout> | null} */
+  let timer = null;
+  let fired = false; // hold fired, so the matching pointerup shouldn't tap
+
+  function stopHold() {
+    if (timer != null) clearTimeout(timer);
+    timer = null;
+    btn.classList.remove("fsx-holding");
+  }
+
+  btn.addEventListener("pointerdown", (event) => {
+    if (event.button > 0) return;
+    fired = false;
+    if (inEditor()) return; // editor: plain tap to full screen, no hold/ring
+    btn.classList.add("fsx-holding");
+    try {
+      btn.setPointerCapture(event.pointerId);
+    } catch {
+      /* ignore */
+    }
+    timer = setTimeout(() => {
+      fired = true;
+      stopHold();
+      hold();
+    }, HOLD_MS);
+  });
+
+  btn.addEventListener("pointerup", () => {
+    const wasHold = fired;
+    stopHold();
+    if (!wasHold) tap();
+  });
+
+  btn.addEventListener("pointercancel", stopHold);
+
+  btn.addEventListener("keydown", (event) => {
+    if (event.repeat) return;
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      tap();
+    }
+  });
+
+  // Any full-screen exit (Esc, the OS, the completed hold) opens the editor.
+  // On iOS there's no real full screen, so the icon tracks the editor state via
+  // CSS (body.fsx-ios:not(.designing)) instead of the fullscreenchange event.
+  btn.classList.toggle("fsx-active", inFullscreen());
+  if (isIOS) document.body.classList.add("fsx-ios");
+  document.addEventListener("fullscreenchange", () => {
+    btn.classList.toggle("fsx-active", inFullscreen());
+    if (!inFullscreen()) setEditing(true);
+  });
+
+  document.body.appendChild(btn);
+}
+
+const CONTRIBUTE_DOCS_URL = `https://github.com/${GALLERY.owner}/${GALLERY.repo}/tree/${GALLERY.branch}/${GALLERY.repoDir}`;
+let mount = null;
+let allItems = [];
+let activeTab = "official";
+let activeTag = null;
+async function newDesign(event) {
+  event.preventDefault();
+  const name = await db.uniqueName("new");
+  window.open(`${"/OS-DPI/"}#${name}`, "_blank", "noopener=true");
+}
+async function fetchIndex() {
+  try {
+    const res = await fetch(galleryIndexURL(), { cache: "no-cache" });
+    if (!res.ok) throw new Error(`status ${res.status}`);
+    const data = await res.json();
+    const list = Array.isArray(data) ? data : data.examples || [];
+    return list.filter((it) => it && it.slug);
+  } catch (e) {
+    console.error("gallery: failed to load index", e);
+    return null;
+  }
+}
+function tagChip(t) {
+  const active = t === activeTag;
+  return html`<button
+    class=${"gallery-tag" + (active ? " gallery-tag--active" : "")}
+    @click=${() => {
+    activeTag = active ? null : t;
+    rerender();
+  }}
+  >
+    #${t}
+  </button>`;
+}
+function card(item) {
+  return html`<article class="gallery-card">
+    <h2 class="gallery-card-title">${item.title}</h2>
+    ${item.description ? html`<p class="gallery-card-desc">${item.description}</p>` : null}
+    ${item.tags && item.tags.length ? html`<div class="gallery-tags">${item.tags.map(tagChip)}</div>` : null}
+    ${item.author ? html`<p class="gallery-card-author">by ${item.author}</p>` : null}
+    <div class="gallery-card-actions">
+      <a
+        class="gallery-btn gallery-btn--primary"
+        href=${loadURL(item, false)}
+        target="_blank"
+        rel="noopener"
+      >
+        Try it
+      </a>
+      <a
+        class="gallery-btn gallery-btn--ghost"
+        href=${loadURL(item, true)}
+        target="_blank"
+        rel="noopener"
+        title="Open in the editor"
+      >
+        Open in editor
+      </a>
+    </div>
+  </article>`;
+}
+function contributeCard() {
+  return html`<article class="gallery-card gallery-card--cta">
+    <a
+      class="gallery-cta-main"
+      href=${"/OS-DPI/"}
+      @click=${newDesign}
+    >
+      <span class="gallery-cta-icon" aria-hidden="true">+</span>
+      <span class="gallery-cta-title">Build &amp; share your own</span>
+      <span class="gallery-cta-sub"
+        >Create a board, then File &rarr; Share to Gallery to open a pull
+        request</span
+      >
+    </a>
+    <a
+      class="gallery-link"
+      href=${CONTRIBUTE_DOCS_URL}
+      target="_blank"
+      rel="noopener"
+    >
+      How sharing works
+    </a>
+  </article>`;
+}
+function header() {
+  return html`<header class="gallery-header">
+    <div class="gallery-header-bar"></div>
+    <div class="gallery-header-text">
+      <h1 class="gallery-title">Example gallery</h1>
+      <p class="gallery-subtitle">
+        Browse boards and load one into OS-DPI with a click.
+      </p>
+    </div>
+  </header>`;
+}
+function tab(id, label, count) {
+  const active = activeTab === id;
+  return html`<button
+    role="tab"
+    aria-selected=${active}
+    class=${"gallery-tab" + (active ? " gallery-tab--active" : "")}
+    @click=${() => {
+    activeTab = id;
+    activeTag = null;
+    rerender();
+  }}
+  >
+    ${label} <span class="gallery-tab-count">${count}</span>
+  </button>`;
+}
+function tagBar(items) {
+  const tags = [...new Set(items.flatMap((it) => it.tags || []))].sort();
+  if (!tags.length) return null;
+  return html`<div class="gallery-tagbar">
+    <button
+      class=${"gallery-tag" + (activeTag === null ? " gallery-tag--active" : "")}
+      @click=${() => {
+    activeTag = null;
+    rerender();
+  }}
+    >
+      All
+    </button>
+    ${tags.map(tagChip)}
+  </div>`;
+}
+function view() {
+  const official = allItems.filter((it) => it.official);
+  const community = allItems.filter((it) => !it.official);
+  const isCommunity = activeTab === "community";
+  const tabItems = isCommunity ? community : official;
+  const list = activeTag ? tabItems.filter((it) => (it.tags || []).includes(activeTag)) : tabItems;
+  return html`<div class="gallery">
+    ${header()}
+    <div class="gallery-tabbar">
+      <div class="gallery-tabs" role="tablist">
+        ${tab("official", "OS-DPI", official.length)}
+        ${tab("community", "Community", community.length)}
+      </div>
+    </div>
+    ${tagBar(tabItems)}
+    <div class="gallery-grid">
+      ${list.map(card)} ${isCommunity ? contributeCard() : null}
+    </div>
+  </div>`;
+}
+function errorView() {
+  return html`<div class="gallery">
+    ${header()}
+    <div class="gallery-empty">
+      <p>Could not load the gallery.</p>
+      <button
+        class="gallery-btn gallery-btn--primary"
+        @click=${() => showGallery()}
+      >
+        Retry
+      </button>
+    </div>
+  </div>`;
+}
+function rerender() {
+  if (mount) render(mount, view());
+}
+async function showGallery(id = "gallery") {
+  mount = document.getElementById(id);
+  if (!mount) return;
+  document.body.classList.add("gallery-mode");
+  const items = await fetchIndex();
+  if (items === null) {
+    render(mount, errorView());
+    return;
+  }
+  allItems = items;
+  activeTab = items.some((it) => it.official) ? "official" : "community";
+  rerender();
+}
 
 /** let me wait for the page to load */
 const pageLoaded = new Promise((resolve) => {
@@ -23805,7 +24020,7 @@ const pageLoaded = new Promise((resolve) => {
 /** Load page and data then go
  */
 async function start() {
-  let editing = false;
+  let editing = true;
   if (window.location.search) {
     const params = new URLSearchParams(window.location.search);
     const fetch = params.get("fetch");
@@ -23822,14 +24037,16 @@ async function start() {
       );
     }
   }
-  let name = window.location.hash.slice(1);
-  if (!name) {
-    name = await db.uniqueName("new");
-    window.location.hash = `#${name}`;
+  // Bare URL or #gallery shows the example gallery.
+  const hash = window.location.hash.slice(1);
+  if (!hash || hash === "gallery") {
+    if (Globals.methods) Globals.methods.stop();
+    await pageLoaded;
+    await showGallery();
+    return;
   }
-  if (name.startsWith("new")) {
-    editing = true;
-  }
+  document.body.classList.remove("gallery-mode");
+  const name = hash;
   db.setDesignName(name);
   const dataArray = await db.read("content", []);
   const noteArray = await db.read("notes", []);
@@ -23927,7 +24144,7 @@ async function start() {
     workerCheckForUpdate();
     document.dispatchEvent(new Event("rendercomplete"));
   }
-  Globals.state.observe(debounce(renderUI), "UI");
+  Globals.state.observe(debounce(renderUI));
   callAfterRender(() => Globals.designer.restoreFocus());
   renderUI();
 }
@@ -23965,6 +24182,13 @@ window.addEventListener("resize", () => {
   if (!Globals.state) return;
   Globals.state.update();
 });
+
+// iOS Safari blocks speech/audio that isn't triggered from a user gesture;
+// prime both on the first interaction so deferred-render playback works.
+installIOSMediaUnlock();
+
+// Floating control: tap for full screen, hold three seconds to reopen the editor.
+installFullscreenExit();
 
 start();
 //# sourceMappingURL=index.js.map

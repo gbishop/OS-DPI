@@ -1,0 +1,140 @@
+[
+  {
+    "slug": "asl-keyword-prediction",
+    "title": "ASL core board with keyword prediction",
+    "description": "An ASL core board with AI keyword prediction, scanning, and zoom.",
+    "tags": [
+      "ASL",
+      "prediction"
+    ],
+    "author": "UNC Project Open AAC",
+    "official": true
+  },
+  {
+    "slug": "contact-utterance",
+    "title": "Contact-like system",
+    "description": "A contact-style board that adapts to location, formality, and tense.",
+    "tags": [
+      "utterance",
+      "contacts"
+    ],
+    "author": "UNC Project Open AAC",
+    "official": true,
+    "board": "examples/updated/utterance_Contact.osdpi"
+  },
+  {
+    "slug": "core-utterance-prediction",
+    "title": "Core board with utterance prediction",
+    "description": "A core board with an AI plug-in suggesting comments and questions.",
+    "tags": [
+      "AI",
+      "prediction"
+    ],
+    "author": "UNC Project Open AAC",
+    "official": true
+  },
+  {
+    "slug": "image-keyword-prediction",
+    "title": "Image upload with keyword prediction",
+    "description": "Upload an image to get AI keyword suggestions.",
+    "tags": [
+      "image",
+      "AI"
+    ],
+    "author": "UNC Project Open AAC",
+    "official": true
+  },
+  {
+    "slug": "image-utterance-prediction",
+    "title": "Image upload with utterance prediction",
+    "description": "Upload an image to get AI comment and question suggestions.",
+    "tags": [
+      "image",
+      "AI"
+    ],
+    "author": "UNC Project Open AAC",
+    "official": true
+  },
+  {
+    "slug": "keyboard-prediction",
+    "title": "Keyboard with prediction",
+    "description": "A QWERTY keyboard with word prediction.",
+    "tags": [
+      "keyboard",
+      "prediction"
+    ],
+    "author": "UNC Project Open AAC",
+    "official": true
+  },
+  {
+    "slug": "mandarin-english",
+    "title": "Mandarin / English board",
+    "description": "A bilingual core board that toggles between Mandarin and English.",
+    "tags": [
+      "bilingual",
+      "grid"
+    ],
+    "author": "UNC Project Open AAC",
+    "official": true
+  },
+  {
+    "slug": "photo-audio",
+    "title": "Photo audio",
+    "description": "A grid of photos that speak when selected.",
+    "tags": [
+      "photo",
+      "audio"
+    ],
+    "author": "UNC Project Open AAC",
+    "official": true,
+    "board": "examples/updated/photo_audio_ex_1.osdpi"
+  },
+  {
+    "slug": "single-words",
+    "title": "Single words",
+    "description": "A 36-button core word board in a 6x6 grid with a message window.",
+    "tags": [
+      "grid",
+      "core"
+    ],
+    "author": "UNC Project Open AAC",
+    "official": true,
+    "board": "examples/updated/grid_ex_1.osdpi"
+  },
+  {
+    "slug": "single-words-morphs",
+    "title": "Single words with morphs",
+    "description": "Core words with their morphological forms across category pages.",
+    "tags": [
+      "grid",
+      "morphology"
+    ],
+    "author": "UNC Project Open AAC",
+    "official": true,
+    "board": "examples/updated/grid_ex_2.osdpi"
+  },
+  {
+    "slug": "text-tabs",
+    "title": "Text with tabs",
+    "description": "A text board with tabs, a keyboard, and stored phrases.",
+    "tags": [
+      "text",
+      "tabs"
+    ],
+    "author": "UNC Project Open AAC",
+    "official": true,
+    "board": "examples/updated/text_tabs_ex_1.osdpi"
+  },
+  {
+    "slug": "visual-scene-display",
+    "title": "Visual scene display",
+    "description": "Photos with tappable hotspots for contextual language.",
+    "tags": [
+      "VSD",
+      "photo"
+    ],
+    "author": "UNC Project Open AAC",
+    "official": true,
+    "board": "examples/updated/VSD_ex_1.osdpi"
+  }
+]
